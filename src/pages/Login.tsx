@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -12,8 +12,19 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signIn, role } = useAuth();
+  const { signIn, role, user } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect when user is authenticated and role is resolved
+  useEffect(() => {
+    if (user && role) {
+      if (role === "MASTER_ADMIN") {
+        navigate("/master/dashboard", { replace: true });
+      } else {
+        navigate("/app/dashboard", { replace: true });
+      }
+    }
+  }, [user, role, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,10 +32,9 @@ const Login = () => {
     setLoading(true);
     try {
       await signIn(email, password);
-      // Navigation will be handled by AuthRedirect
+      // Navigation handled by useEffect above once role resolves
     } catch (err: any) {
       setError(err.message || "Error al iniciar sesión");
-    } finally {
       setLoading(false);
     }
   };
