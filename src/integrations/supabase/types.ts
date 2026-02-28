@@ -50,6 +50,44 @@ export type Database = {
           },
         ]
       }
+      account_settings: {
+        Row: {
+          account_id: string
+          id: string
+          updated_at: string
+          vacation_days_per_year: number
+          work_days: string[]
+          work_end_time: string
+          work_start_time: string
+        }
+        Insert: {
+          account_id: string
+          id?: string
+          updated_at?: string
+          vacation_days_per_year?: number
+          work_days?: string[]
+          work_end_time?: string
+          work_start_time?: string
+        }
+        Update: {
+          account_id?: string
+          id?: string
+          updated_at?: string
+          vacation_days_per_year?: number
+          work_days?: string[]
+          work_end_time?: string
+          work_start_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_settings_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: true
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       accounts: {
         Row: {
           created_at: string

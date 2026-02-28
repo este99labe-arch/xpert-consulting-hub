@@ -17,6 +17,7 @@ import AppDashboard from "@/pages/app/AppDashboard";
 import AppPlaceholder from "@/pages/app/AppPlaceholder";
 import AppInvoices from "@/pages/app/AppInvoices";
 import AppClients from "@/pages/app/AppClients";
+import AppSettings from "@/pages/app/AppSettings";
 
 const queryClient = new QueryClient();
 
@@ -60,7 +61,7 @@ const App = () => (
               <Route path="accounting" element={<AppPlaceholder />} />
               <Route path="hr" element={<AppPlaceholder />} />
               <Route path="attendance" element={<AppPlaceholder />} />
-              <Route path="settings" element={<AppPlaceholder />} />
+              <Route path="settings" element={<AppSettings />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
