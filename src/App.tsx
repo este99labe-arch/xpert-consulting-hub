@@ -16,6 +16,7 @@ import ClientLayout from "@/layouts/ClientLayout";
 import AppDashboard from "@/pages/app/AppDashboard";
 import AppPlaceholder from "@/pages/app/AppPlaceholder";
 import AppInvoices from "@/pages/app/AppInvoices";
+import AppClients from "@/pages/app/AppClients";
 
 const queryClient = new QueryClient();
 
@@ -54,7 +55,7 @@ const App = () => (
               }
             >
               <Route path="dashboard" element={<AppDashboard />} />
-              <Route path="clients" element={<AppPlaceholder />} />
+              <Route path="clients" element={<AppClients />} />
               <Route path="invoices" element={<AppInvoices />} />
               <Route path="accounting" element={<AppPlaceholder />} />
               <Route path="hr" element={<AppPlaceholder />} />
