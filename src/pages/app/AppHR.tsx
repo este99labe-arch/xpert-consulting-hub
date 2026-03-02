@@ -204,6 +204,26 @@ const LeaveTab = () => {
     enabled: !!accountId && !!user,
   });
 
+  // Fetch emails for leave request owners (managers only)
+  const leaveUserIds = [...new Set(requests.map((r: any) => r.user_id))];
+  const { data: leaveProfiles = [] } = useQuery({
+    queryKey: ["leave-user-emails", leaveUserIds, isManager],
+    queryFn: async () => {
+      if (!isManager) return [] as { user_id: string; email: string }[];
+      try {
+        const res = await supabase.functions.invoke("admin_reset_password", {
+          body: { action: "list_users" },
+        });
+        if (res.error || res.data?.error) return [] as { user_id: string; email: string }[];
+        return ((res.data?.users || []) as { user_id: string; email: string }[]).filter((u) => leaveUserIds.includes(u.user_id));
+      } catch {
+        return [] as { user_id: string; email: string }[];
+      }
+    },
+    enabled: isManager && leaveUserIds.length > 0,
+  });
+  const leaveEmailMap = new Map<string, string>(leaveProfiles.map((p) => [p.user_id, p.email]));
+
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const { error } = await supabase.from("leave_requests").update({ status }).eq("id", id);
@@ -229,6 +249,7 @@ const LeaveTab = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                {isManager && <TableHead>Solicitante</TableHead>}
                 <TableHead>Tipo</TableHead>
                 <TableHead>Desde</TableHead>
                 <TableHead>Hasta</TableHead>
@@ -239,14 +260,19 @@ const LeaveTab = () => {
             </TableHeader>
             <TableBody>
               {requests.length === 0 ? (
-                <TableRow><TableCell colSpan={isManager ? 6 : 5} className="text-center text-muted-foreground py-8">No hay solicitudes de ausencia</TableCell></TableRow>
+                <TableRow><TableCell colSpan={isManager ? 8 : 5} className="text-center text-muted-foreground py-8">No hay solicitudes de ausencia</TableCell></TableRow>
               ) : (
                 requests.map((r: any) => {
                   const days = differenceInBusinessDays(parseISO(r.end_date), parseISO(r.start_date)) + 1;
                   const typeLabel = LEAVE_TYPES.find(t => t.value === r.type)?.label || r.type;
                   const st = STATUS_MAP[r.status] || { label: r.status, variant: "outline" as const };
-                  return (
+                    return (
                     <TableRow key={r.id}>
+                      {isManager && (
+                        <TableCell className="font-medium">
+                          {leaveEmailMap.get(r.user_id)?.split("@")[0] || r.user_id.slice(0, 8)}
+                        </TableCell>
+                      )}
                       <TableCell className="font-medium">{typeLabel}</TableCell>
                       <TableCell>{format(parseISO(r.start_date), "dd/MM/yyyy")}</TableCell>
                       <TableCell>{format(parseISO(r.end_date), "dd/MM/yyyy")}</TableCell>
@@ -363,12 +389,12 @@ const VacationCalendarTab = () => {
   const [month, setMonth] = useState(new Date());
   const isManager = role === "MANAGER" || role === "MASTER_ADMIN";
 
-  const { data: approvedLeaves = [] } = useQuery({
-    queryKey: ["approved-leaves", accountId, month.getMonth(), month.getFullYear()],
+  const { data: allLeaves = [] } = useQuery({
+    queryKey: ["calendar-leaves", accountId, month.getMonth(), month.getFullYear()],
     queryFn: async () => {
       const start = startOfMonth(month);
       const end = endOfMonth(month);
-      let q = supabase.from("leave_requests").select("*").eq("status", "APPROVED");
+      let q = supabase.from("leave_requests").select("*").in("status", ["APPROVED", "PENDING"]);
       if (isManager) q = q.eq("account_id", accountId!);
       q = q.lte("start_date", format(end, "yyyy-MM-dd")).gte("end_date", format(start, "yyyy-MM-dd"));
       const { data, error } = await q;
@@ -379,7 +405,7 @@ const VacationCalendarTab = () => {
   });
 
   // Get emails for leave owners
-  const userIds = [...new Set(approvedLeaves.map((l: any) => l.user_id))];
+  const userIds = [...new Set(allLeaves.map((l: any) => l.user_id))];
   const { data: userProfiles = [] } = useQuery({
     queryKey: ["leave-user-profiles", userIds],
     queryFn: async () => {
@@ -400,7 +426,7 @@ const VacationCalendarTab = () => {
   const daysInMonth = eachDayOfInterval({ start: startOfMonth(month), end: endOfMonth(month) });
 
   const leavesForDay = (day: Date) =>
-    approvedLeaves.filter((l: any) =>
+    allLeaves.filter((l: any) =>
       isWithinInterval(day, { start: parseISO(l.start_date), end: parseISO(l.end_date) })
     );
 
@@ -422,25 +448,33 @@ const VacationCalendarTab = () => {
             {Array.from({ length: (daysInMonth[0].getDay() + 6) % 7 }).map((_, i) => <div key={`empty-${i}`} />)}
             {daysInMonth.map(day => {
               const leaves = leavesForDay(day);
+              const hasApproved = leaves.some((l: any) => l.status === "APPROVED");
+              const hasPending = leaves.some((l: any) => l.status === "PENDING");
               const isToday = isSameDay(day, new Date());
               const isWeekend = day.getDay() === 0 || day.getDay() === 6;
               return (
                 <div
                   key={day.toISOString()}
                   className={cn(
-                    "min-h-[60px] rounded-md border p-1 text-xs",
+                    "min-h-[60px] rounded-md border p-1 text-xs transition-colors",
                     isToday && "border-primary",
                     isWeekend && "bg-muted/30",
-                    leaves.length > 0 && "bg-accent"
+                    hasApproved && "bg-primary/15 border-primary/40",
+                    hasPending && !hasApproved && "shadow-md shadow-muted-foreground/20 border-dashed border-muted-foreground/40"
                   )}
                 >
                   <div className="font-medium">{day.getDate()}</div>
                   {leaves.slice(0, 2).map((l: any) => {
                     const typeLabel = LEAVE_TYPES.find(t => t.value === l.type)?.label || l.type;
                     const email = emailMap.get(l.user_id);
+                    const isPending = l.status === "PENDING";
                     return (
-                      <div key={l.id} className="truncate text-[10px] text-accent-foreground">
+                      <div key={l.id} className={cn(
+                        "truncate text-[10px]",
+                        isPending ? "text-muted-foreground italic" : "text-primary font-medium"
+                      )}>
                         {email ? email.split("@")[0] : ""} {typeLabel}
+                        {isPending && " ⏳"}
                       </div>
                     );
                   })}
