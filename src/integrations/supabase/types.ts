@@ -191,6 +191,53 @@ export type Database = {
           },
         ]
       }
+      employee_documents: {
+        Row: {
+          account_id: string
+          category: string
+          created_at: string
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          name: string
+          uploaded_by: string
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          category?: string
+          created_at?: string
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          name: string
+          uploaded_by: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          category?: string
+          created_at?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          name?: string
+          uploaded_by?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_documents_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           account_id: string
