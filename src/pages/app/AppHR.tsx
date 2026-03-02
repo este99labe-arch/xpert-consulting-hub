@@ -92,19 +92,20 @@ const EmployeesTab = () => {
   const { data: profiles = [] } = useQuery({
     queryKey: ["hr-employee-emails", userIds],
     queryFn: async () => {
-      // We'll use the admin edge function to list users
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await supabase.functions.invoke("admin_reset_password", {
-        body: { action: "list_users" },
-        headers: { Authorization: `Bearer ${session?.access_token}` },
-      });
-      if (res.error) return [] as { id: string; email: string }[];
-      return ((res.data?.users || []) as { id: string; email: string }[]).filter((u) => userIds.includes(u.id));
+      try {
+        const res = await supabase.functions.invoke("admin_reset_password", {
+          body: { action: "list_users" },
+        });
+        if (res.error || res.data?.error) return [] as { user_id: string; email: string }[];
+        return ((res.data?.users || []) as { user_id: string; email: string }[]);
+      } catch {
+        return [] as { user_id: string; email: string }[];
+      }
     },
     enabled: userIds.length > 0,
   });
 
-  const emailMap = new Map<string, string>(profiles.map((p) => [p.id, p.email]));
+  const emailMap = new Map<string, string>(profiles.map((p) => [p.user_id, p.email]));
 
   const filtered = employees.filter((e: any) => {
     const email = emailMap.get(e.user_id) || "";
@@ -379,17 +380,19 @@ const VacationCalendarTab = () => {
   const { data: userProfiles = [] } = useQuery({
     queryKey: ["leave-user-profiles", userIds],
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await supabase.functions.invoke("admin_reset_password", {
-        body: { action: "list_users" },
-        headers: { Authorization: `Bearer ${session?.access_token}` },
-      });
-      if (res.error) return [];
-      return (res.data?.users || []).filter((u: any) => userIds.includes(u.id));
+      try {
+        const res = await supabase.functions.invoke("admin_reset_password", {
+          body: { action: "list_users" },
+        });
+        if (res.error || res.data?.error) return [];
+        return (res.data?.users || []).filter((u: any) => userIds.includes(u.user_id));
+      } catch {
+        return [];
+      }
     },
     enabled: userIds.length > 0 && isManager,
   });
-  const emailMap = new Map<string, string>(userProfiles.map((p: any) => [p.id, p.email]));
+  const emailMap = new Map<string, string>(userProfiles.map((p: any) => [p.user_id, p.email]));
 
   const daysInMonth = eachDayOfInterval({ start: startOfMonth(month), end: endOfMonth(month) });
 
@@ -484,17 +487,19 @@ const DocumentsTab = () => {
   const { data: empProfiles = [] } = useQuery({
     queryKey: ["hr-doc-profiles", empUserIds],
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await supabase.functions.invoke("admin_reset_password", {
-        body: { action: "list_users" },
-        headers: { Authorization: `Bearer ${session?.access_token}` },
-      });
-      if (res.error) return [] as { id: string; email: string }[];
-      return ((res.data?.users || []) as { id: string; email: string }[]).filter((u) => empUserIds.includes(u.id));
+      try {
+        const res = await supabase.functions.invoke("admin_reset_password", {
+          body: { action: "list_users" },
+        });
+        if (res.error || res.data?.error) return [] as { user_id: string; email: string }[];
+        return ((res.data?.users || []) as { user_id: string; email: string }[]).filter((u) => empUserIds.includes(u.user_id));
+      } catch {
+        return [] as { user_id: string; email: string }[];
+      }
     },
     enabled: empUserIds.length > 0,
   });
-  const empEmailMap = new Map<string, string>(empProfiles.map((p) => [p.id, p.email]));
+  const empEmailMap = new Map<string, string>(empProfiles.map((p) => [p.user_id, p.email]));
 
   // Get documents
   const { data: documents = [], isLoading } = useQuery({
