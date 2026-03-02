@@ -71,7 +71,8 @@ const AppHR = () => {
    EMPLOYEES TAB
    ============================================================ */
 const EmployeesTab = () => {
-  const { accountId } = useAuth();
+  const { accountId, role, user } = useAuth();
+  const isManager = role === "MANAGER" || role === "MASTER_ADMIN";
   const [search, setSearch] = useState("");
 
   const { data: employees = [], isLoading } = useQuery({
@@ -87,25 +88,27 @@ const EmployeesTab = () => {
     enabled: !!accountId,
   });
 
-  // Get emails for all user_ids
+  // Get emails for all user_ids (only for admin roles allowed by edge function)
   const userIds = employees.map((e: any) => e.user_id);
   const { data: profiles = [] } = useQuery({
-    queryKey: ["hr-employee-emails", userIds],
+    queryKey: ["hr-employee-emails", userIds, isManager],
     queryFn: async () => {
+      if (!isManager) return [] as { user_id: string; email: string }[];
       try {
         const res = await supabase.functions.invoke("admin_reset_password", {
           body: { action: "list_users" },
         });
         if (res.error || res.data?.error) return [] as { user_id: string; email: string }[];
-        return ((res.data?.users || []) as { user_id: string; email: string }[]);
+        return ((res.data?.users || []) as { user_id: string; email: string }[]).filter((u) => userIds.includes(u.user_id));
       } catch {
         return [] as { user_id: string; email: string }[];
       }
     },
-    enabled: userIds.length > 0,
+    enabled: isManager && userIds.length > 0,
   });
 
   const emailMap = new Map<string, string>(profiles.map((p) => [p.user_id, p.email]));
+  if (!isManager && user?.id && user?.email) emailMap.set(user.id, user.email);
 
   const filtered = employees.filter((e: any) => {
     const email = emailMap.get(e.user_id) || "";
