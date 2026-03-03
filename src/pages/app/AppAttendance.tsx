@@ -19,8 +19,13 @@ import { toast } from "@/hooks/use-toast";
 import {
   startOfWeek, endOfWeek, addWeeks, subWeeks, format, eachDayOfInterval,
   startOfMonth, endOfMonth, isSameDay, parseISO, differenceInMinutes, isToday,
+  getISOWeek,
 } from "date-fns";
 import { es } from "date-fns/locale";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+} from "recharts";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 
 const DAY_CODES: Record<number, string> = { 1: "MON", 2: "TUE", 3: "WED", 4: "THU", 5: "FRI", 6: "SAT", 0: "SUN" };
 
@@ -171,6 +176,42 @@ const AppAttendance = () => {
   }, 0);
 
   const balanceMins = workedMonthMins - expectedMonthMins;
+
+  // ---- Weekly chart data ----
+  const chartConfig = {
+    worked: { label: "Trabajadas", color: "hsl(var(--primary))" },
+    expected: { label: "Esperadas", color: "hsl(var(--muted))" },
+  };
+
+  const weeklyChartData = useMemo(() => {
+    const weeksMap: Record<string, { worked: number; expected: number; label: string }> = {};
+    monthDays.forEach(day => {
+      const wk = getISOWeek(day);
+      const ws = startOfWeek(day, { weekStartsOn: 1 });
+      const key = `S${wk}`;
+      if (!weeksMap[key]) {
+        weeksMap[key] = {
+          worked: 0,
+          expected: 0,
+          label: `${format(ws, "d MMM", { locale: es })}`,
+        };
+      }
+      const dayCode = DAY_CODES[day.getDay()];
+      if (workDays.includes(dayCode)) {
+        weeksMap[key].expected += dailyExpectedMins / 60;
+      }
+      const rec = myMonthRecords.find(r => r.work_date === format(day, "yyyy-MM-dd"));
+      if (rec?.check_in && rec?.check_out) {
+        weeksMap[key].worked += differenceInMinutes(new Date(rec.check_out), new Date(rec.check_in)) / 60;
+      }
+    });
+    return Object.entries(weeksMap).map(([key, val]) => ({
+      name: key,
+      label: val.label,
+      worked: Math.round(val.worked * 10) / 10,
+      expected: Math.round(val.expected * 10) / 10,
+    }));
+  }, [monthDays, myMonthRecords, workDays, dailyExpectedMins]);
 
   // ---- Check-in / Check-out ----
   const todayStr = format(new Date(), "yyyy-MM-dd");
@@ -392,6 +433,29 @@ const AppAttendance = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* Weekly hours chart */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Horas por Semana</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={chartConfig} className="h-[250px] w-full">
+                <BarChart data={weeklyChartData} barGap={4}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 12 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}h`} />
+                  <ChartTooltip
+                    content={<ChartTooltipContent />}
+                    cursor={{ fill: "hsl(var(--muted) / 0.2)" }}
+                  />
+                  <Legend />
+                  <Bar dataKey="expected" name="Esperadas" fill="hsl(var(--muted))" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="worked" name="Trabajadas" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
 
           {/* Check-in / Check-out buttons */}
           <Card>
