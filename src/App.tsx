@@ -15,6 +15,7 @@ import MasterSettings from "@/pages/master/MasterSettings";
 import ClientLayout from "@/layouts/ClientLayout";
 import AppDashboard from "@/pages/app/AppDashboard";
 import AppPlaceholder from "@/pages/app/AppPlaceholder";
+import AppAttendance from "@/pages/app/AppAttendance";
 import AppHR from "@/pages/app/AppHR";
 import AppInvoices from "@/pages/app/AppInvoices";
 import AppClients from "@/pages/app/AppClients";
@@ -61,7 +62,7 @@ const App = () => (
               <Route path="invoices" element={<AppInvoices />} />
               <Route path="accounting" element={<AppPlaceholder />} />
               <Route path="hr" element={<AppHR />} />
-              <Route path="attendance" element={<AppPlaceholder />} />
+              <Route path="attendance" element={<AppAttendance />} />
               <Route path="settings" element={<AppSettings />} />
             </Route>
 
