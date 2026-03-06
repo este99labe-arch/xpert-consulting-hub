@@ -15,7 +15,6 @@ const Login = () => {
   const { signIn, role, user } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect when user is authenticated and role is resolved
   useEffect(() => {
     if (user && role) {
       if (role === "MASTER_ADMIN") {
@@ -32,7 +31,6 @@ const Login = () => {
     setLoading(true);
     try {
       await signIn(email, password);
-      // Navigation handled by useEffect above once role resolves
     } catch (err: any) {
       setError(err.message || "Error al iniciar sesión");
       setLoading(false);
@@ -40,19 +38,29 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
-      <Card className="w-full max-w-md shadow-lg">
-        <CardHeader className="text-center space-y-2">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold text-xl">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent px-4">
+      {/* Decorative background shapes */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-primary/8 blur-3xl" />
+      </div>
+
+      <Card className="relative w-full max-w-md shadow-xl border-border/50 backdrop-blur-sm">
+        <CardHeader className="text-center space-y-3 pb-2">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground font-bold text-2xl shadow-lg shadow-primary/25">
             XC
           </div>
-          <CardTitle className="text-2xl font-bold">XpertConsulting</CardTitle>
-          <CardDescription>Introduce tus credenciales para acceder al sistema</CardDescription>
+          <div className="space-y-1">
+            <CardTitle className="text-2xl font-bold tracking-tight">XpertConsulting</CardTitle>
+            <CardDescription className="text-muted-foreground">
+              Introduce tus credenciales para acceder al sistema
+            </CardDescription>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4">
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="flex items-center gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+              <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
                 <AlertCircle className="h-4 w-4 shrink-0" />
                 {error}
               </div>
@@ -67,6 +75,7 @@ const Login = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={loading}
+                className="h-11"
               />
             </div>
             <div className="space-y-2">
@@ -79,13 +88,14 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={loading}
+                className="h-11"
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full h-11 font-medium shadow-md shadow-primary/20" disabled={loading}>
               {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : (
-                <LogIn className="h-4 w-4" />
+                <LogIn className="h-4 w-4 mr-2" />
               )}
               {loading ? "Iniciando sesión..." : "Iniciar sesión"}
             </Button>
