@@ -15,9 +15,10 @@ import {
   SidebarInset,
 } from "@/components/ui/sidebar";
 import {
-  LayoutDashboard, Users, FileText, Calculator, UserCog, Clock, Settings, LogOut, Package,
+  LayoutDashboard, Users, FileText, Calculator, UserCog, Clock, Settings, LogOut, Package, ArrowRightLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 
 const moduleIcons: Record<string, any> = {
   DASHBOARD: LayoutDashboard,
@@ -42,7 +43,7 @@ const modulePaths: Record<string, string> = {
 };
 
 const ClientLayout = () => {
-  const { signOut, user, accountId } = useAuth();
+  const { signOut, user, accountId, role } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -98,6 +99,22 @@ const ClientLayout = () => {
                 );
               })}
             </SidebarMenu>
+            {role === "MASTER_ADMIN" && (
+              <>
+                <Separator className="my-2" />
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      onClick={() => navigate("/master/dashboard")}
+                      tooltip="Ir al Panel Master"
+                    >
+                      <ArrowRightLeft className="h-4 w-4" />
+                      <span>Panel Master</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </>
+            )}
           </SidebarContent>
           <SidebarFooter className="p-3 border-t border-sidebar-border">
             <p className="text-xs text-muted-foreground truncate mb-2">{user?.email}</p>

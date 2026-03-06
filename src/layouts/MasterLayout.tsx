@@ -12,8 +12,9 @@ import {
   SidebarTrigger,
   SidebarInset,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Users, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, Settings, LogOut, ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/master/dashboard" },
@@ -55,6 +56,18 @@ const MasterLayout = () => {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+            </SidebarMenu>
+            <Separator className="my-2" />
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => navigate("/app/dashboard")}
+                  tooltip="Ir al Panel App"
+                >
+                  <ArrowRightLeft className="h-4 w-4" />
+                  <span>Panel App</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarContent>
           <SidebarFooter className="p-3 border-t border-sidebar-border">
