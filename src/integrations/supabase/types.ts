@@ -245,6 +245,7 @@ export type Database = {
           amount_total: number
           amount_vat: number
           client_id: string
+          concept: string
           created_at: string
           id: string
           issue_date: string
@@ -258,6 +259,7 @@ export type Database = {
           amount_total: number
           amount_vat: number
           client_id: string
+          concept?: string
           created_at?: string
           id?: string
           issue_date: string
@@ -271,6 +273,7 @@ export type Database = {
           amount_total?: number
           amount_vat?: number
           client_id?: string
+          concept?: string
           created_at?: string
           id?: string
           issue_date?: string
