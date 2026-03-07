@@ -74,6 +74,7 @@ const EmployeesTab = () => {
   const { accountId, role, user } = useAuth();
   const isManager = role === "MANAGER" || role === "MASTER_ADMIN";
   const [search, setSearch] = useState("");
+  const [showCreateUser, setShowCreateUser] = useState(false);
 
   const { data: employees = [], isLoading } = useQuery({
     queryKey: ["hr-employees", accountId],
