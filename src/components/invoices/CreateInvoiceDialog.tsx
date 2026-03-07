@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 
 interface Props {
@@ -22,15 +23,22 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
 
   const [clientId, setClientId] = useState("");
   const [type, setType] = useState("INVOICE");
+  const [concept, setConcept] = useState("");
   const [issueDate, setIssueDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [amountNet, setAmountNet] = useState("");
+  const [amount, setAmount] = useState("");
   const [vatPercentage, setVatPercentage] = useState("21");
+  const [vatIncluded, setVatIncluded] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const amountNetNum = parseFloat(amountNet) || 0;
+  const amountNum = parseFloat(amount) || 0;
   const vatNum = parseFloat(vatPercentage) || 0;
-  const amountVat = +(amountNetNum * vatNum / 100).toFixed(2);
-  const amountTotal = +(amountNetNum + amountVat).toFixed(2);
+
+  // Calculate net/vat/total based on whether VAT is included
+  const amountNet = vatIncluded
+    ? +(amountNum / (1 + vatNum / 100)).toFixed(2)
+    : amountNum;
+  const amountVat = +(amountNet * vatNum / 100).toFixed(2);
+  const amountTotal = +(amountNet + amountVat).toFixed(2);
 
   const { data: clients = [] } = useQuery({
     queryKey: ["business_clients", accountId],
@@ -48,7 +56,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
   });
 
   const handleSubmit = async () => {
-    if (!clientId || !amountNet || !accountId) {
+    if (!clientId || !amount || !accountId || !concept.trim()) {
       toast({ title: "Error", description: "Completa todos los campos obligatorios", variant: "destructive" });
       return;
     }
@@ -58,8 +66,9 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
         account_id: accountId,
         client_id: clientId,
         type,
+        concept: concept.trim(),
         issue_date: issueDate,
-        amount_net: amountNetNum,
+        amount_net: amountNet,
         vat_percentage: vatNum,
         amount_vat: amountVat,
         amount_total: amountTotal,
@@ -79,9 +88,11 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
   const resetForm = () => {
     setClientId("");
     setType("INVOICE");
+    setConcept("");
     setIssueDate(new Date().toISOString().slice(0, 10));
-    setAmountNet("");
+    setAmount("");
     setVatPercentage("21");
+    setVatIncluded(false);
   };
 
   return (
@@ -115,19 +126,28 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
           </div>
 
           <div className="space-y-2">
+            <Label>Concepto *</Label>
+            <Input
+              value={concept}
+              onChange={(e) => setConcept(e.target.value)}
+              placeholder="Ej: Servicio de consultoría marzo 2026"
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label>Fecha de emisión</Label>
             <Input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Importe neto (€)</Label>
+              <Label>{vatIncluded ? "Importe con IVA (€)" : "Importe neto (€)"}</Label>
               <Input
                 type="number"
                 min="0"
                 step="0.01"
-                value={amountNet}
-                onChange={(e) => setAmountNet(e.target.value)}
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
               />
             </div>
@@ -145,12 +165,23 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
             </div>
           </div>
 
+          <div className="flex items-center gap-3">
+            <Switch checked={vatIncluded} onCheckedChange={setVatIncluded} id="vat-included" />
+            <Label htmlFor="vat-included" className="text-sm text-muted-foreground cursor-pointer">
+              El importe ya incluye IVA
+            </Label>
+          </div>
+
           <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-1">
             <div className="flex justify-between text-sm text-muted-foreground">
-              <span>IVA</span>
+              <span>Base imponible</span>
+              <span className="font-mono">€{amountNet.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
+            </div>
+            <div className="flex justify-between text-sm text-muted-foreground">
+              <span>IVA ({vatPercentage}%)</span>
               <span className="font-mono">€{amountVat.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
             </div>
-            <div className="flex justify-between text-base font-semibold text-foreground">
+            <div className="flex justify-between text-base font-semibold text-foreground pt-1 border-t border-border">
               <span>Total</span>
               <span className="font-mono">€{amountTotal.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
             </div>

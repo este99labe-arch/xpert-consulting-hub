@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
     <thead><tr><th>Concepto</th><th style="text-align:right">Base imponible</th><th style="text-align:right">IVA (${invoice.vat_percentage}%)</th><th style="text-align:right">Total</th></tr></thead>
     <tbody>
       <tr>
-        <td>${typeLabel.toLowerCase()} ${invoice.id.slice(0, 8)}</td>
+        <td>${invoice.concept || `${typeLabel.toLowerCase()} ${invoice.id.slice(0, 8)}`}</td>
         <td style="text-align:right">€${Number(invoice.amount_net).toFixed(2)}</td>
         <td style="text-align:right">€${Number(invoice.amount_vat).toFixed(2)}</td>
         <td style="text-align:right"><strong>€${Number(invoice.amount_total).toFixed(2)}</strong></td>
