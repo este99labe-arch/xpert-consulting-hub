@@ -74,6 +74,7 @@ const EmployeesTab = () => {
   const { accountId, role, user } = useAuth();
   const isManager = role === "MANAGER" || role === "MASTER_ADMIN";
   const [search, setSearch] = useState("");
+  const [showCreateUser, setShowCreateUser] = useState(false);
 
   const { data: employees = [], isLoading } = useQuery({
     queryKey: ["hr-employees", accountId],
@@ -120,9 +121,16 @@ const EmployeesTab = () => {
 
   return (
     <div className="space-y-4">
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Buscar por email o rol..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+      <div className="flex items-center justify-between gap-4">
+        <div className="relative max-w-sm flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Buscar por email o rol..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+        </div>
+        {isManager && (
+          <Button onClick={() => setShowCreateUser(true)}>
+            <Plus className="h-4 w-4 mr-2" />Dar de Alta
+          </Button>
+        )}
       </div>
 
       <Card>
@@ -161,7 +169,76 @@ const EmployeesTab = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {isManager && <CreateEmployeeDialog open={showCreateUser} onOpenChange={setShowCreateUser} />}
     </div>
+  );
+};
+
+/* ---------- Create Employee Dialog ---------- */
+const CreateEmployeeDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) => {
+  const { accountId } = useAuth();
+  const queryClient = useQueryClient();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [roleCode, setRoleCode] = useState("EMPLOYEE");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) return;
+    setLoading(true);
+    try {
+      const res = await supabase.functions.invoke("admin_reset_password", {
+        body: { action: "create_user", email, new_password: password, role_code: roleCode, account_id: accountId },
+      });
+      if (res.error || res.data?.error) throw new Error(res.data?.error || res.error?.message);
+      toast({ title: "Empleado creado correctamente" });
+      queryClient.invalidateQueries({ queryKey: ["hr-employees"] });
+      queryClient.invalidateQueries({ queryKey: ["hr-employee-emails"] });
+      setEmail("");
+      setPassword("");
+      setRoleCode("EMPLOYEE");
+      onOpenChange(false);
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Dar de Alta Empleado</DialogTitle>
+          <DialogDescription>Crea una cuenta para un nuevo miembro del equipo</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label>Email</Label>
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="empleado@empresa.com" required />
+          </div>
+          <div className="space-y-2">
+            <Label>Contraseña</Label>
+            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" required minLength={6} />
+          </div>
+          <div className="space-y-2">
+            <Label>Rol</Label>
+            <Select value={roleCode} onValueChange={setRoleCode}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="EMPLOYEE">Empleado</SelectItem>
+                <SelectItem value="MANAGER">Manager</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Crear Empleado
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 };
 
