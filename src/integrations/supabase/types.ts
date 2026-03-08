@@ -324,6 +324,57 @@ export type Database = {
           },
         ]
       }
+      invoice_delete_requests: {
+        Row: {
+          account_id: string
+          created_at: string
+          id: string
+          invoice_id: string
+          reason: string
+          requested_by: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          id?: string
+          invoice_id: string
+          reason?: string
+          requested_by: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          reason?: string
+          requested_by?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_delete_requests_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_delete_requests_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           account_id: string
