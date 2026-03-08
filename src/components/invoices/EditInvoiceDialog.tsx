@@ -45,6 +45,8 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
   const [vatIncluded, setVatIncluded] = useState(false);
   const [status, setStatus] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [attachmentPath, setAttachmentPath] = useState<string | null>(null);
+  const [attachmentName, setAttachmentName] = useState<string | null>(null);
 
   const isDraft = invoice?.status === "DRAFT";
   const nextStatuses = statusFlow[invoice?.status || ""] || [];
@@ -58,6 +60,8 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
       setVatPercentage(String(invoice.vat_percentage || "21"));
       setVatIncluded(false);
       setStatus(invoice.status || "DRAFT");
+      setAttachmentPath(invoice.attachment_path || null);
+      setAttachmentName(invoice.attachment_name || null);
     }
   }, [invoice, open]);
 
