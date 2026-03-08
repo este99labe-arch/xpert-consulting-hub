@@ -134,11 +134,11 @@ const AppAccounting = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("journal_entry_lines")
-        .select("*, chart_of_accounts(code, name), journal_entries(entry_number, date, description, status, invoice_id)")
+        .select("*, chart_of_accounts(code, name), journal_entries!inner(entry_number, date, description, status, invoice_id, account_id)")
+        .eq("journal_entries.account_id", activeAccountId!)
         .order("id");
       if (error) throw error;
-      // Filter to only lines belonging to this account's entries
-      return (data || []).filter((l: any) => l.journal_entries) as JournalEntryLine[];
+      return (data || []) as JournalEntryLine[];
     },
     enabled: !!activeAccountId,
   });
