@@ -1,20 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const mockGetSession = vi.fn();
-const mockFetch = vi.fn().mockResolvedValue({});
-
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
-    auth: { getSession: mockGetSession },
+    auth: {
+      getSession: vi.fn(),
+    },
   },
 }));
 
-// Mock import.meta.env
-vi.stubEnv("VITE_SUPABASE_PROJECT_ID", "test-project");
-
 import { dispatchWebhook } from "./webhooks";
+import { supabase } from "@/integrations/supabase/client";
+
+const mockGetSession = vi.mocked(supabase.auth.getSession);
 
 describe("dispatchWebhook", () => {
+  const mockFetch = vi.fn().mockResolvedValue({});
+
   beforeEach(() => {
     vi.clearAllMocks();
     globalThis.fetch = mockFetch;
@@ -23,7 +24,7 @@ describe("dispatchWebhook", () => {
   it("sends webhook with correct payload when session exists", async () => {
     mockGetSession.mockResolvedValue({
       data: { session: { access_token: "tok-123" } },
-    });
+    } as any);
 
     await dispatchWebhook("acc-1", "invoice.created", { id: "inv-1" });
 
@@ -41,7 +42,9 @@ describe("dispatchWebhook", () => {
   });
 
   it("does not fetch when no session", async () => {
-    mockGetSession.mockResolvedValue({ data: { session: null } });
+    mockGetSession.mockResolvedValue({
+      data: { session: null },
+    } as any);
 
     await dispatchWebhook("acc-1", "invoice.created", {});
 
