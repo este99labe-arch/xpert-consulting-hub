@@ -241,10 +241,22 @@ const AppInvoices = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">Facturación</h1>
-        <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" /> Nueva Factura
-        </Button>
       </div>
+
+      <Tabs defaultValue="invoices" className="space-y-4">
+        <div className="flex items-center justify-between">
+          <TabsList>
+            <TabsTrigger value="invoices">Facturas</TabsTrigger>
+            <TabsTrigger value="recurring">
+              <RefreshCw className="h-4 w-4 mr-1" /> Recurrentes
+            </TabsTrigger>
+          </TabsList>
+          <Button onClick={() => setDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" /> Nueva Factura
+          </Button>
+        </div>
+
+        <TabsContent value="invoices" className="space-y-6">
 
       {/* KPIs */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
