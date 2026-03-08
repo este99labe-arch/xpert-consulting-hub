@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
+import InvoiceAttachment from "@/components/invoices/InvoiceAttachment";
 
 interface Props {
   open: boolean;
@@ -29,6 +30,8 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
   const [vatPercentage, setVatPercentage] = useState("21");
   const [vatIncluded, setVatIncluded] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [attachmentPath, setAttachmentPath] = useState<string | null>(null);
+  const [attachmentName, setAttachmentName] = useState<string | null>(null);
 
   const amountNum = parseFloat(amount) || 0;
   const vatNum = parseFloat(vatPercentage) || 0;
