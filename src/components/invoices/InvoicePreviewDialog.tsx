@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Printer, Download } from "lucide-react";
+import { Printer, Download, Mail, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
@@ -19,9 +19,10 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   invoice: any | null;
   onExport?: () => void;
+  onSendEmail?: () => void;
 }
 
-const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport }: Props) => {
+const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEmail }: Props) => {
   const printRef = useRef<HTMLDivElement>(null);
   const { accountId } = useAuth();
 
@@ -33,6 +34,20 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport }: Props) 
       return data;
     },
     enabled: !!accountId && open,
+  });
+
+  const { data: emailLogs = [] } = useQuery({
+    queryKey: ["email-log", invoice?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("email_log")
+        .select("*")
+        .eq("invoice_id", invoice!.id)
+        .order("sent_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!invoice?.id && open,
   });
 
   if (!invoice) return null;
@@ -73,6 +88,11 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport }: Props) 
             <Badge variant="outline">{statusLabels[invoice.status] || invoice.status}</Badge>
           </div>
           <div className="flex gap-2">
+            {onSendEmail && invoice.business_clients?.email && (
+              <Button variant="outline" size="sm" onClick={onSendEmail}>
+                <Mail className="h-4 w-4 mr-1" /> Enviar email
+              </Button>
+            )}
             {onExport && (
               <Button variant="outline" size="sm" onClick={onExport}>
                 <Download className="h-4 w-4 mr-1" /> Exportar
@@ -229,6 +249,32 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport }: Props) 
             </div>
           </div>
         </div>
+
+        {/* Email history */}
+        {emailLogs.length > 0 && (
+          <div className="px-6 py-4 border-t bg-muted/20">
+            <div className="flex items-center gap-2 mb-3">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">Historial de envíos</span>
+            </div>
+            <div className="space-y-2">
+              {emailLogs.map((log: any) => (
+                <div key={log.id} className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-3 w-3 text-muted-foreground" />
+                    <span className="text-muted-foreground">{log.recipient}</span>
+                    <Badge variant={log.status === "sent" ? "default" : "destructive"} className="text-xs">
+                      {log.type === "reminder" ? "Recordatorio" : "Factura"} — {log.status === "sent" ? "Enviado" : "Error"}
+                    </Badge>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {format(new Date(log.sent_at), "dd MMM yyyy HH:mm", { locale: es })}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -298,6 +298,54 @@ export type Database = {
           },
         ]
       }
+      email_log: {
+        Row: {
+          account_id: string
+          error_message: string | null
+          id: string
+          invoice_id: string
+          recipient: string
+          sent_at: string
+          status: string
+          type: string
+        }
+        Insert: {
+          account_id: string
+          error_message?: string | null
+          id?: string
+          invoice_id: string
+          recipient: string
+          sent_at?: string
+          status?: string
+          type?: string
+        }
+        Update: {
+          account_id?: string
+          error_message?: string | null
+          id?: string
+          invoice_id?: string
+          recipient?: string
+          sent_at?: string
+          status?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_log_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_log_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_documents: {
         Row: {
           account_id: string
