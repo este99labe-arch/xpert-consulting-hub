@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
     if (accountId !== invoice.account_id) throw new Error("Sin acceso a esta factura");
 
     const { data: account } = await supabase
-      .from("accounts").select("name").eq("id", invoice.account_id).single();
+      .from("accounts").select("name, tax_id, phone, email, address, city, postal_code").eq("id", invoice.account_id).single();
 
     const client = invoice.business_clients;
     const typeLabel = invoice.type === "INVOICE" ? "FACTURA" : "GASTO";
@@ -106,6 +106,9 @@ Deno.serve(async (req) => {
   <div class="header">
     <div>
       <div class="company-name">${account?.name || "Empresa"}</div>
+      ${account?.tax_id ? `<div class="party-detail">NIF/CIF: ${account.tax_id}</div>` : ""}
+      ${account?.address ? `<div class="party-detail">${account.address}${account?.postal_code ? `, ${account.postal_code}` : ""}${account?.city ? ` ${account.city}` : ""}</div>` : ""}
+      ${account?.phone || account?.email ? `<div class="party-detail">${account?.phone || ""}${account?.phone && account?.email ? " · " : ""}${account?.email || ""}</div>` : ""}
     </div>
     <div style="text-align: right;">
       <div class="invoice-type">${typeLabel}</div>
@@ -117,6 +120,9 @@ Deno.serve(async (req) => {
     <div class="party">
       <div class="party-label">De</div>
       <div class="party-name">${account?.name || "—"}</div>
+      ${account?.tax_id ? `<div class="party-detail">NIF/CIF: ${account.tax_id}</div>` : ""}
+      ${account?.address ? `<div class="party-detail">${account.address}${account?.postal_code ? `, ${account.postal_code}` : ""}${account?.city ? ` ${account.city}` : ""}</div>` : ""}
+      ${account?.email ? `<div class="party-detail">${account.email}</div>` : ""}
     </div>
     <div class="party">
       <div class="party-label">Para</div>
