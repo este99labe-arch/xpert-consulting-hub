@@ -297,11 +297,24 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
               </div>
             </div>
           )}
+
+          {/* Attachment — always editable */}
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground uppercase tracking-wide">Archivo adjunto</Label>
+            <InvoiceAttachment
+              accountId={accountId || ""}
+              invoiceId={invoice?.id}
+              attachmentPath={attachmentPath}
+              attachmentName={attachmentName}
+              onUploaded={(path, name) => { setAttachmentPath(path); setAttachmentName(name); }}
+              onRemoved={() => { setAttachmentPath(null); setAttachmentName(null); }}
+            />
+          </div>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSubmit} disabled={submitting || (status === invoice?.status && !isDraft)}>
+          <Button onClick={handleSubmit} disabled={submitting || (status === invoice?.status && !isDraft && attachmentPath === (invoice?.attachment_path || null))}>
             {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
             Guardar
           </Button>
