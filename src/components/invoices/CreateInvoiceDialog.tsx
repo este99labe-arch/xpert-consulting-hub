@@ -40,6 +40,16 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
   const amountVat = +(amountNet * vatNum / 100).toFixed(2);
   const amountTotal = +(amountNet + amountVat).toFixed(2);
 
+  const { data: account } = useQuery({
+    queryKey: ["my-account", accountId],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("accounts").select("id, name").eq("id", accountId!).single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!accountId && open,
+  });
+
   const { data: clients = [] } = useQuery({
     queryKey: ["business_clients", accountId],
     queryFn: async () => {
@@ -114,10 +124,15 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
           </div>
 
           <div className="space-y-2">
-            <Label>Cliente</Label>
+            <Label>{type === "EXPENSE" ? "Proveedor / Empresa" : "Cliente"}</Label>
             <Select value={clientId} onValueChange={setClientId}>
-              <SelectTrigger><SelectValue placeholder="Selecciona un cliente" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Selecciona destinatario" /></SelectTrigger>
               <SelectContent>
+                {account && (
+                  <SelectItem value={`__self__${account.id}`}>
+                    🏢 {account.name} (Mi empresa)
+                  </SelectItem>
+                )}
                 {clients.map((c: any) => (
                   <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                 ))}
