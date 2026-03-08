@@ -26,6 +26,9 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+import OnboardingTour from "@/components/shared/OnboardingTour";
+import HealthCheck from "@/components/shared/HealthCheck";
 
 const moduleIcons: Record<string, any> = {
   DASHBOARD: LayoutDashboard,
@@ -150,6 +153,7 @@ const ClientLayout = () => {
               <LogOut className="h-4 w-4 mr-2" />
               Cerrar sesión
             </Button>
+            <HealthCheck />
           </SidebarFooter>
         </Sidebar>
         <GlobalSearch />
@@ -190,9 +194,12 @@ const ClientLayout = () => {
           </header>
           <main className="flex-1 overflow-auto p-6">
             <div className="max-w-7xl mx-auto">
-              <Outlet />
+              <ErrorBoundary>
+                <Outlet />
+              </ErrorBoundary>
             </div>
           </main>
+          <OnboardingTour />
         </SidebarInset>
       </div>
     </SidebarProvider>

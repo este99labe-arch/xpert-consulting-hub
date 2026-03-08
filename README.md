@@ -1,73 +1,78 @@
-# Welcome to your Lovable project
+# XpertConsulting ERP
 
-## Project info
+Sistema ERP multi-tenant para gestión empresarial: facturación, contabilidad, RRHH, inventario y más.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Tech Stack
 
-## How can I edit this code?
+- **Frontend:** React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui
+- **Backend:** Lovable Cloud (Supabase) — Auth, Database, Edge Functions, Storage
+- **State:** TanStack React Query
+- **Charts:** Recharts
 
-There are several ways of editing your application.
+## Modules
 
-**Use Lovable**
+| Module | Description |
+|--------|-------------|
+| **Dashboard** | KPIs, charts, recent activity |
+| **Clients** | Business client management |
+| **Invoices** | Income/expense invoices, recurring templates, email sending |
+| **Accounting** | Chart of accounts, journal entries, ledger, P&L |
+| **HR** | Employee profiles, leave requests, documents |
+| **Attendance** | Check-in/out, team attendance view |
+| **Inventory** | Products, stock movements, purchase orders, low-stock alerts |
+| **Reports** | Business analytics and data export |
+| **Settings** | Account config, API keys, webhooks, audit log |
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## Roles
 
-Changes made via Lovable will be committed automatically to this repo.
+| Role | Access |
+|------|--------|
+| `MASTER_ADMIN` | Full access + Master panel for multi-tenant management |
+| `MANAGER` | Full access to assigned account |
+| `EMPLOYEE` | Limited access (own attendance, profile, leave requests) |
 
-**Use your preferred IDE**
+## Edge Functions
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+| Function | Purpose |
+|----------|---------|
+| `create_client_account` | Provisions new tenant accounts |
+| `admin_reset_password` | Admin-initiated password reset |
+| `send_welcome_email` | Welcome email to new users |
+| `send_invoice_email` | Email invoice PDF to clients |
+| `generate_invoice_pdf` | PDF generation |
+| `send_payment_reminders` | Automated payment reminder emails |
+| `process_recurring_invoices` | Creates invoices from recurring templates |
+| `generate_notifications` | System notification generation |
+| `public_api` | REST API for external integrations |
+| `manage_api_keys` | API key CRUD operations |
+| `dispatch_webhooks` | Webhook event delivery |
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Public API
 
-Follow these steps:
+External systems can access data via the Public API using API keys. See [docs/api-reference.md](docs/api-reference.md) for full documentation.
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
+## Local Development
+
+```bash
 git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
 cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Environment Variables
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Configured automatically by Lovable Cloud:
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`
+- `VITE_SUPABASE_PROJECT_ID`
 
-**Use GitHub Codespaces**
+## Testing
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```bash
+npm test
+```
 
-## What technologies are used for this project?
+## License
 
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Private — All rights reserved.
