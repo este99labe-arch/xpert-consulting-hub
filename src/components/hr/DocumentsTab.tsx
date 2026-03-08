@@ -86,9 +86,9 @@ const DocumentsTab = () => {
     enabled: !!accountId,
   });
 
-  // Auto-create default folders for employees that don't have them
+  // Auto-create default folders for visible employees that don't have them
   useEffect(() => {
-    if (!accountId || !user || !isManager || visibleEmployees.length === 0) return;
+    if (!accountId || !user || visibleEmployees.length === 0) return;
     const employeesWithFolders = new Set(folders.map((f: any) => f.user_id));
     const missing = visibleEmployees.filter((e) => !employeesWithFolders.has(e.user_id));
     if (missing.length === 0) return;
@@ -104,7 +104,7 @@ const DocumentsTab = () => {
     ).then(() => {
       queryClient.invalidateQueries({ queryKey: ["document-folders"] });
     });
-  }, [accountId, user, isManager, visibleEmployees.length, folders.length]);
+  }, [accountId, user, visibleEmployees.length, folders.length]);
 
   // Auto-select for employee role
   useEffect(() => {
