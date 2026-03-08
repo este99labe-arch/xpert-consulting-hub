@@ -17,7 +17,7 @@ import { Plus, RefreshCw, Pencil, Trash2, Pause, Play } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
-import { DeleteConfirmDialog } from "@/components/shared/DeleteConfirmDialog";
+import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 
 const frequencyLabels: Record<string, string> = {
   MONTHLY: "Mensual",
