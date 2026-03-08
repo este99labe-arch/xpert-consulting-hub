@@ -152,6 +152,7 @@ const AppInvoices = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error enviando email");
       toast({ title: "Email enviado", description: "La factura se ha enviado al cliente por email" });
+      if (accountId) dispatchWebhook(accountId, "invoice.sent", { invoice_id: invoiceId });
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -178,6 +179,7 @@ const AppInvoices = () => {
       const { error } = await supabase.from("invoices").delete().eq("id", deleteInvoice.id);
       if (error) throw error;
       toast({ title: "Factura eliminada" });
+      if (accountId) dispatchWebhook(accountId, "invoice.deleted", { invoice_id: deleteInvoice.id, invoice_number: deleteInvoice.invoice_number });
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
