@@ -183,6 +183,15 @@ const AppClients = () => {
           queryClient.invalidateQueries({ queryKey: ["business-clients"] });
         }}
       />
+
+      <DeleteConfirmDialog
+        open={!!deletingClientId}
+        onConfirm={() => deletingClientId && deleteMutation.mutate(deletingClientId)}
+        onCancel={() => setDeletingClientId(null)}
+        title="¿Eliminar este cliente?"
+        description="Se eliminará el cliente permanentemente. Esta acción no se puede deshacer."
+        loading={deleteMutation.isPending}
+      />
     </div>
   );
 };
