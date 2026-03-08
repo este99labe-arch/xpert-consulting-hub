@@ -89,7 +89,7 @@ const ClientLayout = () => {
               </div>
             </div>
           </SidebarHeader>
-          <SidebarContent className="px-3 py-4">
+          <SidebarContent className="px-3 py-4 scrollbar-hide">
             <SidebarMenu>
               {modules.filter((mod) => mod.code !== "SETTINGS").map((mod) => {
                 const Icon = moduleIcons[mod.code] || LayoutDashboard;

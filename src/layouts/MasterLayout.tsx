@@ -42,7 +42,7 @@ const MasterLayout = () => {
               </div>
             </div>
           </SidebarHeader>
-          <SidebarContent className="px-3 py-4">
+          <SidebarContent className="px-3 py-4 scrollbar-hide">
             <SidebarMenu>
               {navItems.map((item) => (
                 <SidebarMenuItem key={item.path}>
