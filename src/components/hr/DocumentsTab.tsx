@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -52,7 +52,8 @@ const DocumentsTab = () => {
   const [deleteFolder, setDeleteFolder] = useState<EmployeeFolder | null>(null);
 
   // Fetch employee profiles for this account
-  const { data: employees = [] } = useQuery({
+  // Fetch employee profiles
+  const { data: profiles = [] } = useQuery({
     queryKey: ["hr-doc-profiles", accountId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -64,6 +65,38 @@ const DocumentsTab = () => {
     },
     enabled: !!accountId,
   });
+
+  // Fetch user_accounts to find employees without profiles
+  const { data: userAccounts = [] } = useQuery({
+    queryKey: ["hr-doc-user-accounts", accountId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("user_accounts")
+        .select("user_id, roles(code)")
+        .eq("account_id", accountId!)
+        .eq("is_active", true);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!accountId,
+  });
+
+  // Merge: use profiles where available, fallback to user_accounts
+  const employees = useMemo(() => {
+    const profileMap = new Map(profiles.map((p) => [p.user_id, p]));
+    const allUserIds = new Set([
+      ...profiles.map((p) => p.user_id),
+      ...userAccounts.map((ua: any) => ua.user_id),
+    ]);
+    return Array.from(allUserIds).map((uid) => {
+      const profile = profileMap.get(uid);
+      return {
+        user_id: uid,
+        first_name: profile?.first_name || "Empleado",
+        last_name: profile?.last_name || uid.slice(0, 8),
+      };
+    });
+  }, [profiles, userAccounts]);
 
   // For employees, filter to only their own
   const visibleEmployees = isManager
