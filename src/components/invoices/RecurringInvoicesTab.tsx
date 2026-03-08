@@ -374,8 +374,8 @@ const RecurringInvoicesTab = ({ accountId, isManager }: RecurringInvoicesTabProp
       {/* Delete confirm */}
       <DeleteConfirmDialog
         open={!!deleteId}
-        onOpenChange={(o) => { if (!o) setDeleteId(null); }}
         onConfirm={handleDelete}
+        onCancel={() => setDeleteId(null)}
         title="¿Eliminar esta plantilla?"
         description="Se eliminará la plantilla recurrente. Las facturas ya generadas no se verán afectadas."
       />
