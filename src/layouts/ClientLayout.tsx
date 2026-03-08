@@ -1,4 +1,5 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import GlobalSearch from "@/components/shared/GlobalSearch";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -148,6 +149,7 @@ const ClientLayout = () => {
             </Button>
           </SidebarFooter>
         </Sidebar>
+        <GlobalSearch />
         <SidebarInset>
           <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b bg-background/80 backdrop-blur-sm px-6">
             <div className="flex items-center gap-3">
