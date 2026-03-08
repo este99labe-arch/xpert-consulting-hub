@@ -83,12 +83,12 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport }: Props) 
           </div>
         </div>
 
-        {/* A4 Preview */}
-        <div className="p-6 flex justify-center bg-muted/30">
+        {/* A4 Preview — scaled to fit dialog */}
+        <div className="p-4 flex justify-center bg-muted/30 overflow-hidden">
           <div
             ref={printRef}
-            className="invoice-page bg-white shadow-lg"
-            style={{ width: "210mm", minHeight: "297mm", padding: "40px 50px", fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif", color: "#1a1a2e", fontSize: "13px", lineHeight: "1.5" }}
+            className="invoice-page bg-white shadow-lg origin-top"
+            style={{ width: "210mm", minHeight: "297mm", padding: "40px 50px", fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif", color: "#1a1a2e", fontSize: "13px", lineHeight: "1.5", transform: "scale(0.55)", transformOrigin: "top center", marginBottom: "-45%" }}
           >
             {/* Header bar */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "40px" }}>
