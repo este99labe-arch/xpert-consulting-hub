@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/select";
 import { Plus, Search, Loader2, Pencil, Trash2, Users, AlertCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import EmptyState from "@/components/shared/EmptyState";
+import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 
 const AppClients = () => {
   const { accountId } = useAuth();
