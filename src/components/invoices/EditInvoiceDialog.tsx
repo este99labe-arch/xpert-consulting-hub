@@ -89,6 +89,23 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
     enabled: !!accountId && open,
   });
 
+  const resolveClientId = async (selectedId: string): Promise<string> => {
+    if (!selectedId.startsWith("__self__")) return selectedId;
+    const { data: existing } = await supabase
+      .from("business_clients").select("id")
+      .eq("account_id", accountId!).eq("name", account?.name || "")
+      .eq("tax_id", (account as any)?.tax_id || "PROPIA").maybeSingle();
+    if (existing) return existing.id;
+    const { data: created, error } = await supabase
+      .from("business_clients").insert({
+        account_id: accountId!, name: account?.name || "Mi empresa",
+        tax_id: (account as any)?.tax_id || "PROPIA",
+        email: (account as any)?.email || null, status: "ACTIVE",
+      }).select("id").single();
+    if (error) throw error;
+    return created.id;
+  };
+
   const handleSubmit = async () => {
     if (!invoice) return;
     setSubmitting(true);
@@ -101,7 +118,8 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
           setSubmitting(false);
           return;
         }
-        updatePayload.client_id = clientId;
+        const resolvedClientId = await resolveClientId(clientId);
+        updatePayload.client_id = resolvedClientId;
         updatePayload.concept = concept.trim();
         updatePayload.issue_date = issueDate;
         updatePayload.amount_net = amountNet;
@@ -115,6 +133,7 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
 
       toast({ title: "Factura actualizada" });
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["business_clients"] });
       onOpenChange(false);
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
