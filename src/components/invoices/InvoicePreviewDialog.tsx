@@ -84,6 +84,20 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport }: Props) 
           </div>
         </div>
 
+        {/* Attachment bar */}
+        {invoice.attachment_path && invoice.attachment_name && (
+          <div className="px-6 py-2 border-b bg-muted/20">
+            <InvoiceAttachment
+              accountId={accountId || ""}
+              invoiceId={invoice.id}
+              attachmentPath={invoice.attachment_path}
+              attachmentName={invoice.attachment_name}
+              onUploaded={() => {}}
+              readOnly
+            />
+          </div>
+        )}
+
         {/* A4 Preview — scaled to fit dialog */}
         <div className="p-4 flex justify-center bg-muted/30 overflow-hidden">
           <div
