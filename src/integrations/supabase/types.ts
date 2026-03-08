@@ -316,6 +316,7 @@ export type Database = {
           concept: string
           created_at: string
           id: string
+          invoice_number: string | null
           issue_date: string
           status: string
           type: string
@@ -330,6 +331,7 @@ export type Database = {
           concept?: string
           created_at?: string
           id?: string
+          invoice_number?: string | null
           issue_date: string
           status?: string
           type: string
@@ -344,6 +346,7 @@ export type Database = {
           concept?: string
           created_at?: string
           id?: string
+          invoice_number?: string | null
           issue_date?: string
           status?: string
           type?: string
