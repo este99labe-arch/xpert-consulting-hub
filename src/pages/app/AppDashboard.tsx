@@ -115,7 +115,7 @@ const AppDashboard = () => {
           </CardHeader>
           <CardContent className="pt-0 pb-4">
             <div className="w-full h-[260px]">
-              <ChartContainer config={chartConfig} className="h-full w-full">
+              <ChartContainer config={chartConfig} className="!aspect-auto h-full w-full">
                 <AreaChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
                   <defs>
                     <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
