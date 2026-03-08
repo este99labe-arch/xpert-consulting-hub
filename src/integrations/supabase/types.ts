@@ -543,6 +543,57 @@ export type Database = {
           },
         ]
       }
+      journal_entry_delete_requests: {
+        Row: {
+          account_id: string
+          created_at: string
+          entry_id: string
+          id: string
+          reason: string
+          requested_by: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          entry_id: string
+          id?: string
+          reason?: string
+          requested_by: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          entry_id?: string
+          id?: string
+          reason?: string
+          requested_by?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_entry_delete_requests_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entry_delete_requests_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       journal_entry_lines: {
         Row: {
           chart_account_id: string
