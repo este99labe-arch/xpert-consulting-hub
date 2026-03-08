@@ -166,11 +166,6 @@ Deno.serve(async (req) => {
     </div>
   </div>
 
-  <div class="status-center">
-    <span class="status-badge" style="background:${statusBg};color:${statusColor};">
-      ${statusLabel}
-    </span>
-  </div>
 
   <div class="footer">
     ${account?.name || "Empresa"} · Documento generado automáticamente
