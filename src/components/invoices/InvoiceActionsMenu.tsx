@@ -1,4 +1,4 @@
-import { MoreHorizontal, Eye, Download, Pencil, Trash2 } from "lucide-react";
+import { MoreHorizontal, Eye, Download, Pencil, Trash2, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -9,9 +9,10 @@ interface Props {
   onExport: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onSendEmail?: () => void;
 }
 
-const InvoiceActionsMenu = ({ onPreview, onExport, onEdit, onDelete }: Props) => {
+const InvoiceActionsMenu = ({ onPreview, onExport, onEdit, onDelete, onSendEmail }: Props) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -28,6 +29,12 @@ const InvoiceActionsMenu = ({ onPreview, onExport, onEdit, onDelete }: Props) =>
           <Download className="h-4 w-4 mr-2" />
           Exportar
         </DropdownMenuItem>
+        {onSendEmail && (
+          <DropdownMenuItem onClick={onSendEmail}>
+            <Mail className="h-4 w-4 mr-2" />
+            Enviar por email
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem onClick={onEdit}>
           <Pencil className="h-4 w-4 mr-2" />
           Editar

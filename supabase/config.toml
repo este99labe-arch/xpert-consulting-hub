@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.generate_notifications]
 verify_jwt = false
+
+[functions.send_invoice_email]
+verify_jwt = false
+
+[functions.send_payment_reminders]
+verify_jwt = false
