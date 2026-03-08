@@ -643,9 +643,9 @@ const UsersTab = ({ userId, accountId }: { userId: string; accountId: string }) 
     <div className="space-y-6">
       {/* Pending change requests */}
       {pendingRequests.length > 0 && (
-        <Card className="border-amber-500/30 bg-amber-500/5">
+        <Card className="border-destructive/30 bg-destructive/5">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-amber-700">
+            <CardTitle className="flex items-center gap-2 text-destructive">
               <AlertCircle className="h-5 w-5" />
               Solicitudes de cambio pendientes
               <Badge variant="outline" className="ml-2">{pendingRequests.length}</Badge>
