@@ -99,7 +99,7 @@ const AppDashboard = () => {
 
       <div className="grid gap-6 lg:grid-cols-5">
         {/* Chart */}
-        <Card className="lg:col-span-3 border-0 shadow-sm">
+        <Card className="lg:col-span-3 border-0 shadow-sm overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-base font-semibold">Últimos 7 días</CardTitle>
             <Select value={chartMetric} onValueChange={(v) => setChartMetric(v as any)}>
@@ -113,28 +113,30 @@ const AppDashboard = () => {
               </SelectContent>
             </Select>
           </CardHeader>
-          <CardContent className="pt-0">
-            <ChartContainer config={chartConfig} className="h-[260px] w-full">
-              <AreaChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={metricColors[chartMetric]} stopOpacity={0.3} />
-                    <stop offset="100%" stopColor={metricColors[chartMetric]} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="date" tick={{ fontSize: 12 }} className="text-muted-foreground" />
-                <YAxis tick={{ fontSize: 12 }} className="text-muted-foreground" />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Area
-                  type="monotone"
-                  dataKey={chartMetric}
-                  stroke={metricColors[chartMetric]}
-                  fill="url(#chartGradient)"
-                  strokeWidth={2}
-                />
-              </AreaChart>
-            </ChartContainer>
+          <CardContent className="pt-0 pb-4">
+            <div className="w-full h-[260px]">
+              <ChartContainer config={chartConfig} className="!aspect-auto h-full w-full">
+                <AreaChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={metricColors[chartMetric]} stopOpacity={0.3} />
+                      <stop offset="100%" stopColor={metricColors[chartMetric]} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} className="text-muted-foreground" />
+                  <YAxis tick={{ fontSize: 11 }} className="text-muted-foreground" width={50} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Area
+                    type="monotone"
+                    dataKey={chartMetric}
+                    stroke={metricColors[chartMetric]}
+                    fill="url(#chartGradient)"
+                    strokeWidth={2}
+                  />
+                </AreaChart>
+              </ChartContainer>
+            </div>
           </CardContent>
         </Card>
 

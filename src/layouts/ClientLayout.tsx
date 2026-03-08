@@ -76,7 +76,7 @@ const ClientLayout = () => {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full">
+      <div className="flex min-h-screen w-full overflow-hidden">
         <Sidebar collapsible="icon" className="border-r-0">
           <SidebarHeader className="p-5 border-b border-sidebar-border">
             <div className="flex items-center gap-3">
@@ -188,8 +188,10 @@ const ClientLayout = () => {
             </DropdownMenu>
             </div>
           </header>
-          <main className="flex-1 p-6">
-            <Outlet />
+          <main className="flex-1 overflow-auto p-6">
+            <div className="max-w-7xl mx-auto">
+              <Outlet />
+            </div>
           </main>
         </SidebarInset>
       </div>

@@ -89,8 +89,10 @@ const MasterLayout = () => {
           <header className="sticky top-0 z-10 flex h-14 items-center gap-2 border-b bg-background/80 backdrop-blur-sm px-6">
             <SidebarTrigger />
           </header>
-          <main className="flex-1 p-6">
-            <Outlet />
+          <main className="flex-1 overflow-auto p-6">
+            <div className="max-w-7xl mx-auto">
+              <Outlet />
+            </div>
           </main>
         </SidebarInset>
       </div>
