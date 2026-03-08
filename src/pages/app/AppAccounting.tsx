@@ -1333,6 +1333,7 @@ const AppAccounting = () => {
             <AlertDialogDescription>
               ¿Estás seguro de eliminar el asiento <strong>{deleteConfirmEntry?.entry_number}</strong>?
               {deleteConfirmEntry?.status === "POSTED" && " Este asiento ya está contabilizado."}
+              {deleteConfirmEntry?.invoice_id && " Este asiento está vinculado a una factura y se regenerará si la factura se modifica."}
               {" "}Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
