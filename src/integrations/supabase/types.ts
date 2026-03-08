@@ -381,6 +381,8 @@ export type Database = {
           amount_net: number
           amount_total: number
           amount_vat: number
+          attachment_name: string | null
+          attachment_path: string | null
           client_id: string
           concept: string
           created_at: string
@@ -396,6 +398,8 @@ export type Database = {
           amount_net: number
           amount_total: number
           amount_vat: number
+          attachment_name?: string | null
+          attachment_path?: string | null
           client_id: string
           concept?: string
           created_at?: string
@@ -411,6 +415,8 @@ export type Database = {
           amount_net?: number
           amount_total?: number
           amount_vat?: number
+          attachment_name?: string | null
+          attachment_path?: string | null
           client_id?: string
           concept?: string
           created_at?: string
