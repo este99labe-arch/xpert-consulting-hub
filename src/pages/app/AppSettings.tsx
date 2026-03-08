@@ -52,7 +52,12 @@ const PROFILE_FIELD_LABELS: Record<string, string> = {
 };
 
 // ─── EMPRESA TAB ─────────────────────────────────────────
-const CompanyTab = ({ accountId }: { accountId: string }) => {
+const CompanyTab = ({ accountId, isManager }: { accountId: string; isManager: boolean }) => {
+  const queryClient = useQueryClient();
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({ tax_id: "", phone: "", email: "", address: "", city: "", postal_code: "" });
+
   const { data: account } = useQuery({
     queryKey: ["my-account", accountId],
     queryFn: async () => {
@@ -63,18 +68,78 @@ const CompanyTab = ({ accountId }: { accountId: string }) => {
     enabled: !!accountId,
   });
 
+  useEffect(() => {
+    if (account) {
+      setForm({
+        tax_id: (account as any).tax_id || "",
+        phone: (account as any).phone || "",
+        email: (account as any).email || "",
+        address: (account as any).address || "",
+        city: (account as any).city || "",
+        postal_code: (account as any).postal_code || "",
+      });
+    }
+  }, [account]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("accounts").update({
+        tax_id: form.tax_id || null,
+        phone: form.phone || null,
+        email: form.email || null,
+        address: form.address || null,
+        city: form.city || null,
+        postal_code: form.postal_code || null,
+      } as any).eq("id", accountId);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["my-account"] });
+      toast({ title: "Datos fiscales actualizados" });
+      setEditing(false);
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const fields = [
+    { key: "name", label: "Nombre", value: account?.name || "—", readonly: true },
+    { key: "tax_id", label: "NIF/CIF", value: form.tax_id },
+    { key: "phone", label: "Teléfono", value: form.phone },
+    { key: "email", label: "Email", value: form.email },
+    { key: "address", label: "Dirección fiscal", value: form.address },
+    { key: "city", label: "Ciudad", value: form.city },
+    { key: "postal_code", label: "Código postal", value: form.postal_code },
+  ];
+
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Datos de la empresa</CardTitle>
-        <CardDescription>Información general de tu cuenta</CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>Datos de la empresa</CardTitle>
+          <CardDescription>Información general y datos fiscales</CardDescription>
+        </div>
+        {isManager && !editing && (
+          <Button variant="outline" size="sm" onClick={() => setEditing(true)}>Editar</Button>
+        )}
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div className="space-y-1">
-            <Label className="text-muted-foreground text-xs">Nombre</Label>
-            <p className="text-sm font-medium">{account?.name || "—"}</p>
-          </div>
+          {fields.map((f) => (
+            <div key={f.key} className="space-y-1">
+              <Label className="text-muted-foreground text-xs">{f.label}</Label>
+              {editing && !f.readonly ? (
+                <Input
+                  value={f.value}
+                  onChange={(e) => setForm((p) => ({ ...p, [f.key]: e.target.value }))}
+                  placeholder={f.label}
+                />
+              ) : (
+                <p className="text-sm font-medium">{f.value || "—"}</p>
+              )}
+            </div>
+          ))}
           <div className="space-y-1">
             <Label className="text-muted-foreground text-xs">Estado</Label>
             <div>
@@ -84,16 +149,21 @@ const CompanyTab = ({ accountId }: { accountId: string }) => {
             </div>
           </div>
           <div className="space-y-1">
-            <Label className="text-muted-foreground text-xs">Tipo de cuenta</Label>
-            <p className="text-sm font-medium">{account?.type || "—"}</p>
-          </div>
-          <div className="space-y-1">
             <Label className="text-muted-foreground text-xs">Fecha de creación</Label>
             <p className="text-sm font-medium">
               {account?.created_at ? new Date(account.created_at).toLocaleDateString("es-ES") : "—"}
             </p>
           </div>
         </div>
+        {editing && (
+          <div className="flex gap-2 mt-6">
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
+              Guardar
+            </Button>
+            <Button variant="outline" onClick={() => setEditing(false)}>Cancelar</Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
