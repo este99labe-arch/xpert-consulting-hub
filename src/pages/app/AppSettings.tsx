@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -16,9 +17,13 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import { Loader2, KeyRound, UserPlus, AlertCircle, Settings, Users, CalendarDays, Clock, ShieldCheck, Save } from "lucide-react";
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Loader2, KeyRound, UserPlus, AlertCircle, Settings, Users, CalendarDays,
+  Clock, ShieldCheck, Save, User, Lock, Check, X, Mail,
+} from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 const WEEKDAYS = [
@@ -31,72 +36,235 @@ const WEEKDAYS = [
   { code: "SUN", label: "Domingo" },
 ];
 
-const AppSettings = () => {
-  const { user, accountId, role } = useAuth();
-  const queryClient = useQueryClient();
-  const isManager = role === "MANAGER";
+const PROFILE_FIELD_LABELS: Record<string, string> = {
+  first_name: "Nombre",
+  last_name: "Apellidos",
+  dni: "DNI/NIE",
+  phone: "Teléfono",
+  date_of_birth: "Fecha de nacimiento",
+  address: "Dirección",
+  postal_code: "Código postal",
+  city: "Ciudad",
+  department: "Departamento",
+  position: "Puesto",
+  social_security_number: "Nº Seguridad Social",
+  start_date: "Fecha de inicio",
+};
 
-  // Settings state
+// ─── EMPRESA TAB ─────────────────────────────────────────
+const CompanyTab = ({ accountId }: { accountId: string }) => {
+  const { data: account } = useQuery({
+    queryKey: ["my-account", accountId],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("accounts").select("*").eq("id", accountId).single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!accountId,
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Datos de la empresa</CardTitle>
+        <CardDescription>Información general de tu cuenta</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="space-y-1">
+            <Label className="text-muted-foreground text-xs">Nombre</Label>
+            <p className="text-sm font-medium">{account?.name || "—"}</p>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-muted-foreground text-xs">Estado</Label>
+            <div>
+              <Badge variant={account?.is_active ? "default" : "secondary"}>
+                {account?.is_active ? "Activo" : "Inactivo"}
+              </Badge>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-muted-foreground text-xs">Tipo de cuenta</Label>
+            <p className="text-sm font-medium">{account?.type || "—"}</p>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-muted-foreground text-xs">Fecha de creación</Label>
+            <p className="text-sm font-medium">
+              {account?.created_at ? new Date(account.created_at).toLocaleDateString("es-ES") : "—"}
+            </p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+// ─── MI PERFIL TAB ───────────────────────────────────────
+const ProfileTab = ({ userId, accountId, isManager }: { userId: string; accountId: string; isManager: boolean }) => {
+  const queryClient = useQueryClient();
+  const [editField, setEditField] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const { data: profile, isLoading } = useQuery({
+    queryKey: ["my-profile", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("employee_profiles")
+        .select("*")
+        .eq("user_id", userId)
+        .single();
+      if (error && error.code !== "PGRST116") throw error;
+      return data;
+    },
+    enabled: !!userId,
+  });
+
+  const { data: pendingRequests = [] } = useQuery({
+    queryKey: ["my-change-requests", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profile_change_requests")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("status", "PENDING");
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!userId && !isManager,
+  });
+
+  const handleSaveField = async (fieldName: string) => {
+    setSaving(true);
+    try {
+      if (isManager) {
+        // Managers update directly
+        const { error } = await supabase
+          .from("employee_profiles")
+          .update({ [fieldName]: editValue || null, updated_at: new Date().toISOString() })
+          .eq("user_id", userId);
+        if (error) throw error;
+        toast({ title: "Perfil actualizado" });
+        queryClient.invalidateQueries({ queryKey: ["my-profile"] });
+      } else {
+        // Employees create change request
+        const { error } = await supabase.from("profile_change_requests").insert({
+          user_id: userId,
+          account_id: accountId,
+          field_name: fieldName,
+          old_value: profile?.[fieldName as keyof typeof profile]?.toString() || null,
+          new_value: editValue,
+        });
+        if (error) throw error;
+        toast({ title: "Solicitud enviada", description: "Tu cambio será revisado por un administrador." });
+        queryClient.invalidateQueries({ queryKey: ["my-change-requests"] });
+      }
+      setEditField(null);
+      setEditValue("");
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (isLoading) return <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+
+  if (!profile) {
+    return (
+      <Card>
+        <CardContent className="py-10 text-center text-muted-foreground">
+          <User className="h-10 w-10 mx-auto mb-3 opacity-40" />
+          <p>No se ha encontrado un perfil de empleado asociado a tu cuenta.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const fields = Object.keys(PROFILE_FIELD_LABELS);
+  const pendingFieldSet = new Set(pendingRequests.map((r: any) => r.field_name));
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Mi Perfil</CardTitle>
+        <CardDescription>
+          {isManager
+            ? "Puedes editar directamente tu información personal."
+            : "Los cambios serán revisados por tu administrador antes de aplicarse."}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {fields.map((field) => {
+            const value = profile[field as keyof typeof profile];
+            const hasPending = pendingFieldSet.has(field);
+            const isEditing = editField === field;
+
+            return (
+              <div key={field} className="space-y-1 p-3 rounded-lg border bg-card">
+                <div className="flex items-center justify-between">
+                  <Label className="text-muted-foreground text-xs">{PROFILE_FIELD_LABELS[field]}</Label>
+                  {hasPending && <Badge variant="outline" className="text-xs">Pendiente</Badge>}
+                </div>
+                {isEditing ? (
+                  <div className="flex gap-2 items-center">
+                    <Input
+                      type={field.includes("date") ? "date" : "text"}
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      className="h-8 text-sm"
+                      autoFocus
+                    />
+                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => handleSaveField(field)} disabled={saving}>
+                      {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                    </Button>
+                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => { setEditField(null); setEditValue(""); }}>
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ) : (
+                  <p
+                    className={`text-sm font-medium cursor-pointer hover:text-primary transition-colors ${hasPending ? "opacity-60" : ""}`}
+                    onClick={() => {
+                      if (!hasPending) {
+                        setEditField(field);
+                        setEditValue(value?.toString() || "");
+                      }
+                    }}
+                  >
+                    {value?.toString() || <span className="text-muted-foreground italic">Sin datos</span>}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+// ─── HORARIO TAB ─────────────────────────────────────────
+const ScheduleTab = ({ accountId, isManager }: { accountId: string; isManager: boolean }) => {
+  const queryClient = useQueryClient();
   const [workStart, setWorkStart] = useState("09:00");
   const [workEnd, setWorkEnd] = useState("18:00");
   const [workDays, setWorkDays] = useState<string[]>(["MON", "TUE", "WED", "THU", "FRI"]);
   const [vacationDays, setVacationDays] = useState(22);
-  const [savingSettings, setSavingSettings] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  // User management
-  const [showResetDialog, setShowResetDialog] = useState<any>(null);
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [newPassword, setNewPassword] = useState("");
-  const [resetLoading, setResetLoading] = useState(false);
-  const [newEmail, setNewEmail] = useState("");
-  const [newUserPassword, setNewUserPassword] = useState("");
-  const [createLoading, setCreateLoading] = useState(false);
-  const [createError, setCreateError] = useState("");
-
-  // Fetch account settings
-  const { data: settings, isLoading: settingsLoading } = useQuery({
+  const { data: settings, isLoading } = useQuery({
     queryKey: ["account-settings", accountId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("account_settings")
-        .select("*")
-        .eq("account_id", accountId!)
-        .maybeSingle();
+        .from("account_settings").select("*").eq("account_id", accountId).maybeSingle();
       if (error) throw error;
       return data;
     },
     enabled: !!accountId,
   });
 
-  // Fetch account info
-  const { data: account } = useQuery({
-    queryKey: ["my-account", accountId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("accounts")
-        .select("*")
-        .eq("id", accountId!)
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!accountId,
-  });
-
-  // Fetch users
-  const { data: users = [], isLoading: usersLoading } = useQuery({
-    queryKey: ["account-users", accountId],
-    queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("admin_reset_password", {
-        body: { action: "list_users", account_id: accountId },
-      });
-      if (error) throw error;
-      return data?.users || [];
-    },
-    enabled: !!accountId && isManager,
-  });
-
-  // Sync settings to state
   useEffect(() => {
     if (settings) {
       setWorkStart(settings.work_start_time?.slice(0, 5) || "09:00");
@@ -107,36 +275,24 @@ const AppSettings = () => {
   }, [settings]);
 
   const toggleDay = (code: string) => {
-    setWorkDays((prev) =>
-      prev.includes(code) ? prev.filter((d) => d !== code) : [...prev, code]
-    );
+    setWorkDays((prev) => prev.includes(code) ? prev.filter((d) => d !== code) : [...prev, code]);
   };
 
-  const handleSaveSettings = async () => {
-    setSavingSettings(true);
+  const handleSave = async () => {
+    setSaving(true);
     try {
+      const payload = {
+        work_start_time: workStart,
+        work_end_time: workEnd,
+        work_days: workDays,
+        vacation_days_per_year: vacationDays,
+        updated_at: new Date().toISOString(),
+      };
       if (settings) {
-        const { error } = await supabase
-          .from("account_settings")
-          .update({
-            work_start_time: workStart,
-            work_end_time: workEnd,
-            work_days: workDays,
-            vacation_days_per_year: vacationDays,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("account_id", accountId!);
+        const { error } = await supabase.from("account_settings").update(payload).eq("account_id", accountId);
         if (error) throw error;
       } else {
-        const { error } = await supabase
-          .from("account_settings")
-          .insert({
-            account_id: accountId!,
-            work_start_time: workStart,
-            work_end_time: workEnd,
-            work_days: workDays,
-            vacation_days_per_year: vacationDays,
-          });
+        const { error } = await supabase.from("account_settings").insert({ account_id: accountId, ...payload });
         if (error) throw error;
       }
       toast({ title: "Configuración guardada" });
@@ -144,28 +300,267 @@ const AppSettings = () => {
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
-      setSavingSettings(false);
+      setSaving(false);
     }
   };
 
-  const handleResetPassword = async () => {
-    if (!showResetDialog || !newPassword) return;
-    setResetLoading(true);
+  if (isLoading) return <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Clock className="h-5 w-5" /> Horario Laboral</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Hora inicio</Label>
+              <Input type="time" value={workStart} onChange={(e) => setWorkStart(e.target.value)} disabled={!isManager} />
+            </div>
+            <div className="space-y-2">
+              <Label>Hora fin</Label>
+              <Input type="time" value={workEnd} onChange={(e) => setWorkEnd(e.target.value)} disabled={!isManager} />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Días laborales</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {WEEKDAYS.map((day) => (
+                <label key={day.code} className="flex items-center gap-2 rounded-md border p-2 cursor-pointer hover:bg-accent/50 transition-colors">
+                  <Checkbox
+                    checked={workDays.includes(day.code)}
+                    onCheckedChange={() => isManager && toggleDay(day.code)}
+                    disabled={!isManager}
+                  />
+                  <span className="text-sm">{day.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><CalendarDays className="h-5 w-5" /> Vacaciones</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Días de vacaciones al año</Label>
+            <Input type="number" min={0} max={365} value={vacationDays}
+              onChange={(e) => setVacationDays(parseInt(e.target.value) || 0)} disabled={!isManager} />
+          </div>
+          {isManager && (
+            <Button onClick={handleSave} disabled={saving} className="w-full">
+              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+              Guardar Configuración
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+// ─── SEGURIDAD TAB ───────────────────────────────────────
+const SecurityTab = ({ userId, accountId, isManager }: { userId: string; accountId: string; isManager: boolean }) => {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [changingOwn, setChangingOwn] = useState(false);
+
+  // Force reset state (manager)
+  const [forceTarget, setForceTarget] = useState<any>(null);
+  const [forcePassword, setForcePassword] = useState("");
+  const [forceLoading, setForceLoading] = useState(false);
+
+  const { data: users = [] } = useQuery({
+    queryKey: ["account-users-security", accountId],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke("admin_reset_password", {
+        body: { action: "list_users", account_id: accountId },
+      });
+      if (error) throw error;
+      return data?.users || [];
+    },
+    enabled: !!accountId && isManager,
+  });
+
+  const handleChangeOwnPassword = async () => {
+    if (newPassword !== confirmPassword) {
+      toast({ title: "Error", description: "Las contraseñas no coinciden", variant: "destructive" });
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast({ title: "Error", description: "La contraseña debe tener al menos 6 caracteres", variant: "destructive" });
+      return;
+    }
+    setChangingOwn(true);
     try {
       const { data, error } = await supabase.functions.invoke("admin_reset_password", {
-        body: { action: "reset_password", target_user_id: showResetDialog.user_id, new_password: newPassword },
+        body: { action: "change_own_password", current_password: currentPassword, new_password: newPassword },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast({ title: "Contraseña actualizada" });
-      setShowResetDialog(null);
+      toast({ title: "Contraseña actualizada correctamente" });
+      setCurrentPassword("");
       setNewPassword("");
+      setConfirmPassword("");
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
-      setResetLoading(false);
+      setChangingOwn(false);
     }
   };
+
+  const handleForceReset = async () => {
+    if (!forceTarget || forcePassword.length < 6) return;
+    setForceLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin_reset_password", {
+        body: { action: "force_reset_password", target_user_id: forceTarget.user_id, new_password: forcePassword },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({ title: "Contraseña reseteada", description: `Se ha enviado un email a ${forceTarget.email} con las nuevas credenciales.` });
+      setForceTarget(null);
+      setForcePassword("");
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setForceLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Own password change */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Lock className="h-5 w-5" /> Cambiar mi contraseña</CardTitle>
+          <CardDescription>Introduce tu contraseña actual para verificar tu identidad.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4 max-w-md">
+          <div className="space-y-2">
+            <Label>Contraseña actual</Label>
+            <Input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>Nueva contraseña</Label>
+            <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>Confirmar nueva contraseña</Label>
+            <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+          </div>
+          <Button
+            onClick={handleChangeOwnPassword}
+            disabled={changingOwn || !currentPassword || newPassword.length < 6 || newPassword !== confirmPassword}
+          >
+            {changingOwn && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+            Cambiar contraseña
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Manager force reset */}
+      {isManager && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><KeyRound className="h-5 w-5" /> Reseteo forzado de contraseña</CardTitle>
+            <CardDescription>
+              Restablece la contraseña de un empleado. Recibirá un email con las nuevas credenciales.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Rol</TableHead>
+                  <TableHead className="text-right">Acción</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users.filter((u: any) => u.user_id !== userId && u.is_active).map((u: any) => (
+                  <TableRow key={u.user_id}>
+                    <TableCell className="font-medium">{u.email}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{u.role === "MANAGER" ? "Manager" : "Empleado"}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="outline" size="sm" onClick={() => { setForceTarget(u); setForcePassword(""); }}>
+                        <KeyRound className="h-3 w-3 mr-1" /> Resetear
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Force reset dialog */}
+      <Dialog open={!!forceTarget} onOpenChange={() => { setForceTarget(null); setForcePassword(""); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Resetear contraseña</DialogTitle>
+            <DialogDescription>
+              Nueva contraseña para <strong>{forceTarget?.email}</strong>. Se enviará un email con las credenciales.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Nueva contraseña</Label>
+              <Input type="password" value={forcePassword} onChange={(e) => setForcePassword(e.target.value)} minLength={6} />
+            </div>
+            <Button className="w-full" onClick={handleForceReset} disabled={forceLoading || forcePassword.length < 6}>
+              {forceLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Mail className="h-4 w-4 mr-2" />}
+              Resetear y enviar email
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+// ─── USUARIOS TAB ────────────────────────────────────────
+const UsersTab = ({ userId, accountId }: { userId: string; accountId: string }) => {
+  const queryClient = useQueryClient();
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [newUserPassword, setNewUserPassword] = useState("");
+  const [createLoading, setCreateLoading] = useState(false);
+  const [createError, setCreateError] = useState("");
+
+  const { data: users = [], isLoading } = useQuery({
+    queryKey: ["account-users", accountId],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke("admin_reset_password", {
+        body: { action: "list_users", account_id: accountId },
+      });
+      if (error) throw error;
+      return data?.users || [];
+    },
+    enabled: !!accountId,
+  });
+
+  // Pending profile change requests (manager view)
+  const { data: pendingRequests = [] } = useQuery({
+    queryKey: ["pending-change-requests", accountId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profile_change_requests")
+        .select("*")
+        .eq("account_id", accountId)
+        .eq("status", "PENDING");
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!accountId,
+  });
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,13 +568,7 @@ const AppSettings = () => {
     setCreateLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("admin_reset_password", {
-        body: {
-          action: "create_user",
-          email: newEmail,
-          new_password: newUserPassword,
-          role_code: "EMPLOYEE",
-          account_id: accountId,
-        },
+        body: { action: "create_user", email: newEmail, new_password: newUserPassword, role_code: "EMPLOYEE", account_id: accountId },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -196,7 +585,6 @@ const AppSettings = () => {
   };
 
   const handleDeactivateUser = async (targetUserId: string) => {
-    if (!confirm("¿Desactivar este usuario?")) return;
     try {
       const { data, error } = await supabase.functions.invoke("admin_reset_password", {
         body: { action: "deactivate_user", target_user_id: targetUserId },
@@ -210,212 +598,159 @@ const AppSettings = () => {
     }
   };
 
+  const handleApproveRequest = async (request: any) => {
+    try {
+      // Update the profile field
+      const { error: updateError } = await supabase
+        .from("employee_profiles")
+        .update({ [request.field_name]: request.new_value, updated_at: new Date().toISOString() })
+        .eq("user_id", request.user_id)
+        .eq("account_id", accountId);
+      if (updateError) throw updateError;
+
+      // Mark request as approved
+      const { error } = await supabase
+        .from("profile_change_requests")
+        .update({ status: "APPROVED", reviewed_by: userId, reviewed_at: new Date().toISOString() })
+        .eq("id", request.id);
+      if (error) throw error;
+
+      toast({ title: "Cambio aprobado" });
+      queryClient.invalidateQueries({ queryKey: ["pending-change-requests"] });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const handleRejectRequest = async (requestId: string) => {
+    try {
+      const { error } = await supabase
+        .from("profile_change_requests")
+        .update({ status: "REJECTED", reviewed_by: userId, reviewed_at: new Date().toISOString() })
+        .eq("id", requestId);
+      if (error) throw error;
+      toast({ title: "Cambio rechazado" });
+      queryClient.invalidateQueries({ queryKey: ["pending-change-requests"] });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  };
+
+  // Build a map of user_id -> email from users list
+  const emailMap = new Map(users.map((u: any) => [u.user_id, u.email]));
+
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Configuración</h1>
+      {/* Pending change requests */}
+      {pendingRequests.length > 0 && (
+        <Card className="border-amber-500/30 bg-amber-500/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-amber-700">
+              <AlertCircle className="h-5 w-5" />
+              Solicitudes de cambio pendientes
+              <Badge variant="outline" className="ml-2">{pendingRequests.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Usuario</TableHead>
+                  <TableHead>Campo</TableHead>
+                  <TableHead>Valor anterior</TableHead>
+                  <TableHead>Nuevo valor</TableHead>
+                  <TableHead className="text-right">Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pendingRequests.map((req: any) => (
+                  <TableRow key={req.id}>
+                    <TableCell className="font-medium text-sm">{emailMap.get(req.user_id) || req.user_id.slice(0, 8)}</TableCell>
+                    <TableCell>{PROFILE_FIELD_LABELS[req.field_name] || req.field_name}</TableCell>
+                    <TableCell className="text-muted-foreground">{req.old_value || "—"}</TableCell>
+                    <TableCell className="font-medium">{req.new_value}</TableCell>
+                    <TableCell className="text-right space-x-1">
+                      <Button size="sm" variant="default" onClick={() => handleApproveRequest(req)}>
+                        <Check className="h-3 w-3 mr-1" /> Aprobar
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => handleRejectRequest(req.id)}>
+                        <X className="h-3 w-3 mr-1" /> Rechazar
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
-      <Tabs defaultValue="company" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="company" className="gap-2">
-            <Settings className="h-4 w-4" /> Empresa
-          </TabsTrigger>
-          <TabsTrigger value="schedule" className="gap-2">
-            <Clock className="h-4 w-4" /> Horario
-          </TabsTrigger>
-          {isManager && (
-            <TabsTrigger value="users" className="gap-2">
-              <Users className="h-4 w-4" /> Usuarios
-            </TabsTrigger>
-          )}
-        </TabsList>
+      {/* User list */}
+      <div className="flex justify-end">
+        <Button onClick={() => setShowCreateDialog(true)}>
+          <UserPlus className="h-4 w-4 mr-2" /> Nuevo Empleado
+        </Button>
+      </div>
 
-        {/* COMPANY TAB */}
-        <TabsContent value="company">
-          <Card>
-            <CardHeader>
-              <CardTitle>Datos de la empresa</CardTitle>
-              <CardDescription>Información general de tu cuenta</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-muted-foreground text-xs">Nombre</Label>
-                  <p className="text-sm font-medium">{account?.name || "—"}</p>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground text-xs">Estado</Label>
-                  <p className="text-sm">
-                    <Badge variant={account?.is_active ? "default" : "secondary"}>
-                      {account?.is_active ? "Activo" : "Inactivo"}
-                    </Badge>
-                  </p>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground text-xs">Email de gestión</Label>
-                  <p className="text-sm font-medium">{user?.email}</p>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground text-xs">Creado</Label>
-                  <p className="text-sm font-medium">
-                    {account?.created_at ? new Date(account.created_at).toLocaleDateString("es-ES") : "—"}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+      {isLoading ? (
+        <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+      ) : (
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Rol</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead className="text-right">Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users.map((u: any) => (
+                  <TableRow key={u.user_id}>
+                    <TableCell className="font-medium">{u.email}</TableCell>
+                    <TableCell>
+                      <Badge variant={u.role === "MANAGER" ? "default" : "secondary"}>
+                        <ShieldCheck className="h-3 w-3 mr-1" />
+                        {u.role === "MANAGER" ? "Manager" : "Empleado"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={u.is_active ? "default" : "outline"}>
+                        {u.is_active ? "Activo" : "Inactivo"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {u.is_active && u.user_id !== userId && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="outline" size="sm">Desactivar</Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>¿Desactivar usuario?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                El usuario <strong>{u.email}</strong> no podrá acceder al sistema.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeactivateUser(u.user_id)}>Desactivar</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
-        {/* SCHEDULE TAB */}
-        <TabsContent value="schedule">
-          {settingsLoading ? (
-            <div className="flex justify-center py-10">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            </div>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><Clock className="h-5 w-5" /> Horario Laboral</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Hora inicio</Label>
-                      <Input type="time" value={workStart} onChange={(e) => setWorkStart(e.target.value)} disabled={!isManager} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Hora fin</Label>
-                      <Input type="time" value={workEnd} onChange={(e) => setWorkEnd(e.target.value)} disabled={!isManager} />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Días laborales</Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {WEEKDAYS.map((day) => (
-                        <label key={day.code} className="flex items-center gap-2 rounded-md border p-2 cursor-pointer hover:bg-accent/50 transition-colors">
-                          <Checkbox
-                            checked={workDays.includes(day.code)}
-                            onCheckedChange={() => isManager && toggleDay(day.code)}
-                            disabled={!isManager}
-                          />
-                          <span className="text-sm">{day.label}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><CalendarDays className="h-5 w-5" /> Vacaciones</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Días de vacaciones al año</Label>
-                    <Input
-                      type="number"
-                      min={0}
-                      max={365}
-                      value={vacationDays}
-                      onChange={(e) => setVacationDays(parseInt(e.target.value) || 0)}
-                      disabled={!isManager}
-                    />
-                  </div>
-                  {isManager && (
-                    <Button onClick={handleSaveSettings} disabled={savingSettings} className="w-full">
-                      {savingSettings ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                      Guardar Configuración
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          )}
-        </TabsContent>
-
-        {/* USERS TAB (Manager only) */}
-        {isManager && (
-          <TabsContent value="users" className="space-y-4">
-            <div className="flex justify-end">
-              <Button onClick={() => setShowCreateDialog(true)}>
-                <UserPlus className="h-4 w-4 mr-2" /> Nuevo Empleado
-              </Button>
-            </div>
-
-            {usersLoading ? (
-              <div className="flex justify-center py-10">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              </div>
-            ) : (
-              <Card>
-                <CardContent className="p-0">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Rol</TableHead>
-                        <TableHead>Estado</TableHead>
-                        <TableHead className="text-right">Acciones</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {users.map((u: any) => (
-                        <TableRow key={u.user_id}>
-                          <TableCell className="font-medium">{u.email}</TableCell>
-                          <TableCell>
-                            <Badge variant={u.role === "MANAGER" ? "default" : "secondary"}>
-                              <ShieldCheck className="h-3 w-3 mr-1" />
-                              {u.role === "MANAGER" ? "Manager" : "Empleado"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={u.is_active ? "default" : "outline"}>
-                              {u.is_active ? "Activo" : "Inactivo"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right space-x-1">
-                            <Button variant="outline" size="sm" onClick={() => setShowResetDialog(u)}>
-                              <KeyRound className="h-3 w-3 mr-1" /> Reset
-                            </Button>
-                            {u.is_active && u.user_id !== user?.id && (
-                              <Button variant="outline" size="sm" onClick={() => handleDeactivateUser(u.user_id)}>
-                                Desactivar
-                              </Button>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-        )}
-      </Tabs>
-
-      {/* Reset Password Dialog */}
-      <Dialog open={!!showResetDialog} onOpenChange={() => { setShowResetDialog(null); setNewPassword(""); }}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Resetear Contraseña</DialogTitle>
-            <DialogDescription>Nueva contraseña para {showResetDialog?.email}</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Nueva contraseña</Label>
-              <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} minLength={6} />
-            </div>
-            <Button className="w-full" onClick={handleResetPassword} disabled={resetLoading || newPassword.length < 6}>
-              {resetLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              Resetear
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Create Employee Dialog */}
+      {/* Create employee dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -443,6 +778,84 @@ const AppSettings = () => {
           </form>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+};
+
+// ─── MAIN SETTINGS PAGE ──────────────────────────────────
+const AppSettings = () => {
+  const { user, accountId, role } = useAuth();
+  const isManager = role === "MANAGER" || role === "MASTER_ADMIN";
+
+  // Count pending requests for badge
+  const { data: pendingCount = 0 } = useQuery({
+    queryKey: ["pending-requests-count", accountId],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("profile_change_requests")
+        .select("*", { count: "exact", head: true })
+        .eq("account_id", accountId!)
+        .eq("status", "PENDING");
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!accountId && isManager,
+  });
+
+  if (!user || !accountId) return null;
+
+  return (
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold">Configuración</h1>
+
+      <Tabs defaultValue="company" className="space-y-4">
+        <TabsList className="flex-wrap">
+          <TabsTrigger value="company" className="gap-2">
+            <Settings className="h-4 w-4" /> Empresa
+          </TabsTrigger>
+          <TabsTrigger value="profile" className="gap-2">
+            <User className="h-4 w-4" /> Mi Perfil
+          </TabsTrigger>
+          <TabsTrigger value="schedule" className="gap-2">
+            <Clock className="h-4 w-4" /> Horario
+          </TabsTrigger>
+          <TabsTrigger value="security" className="gap-2">
+            <Lock className="h-4 w-4" /> Seguridad
+          </TabsTrigger>
+          {isManager && (
+            <TabsTrigger value="users" className="gap-2">
+              <Users className="h-4 w-4" /> Usuarios
+              {pendingCount > 0 && (
+                <Badge variant="destructive" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs rounded-full">
+                  {pendingCount}
+                </Badge>
+              )}
+            </TabsTrigger>
+          )}
+        </TabsList>
+
+        <TabsContent value="company">
+          <CompanyTab accountId={accountId} />
+        </TabsContent>
+
+        <TabsContent value="profile">
+          <ProfileTab userId={user.id} accountId={accountId} isManager={isManager} />
+        </TabsContent>
+
+        <TabsContent value="schedule">
+          <ScheduleTab accountId={accountId} isManager={isManager} />
+        </TabsContent>
+
+        <TabsContent value="security">
+          <SecurityTab userId={user.id} accountId={accountId} isManager={isManager} />
+        </TabsContent>
+
+        {isManager && (
+          <TabsContent value="users">
+            <UsersTab userId={user.id} accountId={accountId} />
+          </TabsContent>
+        )}
+      </Tabs>
     </div>
   );
 };
