@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import InvoiceAttachment from "@/components/invoices/InvoiceAttachment";
+import { dispatchWebhook } from "@/lib/webhooks";
 
 interface Props {
   open: boolean;
@@ -116,6 +117,10 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
       } as any);
       if (error) throw error;
       toast({ title: "Factura creada correctamente" });
+      dispatchWebhook(accountId, "invoice.created", {
+        type, concept: concept.trim(), amount_net: amountNet, amount_vat: amountVat,
+        amount_total: amountTotal, vat_percentage: vatNum, issue_date: issueDate,
+      });
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
       queryClient.invalidateQueries({ queryKey: ["business_clients"] });
       onOpenChange(false);
