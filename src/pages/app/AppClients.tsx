@@ -28,6 +28,7 @@ const AppClients = () => {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [showCreate, setShowCreate] = useState(false);
   const [editingClient, setEditingClient] = useState<any>(null);
+  const [deletingClientId, setDeletingClientId] = useState<string | null>(null);
 
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ["business-clients", accountId],
@@ -51,6 +52,7 @@ const AppClients = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["business-clients"] });
       toast({ title: "Cliente eliminado" });
+      setDeletingClientId(null);
     },
     onError: (err: any) => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -106,13 +108,13 @@ const AppClients = () => {
       </div>
 
       {filtered.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-            <Users className="h-10 w-10 mb-3" />
-            <p className="text-lg">No hay clientes</p>
-            <p className="text-sm">Crea tu primer cliente para comenzar a facturar</p>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={Users}
+          title="No hay clientes"
+          description="Crea tu primer cliente para comenzar a facturar"
+          actionLabel="Nuevo Cliente"
+          onAction={() => setShowCreate(true)}
+        />
       ) : (
         <Card>
           <CardContent className="p-0">
@@ -148,9 +150,7 @@ const AppClients = () => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => {
-                          if (confirm("¿Eliminar este cliente?")) deleteMutation.mutate(client.id);
-                        }}
+                        onClick={() => setDeletingClientId(client.id)}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
