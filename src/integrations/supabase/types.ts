@@ -90,27 +90,45 @@ export type Database = {
       }
       accounts: {
         Row: {
+          address: string | null
+          city: string | null
           created_at: string
           created_by: string | null
+          email: string | null
           id: string
           is_active: boolean
           name: string
+          phone: string | null
+          postal_code: string | null
+          tax_id: string | null
           type: string
         }
         Insert: {
+          address?: string | null
+          city?: string | null
           created_at?: string
           created_by?: string | null
+          email?: string | null
           id?: string
           is_active?: boolean
           name: string
+          phone?: string | null
+          postal_code?: string | null
+          tax_id?: string | null
           type: string
         }
         Update: {
+          address?: string | null
+          city?: string | null
           created_at?: string
           created_by?: string | null
+          email?: string | null
           id?: string
           is_active?: boolean
           name?: string
+          phone?: string | null
+          postal_code?: string | null
+          tax_id?: string | null
           type?: string
         }
         Relationships: []
