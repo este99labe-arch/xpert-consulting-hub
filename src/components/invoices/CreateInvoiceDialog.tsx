@@ -221,6 +221,18 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
             </Label>
           </div>
 
+          {/* Attachment */}
+          <div className="space-y-2">
+            <Label>Archivo adjunto</Label>
+            <InvoiceAttachment
+              accountId={accountId || ""}
+              attachmentPath={attachmentPath}
+              attachmentName={attachmentName}
+              onUploaded={(path, name) => { setAttachmentPath(path); setAttachmentName(name); }}
+              onRemoved={() => { setAttachmentPath(null); setAttachmentName(null); }}
+            />
+          </div>
+
           <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-1">
             <div className="flex justify-between text-sm text-muted-foreground">
               <span>Base imponible</span>

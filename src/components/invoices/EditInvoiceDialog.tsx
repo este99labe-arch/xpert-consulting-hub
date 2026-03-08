@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Loader2, ArrowRight } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import InvoiceAttachment from "@/components/invoices/InvoiceAttachment";
 
 const statusLabels: Record<string, string> = {
   DRAFT: "Borrador", SENT: "Enviada", PAID: "Pagada", OVERDUE: "Vencida",
