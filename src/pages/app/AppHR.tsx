@@ -26,17 +26,15 @@ const AppHR = () => {
           <TabsTrigger value="calendar">
             <CalendarIcon className="h-4 w-4 mr-2" />Calendario
           </TabsTrigger>
-          {isManager && (
-            <TabsTrigger value="documents">
-              <FileText className="h-4 w-4 mr-2" />Documentación
-            </TabsTrigger>
-          )}
+          <TabsTrigger value="documents">
+            <FileText className="h-4 w-4 mr-2" />Documentación
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="employees"><EmployeesTab /></TabsContent>
         <TabsContent value="leave"><LeaveTab /></TabsContent>
         <TabsContent value="calendar"><VacationCalendarTab /></TabsContent>
-        {isManager && <TabsContent value="documents"><DocumentsTab /></TabsContent>}
+        <TabsContent value="documents"><DocumentsTab /></TabsContent>
       </Tabs>
     </div>
   );
