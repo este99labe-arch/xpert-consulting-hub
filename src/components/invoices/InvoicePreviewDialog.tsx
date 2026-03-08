@@ -249,6 +249,32 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEma
             </div>
           </div>
         </div>
+
+        {/* Email history */}
+        {emailLogs.length > 0 && (
+          <div className="px-6 py-4 border-t bg-muted/20">
+            <div className="flex items-center gap-2 mb-3">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">Historial de envíos</span>
+            </div>
+            <div className="space-y-2">
+              {emailLogs.map((log: any) => (
+                <div key={log.id} className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-3 w-3 text-muted-foreground" />
+                    <span className="text-muted-foreground">{log.recipient}</span>
+                    <Badge variant={log.status === "sent" ? "default" : "destructive"} className="text-xs">
+                      {log.type === "reminder" ? "Recordatorio" : "Factura"} — {log.status === "sent" ? "Enviado" : "Error"}
+                    </Badge>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {format(new Date(log.sent_at), "dd MMM yyyy HH:mm", { locale: es })}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
