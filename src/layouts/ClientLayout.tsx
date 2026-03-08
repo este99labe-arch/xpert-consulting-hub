@@ -149,6 +149,7 @@ const ClientLayout = () => {
             </Button>
           </SidebarFooter>
         </Sidebar>
+        <GlobalSearch />
         <SidebarInset>
           <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b bg-background/80 backdrop-blur-sm px-6">
             <div className="flex items-center gap-3">
