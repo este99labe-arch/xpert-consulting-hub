@@ -1,14 +1,22 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { FileText, TrendingUp, TrendingDown, DollarSign, Plus, Search } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+} from "@/components/ui/dialog";
+import { FileText, TrendingUp, TrendingDown, DollarSign, Plus, Search, Trash2, Check, X } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
@@ -25,25 +33,30 @@ const statusColors: Record<string, string> = {
 };
 
 const statusLabels: Record<string, string> = {
-  DRAFT: "Borrador",
-  SENT: "Enviada",
-  PAID: "Pagada",
-  OVERDUE: "Vencida",
+  DRAFT: "Borrador", SENT: "Enviada", PAID: "Pagada", OVERDUE: "Vencida",
 };
 
 const typeLabels: Record<string, string> = {
-  INVOICE: "Factura",
-  EXPENSE: "Gasto",
+  INVOICE: "Factura", EXPENSE: "Gasto",
 };
 
 const AppInvoices = () => {
-  const { accountId } = useAuth();
+  const { accountId, role, user } = useAuth();
+  const queryClient = useQueryClient();
+  const isManager = role === "MANAGER" || role === "MASTER_ADMIN";
+
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [typeFilter, setTypeFilter] = useState<string>("ALL");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [previewInvoice, setPreviewInvoice] = useState<any>(null);
   const [editInvoice, setEditInvoice] = useState<any>(null);
+
+  // Delete state
+  const [deleteInvoice, setDeleteInvoice] = useState<any>(null);
+  const [deleteReason, setDeleteReason] = useState("");
+  const [deleteReasonDialog, setDeleteReasonDialog] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ["invoices", accountId],
@@ -60,6 +73,22 @@ const AppInvoices = () => {
     enabled: !!accountId,
   });
 
+  // Pending delete requests (managers only)
+  const { data: deleteRequests = [] } = useQuery({
+    queryKey: ["invoice-delete-requests", accountId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("invoice_delete_requests" as any)
+        .select("*, invoices(invoice_number, concept, amount_total, type, business_clients(name))")
+        .eq("account_id", accountId!)
+        .eq("status", "PENDING")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data || []) as any[];
+    },
+    enabled: !!accountId && isManager,
+  });
+
   const filtered = invoices.filter((inv: any) => {
     const matchesSearch =
       !search ||
@@ -72,18 +101,10 @@ const AppInvoices = () => {
   });
 
   // KPIs
-  const totalIncome = invoices
-    .filter((i: any) => i.type === "INVOICE")
-    .reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
-  const totalExpenses = invoices
-    .filter((i: any) => i.type === "EXPENSE")
-    .reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
-  const totalPaid = invoices
-    .filter((i: any) => i.status === "PAID" && i.type === "INVOICE")
-    .reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
-  const totalPending = invoices
-    .filter((i: any) => i.status !== "PAID" && i.type === "INVOICE")
-    .reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
+  const totalIncome = invoices.filter((i: any) => i.type === "INVOICE").reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
+  const totalExpenses = invoices.filter((i: any) => i.type === "EXPENSE").reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
+  const totalPaid = invoices.filter((i: any) => i.status === "PAID" && i.type === "INVOICE").reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
+  const totalPending = invoices.filter((i: any) => i.status !== "PAID" && i.type === "INVOICE").reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
 
   const kpis = [
     { label: "Facturado", value: `€${totalIncome.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`, icon: TrendingUp, color: "text-primary" },
@@ -96,35 +117,99 @@ const AppInvoices = () => {
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token;
-      if (!token) {
-        toast({ title: "Error", description: "No estás autenticado", variant: "destructive" });
-        return;
-      }
+      if (!token) { toast({ title: "Error", description: "No estás autenticado", variant: "destructive" }); return; }
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/generate_invoice_pdf`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ invoice_id: invoiceId }),
-        }
-      );
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Error generando PDF");
-      }
+      const res = await fetch(`https://${projectId}.supabase.co/functions/v1/generate_invoice_pdf`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ invoice_id: invoiceId }),
+      });
+      if (!res.ok) { const err = await res.json(); throw new Error(err.error || "Error generando PDF"); }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const printWindow = window.open(url, "_blank");
-      if (printWindow) {
-        printWindow.addEventListener("load", () => {
-          printWindow.print();
-        });
-      }
+      if (printWindow) { printWindow.addEventListener("load", () => { printWindow.print(); }); }
       toast({ title: "Documento listo para imprimir" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  };
+
+  // Delete handlers
+  const handleDeleteClick = (inv: any) => {
+    setDeleteInvoice(inv);
+    if (isManager) {
+      // Show direct confirmation
+      setDeleteReasonDialog(false);
+    } else {
+      // Show reason dialog for employees
+      setDeleteReason("");
+      setDeleteReasonDialog(true);
+    }
+  };
+
+  const handleManagerDelete = async () => {
+    if (!deleteInvoice) return;
+    setDeleting(true);
+    try {
+      const { error } = await supabase.from("invoices").delete().eq("id", deleteInvoice.id);
+      if (error) throw error;
+      toast({ title: "Factura eliminada" });
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setDeleting(false);
+      setDeleteInvoice(null);
+    }
+  };
+
+  const handleEmployeeRequest = async () => {
+    if (!deleteInvoice || !accountId || !user) return;
+    setDeleting(true);
+    try {
+      const { error } = await supabase.from("invoice_delete_requests" as any).insert({
+        invoice_id: deleteInvoice.id,
+        account_id: accountId,
+        requested_by: user.id,
+        reason: deleteReason.trim() || "Sin motivo especificado",
+        status: "PENDING",
+      } as any);
+      if (error) throw error;
+      toast({ title: "Solicitud enviada", description: "Tu manager revisará la solicitud de eliminación." });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setDeleting(false);
+      setDeleteInvoice(null);
+      setDeleteReasonDialog(false);
+    }
+  };
+
+  const handleApproveDelete = async (request: any) => {
+    try {
+      // Delete the invoice
+      const { error: delErr } = await supabase.from("invoices").delete().eq("id", request.invoice_id);
+      if (delErr) throw delErr;
+      // Update request status
+      await supabase.from("invoice_delete_requests" as any).update({
+        status: "APPROVED", reviewed_by: user?.id, reviewed_at: new Date().toISOString(),
+      } as any).eq("id", request.id);
+      toast({ title: "Factura eliminada y solicitud aprobada" });
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["invoice-delete-requests"] });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const handleRejectDelete = async (request: any) => {
+    try {
+      await supabase.from("invoice_delete_requests" as any).update({
+        status: "REJECTED", reviewed_by: user?.id, reviewed_at: new Date().toISOString(),
+      } as any).eq("id", request.id);
+      toast({ title: "Solicitud rechazada" });
+      queryClient.invalidateQueries({ queryKey: ["invoice-delete-requests"] });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     }
@@ -135,8 +220,7 @@ const AppInvoices = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">Facturación</h1>
         <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nueva Factura
+          <Plus className="h-4 w-4 mr-2" /> Nueva Factura
         </Button>
       </div>
 
@@ -155,16 +239,60 @@ const AppInvoices = () => {
         ))}
       </div>
 
+      {/* Pending delete requests (managers) */}
+      {isManager && deleteRequests.length > 0 && (
+        <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-900 dark:bg-amber-950/20">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Trash2 className="h-4 w-4 text-amber-600" />
+              Solicitudes de eliminación pendientes
+              <Badge variant="secondary" className="ml-1">{deleteRequests.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {deleteRequests.map((req: any) => {
+                const inv = req.invoices;
+                return (
+                  <div key={req.id} className="flex items-center justify-between rounded-lg border bg-background p-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-sm font-semibold">{inv?.invoice_number || "—"}</span>
+                        <Badge variant="outline" className="text-xs">
+                          {inv?.type === "INVOICE" ? "Factura" : "Gasto"}
+                        </Badge>
+                        <span className="text-sm text-muted-foreground">
+                          €{Number(inv?.amount_total || 0).toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {inv?.concept || "—"} · {inv?.business_clients?.name || "—"}
+                      </p>
+                      {req.reason && (
+                        <p className="text-xs text-muted-foreground italic">Motivo: {req.reason}</p>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => handleRejectDelete(req)}>
+                        <X className="h-3.5 w-3.5 mr-1" /> Rechazar
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => handleApproveDelete(req)}>
+                        <Check className="h-3.5 w-3.5 mr-1" /> Aprobar
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nº factura, cliente o concepto..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
+          <Input placeholder="Buscar por nº factura, cliente o concepto..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-[160px]"><SelectValue placeholder="Estado" /></SelectTrigger>
@@ -232,6 +360,7 @@ const AppInvoices = () => {
                         onPreview={() => setPreviewInvoice(inv)}
                         onExport={() => handleExportPdf(inv.id)}
                         onEdit={() => setEditInvoice(inv)}
+                        onDelete={() => handleDeleteClick(inv)}
                       />
                     </TableCell>
                   </TableRow>
@@ -254,6 +383,60 @@ const AppInvoices = () => {
         onOpenChange={() => setEditInvoice(null)}
         invoice={editInvoice}
       />
+
+      {/* Manager: direct delete confirmation */}
+      <AlertDialog open={!!deleteInvoice && isManager && !deleteReasonDialog} onOpenChange={(o) => { if (!o) setDeleteInvoice(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar esta factura?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se eliminará permanentemente la factura{" "}
+              <span className="font-semibold">{deleteInvoice?.invoice_number || ""}</span>.
+              Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleManagerDelete}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Eliminando..." : "Eliminar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Employee: request deletion with reason */}
+      <Dialog open={deleteReasonDialog} onOpenChange={(o) => { if (!o) { setDeleteReasonDialog(false); setDeleteInvoice(null); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Solicitar eliminación</DialogTitle>
+            <DialogDescription>
+              Tu solicitud será revisada por un manager antes de que la factura{" "}
+              <span className="font-semibold">{deleteInvoice?.invoice_number || ""}</span> sea eliminada.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Motivo (opcional)</label>
+            <Textarea
+              value={deleteReason}
+              onChange={(e) => setDeleteReason(e.target.value)}
+              placeholder="Indica por qué deseas eliminar esta factura..."
+              rows={3}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setDeleteReasonDialog(false); setDeleteInvoice(null); }}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleEmployeeRequest} disabled={deleting}>
+              {deleting ? "Enviando..." : "Enviar solicitud"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
