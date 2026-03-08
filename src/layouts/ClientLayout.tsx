@@ -169,7 +169,7 @@ const SidebarInner = () => {
           )}
         </SidebarContent>
         <SidebarFooter className="p-3 border-t border-sidebar-border">
-          <SidebarMenu>
+          <SidebarMenu className="gap-1.5">
             <SidebarMenuItem>
               <SidebarMenuButton
                 size="lg"
@@ -195,7 +195,6 @@ const SidebarInner = () => {
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
-          <HealthCheck />
         </SidebarFooter>
       </Sidebar>
       <GlobalSearch />
