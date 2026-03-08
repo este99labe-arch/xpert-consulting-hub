@@ -13,6 +13,7 @@ import LowStockAlerts from "@/components/dashboard/LowStockAlerts";
 import TopClients from "@/components/dashboard/TopClients";
 import RecentActivity from "@/components/dashboard/RecentActivity";
 import QuickActions from "@/components/dashboard/QuickActions";
+import TodayAttendanceWidget from "@/components/dashboard/TodayAttendanceWidget";
 
 type Period = "7d" | "30d" | "90d" | "year";
 
@@ -178,12 +179,13 @@ const AppDashboard = () => {
         prevActiveClients={prev.clients}
       />
 
-      {/* Revenue chart + Quick actions area */}
+      {/* Revenue chart + Attendance widget */}
       <div className="grid gap-6 lg:grid-cols-5">
         <div className="lg:col-span-3">
           <RevenueChart data={chartData} period={chartPeriod} onPeriodChange={setChartPeriod} />
         </div>
         <div className="lg:col-span-2 grid gap-6">
+          <TodayAttendanceWidget />
           <InvoiceStatusChart data={statusData} />
         </div>
       </div>
