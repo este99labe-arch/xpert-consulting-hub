@@ -96,9 +96,17 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport }: Props) 
                 <div style={{ fontSize: "28px", fontWeight: 800, letterSpacing: "-0.5px", color: "#0f172a" }}>
                   {account?.name || "Empresa"}
                 </div>
-                <div style={{ marginTop: "4px", fontSize: "12px", color: "#64748b" }}>
-                  {account?.type === "CLIENT" ? "Empresa cliente" : ""}
-                </div>
+                {account?.tax_id && (
+                  <div style={{ marginTop: "4px", fontSize: "12px", color: "#64748b" }}>NIF/CIF: {account.tax_id}</div>
+                )}
+                {account?.address && (
+                  <div style={{ fontSize: "12px", color: "#64748b" }}>{account.address}{account?.postal_code ? `, ${account.postal_code}` : ""}{account?.city ? ` ${account.city}` : ""}</div>
+                )}
+                {(account?.phone || account?.email) && (
+                  <div style={{ fontSize: "12px", color: "#64748b" }}>
+                    {account?.phone}{account?.phone && account?.email ? " · " : ""}{account?.email}
+                  </div>
+                )}
               </div>
               <div style={{ textAlign: "right" }}>
                 <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "2px", color: "#94a3b8", fontWeight: 600 }}>
@@ -117,6 +125,9 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport }: Props) 
                   De
                 </div>
                 <div style={{ fontWeight: 600, fontSize: "15px" }}>{account?.name || "—"}</div>
+                {account?.tax_id && <div style={{ color: "#64748b", fontSize: "13px" }}>NIF/CIF: {account.tax_id}</div>}
+                {account?.address && <div style={{ color: "#64748b", fontSize: "13px" }}>{account.address}{account?.postal_code ? `, ${account.postal_code}` : ""}{account?.city ? ` ${account.city}` : ""}</div>}
+                {account?.email && <div style={{ color: "#64748b", fontSize: "13px" }}>{account.email}</div>}
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#94a3b8", fontWeight: 600, marginBottom: "8px" }}>
