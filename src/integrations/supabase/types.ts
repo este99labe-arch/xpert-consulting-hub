@@ -209,6 +209,54 @@ export type Database = {
           },
         ]
       }
+      chart_of_accounts: {
+        Row: {
+          account_id: string
+          code: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          parent_id: string | null
+          type: string
+        }
+        Insert: {
+          account_id: string
+          code: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          parent_id?: string | null
+          type: string
+        }
+        Update: {
+          account_id?: string
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          parent_id?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chart_of_accounts_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chart_of_accounts_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_documents: {
         Row: {
           account_id: string
@@ -440,6 +488,99 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "business_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journal_entries: {
+        Row: {
+          account_id: string
+          created_at: string
+          created_by: string
+          date: string
+          description: string
+          entry_number: string | null
+          id: string
+          invoice_id: string | null
+          status: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          created_by: string
+          date: string
+          description?: string
+          entry_number?: string | null
+          id?: string
+          invoice_id?: string | null
+          status?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          created_by?: string
+          date?: string
+          description?: string
+          entry_number?: string | null
+          id?: string
+          invoice_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_entries_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journal_entry_lines: {
+        Row: {
+          chart_account_id: string
+          credit: number
+          debit: number
+          description: string
+          entry_id: string
+          id: string
+        }
+        Insert: {
+          chart_account_id: string
+          credit?: number
+          debit?: number
+          description?: string
+          entry_id: string
+          id?: string
+        }
+        Update: {
+          chart_account_id?: string
+          credit?: number
+          debit?: number
+          description?: string
+          entry_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_entry_lines_chart_account_id_fkey"
+            columns: ["chart_account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entry_lines_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
             referencedColumns: ["id"]
           },
         ]
