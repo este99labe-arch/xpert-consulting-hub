@@ -82,7 +82,7 @@ const ClientLayout = () => {
           </SidebarHeader>
           <SidebarContent className="px-3 py-4">
             <SidebarMenu>
-              {modules.map((mod) => {
+              {modules.filter((mod) => mod.code !== "SETTINGS").map((mod) => {
                 const Icon = moduleIcons[mod.code] || LayoutDashboard;
                 const path = modulePaths[mod.code] || "/app/dashboard";
                 return (
@@ -99,6 +99,18 @@ const ClientLayout = () => {
                   </SidebarMenuItem>
                 );
               })}
+              {/* SETTINGS always last */}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={location.pathname === "/app/settings"}
+                  onClick={() => navigate("/app/settings")}
+                  tooltip="Configuración"
+                  className="h-10 rounded-lg"
+                >
+                  <Settings className="h-4 w-4" />
+                  <span>Configuración</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
             {role === "MASTER_ADMIN" && (
               <>

@@ -35,7 +35,7 @@ serve(async (req) => {
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-    // Check caller is MASTER_ADMIN or MANAGER
+    // Check caller role
     const { data: callerRole } = await adminClient
       .from("user_accounts")
       .select("role_id, roles(code), account_id")
@@ -45,16 +45,47 @@ serve(async (req) => {
       .single();
 
     const callerRoleCode = (callerRole as any)?.roles?.code;
+    const body = await req.json();
+    const { action } = body;
+
+    // CHANGE OWN PASSWORD — available to ALL authenticated users
+    if (action === "change_own_password") {
+      const { current_password, new_password } = body;
+      if (!current_password || !new_password) {
+        return new Response(JSON.stringify({ error: "Missing current_password or new_password" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Verify current password by attempting sign-in
+      const { error: signInError } = await adminClient.auth.signInWithPassword({
+        email: user.email!,
+        password: current_password,
+      });
+      if (signInError) {
+        return new Response(JSON.stringify({ error: "La contraseña actual es incorrecta" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { error: updateError } = await adminClient.auth.admin.updateUser(user.id, { password: new_password });
+      if (updateError) throw updateError;
+
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // All actions below require MANAGER or MASTER_ADMIN
     if (!callerRoleCode || !["MASTER_ADMIN", "MANAGER"].includes(callerRoleCode)) {
       return new Response(JSON.stringify({ error: "Forbidden" }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const { action, target_user_id, new_password, email, role_code, account_id } = await req.json();
-
-    // RESET PASSWORD
-    if (action === "reset_password") {
+    // FORCE RESET PASSWORD (manager resets any user's password + sends email)
+    if (action === "force_reset_password") {
+      const { target_user_id, new_password } = body;
       if (!target_user_id || !new_password) {
         return new Response(JSON.stringify({ error: "Missing target_user_id or new_password" }), {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -79,13 +110,83 @@ serve(async (req) => {
       const { error: resetError } = await adminClient.auth.admin.updateUser(target_user_id, { password: new_password });
       if (resetError) throw resetError;
 
+      // Get target user email & account info for email
+      const { data: { user: targetUser } } = await adminClient.auth.admin.getUserById(target_user_id);
+      if (targetUser?.email) {
+        // Get account name
+        const { data: targetUA } = await adminClient
+          .from("user_accounts")
+          .select("account_id, accounts(name)")
+          .eq("user_id", target_user_id)
+          .eq("is_active", true)
+          .single();
+        const companyName = (targetUA as any)?.accounts?.name || "la empresa";
+
+        // Get employee profile name
+        const { data: profile } = await adminClient
+          .from("employee_profiles")
+          .select("first_name, last_name")
+          .eq("user_id", target_user_id)
+          .single();
+        const employeeName = profile ? `${profile.first_name} ${profile.last_name}` : undefined;
+
+        // Fire-and-forget email
+        try {
+          await fetch(`${supabaseUrl}/functions/v1/send_welcome_email`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+            },
+            body: JSON.stringify({
+              employee_email: targetUser.email,
+              employee_name: employeeName,
+              password: new_password,
+              company_name: companyName,
+            }),
+          });
+        } catch (_) { /* email failure should not block password reset */ }
+      }
+
       return new Response(JSON.stringify({ success: true }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // CREATE USER (for managers creating employees in their account)
+    // RESET PASSWORD (legacy, kept for compatibility)
+    if (action === "reset_password") {
+      const { target_user_id, new_password } = body;
+      if (!target_user_id || !new_password) {
+        return new Response(JSON.stringify({ error: "Missing target_user_id or new_password" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (callerRoleCode === "MANAGER") {
+        const { data: targetAccount } = await adminClient
+          .from("user_accounts")
+          .select("account_id")
+          .eq("user_id", target_user_id)
+          .eq("is_active", true)
+          .single();
+        if (!targetAccount || targetAccount.account_id !== callerRole.account_id) {
+          return new Response(JSON.stringify({ error: "Cannot reset password for users outside your account" }), {
+            status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+
+      const { error: resetError } = await adminClient.auth.admin.updateUser(target_user_id, { password: new_password });
+      if (resetError) throw resetError;
+
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // CREATE USER
     if (action === "create_user") {
+      const { email, new_password, role_code, account_id } = body;
       if (!email || !new_password || !role_code) {
         return new Response(JSON.stringify({ error: "Missing email, new_password, or role_code" }), {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -94,15 +195,9 @@ serve(async (req) => {
 
       const targetAccountId = callerRoleCode === "MASTER_ADMIN" ? (account_id || callerRole.account_id) : callerRole.account_id;
 
-      // Get role id
-      const { data: role } = await adminClient
-        .from("roles")
-        .select("id")
-        .eq("code", role_code)
-        .single();
+      const { data: role } = await adminClient.from("roles").select("id").eq("code", role_code).single();
       if (!role) throw new Error(`Role ${role_code} not found`);
 
-      // Managers can only create EMPLOYEEs
       if (callerRoleCode === "MANAGER" && role_code !== "EMPLOYEE") {
         return new Response(JSON.stringify({ error: "Managers can only create EMPLOYEE users" }), {
           status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -110,16 +205,12 @@ serve(async (req) => {
       }
 
       const { data: newUser, error: authError } = await adminClient.auth.admin.createUser({
-        email,
-        password: new_password,
-        email_confirm: true,
+        email, password: new_password, email_confirm: true,
       });
       if (authError) throw authError;
 
       const { error: linkError } = await adminClient.from("user_accounts").insert({
-        user_id: newUser.user.id,
-        account_id: targetAccountId,
-        role_id: role.id,
+        user_id: newUser.user.id, account_id: targetAccountId, role_id: role.id,
       });
       if (linkError) throw linkError;
 
@@ -130,6 +221,7 @@ serve(async (req) => {
 
     // DEACTIVATE USER
     if (action === "deactivate_user") {
+      const { target_user_id } = body;
       if (!target_user_id) {
         return new Response(JSON.stringify({ error: "Missing target_user_id" }), {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -161,8 +253,9 @@ serve(async (req) => {
       });
     }
 
-    // LIST USERS (for an account)
+    // LIST USERS
     if (action === "list_users") {
+      const { account_id } = body;
       const targetAccountId = callerRoleCode === "MASTER_ADMIN" ? (account_id || callerRole.account_id) : callerRole.account_id;
 
       const { data: userAccounts, error: listError } = await adminClient
@@ -172,7 +265,6 @@ serve(async (req) => {
 
       if (listError) throw listError;
 
-      // Get emails from auth admin
       const userIds = [...new Set((userAccounts || []).map((ua: any) => ua.user_id))];
       const usersWithEmail = [];
 
