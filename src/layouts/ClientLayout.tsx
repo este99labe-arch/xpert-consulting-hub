@@ -184,6 +184,7 @@ const ClientLayout = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            </div>
           </header>
           <main className="flex-1 p-6">
             <Outlet />
