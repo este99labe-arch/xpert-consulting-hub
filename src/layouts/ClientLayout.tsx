@@ -1,5 +1,6 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import GlobalSearch from "@/components/shared/GlobalSearch";
+import NotificationBell from "@/components/shared/NotificationBell";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -157,7 +158,9 @@ const ClientLayout = () => {
               <Separator orientation="vertical" className="h-5" />
               <Breadcrumbs />
             </div>
-            <DropdownMenu>
+            <div className="flex items-center gap-1">
+              <NotificationBell />
+              <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="gap-2 h-9 px-2">
                   <Avatar className="h-7 w-7">
@@ -181,6 +184,7 @@ const ClientLayout = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            </div>
           </header>
           <main className="flex-1 p-6">
             <Outlet />
