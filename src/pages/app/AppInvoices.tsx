@@ -398,6 +398,7 @@ const AppInvoices = () => {
         onOpenChange={() => setPreviewInvoice(null)}
         invoice={previewInvoice}
         onExport={previewInvoice ? () => handleExportPdf(previewInvoice.id) : undefined}
+        onSendEmail={previewInvoice?.business_clients?.email ? () => handleSendEmail(previewInvoice.id) : undefined}
       />
       <EditInvoiceDialog
         open={!!editInvoice}
