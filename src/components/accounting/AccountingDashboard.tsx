@@ -25,9 +25,9 @@ const AccountingDashboard = ({
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center gap-3">
-            <TrendingUp className="h-8 w-8 text-primary" />
-            <div>
-              <p className="text-2xl font-bold">{EUR(totalIncome)}</p>
+            <TrendingUp className="h-8 w-8 shrink-0 text-primary" />
+            <div className="min-w-0">
+              <p className="text-2xl font-bold truncate">{EUR(totalIncome)}</p>
               <p className="text-xs text-muted-foreground">Ingresos totales</p>
             </div>
           </div>
@@ -36,9 +36,9 @@ const AccountingDashboard = ({
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center gap-3">
-            <TrendingDown className="h-8 w-8 text-destructive" />
-            <div>
-              <p className="text-2xl font-bold">{EUR(totalExpense)}</p>
+            <TrendingDown className="h-8 w-8 shrink-0 text-destructive" />
+            <div className="min-w-0">
+              <p className="text-2xl font-bold truncate">{EUR(totalExpense)}</p>
               <p className="text-xs text-muted-foreground">Gastos totales</p>
             </div>
           </div>
@@ -47,9 +47,9 @@ const AccountingDashboard = ({
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center gap-3">
-            <BarChart3 className="h-8 w-8 text-primary" />
-            <div>
-              <p className={`text-2xl font-bold ${totalIncome - totalExpense >= 0 ? "" : "text-destructive"}`}>
+            <BarChart3 className="h-8 w-8 shrink-0 text-primary" />
+            <div className="min-w-0">
+              <p className={`text-2xl font-bold truncate ${totalIncome - totalExpense >= 0 ? "" : "text-destructive"}`}>
                 {EUR(totalIncome - totalExpense)}
               </p>
               <p className="text-xs text-muted-foreground">Resultado neto</p>
@@ -60,9 +60,9 @@ const AccountingDashboard = ({
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center gap-3">
-            <Calculator className="h-8 w-8 text-muted-foreground" />
-            <div>
-              <p className={`text-2xl font-bold ${vatCollected - vatPaid >= 0 ? "text-destructive" : ""}`}>
+            <Calculator className="h-8 w-8 shrink-0 text-muted-foreground" />
+            <div className="min-w-0">
+              <p className={`text-2xl font-bold truncate ${vatCollected - vatPaid >= 0 ? "text-destructive" : ""}`}>
                 {EUR(vatCollected - vatPaid)}
               </p>
               <p className="text-xs text-muted-foreground">IVA a {vatCollected - vatPaid >= 0 ? "liquidar" : "compensar"}</p>
@@ -73,15 +73,15 @@ const AccountingDashboard = ({
     </div>
 
     <div className="grid gap-6 lg:grid-cols-2">
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader><CardTitle className="text-base">Evolución mensual</CardTitle></CardHeader>
         <CardContent>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlyData}>
+              <BarChart data={monthlyData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                <XAxis dataKey="month" className="text-xs" />
-                <YAxis className="text-xs" />
+                <XAxis dataKey="month" className="text-xs" tick={{ fontSize: 11 }} />
+                <YAxis className="text-xs" tick={{ fontSize: 11 }} width={60} />
                 <Tooltip formatter={(v: number) => EUR(v)} />
                 <Bar dataKey="ingresos" fill="hsl(var(--primary))" name="Ingresos" radius={[2, 2, 0, 0]} />
                 <Bar dataKey="gastos" fill="hsl(var(--destructive))" name="Gastos" radius={[2, 2, 0, 0]} />
@@ -90,14 +90,26 @@ const AccountingDashboard = ({
           </div>
         </CardContent>
       </Card>
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader><CardTitle className="text-base">Distribución de gastos</CardTitle></CardHeader>
         <CardContent>
           <div className="h-[300px]">
             {pieData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                  <Pie
+                    data={pieData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    label={({ name, percent }) => {
+                      const short = name.length > 15 ? name.slice(0, 15) + "…" : name;
+                      return `${short} ${(percent * 100).toFixed(0)}%`;
+                    }}
+                    labelLine={{ strokeWidth: 1 }}
+                  >
                     {pieData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
                   </Pie>
                   <Tooltip formatter={(v: number) => EUR(v)} />
