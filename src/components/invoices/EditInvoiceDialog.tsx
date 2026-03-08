@@ -133,6 +133,10 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
         updatePayload.amount_total = amountTotal;
       }
 
+      // Always allow attachment changes
+      updatePayload.attachment_path = attachmentPath;
+      updatePayload.attachment_name = attachmentName;
+
       const { error } = await supabase.from("invoices").update(updatePayload).eq("id", invoice.id);
       if (error) throw error;
 
