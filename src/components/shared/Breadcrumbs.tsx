@@ -14,6 +14,7 @@ const routeLabels: Record<string, string> = {
   hr: "Recursos Humanos",
   attendance: "Asistencia",
   inventory: "Inventario",
+  reports: "Informes",
   settings: "Configuración",
 };
 

@@ -17,7 +17,7 @@ import {
   SidebarInset,
 } from "@/components/ui/sidebar";
 import {
-  LayoutDashboard, Users, FileText, Calculator, UserCog, Clock, Settings, LogOut, Package, ArrowRightLeft, ChevronDown,
+  LayoutDashboard, Users, FileText, Calculator, UserCog, Clock, Settings, LogOut, Package, ArrowRightLeft, ChevronDown, BarChart3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -35,6 +35,7 @@ const moduleIcons: Record<string, any> = {
   HR: UserCog,
   ATTENDANCE: Clock,
   INVENTORY: Package,
+  REPORTS: BarChart3,
   SETTINGS: Settings,
 };
 
@@ -46,6 +47,7 @@ const modulePaths: Record<string, string> = {
   HR: "/app/hr",
   ATTENDANCE: "/app/attendance",
   INVENTORY: "/app/inventory",
+  REPORTS: "/app/reports",
   SETTINGS: "/app/settings",
 };
 
