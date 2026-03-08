@@ -238,6 +238,74 @@ export type Database = {
           },
         ]
       }
+      employee_profiles: {
+        Row: {
+          account_id: string
+          address: string | null
+          city: string | null
+          created_at: string
+          date_of_birth: string | null
+          department: string | null
+          dni: string | null
+          first_name: string
+          id: string
+          last_name: string
+          phone: string | null
+          position: string | null
+          postal_code: string | null
+          social_security_number: string | null
+          start_date: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          department?: string | null
+          dni?: string | null
+          first_name: string
+          id?: string
+          last_name: string
+          phone?: string | null
+          position?: string | null
+          postal_code?: string | null
+          social_security_number?: string | null
+          start_date?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          department?: string | null
+          dni?: string | null
+          first_name?: string
+          id?: string
+          last_name?: string
+          phone?: string | null
+          position?: string | null
+          postal_code?: string | null
+          social_security_number?: string | null
+          start_date?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_profiles_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           account_id: string
