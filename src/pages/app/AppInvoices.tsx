@@ -14,6 +14,7 @@ import { es } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
 import CreateInvoiceDialog from "@/components/invoices/CreateInvoiceDialog";
 import InvoicePreviewDialog from "@/components/invoices/InvoicePreviewDialog";
+import EditInvoiceDialog from "@/components/invoices/EditInvoiceDialog";
 import InvoiceActionsMenu from "@/components/invoices/InvoiceActionsMenu";
 
 const statusColors: Record<string, string> = {
@@ -42,6 +43,7 @@ const AppInvoices = () => {
   const [typeFilter, setTypeFilter] = useState<string>("ALL");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [previewInvoice, setPreviewInvoice] = useState<any>(null);
+  const [editInvoice, setEditInvoice] = useState<any>(null);
 
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ["invoices", accountId],
@@ -62,7 +64,8 @@ const AppInvoices = () => {
     const matchesSearch =
       !search ||
       (inv.business_clients?.name || "").toLowerCase().includes(search.toLowerCase()) ||
-      (inv.concept || "").toLowerCase().includes(search.toLowerCase());
+      (inv.concept || "").toLowerCase().includes(search.toLowerCase()) ||
+      (inv.invoice_number || "").toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === "ALL" || inv.status === statusFilter;
     const matchesType = typeFilter === "ALL" || inv.type === typeFilter;
     return matchesSearch && matchesStatus && matchesType;
@@ -85,8 +88,8 @@ const AppInvoices = () => {
   const kpis = [
     { label: "Facturado", value: `€${totalIncome.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`, icon: TrendingUp, color: "text-primary" },
     { label: "Gastos", value: `€${totalExpenses.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`, icon: TrendingDown, color: "text-destructive" },
-    { label: "Cobrado", value: `€${totalPaid.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`, icon: DollarSign, color: "text-green-600" },
-    { label: "Pendiente", value: `€${totalPending.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`, icon: FileText, color: "text-amber-600" },
+    { label: "Cobrado", value: `€${totalPaid.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`, icon: DollarSign, color: "text-primary" },
+    { label: "Pendiente", value: `€${totalPending.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`, icon: FileText, color: "text-muted-foreground" },
   ];
 
   const handleExportPdf = async (invoiceId: string) => {
@@ -115,12 +118,13 @@ const AppInvoices = () => {
       }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `factura-${invoiceId.slice(0, 8)}.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
-      toast({ title: "PDF descargado" });
+      const printWindow = window.open(url, "_blank");
+      if (printWindow) {
+        printWindow.addEventListener("load", () => {
+          printWindow.print();
+        });
+      }
+      toast({ title: "Documento listo para imprimir" });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     }
@@ -156,7 +160,7 @@ const AppInvoices = () => {
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar por cliente o concepto..."
+            placeholder="Buscar por nº factura, cliente o concepto..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -193,6 +197,7 @@ const AppInvoices = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Nº</TableHead>
                   <TableHead>Fecha</TableHead>
                   <TableHead>Cliente</TableHead>
                   <TableHead>Concepto</TableHead>
@@ -204,7 +209,10 @@ const AppInvoices = () => {
               </TableHeader>
               <TableBody>
                 {filtered.map((inv: any) => (
-                  <TableRow key={inv.id}>
+                  <TableRow key={inv.id} className="cursor-pointer hover:bg-accent/50" onClick={() => setPreviewInvoice(inv)}>
+                    <TableCell className="font-mono font-semibold text-sm">
+                      {inv.invoice_number || inv.id.slice(0, 8).toUpperCase()}
+                    </TableCell>
                     <TableCell className="whitespace-nowrap">
                       {format(new Date(inv.issue_date), "dd MMM yyyy", { locale: es })}
                     </TableCell>
@@ -219,11 +227,11 @@ const AppInvoices = () => {
                         {statusLabels[inv.status] || inv.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                       <InvoiceActionsMenu
                         onPreview={() => setPreviewInvoice(inv)}
                         onExport={() => handleExportPdf(inv.id)}
-                        onEdit={() => toast({ title: "Próximamente", description: "Edición de facturas en desarrollo" })}
+                        onEdit={() => setEditInvoice(inv)}
                       />
                     </TableCell>
                   </TableRow>
@@ -235,7 +243,17 @@ const AppInvoices = () => {
       </Card>
 
       <CreateInvoiceDialog open={dialogOpen} onOpenChange={setDialogOpen} />
-      <InvoicePreviewDialog open={!!previewInvoice} onOpenChange={() => setPreviewInvoice(null)} invoice={previewInvoice} />
+      <InvoicePreviewDialog
+        open={!!previewInvoice}
+        onOpenChange={() => setPreviewInvoice(null)}
+        invoice={previewInvoice}
+        onExport={previewInvoice ? () => handleExportPdf(previewInvoice.id) : undefined}
+      />
+      <EditInvoiceDialog
+        open={!!editInvoice}
+        onOpenChange={() => setEditInvoice(null)}
+        invoice={editInvoice}
+      />
     </div>
   );
 };
