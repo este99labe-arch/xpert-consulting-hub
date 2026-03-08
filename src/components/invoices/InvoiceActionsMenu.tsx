@@ -1,16 +1,17 @@
-import { MoreHorizontal, Eye, Download, Pencil } from "lucide-react";
+import { MoreHorizontal, Eye, Download, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
 interface Props {
   onPreview: () => void;
   onExport: () => void;
   onEdit: () => void;
+  onDelete: () => void;
 }
 
-const InvoiceActionsMenu = ({ onPreview, onExport, onEdit }: Props) => {
+const InvoiceActionsMenu = ({ onPreview, onExport, onEdit, onDelete }: Props) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -30,6 +31,11 @@ const InvoiceActionsMenu = ({ onPreview, onExport, onEdit }: Props) => {
         <DropdownMenuItem onClick={onEdit}>
           <Pencil className="h-4 w-4 mr-2" />
           Editar
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
+          <Trash2 className="h-4 w-4 mr-2" />
+          Eliminar
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
