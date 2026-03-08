@@ -680,7 +680,7 @@ const AppReports = () => {
   const effectiveAccountId = selectedAccount || accountId;
 
   if (role === "MASTER_ADMIN" && !effectiveAccountId) {
-    return <MasterAccountSelector onSelect={setSelectedAccount} />;
+    return <MasterAccountSelector title="Selecciona una cuenta para ver informes" onSelect={setSelectedAccount} />;
   }
 
   if (!effectiveAccountId) return null;
