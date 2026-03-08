@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -16,7 +17,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
-import { FileText, TrendingUp, TrendingDown, DollarSign, Plus, Search, Trash2, Check, X } from "lucide-react";
+import { FileText, TrendingUp, TrendingDown, DollarSign, Plus, Search, Trash2, Check, X, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
@@ -24,6 +25,7 @@ import CreateInvoiceDialog from "@/components/invoices/CreateInvoiceDialog";
 import InvoicePreviewDialog from "@/components/invoices/InvoicePreviewDialog";
 import EditInvoiceDialog from "@/components/invoices/EditInvoiceDialog";
 import InvoiceActionsMenu from "@/components/invoices/InvoiceActionsMenu";
+import RecurringInvoicesTab from "@/components/invoices/RecurringInvoicesTab";
 
 const statusColors: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground",
@@ -239,10 +241,22 @@ const AppInvoices = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">Facturación</h1>
-        <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" /> Nueva Factura
-        </Button>
       </div>
+
+      <Tabs defaultValue="invoices" className="space-y-4">
+        <div className="flex items-center justify-between">
+          <TabsList>
+            <TabsTrigger value="invoices">Facturas</TabsTrigger>
+            <TabsTrigger value="recurring">
+              <RefreshCw className="h-4 w-4 mr-1" /> Recurrentes
+            </TabsTrigger>
+          </TabsList>
+          <Button onClick={() => setDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" /> Nueva Factura
+          </Button>
+        </div>
+
+        <TabsContent value="invoices" className="space-y-6">
 
       {/* KPIs */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -459,6 +473,12 @@ const AppInvoices = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+        </TabsContent>
+
+        <TabsContent value="recurring">
+          <RecurringInvoicesTab accountId={accountId || ""} isManager={isManager} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

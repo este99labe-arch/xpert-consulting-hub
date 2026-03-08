@@ -973,6 +973,78 @@ export type Database = {
           },
         ]
       }
+      recurring_invoices: {
+        Row: {
+          account_id: string
+          amount_net: number
+          amount_total: number
+          amount_vat: number
+          client_id: string
+          concept: string
+          created_at: string
+          created_by: string
+          frequency: string
+          id: string
+          is_active: boolean
+          last_generated_at: string | null
+          next_run_date: string
+          type: string
+          updated_at: string
+          vat_percentage: number
+        }
+        Insert: {
+          account_id: string
+          amount_net: number
+          amount_total: number
+          amount_vat: number
+          client_id: string
+          concept?: string
+          created_at?: string
+          created_by: string
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          last_generated_at?: string | null
+          next_run_date: string
+          type?: string
+          updated_at?: string
+          vat_percentage?: number
+        }
+        Update: {
+          account_id?: string
+          amount_net?: number
+          amount_total?: number
+          amount_vat?: number
+          client_id?: string
+          concept?: string
+          created_at?: string
+          created_by?: string
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          last_generated_at?: string | null
+          next_run_date?: string
+          type?: string
+          updated_at?: string
+          vat_percentage?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_invoices_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_invoices_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "business_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       roles: {
         Row: {
           code: string
