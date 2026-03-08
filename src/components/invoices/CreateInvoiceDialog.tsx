@@ -65,6 +65,32 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
     enabled: !!accountId && open,
   });
 
+  const resolveClientId = async (selectedId: string): Promise<string> => {
+    if (!selectedId.startsWith("__self__")) return selectedId;
+    // Find or create a business_client for own company
+    const { data: existing } = await supabase
+      .from("business_clients")
+      .select("id")
+      .eq("account_id", accountId!)
+      .eq("name", account?.name || "")
+      .eq("tax_id", (account as any)?.tax_id || "PROPIA")
+      .maybeSingle();
+    if (existing) return existing.id;
+    const { data: created, error } = await supabase
+      .from("business_clients")
+      .insert({
+        account_id: accountId!,
+        name: account?.name || "Mi empresa",
+        tax_id: (account as any)?.tax_id || "PROPIA",
+        email: (account as any)?.email || null,
+        status: "ACTIVE",
+      })
+      .select("id")
+      .single();
+    if (error) throw error;
+    return created.id;
+  };
+
   const handleSubmit = async () => {
     if (!clientId || !amount || !accountId || !concept.trim()) {
       toast({ title: "Error", description: "Completa todos los campos obligatorios", variant: "destructive" });
@@ -72,9 +98,10 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
     }
     setSubmitting(true);
     try {
+      const resolvedClientId = await resolveClientId(clientId);
       const { error } = await supabase.from("invoices").insert({
         account_id: accountId,
-        client_id: clientId,
+        client_id: resolvedClientId,
         type,
         concept: concept.trim(),
         issue_date: issueDate,
@@ -86,6 +113,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
       if (error) throw error;
       toast({ title: "Factura creada correctamente" });
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["business_clients"] });
       onOpenChange(false);
       resetForm();
     } catch (err: any) {
