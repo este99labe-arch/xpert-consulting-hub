@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
+import InvoiceAttachment from "@/components/invoices/InvoiceAttachment";
 
 interface Props {
   open: boolean;
@@ -29,6 +30,8 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
   const [vatPercentage, setVatPercentage] = useState("21");
   const [vatIncluded, setVatIncluded] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [attachmentPath, setAttachmentPath] = useState<string | null>(null);
+  const [attachmentName, setAttachmentName] = useState<string | null>(null);
 
   const amountNum = parseFloat(amount) || 0;
   const vatNum = parseFloat(vatPercentage) || 0;
@@ -109,7 +112,8 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
         vat_percentage: vatNum,
         amount_vat: amountVat,
         amount_total: amountTotal,
-      });
+        ...(attachmentPath ? { attachment_path: attachmentPath, attachment_name: attachmentName } : {}),
+      } as any);
       if (error) throw error;
       toast({ title: "Factura creada correctamente" });
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
@@ -131,6 +135,8 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
     setAmount("");
     setVatPercentage("21");
     setVatIncluded(false);
+    setAttachmentPath(null);
+    setAttachmentName(null);
   };
 
   return (
@@ -213,6 +219,18 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
             <Label htmlFor="vat-included" className="text-sm text-muted-foreground cursor-pointer">
               El importe ya incluye IVA
             </Label>
+          </div>
+
+          {/* Attachment */}
+          <div className="space-y-2">
+            <Label>Archivo adjunto</Label>
+            <InvoiceAttachment
+              accountId={accountId || ""}
+              attachmentPath={attachmentPath}
+              attachmentName={attachmentName}
+              onUploaded={(path, name) => { setAttachmentPath(path); setAttachmentName(name); }}
+              onRemoved={() => { setAttachmentPath(null); setAttachmentName(null); }}
+            />
           </div>
 
           <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-1">
