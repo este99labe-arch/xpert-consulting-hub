@@ -135,6 +135,26 @@ const AppInvoices = () => {
     }
   };
 
+  const handleSendEmail = async (invoiceId: string) => {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) { toast({ title: "Error", description: "No estás autenticado", variant: "destructive" }); return; }
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const res = await fetch(`https://${projectId}.supabase.co/functions/v1/send_invoice_email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ invoice_id: invoiceId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Error enviando email");
+      toast({ title: "Email enviado", description: "La factura se ha enviado al cliente por email" });
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  }
+
   // Delete handlers
   const handleDeleteClick = (inv: any) => {
     setDeleteInvoice(inv);
@@ -361,6 +381,7 @@ const AppInvoices = () => {
                         onExport={() => handleExportPdf(inv.id)}
                         onEdit={() => setEditInvoice(inv)}
                         onDelete={() => handleDeleteClick(inv)}
+                        onSendEmail={inv.business_clients?.email ? () => handleSendEmail(inv.id) : undefined}
                       />
                     </TableCell>
                   </TableRow>
