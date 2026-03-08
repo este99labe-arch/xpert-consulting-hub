@@ -26,6 +26,7 @@ import InvoicePreviewDialog from "@/components/invoices/InvoicePreviewDialog";
 import EditInvoiceDialog from "@/components/invoices/EditInvoiceDialog";
 import InvoiceActionsMenu from "@/components/invoices/InvoiceActionsMenu";
 import RecurringInvoicesTab from "@/components/invoices/RecurringInvoicesTab";
+import { dispatchWebhook } from "@/lib/webhooks";
 
 const statusColors: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground",
