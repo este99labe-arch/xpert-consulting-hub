@@ -8,6 +8,7 @@ import { es } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import InvoiceAttachment from "@/components/invoices/InvoiceAttachment";
 
 const statusLabels: Record<string, string> = {
   DRAFT: "Borrador", SENT: "Enviada", PAID: "Pagada", OVERDUE: "Vencida",
