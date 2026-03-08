@@ -905,7 +905,7 @@ const AppSettings = () => {
         </TabsList>
 
         <TabsContent value="company">
-          <CompanyTab accountId={accountId} />
+          <CompanyTab accountId={accountId} isManager={isManager} />
         </TabsContent>
 
         <TabsContent value="profile">
