@@ -648,9 +648,9 @@ const AppAccounting = () => {
     );
   }
 
-  // Managers can edit any manual entry; employees only DRAFT manual entries
-  const canEditEntry = (e: JournalEntry) => !e.invoice_id && (isManager || e.status === "DRAFT");
-  const canDeleteEntry = (e: JournalEntry) => !e.invoice_id;
+  // Managers can edit any entry; employees only DRAFT manual entries
+  const canEditEntry = (e: JournalEntry) => isManager || (e.status === "DRAFT" && !e.invoice_id);
+  const canDeleteEntry = (_e: JournalEntry) => true;
 
   return (
     <div className="space-y-6">
