@@ -60,9 +60,19 @@ const ClientLayout = () => {
   const navigate = useNavigate();
 
   const { data: modules = [] } = useQuery({
-    queryKey: ["account_modules", accountId],
+    queryKey: ["account_modules", accountId, role],
     queryFn: async () => {
       if (!accountId) return [];
+
+      // MASTER_ADMIN always gets all modules
+      if (role === "MASTER_ADMIN") {
+        const { data, error } = await supabase
+          .from("service_modules")
+          .select("code, name");
+        if (error) throw error;
+        return (data || []).map((m) => ({ code: m.code, name: m.name }));
+      }
+
       const { data, error } = await supabase
         .from("account_modules")
         .select("is_enabled, service_modules(code, name)")
