@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -15,52 +16,44 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
   BarChart3, BookOpen, FileText, Calculator, TrendingUp, TrendingDown,
-  Search, Plus, Download, Link, ChevronRight, ChevronDown, Pencil,
+  Search, Plus, Download, Link, Pencil, Trash2, MoreHorizontal, Check, X, Clock,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format, startOfMonth, endOfMonth, startOfYear, endOfYear, subMonths } from "date-fns";
 import { es } from "date-fns/locale";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend,
+  PieChart, Pie, Cell,
 } from "recharts";
 
 // ---- Types ----
 interface ChartAccount {
-  id: string;
-  account_id: string;
-  code: string;
-  name: string;
-  type: string;
-  parent_id: string | null;
-  is_active: boolean;
+  id: string; account_id: string; code: string; name: string; type: string; parent_id: string | null; is_active: boolean;
 }
-
 interface JournalEntry {
-  id: string;
-  account_id: string;
-  entry_number: string;
-  date: string;
-  description: string;
-  invoice_id: string | null;
-  status: string;
-  created_by: string;
-  created_at: string;
+  id: string; account_id: string; entry_number: string; date: string; description: string;
+  invoice_id: string | null; status: string; created_by: string; created_at: string;
 }
-
 interface JournalEntryLine {
-  id: string;
-  entry_id: string;
-  chart_account_id: string;
-  debit: number;
-  credit: number;
-  description: string;
+  id: string; entry_id: string; chart_account_id: string; debit: number; credit: number; description: string;
   chart_of_accounts?: { code: string; name: string };
   journal_entries?: { entry_number: string; date: string; description: string; status: string; invoice_id: string | null };
+}
+interface DeleteRequest {
+  id: string; account_id: string; entry_id: string; reason: string; requested_by: string;
+  status: string; reviewed_by: string | null; reviewed_at: string | null; created_at: string;
+  journal_entries?: { entry_number: string; description: string; date: string };
 }
 
 const typeLabels: Record<string, string> = {
@@ -75,8 +68,9 @@ const typeColors: Record<string, string> = {
 };
 
 const CHART_COLORS = ["hsl(var(--primary))", "hsl(var(--destructive))", "hsl(var(--accent))", "#f59e0b", "#8b5cf6", "#06b6d4"];
-
 const EUR = (n: number) => n.toLocaleString("es-ES", { style: "currency", currency: "EUR" });
+
+type EntryFormLine = { chart_account_id: string; debit: string; credit: string };
 
 const AppAccounting = () => {
   const { user, accountId, role } = useAuth();
@@ -102,11 +96,7 @@ const AppAccounting = () => {
   const { data: chartAccounts = [] } = useQuery({
     queryKey: ["chart-of-accounts", activeAccountId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("chart_of_accounts")
-        .select("*")
-        .eq("account_id", activeAccountId!)
-        .order("code");
+      const { data, error } = await supabase.from("chart_of_accounts").select("*").eq("account_id", activeAccountId!).order("code");
       if (error) throw error;
       return (data || []) as ChartAccount[];
     },
@@ -117,11 +107,7 @@ const AppAccounting = () => {
   const { data: entries = [] } = useQuery({
     queryKey: ["journal-entries", activeAccountId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("journal_entries")
-        .select("*")
-        .eq("account_id", activeAccountId!)
-        .order("date", { ascending: false });
+      const { data, error } = await supabase.from("journal_entries").select("*").eq("account_id", activeAccountId!).order("date", { ascending: false });
       if (error) throw error;
       return (data || []) as JournalEntry[];
     },
@@ -147,15 +133,33 @@ const AppAccounting = () => {
   const { data: invoices = [] } = useQuery({
     queryKey: ["invoices-accounting", activeAccountId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("invoices")
-        .select("*")
-        .eq("account_id", activeAccountId!);
+      const { data, error } = await supabase.from("invoices").select("*").eq("account_id", activeAccountId!);
       if (error) throw error;
       return data || [];
     },
     enabled: !!activeAccountId,
   });
+
+  // ---- Delete Requests ----
+  const { data: deleteRequests = [] } = useQuery({
+    queryKey: ["entry-delete-requests", activeAccountId],
+    queryFn: async () => {
+      const q = supabase
+        .from("journal_entry_delete_requests")
+        .select("*, journal_entries(entry_number, description, date)")
+        .order("created_at", { ascending: false });
+      // For non-master, RLS handles scoping. For master viewing a client, filter.
+      if (isMaster && activeAccountId) {
+        q.eq("account_id", activeAccountId);
+      }
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data || []) as DeleteRequest[];
+    },
+    enabled: !!activeAccountId,
+  });
+
+  const pendingDeleteRequests = useMemo(() => deleteRequests.filter(r => r.status === "PENDING"), [deleteRequests]);
 
   // ===== DASHBOARD KPIs =====
   const postedLines = useMemo(() => allLines.filter(l => l.journal_entries?.status === "POSTED"), [allLines]);
@@ -188,7 +192,6 @@ const AppAccounting = () => {
     const now = new Date();
     const incomeIds = new Set(chartAccounts.filter(c => c.type === "INCOME").map(c => c.id));
     const expenseIds = new Set(chartAccounts.filter(c => c.type === "EXPENSE").map(c => c.id));
-
     for (let i = 11; i >= 0; i--) {
       const d = subMonths(now, i);
       const start = startOfMonth(d);
@@ -206,7 +209,7 @@ const AppAccounting = () => {
     return months;
   }, [postedLines, chartAccounts]);
 
-  // ---- Pie chart by account type ----
+  // ---- Pie chart ----
   const pieData = useMemo(() => {
     const byType: Record<string, number> = {};
     for (const ca of chartAccounts.filter(c => c.type === "EXPENSE")) {
@@ -260,7 +263,16 @@ const AppAccounting = () => {
   // ===== JOURNAL ENTRIES =====
   const [entryFilter, setEntryFilter] = useState({ status: "ALL", search: "" });
   const [entryDialog, setEntryDialog] = useState(false);
-  const [entryForm, setEntryForm] = useState({ date: format(new Date(), "yyyy-MM-dd"), description: "", lines: [{ chart_account_id: "", debit: "", credit: "" }, { chart_account_id: "", debit: "", credit: "" }] });
+  const [editingEntry, setEditingEntry] = useState<JournalEntry | null>(null);
+  const [entryForm, setEntryForm] = useState<{ date: string; description: string; lines: EntryFormLine[] }>({
+    date: format(new Date(), "yyyy-MM-dd"), description: "",
+    lines: [{ chart_account_id: "", debit: "", credit: "" }, { chart_account_id: "", debit: "", credit: "" }],
+  });
+
+  // Delete states
+  const [deleteConfirmEntry, setDeleteConfirmEntry] = useState<JournalEntry | null>(null);
+  const [deleteRequestDialog, setDeleteRequestDialog] = useState<JournalEntry | null>(null);
+  const [deleteRequestReason, setDeleteRequestReason] = useState("");
 
   const filteredEntries = useMemo(() => {
     return entries.filter(e => {
@@ -270,10 +282,33 @@ const AppAccounting = () => {
     });
   }, [entries, entryFilter]);
 
+  const getEntryLines = (entryId: string) => allLines.filter(l => l.entry_id === entryId);
+
+  const openCreateEntry = () => {
+    setEditingEntry(null);
+    setEntryForm({
+      date: format(new Date(), "yyyy-MM-dd"), description: "",
+      lines: [{ chart_account_id: "", debit: "", credit: "" }, { chart_account_id: "", debit: "", credit: "" }],
+    });
+    setEntryDialog(true);
+  };
+
+  const openEditEntry = (entry: JournalEntry) => {
+    const lines = getEntryLines(entry.id);
+    setEditingEntry(entry);
+    setEntryForm({
+      date: entry.date,
+      description: entry.description,
+      lines: lines.length > 0
+        ? lines.map(l => ({ chart_account_id: l.chart_account_id, debit: Number(l.debit) > 0 ? String(l.debit) : "", credit: Number(l.credit) > 0 ? String(l.credit) : "" }))
+        : [{ chart_account_id: "", debit: "", credit: "" }, { chart_account_id: "", debit: "", credit: "" }],
+    });
+    setEntryDialog(true);
+  };
+
   const addEntryLine = () => {
     setEntryForm(prev => ({ ...prev, lines: [...prev.lines, { chart_account_id: "", debit: "", credit: "" }] }));
   };
-
   const updateEntryLine = (idx: number, field: string, value: string) => {
     setEntryForm(prev => {
       const lines = [...prev.lines];
@@ -281,7 +316,6 @@ const AppAccounting = () => {
       return { ...prev, lines };
     });
   };
-
   const removeEntryLine = (idx: number) => {
     if (entryForm.lines.length <= 2) return;
     setEntryForm(prev => ({ ...prev, lines: prev.lines.filter((_, i) => i !== idx) }));
@@ -297,30 +331,44 @@ const AppAccounting = () => {
       const validLines = entryForm.lines.filter(l => l.chart_account_id && (Number(l.debit) > 0 || Number(l.credit) > 0));
       if (validLines.length < 2) throw new Error("Se necesitan al menos 2 líneas");
 
-      const { data: entry, error } = await supabase.from("journal_entries").insert({
-        account_id: activeAccountId!,
-        date: entryForm.date,
-        description: entryForm.description,
-        status: "DRAFT",
-        created_by: user!.id,
-      }).select().single();
-      if (error) throw error;
+      if (editingEntry) {
+        // Update header
+        const { error } = await supabase.from("journal_entries").update({
+          date: entryForm.date, description: entryForm.description,
+        }).eq("id", editingEntry.id);
+        if (error) throw error;
 
-      const linePayloads = validLines.map(l => ({
-        entry_id: entry.id,
-        chart_account_id: l.chart_account_id,
-        debit: Number(l.debit) || 0,
-        credit: Number(l.credit) || 0,
-        description: "",
-      }));
-      const { error: lineErr } = await supabase.from("journal_entry_lines").insert(linePayloads);
-      if (lineErr) throw lineErr;
+        // Delete old lines and re-insert
+        const { error: delErr } = await supabase.from("journal_entry_lines").delete().eq("entry_id", editingEntry.id);
+        if (delErr) throw delErr;
+
+        const linePayloads = validLines.map(l => ({
+          entry_id: editingEntry.id, chart_account_id: l.chart_account_id,
+          debit: Number(l.debit) || 0, credit: Number(l.credit) || 0, description: "",
+        }));
+        const { error: lineErr } = await supabase.from("journal_entry_lines").insert(linePayloads);
+        if (lineErr) throw lineErr;
+      } else {
+        // Create new
+        const { data: entry, error } = await supabase.from("journal_entries").insert({
+          account_id: activeAccountId!, date: entryForm.date, description: entryForm.description,
+          status: "DRAFT", created_by: user!.id,
+        }).select().single();
+        if (error) throw error;
+
+        const linePayloads = validLines.map(l => ({
+          entry_id: entry.id, chart_account_id: l.chart_account_id,
+          debit: Number(l.debit) || 0, credit: Number(l.credit) || 0, description: "",
+        }));
+        const { error: lineErr } = await supabase.from("journal_entry_lines").insert(linePayloads);
+        if (lineErr) throw lineErr;
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["journal-entries", activeAccountId] });
       qc.invalidateQueries({ queryKey: ["journal-entry-lines", activeAccountId] });
       setEntryDialog(false);
-      toast({ title: "Asiento creado" });
+      toast({ title: editingEntry ? "Asiento actualizado" : "Asiento creado" });
     },
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
@@ -335,6 +383,73 @@ const AppAccounting = () => {
       qc.invalidateQueries({ queryKey: ["journal-entry-lines", activeAccountId] });
       toast({ title: "Asiento contabilizado" });
     },
+  });
+
+  // ---- Delete entry (manager direct) ----
+  const deleteEntry = useMutation({
+    mutationFn: async (entryId: string) => {
+      // Lines cascade-delete via FK, but we delete explicitly for RLS
+      const { error: lineErr } = await supabase.from("journal_entry_lines").delete().eq("entry_id", entryId);
+      if (lineErr) throw lineErr;
+      const { error } = await supabase.from("journal_entries").delete().eq("id", entryId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["journal-entries", activeAccountId] });
+      qc.invalidateQueries({ queryKey: ["journal-entry-lines", activeAccountId] });
+      setDeleteConfirmEntry(null);
+      toast({ title: "Asiento eliminado" });
+    },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  // ---- Delete request (employee) ----
+  const createDeleteRequest = useMutation({
+    mutationFn: async () => {
+      if (!deleteRequestDialog) throw new Error("No entry selected");
+      const { error } = await supabase.from("journal_entry_delete_requests").insert({
+        account_id: activeAccountId!, entry_id: deleteRequestDialog.id,
+        reason: deleteRequestReason, requested_by: user!.id,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["entry-delete-requests", activeAccountId] });
+      setDeleteRequestDialog(null);
+      setDeleteRequestReason("");
+      toast({ title: "Solicitud de eliminación enviada" });
+    },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  // ---- Approve/Reject delete request ----
+  const reviewDeleteRequest = useMutation({
+    mutationFn: async ({ requestId, approved }: { requestId: string; approved: boolean }) => {
+      const request = deleteRequests.find(r => r.id === requestId);
+      if (!request) throw new Error("Request not found");
+
+      const { error } = await supabase.from("journal_entry_delete_requests").update({
+        status: approved ? "APPROVED" : "REJECTED",
+        reviewed_by: user!.id,
+        reviewed_at: new Date().toISOString(),
+      }).eq("id", requestId);
+      if (error) throw error;
+
+      if (approved) {
+        // Delete the entry lines then entry
+        const { error: lineErr } = await supabase.from("journal_entry_lines").delete().eq("entry_id", request.entry_id);
+        if (lineErr) throw lineErr;
+        const { error: entryErr } = await supabase.from("journal_entries").delete().eq("id", request.entry_id);
+        if (entryErr) throw entryErr;
+      }
+    },
+    onSuccess: (_, { approved }) => {
+      qc.invalidateQueries({ queryKey: ["entry-delete-requests", activeAccountId] });
+      qc.invalidateQueries({ queryKey: ["journal-entries", activeAccountId] });
+      qc.invalidateQueries({ queryKey: ["journal-entry-lines", activeAccountId] });
+      toast({ title: approved ? "Solicitud aprobada y asiento eliminado" : "Solicitud rechazada" });
+    },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
   // ===== LIBRO MAYOR =====
@@ -380,11 +495,7 @@ const AppAccounting = () => {
     const y = Number(plYear);
     if (plPeriod === "YEAR") return { from: `${y}-01-01`, to: `${y}-12-31` };
     const q = Number(plQuarter);
-    const startMonth = (q - 1) * 3;
-    const from = `${y}-${String(startMonth + 1).padStart(2, "0")}-01`;
-    const endMonth = startMonth + 3;
-    const to = endMonth > 12 ? `${y}-12-31` : `${y}-${String(endMonth).padStart(2, "0")}-01`;
-    // Approximate end of quarter
+    const from = `${y}-${String((q - 1) * 3 + 1).padStart(2, "0")}-01`;
     const endDates: Record<number, string> = { 1: `${y}-03-31`, 2: `${y}-06-30`, 3: `${y}-09-30`, 4: `${y}-12-31` };
     return { from, to: endDates[q] || `${y}-12-31` };
   }, [plPeriod, plYear, plQuarter]);
@@ -394,23 +505,18 @@ const AppAccounting = () => {
       const d = l.journal_entries?.date || "";
       return d >= plDateRange.from && d <= plDateRange.to;
     });
-
     const incomeAccounts = chartAccounts.filter(c => c.type === "INCOME");
     const expenseAccounts = chartAccounts.filter(c => c.type === "EXPENSE");
-
     const incomeBreakdown = incomeAccounts.map(ca => {
       const total = inRange.filter(l => l.chart_account_id === ca.id).reduce((s, l) => s + Number(l.credit) - Number(l.debit), 0);
       return { code: ca.code, name: ca.name, total };
     }).filter(x => x.total !== 0);
-
     const expenseBreakdown = expenseAccounts.map(ca => {
       const total = inRange.filter(l => l.chart_account_id === ca.id).reduce((s, l) => s + Number(l.debit) - Number(l.credit), 0);
       return { code: ca.code, name: ca.name, total };
     }).filter(x => x.total !== 0);
-
     const totalInc = incomeBreakdown.reduce((s, x) => s + x.total, 0);
     const totalExp = expenseBreakdown.reduce((s, x) => s + x.total, 0);
-
     return { incomeBreakdown, expenseBreakdown, totalIncome: totalInc, totalExpense: totalExp, result: totalInc - totalExp };
   }, [postedLines, chartAccounts, plDateRange]);
 
@@ -435,29 +541,22 @@ const AppAccounting = () => {
     const endDates: Record<number, string> = { 1: `${y}-03-31`, 2: `${y}-06-30`, 3: `${y}-09-30`, 4: `${y}-12-31` };
     const from = `${y}-${String((q - 1) * 3 + 1).padStart(2, "0")}-01`;
     const to = endDates[q];
-
     const qInvoices = invoices.filter((inv: any) => inv.issue_date >= from && inv.issue_date <= to);
-
     const vatRates = [0, 4, 10, 21];
     const collected: { rate: number; base: number; vat: number }[] = [];
     const paid: { rate: number; base: number; vat: number }[] = [];
-
     for (const rate of vatRates) {
       const salesAtRate = qInvoices.filter((inv: any) => inv.type === "INVOICE" && Number(inv.vat_percentage) === rate);
       const purchasesAtRate = qInvoices.filter((inv: any) => inv.type === "EXPENSE" && Number(inv.vat_percentage) === rate);
-
       const sBase = salesAtRate.reduce((s: number, inv: any) => s + Number(inv.amount_net), 0);
       const sVat = salesAtRate.reduce((s: number, inv: any) => s + Number(inv.amount_vat), 0);
       const pBase = purchasesAtRate.reduce((s: number, inv: any) => s + Number(inv.amount_net), 0);
       const pVat = purchasesAtRate.reduce((s: number, inv: any) => s + Number(inv.amount_vat), 0);
-
       if (sBase > 0 || sVat > 0) collected.push({ rate, base: sBase, vat: sVat });
       if (pBase > 0 || pVat > 0) paid.push({ rate, base: pBase, vat: pVat });
     }
-
     const totalCollected = collected.reduce((s, r) => s + r.vat, 0);
     const totalPaid = paid.reduce((s, r) => s + r.vat, 0);
-
     return { collected, paid, totalCollected, totalPaid, result: totalCollected - totalPaid };
   }, [invoices, taxYear, taxQuarter]);
 
@@ -472,7 +571,7 @@ const AppAccounting = () => {
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `iva_T${taxQuarter}_${taxYear}.csv`; a.click();
   };
 
-  // ---- Seed chart of accounts for new tenants ----
+  // ---- Seed chart of accounts ----
   const seedChart = useMutation({
     mutationFn: async () => {
       const defaultAccounts = [
@@ -530,7 +629,6 @@ const AppAccounting = () => {
 
   if (!activeAccountId) return <p className="text-muted-foreground">Sin cuenta asignada.</p>;
 
-  // If no chart accounts, show seed button
   if (chartAccounts.length === 0) {
     return (
       <div className="space-y-4">
@@ -541,8 +639,7 @@ const AppAccounting = () => {
             <p className="text-lg text-muted-foreground">No hay plan contable configurado</p>
             {isManager && (
               <Button onClick={() => seedChart.mutate()} disabled={seedChart.isPending}>
-                <Plus className="mr-2 h-4 w-4" />
-                Inicializar Plan Contable Español (PGC)
+                <Plus className="mr-2 h-4 w-4" /> Inicializar Plan Contable Español (PGC)
               </Button>
             )}
           </CardContent>
@@ -550,6 +647,9 @@ const AppAccounting = () => {
       </div>
     );
   }
+
+  const canEditEntry = (e: JournalEntry) => e.status === "DRAFT" && !e.invoice_id;
+  const canDeleteEntry = (e: JournalEntry) => !e.invoice_id;
 
   return (
     <div className="space-y-6">
@@ -564,7 +664,14 @@ const AppAccounting = () => {
         <TabsList className="flex-wrap">
           <TabsTrigger value="dashboard">Resumen</TabsTrigger>
           <TabsTrigger value="chart">Plan Contable</TabsTrigger>
-          <TabsTrigger value="entries">Asientos</TabsTrigger>
+          <TabsTrigger value="entries" className="relative">
+            Asientos
+            {isManager && pendingDeleteRequests.length > 0 && (
+              <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold h-4 w-4">
+                {pendingDeleteRequests.length}
+              </span>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="ledger">Libro Mayor</TabsTrigger>
           <TabsTrigger value="pl">Resultados</TabsTrigger>
           <TabsTrigger value="taxes">Impuestos</TabsTrigger>
@@ -576,7 +683,7 @@ const AppAccounting = () => {
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
-                  <TrendingUp className="h-8 w-8 text-green-600" />
+                  <TrendingUp className="h-8 w-8 text-primary" />
                   <div>
                     <p className="text-2xl font-bold">{EUR(totalIncome)}</p>
                     <p className="text-xs text-muted-foreground">Ingresos totales</p>
@@ -600,7 +707,7 @@ const AppAccounting = () => {
                 <div className="flex items-center gap-3">
                   <BarChart3 className="h-8 w-8 text-primary" />
                   <div>
-                    <p className={`text-2xl font-bold ${totalIncome - totalExpense >= 0 ? "text-green-600" : "text-destructive"}`}>
+                    <p className={`text-2xl font-bold ${totalIncome - totalExpense >= 0 ? "" : "text-destructive"}`}>
                       {EUR(totalIncome - totalExpense)}
                     </p>
                     <p className="text-xs text-muted-foreground">Resultado neto</p>
@@ -613,7 +720,7 @@ const AppAccounting = () => {
                 <div className="flex items-center gap-3">
                   <Calculator className="h-8 w-8 text-muted-foreground" />
                   <div>
-                    <p className={`text-2xl font-bold ${vatCollected - vatPaid >= 0 ? "text-destructive" : "text-green-600"}`}>
+                    <p className={`text-2xl font-bold ${vatCollected - vatPaid >= 0 ? "text-destructive" : ""}`}>
                       {EUR(vatCollected - vatPaid)}
                     </p>
                     <p className="text-xs text-muted-foreground">IVA a {vatCollected - vatPaid >= 0 ? "liquidar" : "compensar"}</p>
@@ -623,7 +730,6 @@ const AppAccounting = () => {
             </Card>
           </div>
 
-          {/* Charts */}
           <div className="grid gap-6 lg:grid-cols-2">
             <Card>
               <CardHeader><CardTitle className="text-base">Evolución mensual</CardTitle></CardHeader>
@@ -729,6 +835,59 @@ const AppAccounting = () => {
 
         {/* ===== ASIENTOS ===== */}
         <TabsContent value="entries" className="space-y-4">
+          {/* Pending delete requests for managers */}
+          {isManager && pendingDeleteRequests.length > 0 && (
+            <Card className="border-destructive/50">
+              <CardHeader className="py-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-destructive" />
+                  Solicitudes de eliminación pendientes ({pendingDeleteRequests.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-32">Asiento</TableHead>
+                      <TableHead className="w-28">Fecha</TableHead>
+                      <TableHead>Motivo</TableHead>
+                      <TableHead className="w-28">Solicitado</TableHead>
+                      <TableHead className="w-28" />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {pendingDeleteRequests.map(req => (
+                      <TableRow key={req.id}>
+                        <TableCell className="font-mono text-sm">{req.journal_entries?.entry_number}</TableCell>
+                        <TableCell>{req.journal_entries?.date ? format(new Date(req.journal_entries.date), "dd/MM/yyyy") : ""}</TableCell>
+                        <TableCell className="max-w-[250px] truncate">{req.reason || "Sin motivo"}</TableCell>
+                        <TableCell>{format(new Date(req.created_at), "dd/MM/yyyy")}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="outline" size="icon" className="h-7 w-7 text-primary"
+                              onClick={() => reviewDeleteRequest.mutate({ requestId: req.id, approved: true })}
+                              disabled={reviewDeleteRequest.isPending}
+                            >
+                              <Check className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="outline" size="icon" className="h-7 w-7 text-destructive"
+                              onClick={() => reviewDeleteRequest.mutate({ requestId: req.id, approved: false })}
+                              disabled={reviewDeleteRequest.isPending}
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -743,10 +902,7 @@ const AppAccounting = () => {
               </SelectContent>
             </Select>
             {isManager && (
-              <Button size="sm" onClick={() => {
-                setEntryForm({ date: format(new Date(), "yyyy-MM-dd"), description: "", lines: [{ chart_account_id: "", debit: "", credit: "" }, { chart_account_id: "", debit: "", credit: "" }] });
-                setEntryDialog(true);
-              }}>
+              <Button size="sm" onClick={openCreateEntry}>
                 <Plus className="mr-1 h-4 w-4" /> Nuevo asiento
               </Button>
             )}
@@ -760,7 +916,7 @@ const AppAccounting = () => {
                   <TableHead className="w-28">Fecha</TableHead>
                   <TableHead>Descripción</TableHead>
                   <TableHead className="w-28">Estado</TableHead>
-                  <TableHead className="w-24" />
+                  <TableHead className="w-16" />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -780,9 +936,41 @@ const AppAccounting = () => {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {isManager && e.status === "DRAFT" && (
-                        <Button variant="outline" size="sm" onClick={() => postEntry.mutate(e.id)}>Contabilizar</Button>
-                      )}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {/* Edit — only DRAFT manual entries */}
+                          {canEditEntry(e) && (
+                            <DropdownMenuItem onClick={() => openEditEntry(e)}>
+                              <Pencil className="mr-2 h-4 w-4" /> Editar
+                            </DropdownMenuItem>
+                          )}
+                          {/* Post — managers, DRAFT only */}
+                          {isManager && e.status === "DRAFT" && (
+                            <DropdownMenuItem onClick={() => postEntry.mutate(e.id)}>
+                              <Check className="mr-2 h-4 w-4" /> Contabilizar
+                            </DropdownMenuItem>
+                          )}
+                          {canDeleteEntry(e) && (
+                            <>
+                              <DropdownMenuSeparator />
+                              {isManager ? (
+                                <DropdownMenuItem className="text-destructive" onClick={() => setDeleteConfirmEntry(e)}>
+                                  <Trash2 className="mr-2 h-4 w-4" /> Eliminar
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem className="text-destructive" onClick={() => { setDeleteRequestDialog(e); setDeleteRequestReason(""); }}>
+                                  <Trash2 className="mr-2 h-4 w-4" /> Solicitar eliminación
+                                </DropdownMenuItem>
+                              )}
+                            </>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -878,10 +1066,9 @@ const AppAccounting = () => {
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
-            {/* Income */}
             <Card>
               <CardHeader className="py-3">
-                <CardTitle className="text-base text-green-600">Ingresos</CardTitle>
+                <CardTitle className="text-base text-primary">Ingresos</CardTitle>
               </CardHeader>
               <Table>
                 <TableBody>
@@ -894,12 +1081,11 @@ const AppAccounting = () => {
                   ))}
                   <TableRow className="font-bold border-t-2">
                     <TableCell colSpan={2}>TOTAL INGRESOS</TableCell>
-                    <TableCell className="text-right font-mono text-green-600">{EUR(plData.totalIncome)}</TableCell>
+                    <TableCell className="text-right font-mono text-primary">{EUR(plData.totalIncome)}</TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
             </Card>
-            {/* Expenses */}
             <Card>
               <CardHeader className="py-3">
                 <CardTitle className="text-base text-destructive">Gastos</CardTitle>
@@ -925,7 +1111,7 @@ const AppAccounting = () => {
           <Card>
             <CardContent className="py-6 flex justify-between items-center">
               <span className="text-lg font-bold">Resultado del periodo</span>
-              <span className={`text-2xl font-bold font-mono ${plData.result >= 0 ? "text-green-600" : "text-destructive"}`}>
+              <span className={`text-2xl font-bold font-mono ${plData.result >= 0 ? "" : "text-destructive"}`}>
                 {EUR(plData.result)}
               </span>
             </CardContent>
@@ -957,9 +1143,7 @@ const AppAccounting = () => {
 
           <div className="grid gap-4 lg:grid-cols-2">
             <Card>
-              <CardHeader className="py-3">
-                <CardTitle className="text-base">IVA Repercutido (Ventas)</CardTitle>
-              </CardHeader>
+              <CardHeader className="py-3"><CardTitle className="text-base">IVA Repercutido (Ventas)</CardTitle></CardHeader>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -990,11 +1174,8 @@ const AppAccounting = () => {
                 </TableBody>
               </Table>
             </Card>
-
             <Card>
-              <CardHeader className="py-3">
-                <CardTitle className="text-base">IVA Soportado (Compras)</CardTitle>
-              </CardHeader>
+              <CardHeader className="py-3"><CardTitle className="text-base">IVA Soportado (Compras)</CardTitle></CardHeader>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -1035,7 +1216,7 @@ const AppAccounting = () => {
                   {taxData.result >= 0 ? "A ingresar en Hacienda" : "A compensar / devolver"}
                 </p>
               </div>
-              <span className={`text-2xl font-bold font-mono ${taxData.result >= 0 ? "text-destructive" : "text-green-600"}`}>
+              <span className={`text-2xl font-bold font-mono ${taxData.result >= 0 ? "text-destructive" : ""}`}>
                 {EUR(Math.abs(taxData.result))}
               </span>
             </CardContent>
@@ -1082,11 +1263,11 @@ const AppAccounting = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Journal Entry Dialog */}
+      {/* Journal Entry Dialog (Create / Edit) */}
       <Dialog open={entryDialog} onOpenChange={setEntryDialog}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Nuevo asiento contable</DialogTitle>
+            <DialogTitle>{editingEntry ? `Editar asiento ${editingEntry.entry_number}` : "Nuevo asiento contable"}</DialogTitle>
             <DialogDescription>Las líneas deben cuadrar (Debe = Haber).</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -1137,7 +1318,61 @@ const AppAccounting = () => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setEntryDialog(false)}>Cancelar</Button>
             <Button onClick={() => saveEntry.mutate()} disabled={!entryBalanced || saveEntry.isPending}>
-              Crear asiento
+              {editingEntry ? "Guardar cambios" : "Crear asiento"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation (Manager) */}
+      <AlertDialog open={!!deleteConfirmEntry} onOpenChange={open => !open && setDeleteConfirmEntry(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar asiento</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro de eliminar el asiento <strong>{deleteConfirmEntry?.entry_number}</strong>?
+              {deleteConfirmEntry?.status === "POSTED" && " Este asiento ya está contabilizado."}
+              {" "}Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => deleteConfirmEntry && deleteEntry.mutate(deleteConfirmEntry.id)}
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Request Dialog (Employee) */}
+      <Dialog open={!!deleteRequestDialog} onOpenChange={open => !open && setDeleteRequestDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Solicitar eliminación de asiento</DialogTitle>
+            <DialogDescription>
+              Asiento: <strong>{deleteRequestDialog?.entry_number}</strong> — {deleteRequestDialog?.description}
+            </DialogDescription>
+          </DialogHeader>
+          <div>
+            <Label>Motivo de la eliminación</Label>
+            <Textarea
+              value={deleteRequestReason}
+              onChange={e => setDeleteRequestReason(e.target.value)}
+              placeholder="Explica por qué se debe eliminar este asiento..."
+              rows={3}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteRequestDialog(null)}>Cancelar</Button>
+            <Button
+              variant="destructive"
+              onClick={() => createDeleteRequest.mutate()}
+              disabled={!deleteRequestReason.trim() || createDeleteRequest.isPending}
+            >
+              Enviar solicitud
             </Button>
           </DialogFooter>
         </DialogContent>
