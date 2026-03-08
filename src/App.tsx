@@ -15,6 +15,7 @@ import MasterSettings from "@/pages/master/MasterSettings";
 import ClientLayout from "@/layouts/ClientLayout";
 import AppDashboard from "@/pages/app/AppDashboard";
 import AppPlaceholder from "@/pages/app/AppPlaceholder";
+import AppAccounting from "@/pages/app/AppAccounting";
 import AppAttendance from "@/pages/app/AppAttendance";
 import AppHR from "@/pages/app/AppHR";
 import AppInvoices from "@/pages/app/AppInvoices";
