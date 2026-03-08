@@ -22,12 +22,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   Loader2, KeyRound, UserPlus, AlertCircle, Settings, Users, CalendarDays,
-  Clock, ShieldCheck, Save, User, Lock, Check, X, Mail, Activity, Key, Webhook,
+  Clock, ShieldCheck, Save, User, Lock, Check, X, Mail, Activity, Key, Webhook, MessageSquare,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import AuditActivityTab from "@/components/settings/AuditActivityTab";
 import ApiKeysTab from "@/components/settings/ApiKeysTab";
 import WebhooksTab from "@/components/settings/WebhooksTab";
+import WhatsAppConfigTab from "@/components/settings/WhatsAppConfigTab";
 
 const WEEKDAYS = [
   { code: "MON", label: "Lunes" },
@@ -920,6 +921,11 @@ const AppSettings = () => {
               <Webhook className="h-4 w-4" /> Webhooks
             </TabsTrigger>
           )}
+          {isManager && (
+            <TabsTrigger value="whatsapp" className="gap-2">
+              <MessageSquare className="h-4 w-4" /> WhatsApp
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="company">
@@ -956,6 +962,11 @@ const AppSettings = () => {
         {isManager && (
           <TabsContent value="webhooks">
             <WebhooksTab accountId={accountId} isManager={isManager} />
+          </TabsContent>
+        )}
+        {isManager && (
+          <TabsContent value="whatsapp">
+            <WhatsAppConfigTab accountId={accountId} isManager={isManager} />
           </TabsContent>
         )}
       </Tabs>
