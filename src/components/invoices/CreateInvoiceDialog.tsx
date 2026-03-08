@@ -112,7 +112,8 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
         vat_percentage: vatNum,
         amount_vat: amountVat,
         amount_total: amountTotal,
-      });
+        ...(attachmentPath ? { attachment_path: attachmentPath, attachment_name: attachmentName } : {}),
+      } as any);
       if (error) throw error;
       toast({ title: "Factura creada correctamente" });
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
@@ -134,6 +135,8 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
     setAmount("");
     setVatPercentage("21");
     setVatIncluded(false);
+    setAttachmentPath(null);
+    setAttachmentName(null);
   };
 
   return (
