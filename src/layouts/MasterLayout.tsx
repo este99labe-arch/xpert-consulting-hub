@@ -15,6 +15,8 @@ import {
 import { LayoutDashboard, Users, Settings, LogOut, ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+import HealthCheck from "@/components/shared/HealthCheck";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/master/dashboard" },
@@ -83,6 +85,7 @@ const MasterLayout = () => {
               <LogOut className="h-4 w-4 mr-2" />
               Cerrar sesión
             </Button>
+            <HealthCheck />
           </SidebarFooter>
         </Sidebar>
         <SidebarInset>
@@ -91,7 +94,9 @@ const MasterLayout = () => {
           </header>
           <main className="flex-1 overflow-auto p-6">
             <div className="max-w-7xl mx-auto">
-              <Outlet />
+              <ErrorBoundary>
+                <Outlet />
+              </ErrorBoundary>
             </div>
           </main>
         </SidebarInset>
