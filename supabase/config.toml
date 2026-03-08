@@ -17,3 +17,9 @@ verify_jwt = false
 
 [functions.process_recurring_invoices]
 verify_jwt = false
+
+[functions.public_api]
+verify_jwt = false
+
+[functions.manage_api_keys]
+verify_jwt = false
