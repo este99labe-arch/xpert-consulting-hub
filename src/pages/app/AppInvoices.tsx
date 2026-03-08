@@ -473,6 +473,12 @@ const AppInvoices = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+        </TabsContent>
+
+        <TabsContent value="recurring">
+          <RecurringInvoicesTab accountId={accountId || ""} isManager={isManager} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
