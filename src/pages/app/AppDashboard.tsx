@@ -146,14 +146,14 @@ const AppDashboard = () => {
   const recent = invoices.slice(0, 8);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-sm text-muted-foreground">Resumen de tu negocio</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <QuickActions />
           <ToggleGroup type="single" value={period} onValueChange={(v) => v && setPeriod(v as Period)} size="sm" className="bg-muted rounded-lg p-0.5">
             <ToggleGroupItem value="7d" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:shadow-sm">7d</ToggleGroupItem>
@@ -179,27 +179,25 @@ const AppDashboard = () => {
         prevActiveClients={prev.clients}
       />
 
-      {/* Revenue chart + Attendance widget */}
-      <div className="grid gap-6 lg:grid-cols-5">
-        <div className="lg:col-span-3">
+      {/* Row 1: Revenue chart + Attendance */}
+      <div className="grid gap-5 lg:grid-cols-3">
+        <div className="lg:col-span-2">
           <RevenueChart data={chartData} period={chartPeriod} onPeriodChange={setChartPeriod} />
         </div>
-        <div className="lg:col-span-2 grid gap-6">
+        <div className="lg:col-span-1">
           <TodayAttendanceWidget />
-          <InvoiceStatusChart data={statusData} />
         </div>
       </div>
 
-      {/* Bottom row */}
-      <div className="grid gap-6 lg:grid-cols-5">
-        <div className="lg:col-span-3">
-          <RecentActivity invoices={recent} />
-        </div>
-        <div className="lg:col-span-2 grid gap-6">
-          <TopClients clients={topClients} />
-          <LowStockAlerts products={lowStockProducts} />
-        </div>
+      {/* Row 2: Invoice status + Top clients + Low stock */}
+      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        <InvoiceStatusChart data={statusData} />
+        <TopClients clients={topClients} />
+        <LowStockAlerts products={lowStockProducts} />
       </div>
+
+      {/* Row 3: Recent activity (full width) */}
+      <RecentActivity invoices={recent} />
     </div>
   );
 };
