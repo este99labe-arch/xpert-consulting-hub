@@ -6,11 +6,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Product } from "./types";
 
+type OrderForm = { product_id: string; quantity: string; estimated_date: string; notes: string };
+
 interface OrderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  form: { product_id: string; quantity: string; estimated_date: string; notes: string };
-  setForm: React.Dispatch<React.SetStateAction<typeof form>>;
+  form: OrderForm;
+  setForm: React.Dispatch<React.SetStateAction<OrderForm>>;
   products: Product[];
   onSave: () => void;
 }

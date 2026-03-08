@@ -4,11 +4,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 
+type ProductForm = { name: string; sku: string; description: string; category: string; unit: string; min_stock: string; cost_price: string; sale_price: string };
+
 interface ProductDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  form: { name: string; sku: string; description: string; category: string; unit: string; min_stock: string; cost_price: string; sale_price: string };
-  setForm: React.Dispatch<React.SetStateAction<typeof form>>;
+  form: ProductForm;
+  setForm: React.Dispatch<React.SetStateAction<ProductForm>>;
   editing: boolean;
   onSave: () => void;
 }
