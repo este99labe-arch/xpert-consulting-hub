@@ -205,21 +205,6 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport }: Props) 
               </div>
             </div>
 
-            {/* Status badge */}
-            <div style={{ display: "flex", justifyContent: "center", marginBottom: "40px" }}>
-              <div style={{
-                padding: "8px 24px",
-                borderRadius: "999px",
-                fontSize: "12px",
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: "1px",
-                background: invoice.status === "PAID" ? "#dcfce7" : invoice.status === "OVERDUE" ? "#fee2e2" : "#f1f5f9",
-                color: invoice.status === "PAID" ? "#166534" : invoice.status === "OVERDUE" ? "#991b1b" : "#475569",
-              }}>
-                {statusLabels[invoice.status] || invoice.status}
-              </div>
-            </div>
 
             {/* Footer */}
             <div style={{ position: "relative", marginTop: "auto", paddingTop: "30px", borderTop: "1px solid #e2e8f0", textAlign: "center" }}>
