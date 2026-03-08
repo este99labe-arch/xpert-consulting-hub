@@ -22,9 +22,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   Loader2, KeyRound, UserPlus, AlertCircle, Settings, Users, CalendarDays,
-  Clock, ShieldCheck, Save, User, Lock, Check, X, Mail,
+  Clock, ShieldCheck, Save, User, Lock, Check, X, Mail, Activity,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import AuditActivityTab from "@/components/settings/AuditActivityTab";
 
 const WEEKDAYS = [
   { code: "MON", label: "Lunes" },
@@ -902,6 +903,11 @@ const AppSettings = () => {
               )}
             </TabsTrigger>
           )}
+          {isManager && (
+            <TabsTrigger value="activity" className="gap-2">
+              <Activity className="h-4 w-4" /> Actividad
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="company">
@@ -923,6 +929,11 @@ const AppSettings = () => {
         {isManager && (
           <TabsContent value="users">
             <UsersTab userId={user.id} accountId={accountId} />
+          </TabsContent>
+        )}
+        {isManager && (
+          <TabsContent value="activity">
+            <AuditActivityTab accountId={accountId} />
           </TabsContent>
         )}
       </Tabs>
