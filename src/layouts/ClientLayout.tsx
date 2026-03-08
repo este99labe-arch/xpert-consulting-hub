@@ -59,6 +59,24 @@ const ClientLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Fetch account info for sidebar branding
+  const { data: accountInfo } = useQuery({
+    queryKey: ["account-info", accountId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("accounts")
+        .select("name")
+        .eq("id", accountId!)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!accountId,
+  });
+
+  const companyName = accountInfo?.name || "Mi Empresa";
+  const companyInitials = companyName.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase();
+
   const { data: modules = [] } = useQuery({
     queryKey: ["account_modules", accountId, role],
     queryFn: async () => {
@@ -94,10 +112,10 @@ const ClientLayout = () => {
           <SidebarHeader className="p-5 border-b border-sidebar-border">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground text-sm font-bold shadow-md">
-                XC
+                {companyInitials}
               </div>
               <div>
-                <p className="text-sm font-semibold text-sidebar-foreground">XpertConsulting</p>
+                <p className="text-sm font-semibold text-sidebar-foreground">{companyName}</p>
                 <p className="text-xs text-sidebar-foreground/50">Panel Cliente</p>
               </div>
             </div>
