@@ -1,26 +1,29 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import {
-  ChartContainer, ChartTooltip, ChartTooltipContent,
-} from "@/components/ui/chart";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
-import {
-  DollarSign, TrendingDown, BarChart3, TrendingUp, FileText, ArrowUpRight, ArrowDownRight,
-} from "lucide-react";
-import { format, subDays, parseISO, startOfDay } from "date-fns";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { format, subDays, subMonths, startOfDay, startOfMonth, parseISO, differenceInDays } from "date-fns";
 import { es } from "date-fns/locale";
+
+import KpiCards from "@/components/dashboard/KpiCards";
+import RevenueChart from "@/components/dashboard/RevenueChart";
+import InvoiceStatusChart from "@/components/dashboard/InvoiceStatusChart";
+import LowStockAlerts from "@/components/dashboard/LowStockAlerts";
+import TopClients from "@/components/dashboard/TopClients";
+import RecentActivity from "@/components/dashboard/RecentActivity";
+import QuickActions from "@/components/dashboard/QuickActions";
+
+type Period = "7d" | "30d" | "90d" | "year";
+
+const periodDays: Record<Period, number> = { "7d": 7, "30d": 30, "90d": 90, year: 365 };
 
 const AppDashboard = () => {
   const { accountId } = useAuth();
-  const [chartMetric, setChartMetric] = useState<"income" | "expense" | "balance">("income");
+  const [period, setPeriod] = useState<Period>("30d");
+  const [chartPeriod, setChartPeriod] = useState("30d");
 
+  // Fetch invoices
   const { data: invoices = [] } = useQuery({
     queryKey: ["dashboard-invoices", accountId],
     queryFn: async () => {
@@ -35,145 +38,165 @@ const AppDashboard = () => {
     enabled: !!accountId,
   });
 
-  // KPIs
-  const income = invoices.filter((i: any) => i.type === "INCOME").reduce((s: number, i: any) => s + Number(i.amount_total), 0);
-  const expense = invoices.filter((i: any) => i.type === "EXPENSE").reduce((s: number, i: any) => s + Number(i.amount_total), 0);
-  const balance = income - expense;
-  const paid = invoices.filter((i: any) => i.status === "PAID").reduce((s: number, i: any) => s + Number(i.amount_total), 0);
-
-  const kpis = [
-    { label: "Ingresos", value: income, icon: TrendingUp, color: "text-emerald-600", bg: "bg-emerald-500/10" },
-    { label: "Gastos", value: expense, icon: TrendingDown, color: "text-red-500", bg: "bg-red-500/10" },
-    { label: "Balance", value: balance, icon: BarChart3, color: balance >= 0 ? "text-emerald-600" : "text-red-500", bg: "bg-primary/10" },
-    { label: "Cobrado", value: paid, icon: DollarSign, color: "text-primary", bg: "bg-primary/10" },
-  ];
-
-  // Chart data — last 7 days
-  const chartData = Array.from({ length: 7 }, (_, i) => {
-    const day = startOfDay(subDays(new Date(), 6 - i));
-    const dayStr = format(day, "yyyy-MM-dd");
-    const dayIncome = invoices.filter((inv: any) => inv.type === "INCOME" && inv.issue_date === dayStr).reduce((s: number, inv: any) => s + Number(inv.amount_total), 0);
-    const dayExpense = invoices.filter((inv: any) => inv.type === "EXPENSE" && inv.issue_date === dayStr).reduce((s: number, inv: any) => s + Number(inv.amount_total), 0);
-    return {
-      date: format(day, "EEE", { locale: es }),
-      income: dayIncome,
-      expense: dayExpense,
-      balance: dayIncome - dayExpense,
-    };
+  // Fetch low stock products
+  const { data: lowStockProducts = [] } = useQuery({
+    queryKey: ["dashboard-low-stock", accountId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name, current_stock, min_stock")
+        .eq("account_id", accountId!)
+        .eq("is_active", true);
+      if (error) throw error;
+      return (data || []).filter((p: any) => p.current_stock < p.min_stock).sort((a: any, b: any) => (a.current_stock - a.min_stock) - (b.current_stock - b.min_stock));
+    },
+    enabled: !!accountId,
   });
 
-  const metricLabels: Record<string, string> = { income: "Ingresos", expense: "Gastos", balance: "Balance" };
-  const metricColors: Record<string, string> = { income: "hsl(var(--primary))", expense: "hsl(0 72% 51%)", balance: "hsl(160 60% 45%)" };
+  // Period filtering
+  const now = new Date();
+  const days = periodDays[period];
+  const periodStart = startOfDay(subDays(now, days));
+  const prevPeriodStart = startOfDay(subDays(now, days * 2));
 
-  const chartConfig = {
-    [chartMetric]: { label: metricLabels[chartMetric], color: metricColors[chartMetric] },
+  const currentInvoices = useMemo(() =>
+    invoices.filter((i: any) => parseISO(i.issue_date) >= periodStart),
+    [invoices, periodStart]
+  );
+  const prevInvoices = useMemo(() =>
+    invoices.filter((i: any) => {
+      const d = parseISO(i.issue_date);
+      return d >= prevPeriodStart && d < periodStart;
+    }),
+    [invoices, prevPeriodStart, periodStart]
+  );
+
+  // KPI calculations
+  const calc = (list: any[]) => {
+    const income = list.filter((i: any) => i.type === "INCOME").reduce((s: number, i: any) => s + Number(i.amount_total), 0);
+    const expense = list.filter((i: any) => i.type === "EXPENSE").reduce((s: number, i: any) => s + Number(i.amount_total), 0);
+    const pending = list.filter((i: any) => i.status === "DRAFT" || i.status === "SENT").length;
+    const overdue = list.filter((i: any) => i.status === "SENT" && differenceInDays(now, parseISO(i.issue_date)) > 30).length;
+    const clients = new Set(list.map((i: any) => i.client_id)).size;
+    return { income, expense, pending, overdue, clients };
   };
 
-  // Recent invoices (last 5)
-  const recent = invoices.slice(0, 5);
+  const curr = calc(currentInvoices);
+  const prev = calc(prevInvoices);
+
+  // Chart data
+  const chartData = useMemo(() => {
+    if (chartPeriod === "7d") {
+      return Array.from({ length: 7 }, (_, i) => {
+        const day = startOfDay(subDays(now, 6 - i));
+        const dayStr = format(day, "yyyy-MM-dd");
+        const inc = invoices.filter((inv: any) => inv.type === "INCOME" && inv.issue_date === dayStr).reduce((s: number, inv: any) => s + Number(inv.amount_total), 0);
+        const exp = invoices.filter((inv: any) => inv.type === "EXPENSE" && inv.issue_date === dayStr).reduce((s: number, inv: any) => s + Number(inv.amount_total), 0);
+        return { label: format(day, "EEE", { locale: es }), income: inc, expense: exp };
+      });
+    }
+    if (chartPeriod === "30d") {
+      return Array.from({ length: 30 }, (_, i) => {
+        const day = startOfDay(subDays(now, 29 - i));
+        const dayStr = format(day, "yyyy-MM-dd");
+        const inc = invoices.filter((inv: any) => inv.type === "INCOME" && inv.issue_date === dayStr).reduce((s: number, inv: any) => s + Number(inv.amount_total), 0);
+        const exp = invoices.filter((inv: any) => inv.type === "EXPENSE" && inv.issue_date === dayStr).reduce((s: number, inv: any) => s + Number(inv.amount_total), 0);
+        return { label: format(day, "dd", { locale: es }), income: inc, expense: exp };
+      });
+    }
+    // 12m
+    return Array.from({ length: 12 }, (_, i) => {
+      const month = startOfMonth(subMonths(now, 11 - i));
+      const monthStr = format(month, "yyyy-MM");
+      const inc = invoices.filter((inv: any) => inv.type === "INCOME" && inv.issue_date.startsWith(monthStr)).reduce((s: number, inv: any) => s + Number(inv.amount_total), 0);
+      const exp = invoices.filter((inv: any) => inv.type === "EXPENSE" && inv.issue_date.startsWith(monthStr)).reduce((s: number, inv: any) => s + Number(inv.amount_total), 0);
+      return { label: format(month, "MMM", { locale: es }), income: inc, expense: exp };
+    });
+  }, [invoices, chartPeriod]);
+
+  // Status donut
+  const statusData = useMemo(() => {
+    const statuses = [
+      { key: "DRAFT", name: "Borrador", color: "hsl(var(--muted-foreground))" },
+      { key: "SENT", name: "Enviada", color: "hsl(var(--warning))" },
+      { key: "PAID", name: "Pagada", color: "hsl(var(--success))" },
+    ];
+    return statuses.map((s) => {
+      const items = currentInvoices.filter((i: any) => i.status === s.key);
+      return { name: s.name, count: items.length, amount: items.reduce((sum: number, i: any) => sum + Number(i.amount_total), 0), color: s.color };
+    }).filter((s) => s.count > 0);
+  }, [currentInvoices]);
+
+  // Top clients
+  const topClients = useMemo(() => {
+    const map = new Map<string, { name: string; total: number }>();
+    currentInvoices
+      .filter((i: any) => i.type === "INCOME")
+      .forEach((i: any) => {
+        const name = (i as any).business_clients?.name || "—";
+        const existing = map.get(i.client_id) || { name, total: 0 };
+        existing.total += Number(i.amount_total);
+        map.set(i.client_id, existing);
+      });
+    return Array.from(map.values()).sort((a, b) => b.total - a.total).slice(0, 5);
+  }, [currentInvoices]);
+
+  // Recent
+  const recent = invoices.slice(0, 8);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <p className="text-sm text-muted-foreground">Resumen de tu negocio</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <QuickActions />
+          <ToggleGroup type="single" value={period} onValueChange={(v) => v && setPeriod(v as Period)} size="sm" className="bg-muted rounded-lg p-0.5">
+            <ToggleGroupItem value="7d" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:shadow-sm">7d</ToggleGroupItem>
+            <ToggleGroupItem value="30d" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:shadow-sm">30d</ToggleGroupItem>
+            <ToggleGroupItem value="90d" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:shadow-sm">90d</ToggleGroupItem>
+            <ToggleGroupItem value="year" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:shadow-sm">Año</ToggleGroupItem>
+          </ToggleGroup>
+        </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {kpis.map((kpi) => (
-          <Card key={kpi.label} className="border-0 shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium text-muted-foreground">{kpi.label}</span>
-                <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${kpi.bg}`}>
-                  <kpi.icon className={`h-4 w-4 ${kpi.color}`} />
-                </div>
-              </div>
-              <p className={`text-2xl font-bold tracking-tight ${kpi.color}`}>
-                {kpi.value.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {/* KPIs */}
+      <KpiCards
+        income={curr.income}
+        expense={curr.expense}
+        balance={curr.income - curr.expense}
+        pendingCount={curr.pending}
+        overdueCount={curr.overdue}
+        activeClients={curr.clients}
+        prevIncome={prev.income}
+        prevExpense={prev.expense}
+        prevPendingCount={prev.pending}
+        prevOverdueCount={prev.overdue}
+        prevActiveClients={prev.clients}
+      />
 
+      {/* Revenue chart + Quick actions area */}
       <div className="grid gap-6 lg:grid-cols-5">
-        {/* Chart */}
-        <Card className="lg:col-span-3 border-0 shadow-sm overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-base font-semibold">Últimos 7 días</CardTitle>
-            <Select value={chartMetric} onValueChange={(v) => setChartMetric(v as any)}>
-              <SelectTrigger className="w-[140px] h-8 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="income">Ingresos</SelectItem>
-                <SelectItem value="expense">Gastos</SelectItem>
-                <SelectItem value="balance">Balance</SelectItem>
-              </SelectContent>
-            </Select>
-          </CardHeader>
-          <CardContent className="pt-0 pb-4">
-            <div className="w-full h-[260px]">
-              <ChartContainer config={chartConfig} className="!aspect-auto h-full w-full">
-                <AreaChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={metricColors[chartMetric]} stopOpacity={0.3} />
-                      <stop offset="100%" stopColor={metricColors[chartMetric]} stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="date" tick={{ fontSize: 11 }} className="text-muted-foreground" />
-                  <YAxis tick={{ fontSize: 11 }} className="text-muted-foreground" width={50} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Area
-                    type="monotone"
-                    dataKey={chartMetric}
-                    stroke={metricColors[chartMetric]}
-                    fill="url(#chartGradient)"
-                    strokeWidth={2}
-                  />
-                </AreaChart>
-              </ChartContainer>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="lg:col-span-3">
+          <RevenueChart data={chartData} period={chartPeriod} onPeriodChange={setChartPeriod} />
+        </div>
+        <div className="lg:col-span-2 grid gap-6">
+          <InvoiceStatusChart data={statusData} />
+        </div>
+      </div>
 
-        {/* Recent Activity */}
-        <Card className="lg:col-span-2 border-0 shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <FileText className="h-4 w-4 text-muted-foreground" />
-              Actividad Reciente
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {recent.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">Sin actividad reciente</p>
-            ) : (
-              recent.map((inv: any) => (
-                <div key={inv.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/40 hover:bg-muted/60 transition-colors">
-                  <div className={`flex h-8 w-8 items-center justify-center rounded-full shrink-0 ${inv.type === "INCOME" ? "bg-emerald-500/10 text-emerald-600" : "bg-red-500/10 text-red-500"}`}>
-                    {inv.type === "INCOME" ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{(inv as any).business_clients?.name || "—"}</p>
-                    <p className="text-xs text-muted-foreground">{format(parseISO(inv.issue_date), "dd MMM yyyy", { locale: es })}</p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className={`text-sm font-semibold ${inv.type === "INCOME" ? "text-emerald-600" : "text-red-500"}`}>
-                      {inv.type === "INCOME" ? "+" : "-"}{Number(inv.amount_total).toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
-                    </p>
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                      {inv.status === "PAID" ? "Pagada" : inv.status === "SENT" ? "Enviada" : "Borrador"}
-                    </Badge>
-                  </div>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
+      {/* Bottom row */}
+      <div className="grid gap-6 lg:grid-cols-5">
+        <div className="lg:col-span-3">
+          <RecentActivity invoices={recent} />
+        </div>
+        <div className="lg:col-span-2 grid gap-6">
+          <TopClients clients={topClients} />
+          <LowStockAlerts products={lowStockProducts} />
+        </div>
       </div>
     </div>
   );
