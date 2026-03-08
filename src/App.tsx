@@ -24,6 +24,7 @@ import AppInvoices from "@/pages/app/AppInvoices";
 import AppClients from "@/pages/app/AppClients";
 import AppSettings from "@/pages/app/AppSettings";
 import AppInventory from "@/pages/app/AppInventory";
+import AppReports from "@/pages/app/AppReports";
 
 const queryClient = new QueryClient();
 
@@ -70,6 +71,7 @@ const App = () => (
               <Route path="hr" element={<AppHR />} />
               <Route path="attendance" element={<AppAttendance />} />
               <Route path="inventory" element={<AppInventory />} />
+              <Route path="reports" element={<AppReports />} />
               <Route path="settings" element={<AppSettings />} />
             </Route>
 
