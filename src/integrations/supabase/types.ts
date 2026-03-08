@@ -184,6 +184,10 @@ export type Database = {
           check_out: string | null
           created_at: string
           id: string
+          location_lat: number | null
+          location_lng: number | null
+          phone_number: string | null
+          source: string
           user_id: string
           work_date: string
         }
@@ -193,6 +197,10 @@ export type Database = {
           check_out?: string | null
           created_at?: string
           id?: string
+          location_lat?: number | null
+          location_lng?: number | null
+          phone_number?: string | null
+          source?: string
           user_id: string
           work_date: string
         }
@@ -202,6 +210,10 @@ export type Database = {
           check_out?: string | null
           created_at?: string
           id?: string
+          location_lat?: number | null
+          location_lng?: number | null
+          phone_number?: string | null
+          source?: string
           user_id?: string
           work_date?: string
         }
@@ -1304,6 +1316,44 @@ export type Database = {
             foreignKeyName: "webhooks_account_id_fkey"
             columns: ["account_id"]
             isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_config: {
+        Row: {
+          account_id: string
+          created_at: string
+          id: string
+          is_enabled: boolean
+          phone_number_id: string
+          updated_at: string
+          verify_token: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          phone_number_id?: string
+          updated_at?: string
+          verify_token?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          phone_number_id?: string
+          updated_at?: string
+          verify_token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_config_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: true
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },

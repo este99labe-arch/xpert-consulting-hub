@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.dispatch_webhooks]
 verify_jwt = false
+
+[functions.whatsapp_webhook]
+verify_jwt = false

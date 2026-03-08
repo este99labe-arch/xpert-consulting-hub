@@ -27,6 +27,10 @@ interface AttendanceRecord {
   check_in: string | null;
   check_out: string | null;
   created_at: string;
+  source?: string;
+  location_lat?: number | null;
+  location_lng?: number | null;
+  phone_number?: string | null;
 }
 
 interface MyAttendanceViewProps {
@@ -208,6 +212,7 @@ const MyAttendanceView = ({
                   <TableHead>Salida</TableHead>
                   <TableHead>Horas</TableHead>
                   <TableHead>Esperado</TableHead>
+                  <TableHead>Fuente</TableHead>
                   <TableHead className="text-right">Acción</TableHead>
                 </TableRow>
               </TableHeader>
@@ -262,6 +267,15 @@ const MyAttendanceView = ({
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
                             {isWorkDay ? formatMinutes(dailyExpectedMins) : "Libre"}
+                          </TableCell>
+                          <TableCell>
+                            {record?.source && record.source !== "APP" ? (
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                {record.source === "WHATSAPP" ? "📱 WA" : record.source === "MIXED" ? "🔀 Mixto" : record.source}
+                              </Badge>
+                            ) : record ? (
+                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">App</Badge>
+                            ) : null}
                           </TableCell>
                         </>
                       )}

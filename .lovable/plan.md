@@ -1,103 +1,139 @@
 
+# Plan de Desarrollo — XpertConsulting ERP
 
-# WhatsApp Attendance Integration Plan
+## Estado Actual (Resumen)
 
-## Overview
+ERP multi-tenant con 8 módulos funcionales: Dashboard, Clientes, Facturación, Contabilidad, RRHH, Asistencia, Inventario y Configuración. Sistema de roles (MASTER_ADMIN, MANAGER, EMPLOYEE), RLS en todas las tablas, activación modular por cuenta.
 
-Create a WhatsApp-based clock-in/clock-out system using Meta's WhatsApp Business API. Users send messages like "entrada" or "salida" to a dedicated company number, and the system registers attendance automatically — same as doing it from the app.
+---
 
-## Architecture
+## 🔍 Análisis Detallado
 
-```text
-┌──────────────┐     webhook POST      ┌─────────────────────┐
-│  WhatsApp    │ ──────────────────────>│  Edge Function      │
-│  Business    │                        │  whatsapp_webhook   │
-│  (Meta API)  │ <──────────────────────│                     │
-│              │   reply confirmation   │  1. Verify webhook  │
-└──────────────┘                        │  2. Parse message   │
-                                        │  3. Match phone→user│
-                                        │  4. Insert/update   │
-                                        │     attendance      │
-                                        │  5. Reply via API   │
-                                        └─────────────────────┘
-```
+### ✅ Lo que funciona bien
+- Arquitectura multi-tenant sólida con RLS
+- Sistema de roles y permisos consistente
+- Flujos de aprobación (eliminación de facturas/asientos para empleados)
+- Design system coherente (tokens CSS, dark mode)
+- Edge Functions seguras con validación de caller
+- Módulos activables/desactivables por cuenta
 
-## What's Needed
+### ⚠️ Problemas Detectados
 
-### 1. Database Changes
+#### 1. Arquitectura / Código
+- **Archivos monolíticos**: `AppAccounting.tsx` (1386 líneas), `AppHR.tsx` (981 líneas), `AppInventory.tsx` (774 líneas), `AppAttendance.tsx` (670 líneas). Dificulta mantenimiento y testing.
+- **Sin paginación**: Todas las tablas cargan todos los registros. Con volumen alto provocará problemas de rendimiento (límite de 1000 filas de Supabase).
+- **Tipado parcial**: Uso extensivo de `any` en vez de tipos del schema generado (`Tables<"invoices">`, etc.).
+- **Lógica duplicada**: Selector de cuenta para Master Admin repetido en cada módulo. Patrón de exportación CSV duplicado.
+- **Sin error boundaries**: Un error en un componente hijo tumba toda la página.
 
-- **Add `phone` column to `employee_profiles`** (already exists — confirmed in schema). Good, it's already there.
-- **New table `whatsapp_config`**: stores per-account WhatsApp settings (phone number ID, verify token, enabled flag). One row per account.
-  - `id`, `account_id`, `phone_number_id`, `verify_token`, `is_enabled`, `created_at`, `updated_at`
-  - RLS: managers can manage own account config
+#### 2. Seguridad
+- **`AppClients.tsx` usa `confirm()` nativo** para eliminación — no hay control real ni confirmación segura.
+- **Sin rate limiting** en edge functions (crear usuarios, reset password).
+- **Sin validación de inputs** del lado servidor en varias edge functions (ej: longitud de password, formato de email).
+- **Sin audit log**: No hay registro de quién hizo qué cambio y cuándo.
 
-### 2. Edge Function: `whatsapp_webhook`
+#### 3. UX / Diseño
+- **Dashboard limitado**: Solo muestra datos de facturación. No integra info de RRHH, asistencia, inventario.
+- **Sin breadcrumbs** ni indicación clara de ubicación en la navegación.
+- **Sin estados vacíos consistentes**: Algunos módulos tienen, otros no.
+- **Sin modo responsive completo**: Las tablas no se adaptan bien a móvil.
+- **Sin notificaciones**: No hay sistema de alertas internas (stock bajo, solicitudes pendientes, etc.).
+- **Sin feedback de carga por sección**: Loading spinner genérico en vez de skeletons.
 
-Single edge function handling two things:
+#### 4. Funcionalidad ausente
+- **Sin recuperación de contraseña** (forgot password flow)
+- **Sin perfil de usuario** accesible desde el sidebar
+- **Sin filtros por fecha** en Dashboard
+- **Sin reportes/informes** exportables (solo CSV básico en algunos módulos)
+- **Sin multi-idioma** (todo hardcodeado en español)
+- **Sin búsqueda global** entre módulos
+- **Sin actividad/historial** (audit trail)
 
-- **GET** — Meta webhook verification (responds with `hub.challenge`)
-- **POST** — Incoming messages. Flow:
-  1. Extract sender phone number and message text
-  2. Normalize phone (strip +, spaces)
-  3. Look up `employee_profiles` by phone → get `user_id` and `account_id`
-  4. Check `whatsapp_config` is enabled for that account
-  5. Parse command: `entrada`/`salida` (case-insensitive, with common variants)
-  6. Insert/update `attendance_records` (same logic as app)
-  7. Optionally extract location if WhatsApp sends it
-  8. Reply to user via WhatsApp API confirming the action
-  
-  Uses `verify_jwt = false` in config.toml since Meta calls it directly.
+---
 
-### 3. Secrets Required
+## 📋 Plan de Desarrollo (por fases)
 
-- **`WHATSAPP_ACCESS_TOKEN`** — Meta permanent token for WhatsApp Business API
-- **`WHATSAPP_VERIFY_TOKEN`** — Custom string for webhook verification
+### Fase 1 — Estabilidad y Refactor (Prioridad Alta)
+> Objetivo: Código mantenible, rendimiento óptimo, seguridad robusta
 
-### 4. UI: WhatsApp Config in Settings
+| # | Tarea | Impacto |
+|---|-------|---------|
+| 1.1 | **Refactor: Extraer componentes** — Dividir archivos monolíticos en componentes reutilizables (`<ProductsTab>`, `<MovementsTab>`, etc.) | Mantenimiento |
+| 1.2 | **Paginación server-side** — Implementar paginación con `.range()` en todas las tablas con datos crecientes | Rendimiento |
+| 1.3 | **Tipado estricto** — Reemplazar `any` por tipos generados de Supabase (`Tables<"tablename">`) | Calidad |
+| 1.4 | **Error Boundaries** — Añadir React Error Boundaries por módulo | Estabilidad |
+| 1.5 | **Componente reutilizable MasterAccountSelector** — Extraer el selector de cuenta de Master Admin que se repite en cada módulo | DRY |
+| 1.6 | **Skeleton loaders** — Reemplazar spinners genéricos por skeletons contextuales | UX |
+| 1.7 | **Validación de inputs en edge functions** — Password mínimo 8 chars, formato email, sanitización | Seguridad |
 
-New section in `AppSettings.tsx` (inside Schedule or a new "Integraciones" tab):
-- Toggle to enable/disable WhatsApp attendance
-- Field for WhatsApp Phone Number ID (from Meta Business dashboard)
-- Display the webhook URL to configure in Meta
-- Info text explaining setup steps
+### Fase 2 — UX y Diseño (Prioridad Alta)
+> Objetivo: Experiencia de usuario profesional y completa
 
-### 5. Attendance Records Enhancement
+| # | Tarea | Impacto |
+|---|-------|---------|
+| 2.1 | **Dashboard enriquecido** — Widgets de cada módulo activo: empleados activos hoy, stock bajo, solicitudes pendientes, balance contable | UX |
+| 2.2 | **Responsive tables** — Convertir tablas a cards en móvil con diseño adaptativo | UX/Móvil |
+| 2.3 | **Breadcrumbs** — Navegación contextual en el header | Navegación |
+| 2.4 | **Estados vacíos unificados** — Componente reutilizable `<EmptyState icon={} title="" description="" action={} />` | Consistencia |
+| 2.5 | **Confirmación de eliminación unificada** — Reemplazar `confirm()` por `AlertDialog` en AppClients y donde falte | UX/Seguridad |
+| 2.6 | **Filtro por rango de fechas** — Componente date range picker reutilizable para dashboard, facturas, contabilidad | Funcionalidad |
+| 2.7 | **Header con perfil de usuario** — Avatar, nombre, rol visible; acceso rápido a perfil y cerrar sesión | UX |
 
-Add optional columns to `attendance_records`:
-- **`source`** (`text`, default `'APP'`) — tracks whether entry came from `APP` or `WHATSAPP`
-- **`location_lat`** / **`location_lng`** (`numeric`, nullable) — GPS from WhatsApp location messages
-- **`phone_number`** (`text`, nullable) — the phone that sent the message
+### Fase 3 — Funcionalidades Nuevas (Prioridad Media)
+> Objetivo: Funcionalidades que completan la propuesta de valor del ERP
 
-This lets the UI show how each record was created (badge: "App" vs "WhatsApp") and optionally display location.
+| # | Tarea | Impacto |
+|---|-------|---------|
+| 3.1 | **Sistema de notificaciones** — Tabla `notifications`, campanita en header, alertas de: stock bajo, solicitudes pendientes, facturas por cobrar vencidas | Alto |
+| 3.2 | **Forgot password** — Flujo completo de recuperación de contraseña por email | Alto |
+| 3.3 | **Audit log** — Tabla `audit_logs` con trigger o registro manual de acciones críticas (crear/editar/eliminar) | Medio |
+| 3.4 | **Informes y reportes** — Página de reportes con: P&L mensual, balance general, informe de asistencia, valoración de inventario. Exportación a PDF | Alto |
+| 3.5 | **Búsqueda global** — Command palette (Cmd+K) para buscar clientes, facturas, productos, empleados | Medio |
+| 3.6 | **Multi-moneda** — Soporte para facturas en diferentes monedas con tipo de cambio | Bajo |
+| 3.7 | **Comentarios/notas internas** — Sistema de notas en facturas, asientos, órdenes de compra | Medio |
 
-## Implementation Order
+### Fase 4 — Integraciones y Automatización (Prioridad Baja)
+> Objetivo: Automatizar procesos y conectar con servicios externos
 
-1. **DB migration**: add `source`, `location_lat`, `location_lng`, `phone_number` to `attendance_records`; create `whatsapp_config` table
-2. **Edge function**: `whatsapp_webhook` with GET verification + POST message handling
-3. **UI config**: WhatsApp settings panel for managers
-4. **UI display**: Show source badges in attendance views
+| # | Tarea | Impacto |
+|---|-------|---------|
+| 4.1 | **Email automáticos** — Envío de facturas por email a clientes, recordatorios de cobro | Alto |
+| 4.2 | **Facturación recurrente** — Programar facturas automáticas mensuales/trimestrales | Alto |
+| 4.3 | **Integración bancaria** — Importar movimientos bancarios y conciliar con contabilidad | Alto |
+| 4.4 | **API pública** — Edge functions como API REST para integraciones de terceros | Medio |
+| 4.5 | **Webhooks** — Notificar a sistemas externos cuando ocurren eventos (nueva factura, stock bajo) | Medio |
 
-## Files to Create/Modify
+### Fase 5 — Escalabilidad y Producción
+> Objetivo: Preparar la app para producción real
 
-**Create:**
-- `supabase/functions/whatsapp_webhook/index.ts`
-- `src/components/settings/WhatsAppConfigTab.tsx`
+| # | Tarea | Impacto |
+|---|-------|---------|
+| 5.1 | **Tests automatizados** — Tests unitarios para lógica de negocio, tests de integración para edge functions | Crítico |
+| 5.2 | **Monitorización** — Logging estructurado, métricas de rendimiento | Alto |
+| 5.3 | **Backup y recuperación** — Estrategia de backups de BD | Crítico |
+| 5.4 | **Dominio personalizado + SSL** — Configuración de dominio propio | Producción |
+| 5.5 | **Onboarding guiado** — Tour interactivo para nuevos usuarios | UX |
+| 5.6 | **Documentación técnica** — README actualizado, guía de contribución, documentación de API | Mantenimiento |
 
-**Modify:**
-- `supabase/config.toml` — add `[functions.whatsapp_webhook]` with `verify_jwt = false`
-- `src/pages/app/AppSettings.tsx` — add WhatsApp config tab
-- `src/components/attendance/MyAttendanceView.tsx` — show source badge
-- `src/components/attendance/TeamAttendanceView.tsx` — show source in team view
-- DB migration for new columns and table
+---
 
-## Meta WhatsApp Setup (User Steps)
+## 🎯 Recomendación de Prioridad
 
-The user will need to:
-1. Create a Meta Business App at developers.facebook.com
-2. Enable WhatsApp product
-3. Get Phone Number ID and permanent access token
-4. Configure the webhook URL pointing to the edge function
-5. Subscribe to `messages` webhook field
+**Próximos pasos inmediatos (recomendados):**
+1. **Fase 1.1-1.2** — Refactor + paginación (base técnica sólida)
+2. **Fase 2.1** — Dashboard enriquecido (impacto visual inmediato)
+3. **Fase 2.2** — Responsive (accesibilidad móvil)
+4. **Fase 3.1** — Notificaciones (engagement)
+5. **Fase 3.2** — Forgot password (necesidad básica)
 
-We'll provide the webhook URL and verify token in the settings UI.
+---
 
+## 📊 Métricas de complejidad estimada
+
+| Fase | Esfuerzo | Mensajes estimados |
+|------|----------|-------------------|
+| Fase 1 | Medio | 15-25 mensajes |
+| Fase 2 | Medio | 15-20 mensajes |
+| Fase 3 | Alto | 25-40 mensajes |
+| Fase 4 | Alto | 30-50 mensajes |
+| Fase 5 | Medio | 15-25 mensajes |
