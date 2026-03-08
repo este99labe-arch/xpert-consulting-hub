@@ -27,6 +27,10 @@ interface AttendanceRecord {
   check_in: string | null;
   check_out: string | null;
   created_at: string;
+  source?: string;
+  location_lat?: number | null;
+  location_lng?: number | null;
+  phone_number?: string | null;
 }
 
 interface MyAttendanceViewProps {
