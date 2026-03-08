@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, Calculator, TrendingUp, TrendingDown } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell,
+  PieChart, Pie, Cell, Legend,
 } from "recharts";
 
 const CHART_COLORS = ["hsl(var(--primary))", "hsl(var(--destructive))", "hsl(var(--accent))", "#f59e0b", "#8b5cf6", "#06b6d4"];
@@ -96,23 +96,30 @@ const AccountingDashboard = ({
           <div className="h-[300px]">
             {pieData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
+                <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                   <Pie
                     data={pieData}
                     dataKey="value"
                     nameKey="name"
                     cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    label={({ name, percent }) => {
-                      const short = name.length > 15 ? name.slice(0, 15) + "…" : name;
-                      return `${short} ${(percent * 100).toFixed(0)}%`;
-                    }}
-                    labelLine={{ strokeWidth: 1 }}
+                    cy="45%"
+                    outerRadius={70}
+                    innerRadius={35}
+                    label={false}
+                    paddingAngle={2}
                   >
                     {pieData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
                   </Pie>
                   <Tooltip formatter={(v: number) => EUR(v)} />
+                  <Legend
+                    layout="horizontal"
+                    verticalAlign="bottom"
+                    align="center"
+                    iconType="circle"
+                    iconSize={8}
+                    formatter={(value: string) => value.length > 20 ? value.slice(0, 20) + "…" : value}
+                    wrapperStyle={{ fontSize: "11px", lineHeight: "18px" }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
