@@ -1,102 +1,139 @@
 
+# Plan de Desarrollo — XpertConsulting ERP
 
-# Plan: Refactor Monolithic Files + MasterAccountSelector
+## Estado Actual (Resumen)
 
-## Overview
-
-Extract repeated patterns into shared components and split 4 large page files (~3,800 lines total) into focused sub-components. This improves maintainability without changing any functionality.
-
----
-
-## 1. Shared Component: `MasterAccountSelector`
-
-**File:** `src/components/shared/MasterAccountSelector.tsx`
-
-Replaces the identical pattern found in AppAccounting, AppInventory, and AppAttendance (3 modules use a full-page selector; Attendance uses an inline variant).
-
-Props:
-- `title: string` — page title (e.g. "Contabilidad")
-- `onSelect: (accountId: string) => void`
-- `selectedAccountId?: string`
-- `onClear?: () => void` — for the "Cambiar cliente" button
-- `variant?: "page" | "inline"` — full-page card (Accounting/Inventory) vs inline row (Attendance)
-
-Internally fetches `accounts` with the same query all modules use. Returns the selector UI.
+ERP multi-tenant con 8 módulos funcionales: Dashboard, Clientes, Facturación, Contabilidad, RRHH, Asistencia, Inventario y Configuración. Sistema de roles (MASTER_ADMIN, MANAGER, EMPLOYEE), RLS en todas las tablas, activación modular por cuenta.
 
 ---
 
-## 2. AppAccounting Refactor (1,386 lines → ~6 files)
+## 🔍 Análisis Detallado
 
-**New files under `src/components/accounting/`:**
+### ✅ Lo que funciona bien
+- Arquitectura multi-tenant sólida con RLS
+- Sistema de roles y permisos consistente
+- Flujos de aprobación (eliminación de facturas/asientos para empleados)
+- Design system coherente (tokens CSS, dark mode)
+- Edge Functions seguras con validación de caller
+- Módulos activables/desactivables por cuenta
 
-| File | Content | ~Lines |
-|------|---------|--------|
-| `AccountingDashboard.tsx` | KPI cards + bar chart + pie chart (lines 682-772) | ~100 |
-| `ChartOfAccountsTab.tsx` | Search + grouped table + edit dialog (lines 774-835, 1230-1265) | ~150 |
-| `JournalEntriesTab.tsx` | Delete requests panel + entries table + dropdown actions (lines 838-981) | ~160 |
-| `JournalEntryDialog.tsx` | Create/edit entry form with lines (lines 1267-1326) | ~70 |
-| `LedgerTab.tsx` | Account selector + date range + table + CSV (lines 983-1035) | ~60 |
-| `PLTab.tsx` | Period selectors + income/expense cards + result (lines 1037-1120) | ~90 |
-| `TaxesTab.tsx` | Quarter selector + collected/paid tables + result (lines 1122-1225) | ~110 |
-| `DeleteEntryDialogs.tsx` | AlertDialog (manager) + Request Dialog (employee) (lines 1328-1381) | ~60 |
+### ⚠️ Problemas Detectados
 
-**`AppAccounting.tsx`** becomes the orchestrator (~200 lines): types, constants, data fetching, mutations, state, and the `<Tabs>` shell that renders each sub-component, passing data + callbacks as props.
+#### 1. Arquitectura / Código
+- **Archivos monolíticos**: `AppAccounting.tsx` (1386 líneas), `AppHR.tsx` (981 líneas), `AppInventory.tsx` (774 líneas), `AppAttendance.tsx` (670 líneas). Dificulta mantenimiento y testing.
+- **Sin paginación**: Todas las tablas cargan todos los registros. Con volumen alto provocará problemas de rendimiento (límite de 1000 filas de Supabase).
+- **Tipado parcial**: Uso extensivo de `any` en vez de tipos del schema generado (`Tables<"invoices">`, etc.).
+- **Lógica duplicada**: Selector de cuenta para Master Admin repetido en cada módulo. Patrón de exportación CSV duplicado.
+- **Sin error boundaries**: Un error en un componente hijo tumba toda la página.
 
----
+#### 2. Seguridad
+- **`AppClients.tsx` usa `confirm()` nativo** para eliminación — no hay control real ni confirmación segura.
+- **Sin rate limiting** en edge functions (crear usuarios, reset password).
+- **Sin validación de inputs** del lado servidor en varias edge functions (ej: longitud de password, formato de email).
+- **Sin audit log**: No hay registro de quién hizo qué cambio y cuándo.
 
-## 3. AppInventory Refactor (774 lines → ~4 files)
+#### 3. UX / Diseño
+- **Dashboard limitado**: Solo muestra datos de facturación. No integra info de RRHH, asistencia, inventario.
+- **Sin breadcrumbs** ni indicación clara de ubicación en la navegación.
+- **Sin estados vacíos consistentes**: Algunos módulos tienen, otros no.
+- **Sin modo responsive completo**: Las tablas no se adaptan bien a móvil.
+- **Sin notificaciones**: No hay sistema de alertas internas (stock bajo, solicitudes pendientes, etc.).
+- **Sin feedback de carga por sección**: Loading spinner genérico en vez de skeletons.
 
-**New files under `src/components/inventory/`:**
-
-| File | Content | ~Lines |
-|------|---------|--------|
-| `ProductsTab.tsx` | Products table + search + filter + CSV | ~150 |
-| `MovementsTab.tsx` | Movements table + filter + CSV | ~100 |
-| `AlertsTab.tsx` | Low stock alerts table | ~60 |
-| `PurchaseOrdersTab.tsx` | Orders table + status progression | ~120 |
-| `ProductDialog.tsx` | Create/edit product form | ~80 |
-| `MovementDialog.tsx` | Create movement form | ~50 |
-| `OrderDialog.tsx` | Create/edit order form | ~60 |
-
-**`AppInventory.tsx`** becomes ~180 lines.
-
----
-
-## 4. AppHR Refactor (981 lines → ~5 files)
-
-Already partially split into internal components (`EmployeesTab`, `LeaveTab`, etc.) but all in one file.
-
-**Move each to its own file under `src/components/hr/`:**
-
-| File | Content |
-|------|---------|
-| `EmployeesTab.tsx` | Employee list + search + CreateEmployeeDialog |
-| `LeaveTab.tsx` | Leave requests + CreateLeaveDialog |
-| `VacationCalendarTab.tsx` | Month grid calendar |
-| `DocumentsTab.tsx` | Documents list + upload + UploadDocumentDialog |
-
-**`AppHR.tsx`** becomes ~40 lines (just the tabs shell with imports).
+#### 4. Funcionalidad ausente
+- **Sin recuperación de contraseña** (forgot password flow)
+- **Sin perfil de usuario** accesible desde el sidebar
+- **Sin filtros por fecha** en Dashboard
+- **Sin reportes/informes** exportables (solo CSV básico en algunos módulos)
+- **Sin multi-idioma** (todo hardcodeado en español)
+- **Sin búsqueda global** entre módulos
+- **Sin actividad/historial** (audit trail)
 
 ---
 
-## 5. AppAttendance Refactor (670 lines → ~3 files)
+## 📋 Plan de Desarrollo (por fases)
 
-**New files under `src/components/attendance/`:**
+### Fase 1 — Estabilidad y Refactor (Prioridad Alta)
+> Objetivo: Código mantenible, rendimiento óptimo, seguridad robusta
 
-| File | Content |
-|------|---------|
-| `MyAttendanceView.tsx` | Summary cards, weekly chart, check-in/out, weekly table |
-| `TeamAttendanceView.tsx` | Client selector, export, per-user summary table |
+| # | Tarea | Impacto |
+|---|-------|---------|
+| 1.1 | **Refactor: Extraer componentes** — Dividir archivos monolíticos en componentes reutilizables (`<ProductsTab>`, `<MovementsTab>`, etc.) | Mantenimiento |
+| 1.2 | **Paginación server-side** — Implementar paginación con `.range()` en todas las tablas con datos crecientes | Rendimiento |
+| 1.3 | **Tipado estricto** — Reemplazar `any` por tipos generados de Supabase (`Tables<"tablename">`) | Calidad |
+| 1.4 | **Error Boundaries** — Añadir React Error Boundaries por módulo | Estabilidad |
+| 1.5 | **Componente reutilizable MasterAccountSelector** — Extraer el selector de cuenta de Master Admin que se repite en cada módulo | DRY |
+| 1.6 | **Skeleton loaders** — Reemplazar spinners genéricos por skeletons contextuales | UX |
+| 1.7 | **Validación de inputs en edge functions** — Password mínimo 8 chars, formato email, sanitización | Seguridad |
 
-**`AppAttendance.tsx`** becomes ~120 lines (data fetching + tab toggle + renders the two views).
+### Fase 2 — UX y Diseño (Prioridad Alta)
+> Objetivo: Experiencia de usuario profesional y completa
+
+| # | Tarea | Impacto |
+|---|-------|---------|
+| 2.1 | **Dashboard enriquecido** — Widgets de cada módulo activo: empleados activos hoy, stock bajo, solicitudes pendientes, balance contable | UX |
+| 2.2 | **Responsive tables** — Convertir tablas a cards en móvil con diseño adaptativo | UX/Móvil |
+| 2.3 | **Breadcrumbs** — Navegación contextual en el header | Navegación |
+| 2.4 | **Estados vacíos unificados** — Componente reutilizable `<EmptyState icon={} title="" description="" action={} />` | Consistencia |
+| 2.5 | **Confirmación de eliminación unificada** — Reemplazar `confirm()` por `AlertDialog` en AppClients y donde falte | UX/Seguridad |
+| 2.6 | **Filtro por rango de fechas** — Componente date range picker reutilizable para dashboard, facturas, contabilidad | Funcionalidad |
+| 2.7 | **Header con perfil de usuario** — Avatar, nombre, rol visible; acceso rápido a perfil y cerrar sesión | UX |
+
+### Fase 3 — Funcionalidades Nuevas (Prioridad Media)
+> Objetivo: Funcionalidades que completan la propuesta de valor del ERP
+
+| # | Tarea | Impacto |
+|---|-------|---------|
+| 3.1 | **Sistema de notificaciones** — Tabla `notifications`, campanita en header, alertas de: stock bajo, solicitudes pendientes, facturas por cobrar vencidas | Alto |
+| 3.2 | **Forgot password** — Flujo completo de recuperación de contraseña por email | Alto |
+| 3.3 | **Audit log** — Tabla `audit_logs` con trigger o registro manual de acciones críticas (crear/editar/eliminar) | Medio |
+| 3.4 | **Informes y reportes** — Página de reportes con: P&L mensual, balance general, informe de asistencia, valoración de inventario. Exportación a PDF | Alto |
+| 3.5 | **Búsqueda global** — Command palette (Cmd+K) para buscar clientes, facturas, productos, empleados | Medio |
+| 3.6 | **Multi-moneda** — Soporte para facturas en diferentes monedas con tipo de cambio | Bajo |
+| 3.7 | **Comentarios/notas internas** — Sistema de notas en facturas, asientos, órdenes de compra | Medio |
+
+### Fase 4 — Integraciones y Automatización (Prioridad Baja)
+> Objetivo: Automatizar procesos y conectar con servicios externos
+
+| # | Tarea | Impacto |
+|---|-------|---------|
+| 4.1 | **Email automáticos** — Envío de facturas por email a clientes, recordatorios de cobro | Alto |
+| 4.2 | **Facturación recurrente** — Programar facturas automáticas mensuales/trimestrales | Alto |
+| 4.3 | **Integración bancaria** — Importar movimientos bancarios y conciliar con contabilidad | Alto |
+| 4.4 | **API pública** — Edge functions como API REST para integraciones de terceros | Medio |
+| 4.5 | **Webhooks** — Notificar a sistemas externos cuando ocurren eventos (nueva factura, stock bajo) | Medio |
+
+### Fase 5 — Escalabilidad y Producción
+> Objetivo: Preparar la app para producción real
+
+| # | Tarea | Impacto |
+|---|-------|---------|
+| 5.1 | **Tests automatizados** — Tests unitarios para lógica de negocio, tests de integración para edge functions | Crítico |
+| 5.2 | **Monitorización** — Logging estructurado, métricas de rendimiento | Alto |
+| 5.3 | **Backup y recuperación** — Estrategia de backups de BD | Crítico |
+| 5.4 | **Dominio personalizado + SSL** — Configuración de dominio propio | Producción |
+| 5.5 | **Onboarding guiado** — Tour interactivo para nuevos usuarios | UX |
+| 5.6 | **Documentación técnica** — README actualizado, guía de contribución, documentación de API | Mantenimiento |
 
 ---
 
-## 6. Implementation Approach
+## 🎯 Recomendación de Prioridad
 
-- All refactors are purely structural — no logic changes, no DB changes
-- Props will pass data + mutation callbacks down; no new context needed
-- Types/interfaces/constants stay in the parent page file (or a shared `types.ts` per module if needed)
-- Each sub-component receives only the data it needs
-- Estimated: ~15 files created, 4 files heavily modified
+**Próximos pasos inmediatos (recomendados):**
+1. **Fase 1.1-1.2** — Refactor + paginación (base técnica sólida)
+2. **Fase 2.1** — Dashboard enriquecido (impacto visual inmediato)
+3. **Fase 2.2** — Responsive (accesibilidad móvil)
+4. **Fase 3.1** — Notificaciones (engagement)
+5. **Fase 3.2** — Forgot password (necesidad básica)
 
+---
+
+## 📊 Métricas de complejidad estimada
+
+| Fase | Esfuerzo | Mensajes estimados |
+|------|----------|-------------------|
+| Fase 1 | Medio | 15-25 mensajes |
+| Fase 2 | Medio | 15-20 mensajes |
+| Fase 3 | Alto | 25-40 mensajes |
+| Fase 4 | Alto | 30-50 mensajes |
+| Fase 5 | Medio | 15-25 mensajes |
