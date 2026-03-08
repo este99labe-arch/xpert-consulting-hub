@@ -1,91 +1,113 @@
 
 
-## Plan: Módulo de Inventario / Gestión de Stock
+## Plan: Módulo de Contabilidad Completo
 
-### Resumen
+### Contexto
 
-Crear un módulo completo de inventario que permita gestionar productos, controlar stock, configurar alertas de stock bajo, y planificar compras. Accesible según rol (Employee solo lectura, Manager gestión completa, Master Admin por cliente).
-
----
-
-### 1. Base de datos (3 tablas nuevas)
-
-**`products`** — Catálogo de productos por cuenta
-- `id`, `account_id`, `name`, `sku` (código único), `description`, `category`, `unit` (unidad de medida: uds, kg, litros...), `min_stock` (umbral de alerta), `current_stock`, `cost_price`, `sale_price`, `is_active`, `created_at`, `updated_at`
-
-**`stock_movements`** — Registro de cada entrada/salida de stock
-- `id`, `account_id`, `product_id` (FK products), `type` (IN / OUT / ADJUSTMENT), `quantity`, `reason` (compra, venta, merma, ajuste manual...), `notes`, `created_by` (user_id), `created_at`
-- Un trigger actualizará `products.current_stock` automáticamente con cada movimiento.
-
-**`purchase_orders`** — Planificación de compras
-- `id`, `account_id`, `product_id` (FK products), `quantity`, `status` (DRAFT / PENDING / ORDERED / RECEIVED), `estimated_date`, `notes`, `created_by`, `created_at`, `updated_at`
-
-RLS: misma estrategia multi-tenant (users ven su cuenta, managers gestionan, master admin ve todo).
+Actualmente `/app/accounting` muestra un placeholder. El módulo se construirá sobre los datos existentes de `invoices` (ingresos/gastos) e integrará un sistema contable completo con plan de cuentas, asientos, libros y reportes fiscales.
 
 ---
 
-### 2. Módulo de servicio
+### 1. Base de datos (3 tablas nuevas + 1 migración)
 
-Insertar un nuevo registro en `service_modules`:
-- code: `INVENTORY`, name: `Inventario`
+**`chart_of_accounts`** — Plan contable por cuenta
+- `id`, `account_id`, `code` (ej: "700", "400"), `name`, `type` (ASSET, LIABILITY, EQUITY, INCOME, EXPENSE), `parent_id` (FK self, nullable), `is_active`, `created_at`
+- Se pre-cargará con un plan contable español básico via seed (cuentas 100-799)
 
-Esto permite activarlo/desactivarlo por cliente desde el panel Master.
+**`journal_entries`** — Asientos contables
+- `id`, `account_id`, `entry_number` (auto-generado), `date`, `description`, `invoice_id` (FK invoices, nullable — enlaza asientos automáticos), `status` (DRAFT, POSTED), `created_by`, `created_at`
 
----
+**`journal_entry_lines`** — Líneas de cada asiento (partida doble)
+- `id`, `entry_id` (FK journal_entries), `chart_account_id` (FK chart_of_accounts), `debit`, `credit`, `description`
 
-### 3. Página `AppInventory.tsx` — Layout con 4 pestañas
+**Trigger**: al crear/editar una factura, generar automáticamente el asiento contable correspondiente (ej: Factura de ingreso → Debe: 430 Clientes / Haber: 700 Ventas + 477 IVA Repercutido).
 
-**Pestaña "Productos"**
-- Tabla con: nombre, SKU, categoría, stock actual, stock mínimo, precio coste/venta, estado
-- Indicador visual: rojo si `current_stock <= min_stock`, amarillo si está cerca (ej. < 1.5x min)
-- Búsqueda por nombre/SKU, filtro por categoría y estado
-- Dialog para crear/editar producto
-- Employees: solo lectura; Managers: CRUD completo
-
-**Pestaña "Movimientos"**
-- Historial de entradas/salidas con filtros por producto, tipo y fecha
-- Botón para registrar movimiento manual (entrada, salida, ajuste)
-- Cada movimiento actualiza `current_stock` vía trigger DB
-
-**Pestaña "Alertas"**
-- Lista de productos cuyo `current_stock <= min_stock`
-- Ordenados por urgencia (los más bajos primero)
-- Acción rápida: crear orden de compra desde la alerta
-
-**Pestaña "Órdenes de Compra"**
-- Lista de órdenes con estado, producto, cantidad, fecha estimada
-- Flujo de estados: Borrador → Pendiente → Pedido → Recibido
-- Al marcar como "Recibido", se genera automáticamente un movimiento de tipo IN
-
-**Master Admin**: selector de cliente (como en Asistencia) antes de ver el contenido.
+**RLS**: misma estrategia multi-tenant existente con `get_user_account_id` y `has_role`.
 
 ---
 
-### 4. Funcionalidades adicionales sugeridas
+### 2. Página `AppAccounting.tsx` — 6 pestañas
 
-1. **Dashboard de inventario** con tarjetas resumen: total productos, productos con stock bajo, valor total del inventario (sum de `current_stock * cost_price`), movimientos del mes
-2. **Exportación CSV** de productos y movimientos para reporting externo
-3. **Historial de precios** — se podría registrar cambios de `cost_price` en los movimientos para análisis de costes
-4. **Categorías personalizables** — en vez de texto libre, una tabla `product_categories` por cuenta para consistencia
+**Pestaña "Resumen"** — Dashboard contable
+- KPIs: Ingresos totales, Gastos totales, Resultado neto, IVA a liquidar
+- Gráfico de evolución mensual (ingresos vs gastos, 12 meses)
+- Gráfico de distribución por categoría contable (pie/donut)
 
-Para esta primera versión implementaré las 4 pestañas principales + dashboard resumen + exportación CSV. Las categorías personalizables y el historial de precios se pueden añadir después.
+**Pestaña "Plan Contable"**
+- Árbol jerárquico de cuentas (agrupadas por tipo: Activo, Pasivo, Patrimonio, Ingresos, Gastos)
+- Búsqueda por código o nombre
+- CRUD para managers (crear cuenta, editar, desactivar)
+- Saldo actual calculado de cada cuenta
+
+**Pestaña "Asientos"**
+- Listado de asientos con filtros por fecha, estado y cuenta
+- Asientos automáticos (desde facturas, marcados con icono enlace)
+- Crear asiento manual con N líneas (debe = haber obligatorio)
+- Cambiar estado: Borrador → Contabilizado
+- Los employees solo lectura
+
+**Pestaña "Libro Mayor"**
+- Selector de cuenta contable
+- Rango de fechas
+- Tabla con: fecha, nº asiento, descripción, debe, haber, saldo acumulado
+- Exportación CSV
+
+**Pestaña "Resultados"** — Cuenta de Pérdidas y Ganancias
+- Selector de periodo (mes, trimestre, año)
+- Ingresos desglosados por cuenta (700, 701...)
+- Gastos desglosados por cuenta (600, 621, 625...)
+- Resultado del ejercicio
+- Exportación CSV
+
+**Pestaña "Impuestos"** — Resumen IVA
+- Selector de trimestre (Q1-Q4)
+- IVA Repercutido (ventas) desglosado por tipo (4%, 10%, 21%)
+- IVA Soportado (compras) desglosado por tipo
+- Resultado: IVA a ingresar o a devolver
+- Base imponible total por cada tramo
+- Exportación CSV para modelo 303
+
+**Master Admin**: selector de cliente antes del contenido (mismo patrón que Inventario).
 
 ---
 
-### 5. Routing y sidebar
+### 3. Integración con Facturación
 
-- Añadir ruta `/app/inventory` en `App.tsx`
-- Añadir `INVENTORY: Package` (icono) y `INVENTORY: "/app/inventory"` en `ClientLayout.tsx`
+- Cuando se crea/actualiza una factura, se genera/actualiza el asiento contable automáticamente
+- Factura de ingreso: Debe 430 (Clientes) / Haber 700 (Ventas) + 477 (IVA Repercutido)
+- Gasto: Debe 600 (Compras) + 472 (IVA Soportado) / Haber 400 (Proveedores)
+- Al eliminar factura, se elimina el asiento vinculado
 
 ---
 
-### Archivos a crear/modificar
+### 4. Plan contable español por defecto (seed)
+
+Se insertarán ~25 cuentas básicas al activar el módulo:
+- 100 Capital, 129 Resultado del ejercicio
+- 400 Proveedores, 410 Acreedores, 430 Clientes
+- 472 IVA Soportado, 477 IVA Repercutido
+- 570 Caja, 572 Bancos
+- 600 Compras, 621 Arrendamientos, 625 Seguros, 628 Suministros, 629 Otros gastos
+- 640 Sueldos, 642 Seguridad Social
+- 700 Ventas de mercancías, 705 Prestaciones de servicios, 759 Otros ingresos
+
+---
+
+### 5. Archivos a crear/modificar
 
 | Acción | Archivo |
 |--------|---------|
-| Crear | `src/pages/app/AppInventory.tsx` |
-| Modificar | `src/App.tsx` (nueva ruta) |
-| Modificar | `src/layouts/ClientLayout.tsx` (icono + path) |
-| Migración | 3 tablas + trigger + RLS policies |
-| Insert | Registro en `service_modules` |
+| Crear | `src/pages/app/AppAccounting.tsx` (página principal con 6 tabs) |
+| Crear | Migración SQL: 3 tablas + trigger auto-asientos + seed plan contable + RLS |
+| Modificar | `src/App.tsx` (ruta ya apunta a AppPlaceholder, redirigir a nuevo componente) |
+| Insertar | Registro `ACCOUNTING` en `service_modules` si no existe |
+
+---
+
+### 6. Notas técnicas
+
+- Los cálculos de Libro Mayor y P&L se harán en cliente (sumando líneas de asientos filtradas) dado el volumen esperado por tenant
+- El trigger de auto-asientos será una función PL/pgSQL `SECURITY DEFINER` que se ejecuta `AFTER INSERT OR UPDATE ON invoices`
+- Las líneas de asiento usarán `numeric` para debe/haber (consistente con la tabla invoices)
+- El componente será ~800-1000 líneas, similar al patrón de AppInventory con tabs internos
 
