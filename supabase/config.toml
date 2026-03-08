@@ -2,3 +2,6 @@ project_id = "waguxyimbqifssvxufbz"
 
 [functions.generate_invoice_pdf]
 verify_jwt = false
+
+[functions.send_welcome_email]
+verify_jwt = false
