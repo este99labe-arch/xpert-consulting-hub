@@ -96,7 +96,10 @@ const AppInvoices = () => {
     enabled: !!accountId && isManager,
   });
 
-  const filtered = invoices.filter((inv: any) => {
+  const filteredInvoices = invoices.filter((inv: any) => inv.type !== "QUOTE");
+  const quotes = invoices.filter((inv: any) => inv.type === "QUOTE");
+
+  const filtered = filteredInvoices.filter((inv: any) => {
     const matchesSearch =
       !search ||
       (inv.business_clients?.name || "").toLowerCase().includes(search.toLowerCase()) ||
@@ -105,6 +108,19 @@ const AppInvoices = () => {
     const matchesStatus = statusFilter === "ALL" || inv.status === statusFilter;
     const matchesType = typeFilter === "ALL" || inv.type === typeFilter;
     return matchesSearch && matchesStatus && matchesType;
+  });
+
+  const [quoteSearch, setQuoteSearch] = useState("");
+  const [quoteStatusFilter, setQuoteStatusFilter] = useState<string>("ALL");
+
+  const filteredQuotes = quotes.filter((q: any) => {
+    const matchesSearch =
+      !quoteSearch ||
+      (q.business_clients?.name || "").toLowerCase().includes(quoteSearch.toLowerCase()) ||
+      (q.concept || "").toLowerCase().includes(quoteSearch.toLowerCase()) ||
+      (q.invoice_number || "").toLowerCase().includes(quoteSearch.toLowerCase());
+    const matchesStatus = quoteStatusFilter === "ALL" || q.status === quoteStatusFilter;
+    return matchesSearch && matchesStatus;
   });
 
   // KPIs
