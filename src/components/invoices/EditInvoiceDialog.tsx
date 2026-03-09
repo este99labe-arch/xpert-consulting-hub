@@ -126,6 +126,32 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
     if (!invoice) return;
     setSubmitting(true);
     try {
+      // If quote is being moved to INVOICED, create a new invoice from it
+      if (isQuote && status === "INVOICED") {
+        // Create invoice copy
+        const { error: invErr } = await supabase.from("invoices").insert({
+          account_id: invoice.account_id,
+          client_id: invoice.client_id,
+          type: "INVOICE",
+          concept: invoice.concept,
+          issue_date: new Date().toISOString().slice(0, 10),
+          amount_net: invoice.amount_net,
+          vat_percentage: invoice.vat_percentage,
+          amount_vat: invoice.amount_vat,
+          amount_total: invoice.amount_total,
+          attachment_path: invoice.attachment_path,
+          attachment_name: invoice.attachment_name,
+        } as any);
+        if (invErr) throw invErr;
+        // Update quote status to INVOICED
+        const { error: updErr } = await supabase.from("invoices").update({ status: "INVOICED" }).eq("id", invoice.id);
+        if (updErr) throw updErr;
+        toast({ title: "Factura creada desde presupuesto" });
+        queryClient.invalidateQueries({ queryKey: ["invoices"] });
+        onOpenChange(false);
+        return;
+      }
+
       const updatePayload: any = { status };
 
       if (isDraft) {
@@ -151,7 +177,7 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
       const { error } = await supabase.from("invoices").update(updatePayload).eq("id", invoice.id);
       if (error) throw error;
 
-      toast({ title: "Factura actualizada" });
+      toast({ title: isQuote ? "Presupuesto actualizado" : "Factura actualizada" });
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
       queryClient.invalidateQueries({ queryKey: ["business_clients"] });
       onOpenChange(false);
