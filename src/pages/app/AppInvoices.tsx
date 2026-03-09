@@ -33,14 +33,18 @@ const statusColors: Record<string, string> = {
   SENT: "bg-primary/10 text-primary",
   PAID: "bg-green-100 text-green-800",
   OVERDUE: "bg-destructive/10 text-destructive",
+  ACCEPTED: "bg-green-100 text-green-800",
+  REJECTED: "bg-destructive/10 text-destructive",
+  INVOICED: "bg-primary/10 text-primary",
 };
 
 const statusLabels: Record<string, string> = {
   DRAFT: "Borrador", SENT: "Enviada", PAID: "Pagada", OVERDUE: "Vencida",
+  ACCEPTED: "Aceptado", REJECTED: "Rechazado", INVOICED: "Facturado",
 };
 
 const typeLabels: Record<string, string> = {
-  INVOICE: "Factura", EXPENSE: "Gasto",
+  INVOICE: "Factura", EXPENSE: "Gasto", QUOTE: "Presupuesto",
 };
 
 const AppInvoices = () => {

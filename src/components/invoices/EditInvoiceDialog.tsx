@@ -18,6 +18,7 @@ import InvoiceAttachment from "@/components/invoices/InvoiceAttachment";
 
 const statusLabels: Record<string, string> = {
   DRAFT: "Borrador", SENT: "Enviada", PAID: "Pagada", OVERDUE: "Vencida",
+  ACCEPTED: "Aceptado", REJECTED: "Rechazado", INVOICED: "Facturado",
 };
 
 const statusFlow: Record<string, string[]> = {
@@ -25,6 +26,14 @@ const statusFlow: Record<string, string[]> = {
   SENT: ["PAID", "OVERDUE"],
   OVERDUE: ["PAID"],
   PAID: [],
+};
+
+const quoteStatusFlow: Record<string, string[]> = {
+  DRAFT: ["SENT"],
+  SENT: ["ACCEPTED", "REJECTED"],
+  ACCEPTED: ["INVOICED"],
+  REJECTED: [],
+  INVOICED: [],
 };
 
 interface Props {

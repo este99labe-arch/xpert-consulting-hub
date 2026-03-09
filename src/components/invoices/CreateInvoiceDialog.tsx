@@ -148,7 +148,9 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Nueva Factura / Gasto</DialogTitle>
+          <DialogTitle>
+            {type === "QUOTE" ? "Nuevo Presupuesto" : "Nueva Factura / Gasto"}
+          </DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
@@ -158,6 +160,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
               <SelectContent>
                 <SelectItem value="INVOICE">Factura</SelectItem>
                 <SelectItem value="EXPENSE">Gasto</SelectItem>
+                <SelectItem value="QUOTE">Presupuesto</SelectItem>
               </SelectContent>
             </Select>
           </div>
