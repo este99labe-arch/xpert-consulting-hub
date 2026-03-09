@@ -112,8 +112,6 @@ const AppInvoices = () => {
     return matchesSearch && matchesStatus && matchesType;
   });
 
-  const [quoteSearch, setQuoteSearch] = useState("");
-  const [quoteStatusFilter, setQuoteStatusFilter] = useState<string>("ALL");
 
   const filteredQuotes = quotes.filter((q: any) => {
     const matchesSearch =
