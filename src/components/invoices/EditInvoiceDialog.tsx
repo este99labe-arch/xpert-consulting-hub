@@ -199,8 +199,10 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
           <DialogTitle>Editar {invoiceNumber}</DialogTitle>
           <DialogDescription>
             {isDraft
-              ? "Puedes modificar todos los campos mientras la factura está en borrador."
-              : "Solo puedes cambiar el estado de esta factura."}
+              ? `Puedes modificar todos los campos mientras ${isQuote ? "el presupuesto" : "la factura"} está en borrador.`
+              : isQuote && invoice?.status === "ACCEPTED"
+                ? "Puedes convertir este presupuesto en factura."
+                : `Solo puedes cambiar el estado de ${isQuote ? "este presupuesto" : "esta factura"}.`}
           </DialogDescription>
         </DialogHeader>
 
