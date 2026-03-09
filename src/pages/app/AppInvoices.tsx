@@ -17,7 +17,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
-import { FileText, TrendingUp, TrendingDown, DollarSign, Plus, Search, Trash2, Check, X, RefreshCw } from "lucide-react";
+import { FileText, TrendingUp, TrendingDown, DollarSign, Plus, Search, Trash2, Check, X, RefreshCw, ClipboardList } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
@@ -33,14 +33,18 @@ const statusColors: Record<string, string> = {
   SENT: "bg-primary/10 text-primary",
   PAID: "bg-green-100 text-green-800",
   OVERDUE: "bg-destructive/10 text-destructive",
+  ACCEPTED: "bg-green-100 text-green-800",
+  REJECTED: "bg-destructive/10 text-destructive",
+  INVOICED: "bg-primary/10 text-primary",
 };
 
 const statusLabels: Record<string, string> = {
   DRAFT: "Borrador", SENT: "Enviada", PAID: "Pagada", OVERDUE: "Vencida",
+  ACCEPTED: "Aceptado", REJECTED: "Rechazado", INVOICED: "Facturado",
 };
 
 const typeLabels: Record<string, string> = {
-  INVOICE: "Factura", EXPENSE: "Gasto",
+  INVOICE: "Factura", EXPENSE: "Gasto", QUOTE: "Presupuesto",
 };
 
 const AppInvoices = () => {
@@ -54,6 +58,8 @@ const AppInvoices = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [previewInvoice, setPreviewInvoice] = useState<any>(null);
   const [editInvoice, setEditInvoice] = useState<any>(null);
+  const [quoteSearch, setQuoteSearch] = useState("");
+  const [quoteStatusFilter, setQuoteStatusFilter] = useState<string>("ALL");
 
   // Delete state
   const [deleteInvoice, setDeleteInvoice] = useState<any>(null);
@@ -92,7 +98,10 @@ const AppInvoices = () => {
     enabled: !!accountId && isManager,
   });
 
-  const filtered = invoices.filter((inv: any) => {
+  const filteredInvoices = invoices.filter((inv: any) => inv.type !== "QUOTE");
+  const quotes = invoices.filter((inv: any) => inv.type === "QUOTE");
+
+  const filtered = filteredInvoices.filter((inv: any) => {
     const matchesSearch =
       !search ||
       (inv.business_clients?.name || "").toLowerCase().includes(search.toLowerCase()) ||
@@ -103,11 +112,27 @@ const AppInvoices = () => {
     return matchesSearch && matchesStatus && matchesType;
   });
 
+
+  const filteredQuotes = quotes.filter((q: any) => {
+    const matchesSearch =
+      !quoteSearch ||
+      (q.business_clients?.name || "").toLowerCase().includes(quoteSearch.toLowerCase()) ||
+      (q.concept || "").toLowerCase().includes(quoteSearch.toLowerCase()) ||
+      (q.invoice_number || "").toLowerCase().includes(quoteSearch.toLowerCase());
+    const matchesStatus = quoteStatusFilter === "ALL" || q.status === quoteStatusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
   // KPIs
-  const totalIncome = invoices.filter((i: any) => i.type === "INVOICE").reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
-  const totalExpenses = invoices.filter((i: any) => i.type === "EXPENSE").reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
-  const totalPaid = invoices.filter((i: any) => i.status === "PAID" && i.type === "INVOICE").reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
-  const totalPending = invoices.filter((i: any) => i.status !== "PAID" && i.type === "INVOICE").reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
+  const totalIncome = filteredInvoices.filter((i: any) => i.type === "INVOICE").reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
+  const totalExpenses = filteredInvoices.filter((i: any) => i.type === "EXPENSE").reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
+  const totalPaid = filteredInvoices.filter((i: any) => i.status === "PAID" && i.type === "INVOICE").reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
+  const totalPending = filteredInvoices.filter((i: any) => i.status !== "PAID" && i.type === "INVOICE").reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
+
+  // Quote KPIs
+  const totalQuotes = quotes.reduce((sum: number, q: any) => sum + Number(q.amount_total), 0);
+  const acceptedQuotes = quotes.filter((q: any) => q.status === "ACCEPTED" || q.status === "INVOICED").reduce((sum: number, q: any) => sum + Number(q.amount_total), 0);
+  const pendingQuotes = quotes.filter((q: any) => q.status === "DRAFT" || q.status === "SENT").reduce((sum: number, q: any) => sum + Number(q.amount_total), 0);
 
   const kpis = [
     { label: "Facturado", value: `€${totalIncome.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`, icon: TrendingUp, color: "text-primary" },
@@ -250,12 +275,15 @@ const AppInvoices = () => {
         <div className="flex items-center justify-between">
           <TabsList>
             <TabsTrigger value="invoices">Facturas</TabsTrigger>
+            <TabsTrigger value="quotes">
+              <ClipboardList className="h-4 w-4 mr-1" /> Presupuestos
+            </TabsTrigger>
             <TabsTrigger value="recurring">
               <RefreshCw className="h-4 w-4 mr-1" /> Recurrentes
             </TabsTrigger>
           </TabsList>
           <Button onClick={() => setDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" /> Nueva Factura
+            <Plus className="h-4 w-4 mr-2" /> Nuevo
           </Button>
         </div>
 
@@ -476,6 +504,112 @@ const AppInvoices = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+        </TabsContent>
+
+        <TabsContent value="quotes" className="space-y-6">
+          {/* Quote KPIs */}
+          <div className="grid gap-4 md:grid-cols-3">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Total presupuestado</CardTitle>
+                <ClipboardList className="h-5 w-5 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold text-foreground">€{totalQuotes.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Aceptados</CardTitle>
+                <Check className="h-5 w-5 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold text-foreground">€{acceptedQuotes.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Pendientes</CardTitle>
+                <FileText className="h-5 w-5 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold text-foreground">€{pendingQuotes.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Quote Filters */}
+          <div className="flex flex-wrap gap-3">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Buscar presupuesto..." value={quoteSearch} onChange={(e) => setQuoteSearch(e.target.value)} className="pl-9" />
+            </div>
+            <Select value={quoteStatusFilter} onValueChange={setQuoteStatusFilter}>
+              <SelectTrigger className="w-[160px]"><SelectValue placeholder="Estado" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Todos</SelectItem>
+                <SelectItem value="DRAFT">Borrador</SelectItem>
+                <SelectItem value="SENT">Enviado</SelectItem>
+                <SelectItem value="ACCEPTED">Aceptado</SelectItem>
+                <SelectItem value="REJECTED">Rechazado</SelectItem>
+                <SelectItem value="INVOICED">Facturado</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Quotes Table */}
+          <Card>
+            <CardContent className="p-0">
+              {filteredQuotes.length === 0 ? (
+                <div className="p-8 text-center text-muted-foreground">No se encontraron presupuestos</div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nº</TableHead>
+                      <TableHead>Fecha</TableHead>
+                      <TableHead>Cliente</TableHead>
+                      <TableHead>Concepto</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead className="text-right">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredQuotes.map((q: any) => (
+                      <TableRow key={q.id} className="cursor-pointer hover:bg-accent/50" onClick={() => setPreviewInvoice(q)}>
+                        <TableCell className="font-mono font-semibold text-sm">
+                          {q.invoice_number || q.id.slice(0, 8).toUpperCase()}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          {format(new Date(q.issue_date), "dd MMM yyyy", { locale: es })}
+                        </TableCell>
+                        <TableCell>{q.business_clients?.name || "—"}</TableCell>
+                        <TableCell className="max-w-[200px] truncate">{q.concept || "—"}</TableCell>
+                        <TableCell className="text-right font-mono font-semibold">
+                          €{Number(q.amount_total).toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className={statusColors[q.status]}>
+                            {statusLabels[q.status] || q.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                          <InvoiceActionsMenu
+                            onPreview={() => setPreviewInvoice(q)}
+                            onExport={() => handleExportPdf(q.id)}
+                            onEdit={() => setEditInvoice(q)}
+                            onDelete={() => handleDeleteClick(q)}
+                            onSendEmail={q.business_clients?.email ? () => handleSendEmail(q.id) : undefined}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="recurring">

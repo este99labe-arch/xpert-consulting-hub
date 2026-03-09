@@ -18,6 +18,7 @@ import InvoiceAttachment from "@/components/invoices/InvoiceAttachment";
 
 const statusLabels: Record<string, string> = {
   DRAFT: "Borrador", SENT: "Enviada", PAID: "Pagada", OVERDUE: "Vencida",
+  ACCEPTED: "Aceptado", REJECTED: "Rechazado", INVOICED: "Facturado",
 };
 
 const statusFlow: Record<string, string[]> = {
@@ -25,6 +26,14 @@ const statusFlow: Record<string, string[]> = {
   SENT: ["PAID", "OVERDUE"],
   OVERDUE: ["PAID"],
   PAID: [],
+};
+
+const quoteStatusFlow: Record<string, string[]> = {
+  DRAFT: ["SENT"],
+  SENT: ["ACCEPTED", "REJECTED"],
+  ACCEPTED: ["INVOICED"],
+  REJECTED: [],
+  INVOICED: [],
 };
 
 interface Props {
@@ -49,7 +58,9 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
   const [attachmentName, setAttachmentName] = useState<string | null>(null);
 
   const isDraft = invoice?.status === "DRAFT";
-  const nextStatuses = statusFlow[invoice?.status || ""] || [];
+  const isQuote = invoice?.type === "QUOTE";
+  const flow = isQuote ? quoteStatusFlow : statusFlow;
+  const nextStatuses = flow[invoice?.status || ""] || [];
 
   useEffect(() => {
     if (invoice && open) {
@@ -115,6 +126,32 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
     if (!invoice) return;
     setSubmitting(true);
     try {
+      // If quote is being moved to INVOICED, create a new invoice from it
+      if (isQuote && status === "INVOICED") {
+        // Create invoice copy
+        const { error: invErr } = await supabase.from("invoices").insert({
+          account_id: invoice.account_id,
+          client_id: invoice.client_id,
+          type: "INVOICE",
+          concept: invoice.concept,
+          issue_date: new Date().toISOString().slice(0, 10),
+          amount_net: invoice.amount_net,
+          vat_percentage: invoice.vat_percentage,
+          amount_vat: invoice.amount_vat,
+          amount_total: invoice.amount_total,
+          attachment_path: invoice.attachment_path,
+          attachment_name: invoice.attachment_name,
+        } as any);
+        if (invErr) throw invErr;
+        // Update quote status to INVOICED
+        const { error: updErr } = await supabase.from("invoices").update({ status: "INVOICED" }).eq("id", invoice.id);
+        if (updErr) throw updErr;
+        toast({ title: "Factura creada desde presupuesto" });
+        queryClient.invalidateQueries({ queryKey: ["invoices"] });
+        onOpenChange(false);
+        return;
+      }
+
       const updatePayload: any = { status };
 
       if (isDraft) {
@@ -140,7 +177,7 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
       const { error } = await supabase.from("invoices").update(updatePayload).eq("id", invoice.id);
       if (error) throw error;
 
-      toast({ title: "Factura actualizada" });
+      toast({ title: isQuote ? "Presupuesto actualizado" : "Factura actualizada" });
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
       queryClient.invalidateQueries({ queryKey: ["business_clients"] });
       onOpenChange(false);
@@ -162,8 +199,10 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
           <DialogTitle>Editar {invoiceNumber}</DialogTitle>
           <DialogDescription>
             {isDraft
-              ? "Puedes modificar todos los campos mientras la factura está en borrador."
-              : "Solo puedes cambiar el estado de esta factura."}
+              ? `Puedes modificar todos los campos mientras ${isQuote ? "el presupuesto" : "la factura"} está en borrador.`
+              : isQuote && invoice?.status === "ACCEPTED"
+                ? "Puedes convertir este presupuesto en factura."
+                : `Solo puedes cambiar el estado de ${isQuote ? "este presupuesto" : "esta factura"}.`}
           </DialogDescription>
         </DialogHeader>
 
@@ -316,7 +355,7 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button onClick={handleSubmit} disabled={submitting || (status === invoice?.status && !isDraft && attachmentPath === (invoice?.attachment_path || null))}>
             {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-            Guardar
+            {isQuote && status === "INVOICED" ? "Convertir en factura" : "Guardar"}
           </Button>
         </DialogFooter>
       </DialogContent>
