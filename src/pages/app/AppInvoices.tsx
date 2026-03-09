@@ -124,10 +124,15 @@ const AppInvoices = () => {
   });
 
   // KPIs
-  const totalIncome = invoices.filter((i: any) => i.type === "INVOICE").reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
-  const totalExpenses = invoices.filter((i: any) => i.type === "EXPENSE").reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
-  const totalPaid = invoices.filter((i: any) => i.status === "PAID" && i.type === "INVOICE").reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
-  const totalPending = invoices.filter((i: any) => i.status !== "PAID" && i.type === "INVOICE").reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
+  const totalIncome = filteredInvoices.filter((i: any) => i.type === "INVOICE").reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
+  const totalExpenses = filteredInvoices.filter((i: any) => i.type === "EXPENSE").reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
+  const totalPaid = filteredInvoices.filter((i: any) => i.status === "PAID" && i.type === "INVOICE").reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
+  const totalPending = filteredInvoices.filter((i: any) => i.status !== "PAID" && i.type === "INVOICE").reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
+
+  // Quote KPIs
+  const totalQuotes = quotes.reduce((sum: number, q: any) => sum + Number(q.amount_total), 0);
+  const acceptedQuotes = quotes.filter((q: any) => q.status === "ACCEPTED" || q.status === "INVOICED").reduce((sum: number, q: any) => sum + Number(q.amount_total), 0);
+  const pendingQuotes = quotes.filter((q: any) => q.status === "DRAFT" || q.status === "SENT").reduce((sum: number, q: any) => sum + Number(q.amount_total), 0);
 
   const kpis = [
     { label: "Facturado", value: `€${totalIncome.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`, icon: TrendingUp, color: "text-primary" },
