@@ -58,6 +58,8 @@ const AppInvoices = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [previewInvoice, setPreviewInvoice] = useState<any>(null);
   const [editInvoice, setEditInvoice] = useState<any>(null);
+  const [quoteSearch, setQuoteSearch] = useState("");
+  const [quoteStatusFilter, setQuoteStatusFilter] = useState<string>("ALL");
 
   // Delete state
   const [deleteInvoice, setDeleteInvoice] = useState<any>(null);
