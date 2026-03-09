@@ -506,6 +506,112 @@ const AppInvoices = () => {
       </Dialog>
         </TabsContent>
 
+        <TabsContent value="quotes" className="space-y-6">
+          {/* Quote KPIs */}
+          <div className="grid gap-4 md:grid-cols-3">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Total presupuestado</CardTitle>
+                <ClipboardList className="h-5 w-5 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold text-foreground">€{totalQuotes.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Aceptados</CardTitle>
+                <Check className="h-5 w-5 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold text-foreground">€{acceptedQuotes.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Pendientes</CardTitle>
+                <FileText className="h-5 w-5 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold text-foreground">€{pendingQuotes.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Quote Filters */}
+          <div className="flex flex-wrap gap-3">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Buscar presupuesto..." value={quoteSearch} onChange={(e) => setQuoteSearch(e.target.value)} className="pl-9" />
+            </div>
+            <Select value={quoteStatusFilter} onValueChange={setQuoteStatusFilter}>
+              <SelectTrigger className="w-[160px]"><SelectValue placeholder="Estado" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Todos</SelectItem>
+                <SelectItem value="DRAFT">Borrador</SelectItem>
+                <SelectItem value="SENT">Enviado</SelectItem>
+                <SelectItem value="ACCEPTED">Aceptado</SelectItem>
+                <SelectItem value="REJECTED">Rechazado</SelectItem>
+                <SelectItem value="INVOICED">Facturado</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Quotes Table */}
+          <Card>
+            <CardContent className="p-0">
+              {filteredQuotes.length === 0 ? (
+                <div className="p-8 text-center text-muted-foreground">No se encontraron presupuestos</div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nº</TableHead>
+                      <TableHead>Fecha</TableHead>
+                      <TableHead>Cliente</TableHead>
+                      <TableHead>Concepto</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead className="text-right">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredQuotes.map((q: any) => (
+                      <TableRow key={q.id} className="cursor-pointer hover:bg-accent/50" onClick={() => setPreviewInvoice(q)}>
+                        <TableCell className="font-mono font-semibold text-sm">
+                          {q.invoice_number || q.id.slice(0, 8).toUpperCase()}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          {format(new Date(q.issue_date), "dd MMM yyyy", { locale: es })}
+                        </TableCell>
+                        <TableCell>{q.business_clients?.name || "—"}</TableCell>
+                        <TableCell className="max-w-[200px] truncate">{q.concept || "—"}</TableCell>
+                        <TableCell className="text-right font-mono font-semibold">
+                          €{Number(q.amount_total).toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className={statusColors[q.status]}>
+                            {statusLabels[q.status] || q.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                          <InvoiceActionsMenu
+                            onPreview={() => setPreviewInvoice(q)}
+                            onExport={() => handleExportPdf(q.id)}
+                            onEdit={() => setEditInvoice(q)}
+                            onDelete={() => handleDeleteClick(q)}
+                            onSendEmail={q.business_clients?.email ? () => handleSendEmail(q.id) : undefined}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="recurring">
           <RecurringInvoicesTab accountId={accountId || ""} isManager={isManager} />
         </TabsContent>
