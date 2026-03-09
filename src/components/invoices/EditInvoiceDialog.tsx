@@ -355,7 +355,7 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button onClick={handleSubmit} disabled={submitting || (status === invoice?.status && !isDraft && attachmentPath === (invoice?.attachment_path || null))}>
             {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-            Guardar
+            {isQuote && status === "INVOICED" ? "Convertir en factura" : "Guardar"}
           </Button>
         </DialogFooter>
       </DialogContent>
