@@ -275,12 +275,15 @@ const AppInvoices = () => {
         <div className="flex items-center justify-between">
           <TabsList>
             <TabsTrigger value="invoices">Facturas</TabsTrigger>
+            <TabsTrigger value="quotes">
+              <ClipboardList className="h-4 w-4 mr-1" /> Presupuestos
+            </TabsTrigger>
             <TabsTrigger value="recurring">
               <RefreshCw className="h-4 w-4 mr-1" /> Recurrentes
             </TabsTrigger>
           </TabsList>
           <Button onClick={() => setDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" /> Nueva Factura
+            <Plus className="h-4 w-4 mr-2" /> Nuevo
           </Button>
         </div>
 
