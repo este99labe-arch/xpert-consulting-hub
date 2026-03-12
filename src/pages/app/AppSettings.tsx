@@ -605,10 +605,7 @@ const SecurityTab = ({ userId, accountId, isManager }: { userId: string; account
 const UsersTab = ({ userId, accountId }: { userId: string; accountId: string }) => {
   const queryClient = useQueryClient();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [newEmail, setNewEmail] = useState("");
-  const [newUserPassword, setNewUserPassword] = useState("");
-  const [createLoading, setCreateLoading] = useState(false);
-  const [createError, setCreateError] = useState("");
+
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["account-users", accountId],
