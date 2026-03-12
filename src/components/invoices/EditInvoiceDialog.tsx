@@ -136,6 +136,7 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
           account_id: invoice.account_id,
           client_id: invoice.client_id,
           type: "INVOICE",
+          status: "PAID",
           concept: invoice.concept,
           issue_date: new Date().toISOString().slice(0, 10),
           amount_net: invoice.amount_net,
