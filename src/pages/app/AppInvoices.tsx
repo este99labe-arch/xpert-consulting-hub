@@ -60,6 +60,7 @@ const AppInvoices = () => {
   const [editInvoice, setEditInvoice] = useState<any>(null);
   const [quoteSearch, setQuoteSearch] = useState("");
   const [quoteStatusFilter, setQuoteStatusFilter] = useState<string>("ALL");
+  const [activeTab, setActiveTab] = useState("invoices");
 
   // Delete state
   const [deleteInvoice, setDeleteInvoice] = useState<any>(null);
