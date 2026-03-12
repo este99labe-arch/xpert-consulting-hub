@@ -150,7 +150,7 @@ const CreateEmployeeDialog = ({ open, onOpenChange }: { open: boolean; onOpenCha
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="EMPLOYEE">Empleado</SelectItem>
-                      <SelectItem value="MANAGER">Manager</SelectItem>
+                      {role === "MASTER_ADMIN" && <SelectItem value="MANAGER">Manager</SelectItem>}
                     </SelectContent>
                   </Select>
                 </div>
