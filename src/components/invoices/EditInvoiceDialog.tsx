@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
@@ -48,6 +49,7 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
 
   const [clientId, setClientId] = useState("");
   const [concept, setConcept] = useState("");
+  const [description, setDescription] = useState("");
   const [issueDate, setIssueDate] = useState("");
   const [amount, setAmount] = useState("");
   const [vatPercentage, setVatPercentage] = useState("21");
@@ -66,6 +68,7 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
     if (invoice && open) {
       setClientId(invoice.client_id || "");
       setConcept(invoice.concept || "");
+      setDescription(invoice.description || "");
       setIssueDate(invoice.issue_date || "");
       setAmount(String(invoice.amount_net || ""));
       setVatPercentage(String(invoice.vat_percentage || "21"));
@@ -163,6 +166,7 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
         const resolvedClientId = await resolveClientId(clientId);
         updatePayload.client_id = resolvedClientId;
         updatePayload.concept = concept.trim();
+        updatePayload.description = description.trim();
         updatePayload.issue_date = issueDate;
         updatePayload.amount_net = amountNet;
         updatePayload.vat_percentage = vatNum;
@@ -194,7 +198,7 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Editar {invoiceNumber}</DialogTitle>
           <DialogDescription>
@@ -206,7 +210,7 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 overflow-y-auto flex-1 pr-1">
           {/* Status change section */}
           <div className="space-y-3">
             <Label className="text-xs text-muted-foreground uppercase tracking-wide">Estado</Label>
@@ -260,6 +264,16 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
               <div className="space-y-2">
                 <Label>Concepto</Label>
                 <Input value={concept} onChange={(e) => setConcept(e.target.value)} />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Descripción</Label>
+                <Textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Información adicional o detalles..."
+                  rows={3}
+                />
               </div>
 
               <div className="space-y-2">

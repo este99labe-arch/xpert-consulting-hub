@@ -627,6 +627,7 @@ export type Database = {
           client_id: string
           concept: string
           created_at: string
+          description: string | null
           id: string
           invoice_number: string | null
           issue_date: string
@@ -644,6 +645,7 @@ export type Database = {
           client_id: string
           concept?: string
           created_at?: string
+          description?: string | null
           id?: string
           invoice_number?: string | null
           issue_date: string
@@ -661,6 +663,7 @@ export type Database = {
           client_id?: string
           concept?: string
           created_at?: string
+          description?: string | null
           id?: string
           invoice_number?: string | null
           issue_date?: string

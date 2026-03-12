@@ -60,6 +60,7 @@ const AppInvoices = () => {
   const [editInvoice, setEditInvoice] = useState<any>(null);
   const [quoteSearch, setQuoteSearch] = useState("");
   const [quoteStatusFilter, setQuoteStatusFilter] = useState<string>("ALL");
+  const [activeTab, setActiveTab] = useState("invoices");
 
   // Delete state
   const [deleteInvoice, setDeleteInvoice] = useState<any>(null);
@@ -271,7 +272,7 @@ const AppInvoices = () => {
         <h1 className="text-2xl font-bold text-foreground">Facturación</h1>
       </div>
 
-      <Tabs defaultValue="invoices" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <div className="flex items-center justify-between">
           <TabsList>
             <TabsTrigger value="invoices">Facturas</TabsTrigger>
@@ -283,7 +284,7 @@ const AppInvoices = () => {
             </TabsTrigger>
           </TabsList>
           <Button onClick={() => setDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" /> Nuevo
+            <Plus className="h-4 w-4 mr-2" /> {activeTab === "quotes" ? "Nuevo presupuesto" : "Nuevo"}
           </Button>
         </div>
 
@@ -550,7 +551,7 @@ const AppInvoices = () => {
         </TabsContent>
       </Tabs>
 
-      <CreateInvoiceDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      <CreateInvoiceDialog open={dialogOpen} onOpenChange={setDialogOpen} defaultType={activeTab === "quotes" ? "QUOTE" : undefined} />
       <InvoicePreviewDialog
         open={!!previewInvoice}
         onOpenChange={() => setPreviewInvoice(null)}
