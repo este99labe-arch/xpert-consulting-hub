@@ -68,6 +68,7 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
     if (invoice && open) {
       setClientId(invoice.client_id || "");
       setConcept(invoice.concept || "");
+      setDescription(invoice.description || "");
       setIssueDate(invoice.issue_date || "");
       setAmount(String(invoice.amount_net || ""));
       setVatPercentage(String(invoice.vat_percentage || "21"));
