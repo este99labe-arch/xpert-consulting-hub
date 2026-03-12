@@ -762,7 +762,7 @@ const UsersTab = ({ userId, accountId }: { userId: string; accountId: string }) 
       {/* User list */}
       <div className="flex justify-end">
         <Button onClick={() => setShowCreateDialog(true)}>
-          <UserPlus className="h-4 w-4 mr-2" /> Nuevo Empleado
+          <UserPlus className="h-4 w-4 mr-2" /> Dar de Alta
         </Button>
       </div>
 
@@ -824,34 +824,8 @@ const UsersTab = ({ userId, accountId }: { userId: string; accountId: string }) 
         </Card>
       )}
 
-      {/* Create employee dialog */}
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Nuevo Empleado</DialogTitle>
-            <DialogDescription>Crea un nuevo usuario empleado para tu cuenta</DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleCreateUser} className="space-y-4">
-            {createError && (
-              <div className="flex items-center gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-                <AlertCircle className="h-4 w-4 shrink-0" /> {createError}
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label>Email</Label>
-              <Input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} required />
-            </div>
-            <div className="space-y-2">
-              <Label>Contraseña</Label>
-              <Input type="password" value={newUserPassword} onChange={(e) => setNewUserPassword(e.target.value)} required minLength={6} />
-            </div>
-            <Button type="submit" className="w-full" disabled={createLoading}>
-              {createLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              Crear Empleado
-            </Button>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* Create employee dialog - full onboarding form */}
+      <CreateEmployeeDialog open={showCreateDialog} onOpenChange={setShowCreateDialog} />
     </div>
   );
 };

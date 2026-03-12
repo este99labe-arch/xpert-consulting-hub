@@ -1,30 +1,19 @@
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from "@/components/ui/dialog";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import { Plus, Search, Loader2, UserCheck, UserX } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
-import CreateEmployeeDialog from "./CreateEmployeeDialog";
+import { Search, Loader2, UserCheck, UserX } from "lucide-react";
 
 const EmployeesTab = () => {
   const { accountId, role, user } = useAuth();
   const isManager = role === "MANAGER" || role === "MASTER_ADMIN";
   const [search, setSearch] = useState("");
-  const [showCreateUser, setShowCreateUser] = useState(false);
 
   const { data: employees = [], isLoading } = useQuery({
     queryKey: ["hr-employees", accountId],
@@ -70,16 +59,11 @@ const EmployeesTab = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center gap-4">
         <div className="relative max-w-sm flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Buscar por email o rol..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
-        {isManager && (
-          <Button onClick={() => setShowCreateUser(true)}>
-            <Plus className="h-4 w-4 mr-2" />Dar de Alta
-          </Button>
-        )}
       </div>
 
       <Card>
@@ -118,8 +102,6 @@ const EmployeesTab = () => {
           </Table>
         </CardContent>
       </Card>
-
-      {isManager && <CreateEmployeeDialog open={showCreateUser} onOpenChange={setShowCreateUser} />}
     </div>
   );
 };
