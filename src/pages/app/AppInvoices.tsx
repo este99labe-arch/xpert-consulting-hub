@@ -549,6 +549,74 @@ const AppInvoices = () => {
           <RecurringInvoicesTab accountId={accountId || ""} isManager={isManager} />
         </TabsContent>
       </Tabs>
+
+      <CreateInvoiceDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      <InvoicePreviewDialog
+        open={!!previewInvoice}
+        onOpenChange={() => setPreviewInvoice(null)}
+        invoice={previewInvoice}
+        onExport={previewInvoice ? () => handleExportPdf(previewInvoice.id) : undefined}
+        onSendEmail={previewInvoice?.business_clients?.email ? () => handleSendEmail(previewInvoice.id) : undefined}
+      />
+      <EditInvoiceDialog
+        open={!!editInvoice}
+        onOpenChange={() => setEditInvoice(null)}
+        invoice={editInvoice}
+      />
+
+      {/* Manager: direct delete confirmation */}
+      <AlertDialog open={!!deleteInvoice && isManager && !deleteReasonDialog} onOpenChange={(o) => { if (!o) setDeleteInvoice(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar este registro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se eliminará permanentemente{" "}
+              <span className="font-semibold">{deleteInvoice?.invoice_number || ""}</span>.
+              Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleManagerDelete}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Eliminando..." : "Eliminar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Employee: request deletion with reason */}
+      <Dialog open={deleteReasonDialog} onOpenChange={(o) => { if (!o) { setDeleteReasonDialog(false); setDeleteInvoice(null); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Solicitar eliminación</DialogTitle>
+            <DialogDescription>
+              Tu solicitud será revisada por un manager antes de que{" "}
+              <span className="font-semibold">{deleteInvoice?.invoice_number || ""}</span> sea eliminado.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Motivo (opcional)</label>
+            <Textarea
+              value={deleteReason}
+              onChange={(e) => setDeleteReason(e.target.value)}
+              placeholder="Indica el motivo..."
+              rows={3}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setDeleteReasonDialog(false); setDeleteInvoice(null); }}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleEmployeeRequest} disabled={deleting}>
+              {deleting ? "Enviando..." : "Enviar solicitud"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
