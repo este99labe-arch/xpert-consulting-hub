@@ -634,27 +634,7 @@ const UsersTab = ({ userId, accountId }: { userId: string; accountId: string }) 
     enabled: !!accountId,
   });
 
-  const handleCreateUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setCreateError("");
-    setCreateLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("admin_reset_password", {
-        body: { action: "create_user", email: newEmail, new_password: newUserPassword, role_code: "EMPLOYEE", account_id: accountId },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      toast({ title: "Empleado creado" });
-      setShowCreateDialog(false);
-      setNewEmail("");
-      setNewUserPassword("");
-      queryClient.invalidateQueries({ queryKey: ["account-users"] });
-    } catch (err: any) {
-      setCreateError(err.message);
-    } finally {
-      setCreateLoading(false);
-    }
-  };
+
 
   const handleDeactivateUser = async (targetUserId: string) => {
     try {
