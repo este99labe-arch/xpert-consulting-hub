@@ -267,6 +267,16 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
               </div>
 
               <div className="space-y-2">
+                <Label>Descripción</Label>
+                <Textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Información adicional o detalles..."
+                  rows={3}
+                />
+              </div>
+
+              <div className="space-y-2">
                 <Label>Fecha de emisión</Label>
                 <Input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} />
               </div>
