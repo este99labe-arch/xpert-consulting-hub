@@ -272,7 +272,7 @@ const AppInvoices = () => {
         <h1 className="text-2xl font-bold text-foreground">Facturación</h1>
       </div>
 
-      <Tabs defaultValue="invoices" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <div className="flex items-center justify-between">
           <TabsList>
             <TabsTrigger value="invoices">Facturas</TabsTrigger>
@@ -284,7 +284,7 @@ const AppInvoices = () => {
             </TabsTrigger>
           </TabsList>
           <Button onClick={() => setDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" /> Nuevo
+            <Plus className="h-4 w-4 mr-2" /> {activeTab === "quotes" ? "Nuevo presupuesto" : "Nuevo"}
           </Button>
         </div>
 
