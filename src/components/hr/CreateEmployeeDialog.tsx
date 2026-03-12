@@ -75,14 +75,19 @@ const CreateEmployeeDialog = ({ open, onOpenChange }: { open: boolean; onOpenCha
       }
 
       if (sendEmail) {
-        let companyName = "la empresa";
-        if (accountId) {
-          const { data: acc } = await supabase.from("accounts").select("name").eq("id", accountId).single();
-          if (acc?.name) companyName = acc.name;
+        try {
+          let companyName = "la empresa";
+          if (accountId) {
+            const { data: acc } = await supabase.from("accounts").select("name").eq("id", accountId).single();
+            if (acc?.name) companyName = acc.name;
+          }
+          await supabase.functions.invoke("send_welcome_email", {
+            body: { employee_email: email, employee_name: `${firstName} ${lastName}`, password, company_name: companyName },
+          });
+        } catch (emailErr: any) {
+          console.warn("Email de bienvenida no enviado:", emailErr.message);
+          toast({ title: "Aviso", description: "El empleado fue creado pero no se pudo enviar el email de bienvenida. Comprueba la configuración de email.", variant: "destructive" });
         }
-        await supabase.functions.invoke("send_welcome_email", {
-          body: { employee_email: email, employee_name: `${firstName} ${lastName}`, password, company_name: companyName },
-        });
       }
 
       toast({ title: "Empleado dado de alta correctamente", description: sendEmail ? "Se ha enviado un email con las credenciales" : undefined });
