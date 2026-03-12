@@ -210,7 +210,7 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 overflow-y-auto flex-1 pr-1">
           {/* Status change section */}
           <div className="space-y-3">
             <Label className="text-xs text-muted-foreground uppercase tracking-wide">Estado</Label>
