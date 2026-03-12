@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
@@ -17,15 +18,17 @@ import { dispatchWebhook } from "@/lib/webhooks";
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  defaultType?: "QUOTE" | "INVOICE" | "EXPENSE";
 }
 
-const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
+const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
   const { accountId } = useAuth();
   const queryClient = useQueryClient();
 
   const [clientId, setClientId] = useState("");
   const [type, setType] = useState("INVOICE");
   const [concept, setConcept] = useState("");
+  const [description, setDescription] = useState("");
   const [issueDate, setIssueDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [amount, setAmount] = useState("");
   const [vatPercentage, setVatPercentage] = useState("21");
@@ -34,10 +37,17 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
   const [attachmentPath, setAttachmentPath] = useState<string | null>(null);
   const [attachmentName, setAttachmentName] = useState<string | null>(null);
 
+  // Set type when defaultType changes or dialog opens
+  useEffect(() => {
+    if (open && defaultType) {
+      setType(defaultType);
+    }
+  }, [open, defaultType]);
+
+  const isQuoteMode = defaultType === "QUOTE";
+
   const amountNum = parseFloat(amount) || 0;
   const vatNum = parseFloat(vatPercentage) || 0;
-
-  // Calculate net/vat/total based on whether VAT is included
   const amountNet = vatIncluded
     ? +(amountNum / (1 + vatNum / 100)).toFixed(2)
     : amountNum;
@@ -71,7 +81,6 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
 
   const resolveClientId = async (selectedId: string): Promise<string> => {
     if (!selectedId.startsWith("__self__")) return selectedId;
-    // Find or create a business_client for own company
     const { data: existing } = await supabase
       .from("business_clients")
       .select("id")
@@ -108,6 +117,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
         client_id: resolvedClientId,
         type,
         concept: concept.trim(),
+        description: description.trim(),
         issue_date: issueDate,
         amount_net: amountNet,
         vat_percentage: vatNum,
@@ -116,8 +126,10 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
         ...(attachmentPath ? { attachment_path: attachmentPath, attachment_name: attachmentName } : {}),
       } as any);
       if (error) throw error;
-      toast({ title: "Factura creada correctamente" });
-      dispatchWebhook(accountId, "invoice.created", {
+
+      const typeLabel = type === "QUOTE" ? "Presupuesto" : type === "EXPENSE" ? "Gasto" : "Factura";
+      toast({ title: `${typeLabel} creado correctamente` });
+      dispatchWebhook(accountId, type === "QUOTE" ? "quote.created" : "invoice.created", {
         type, concept: concept.trim(), amount_net: amountNet, amount_vat: amountVat,
         amount_total: amountTotal, vat_percentage: vatNum, issue_date: issueDate,
       });
@@ -136,6 +148,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
     setClientId("");
     setType("INVOICE");
     setConcept("");
+    setDescription("");
     setIssueDate(new Date().toISOString().slice(0, 10));
     setAmount("");
     setVatPercentage("21");
@@ -144,29 +157,32 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
     setAttachmentName(null);
   };
 
+  const dialogTitle = isQuoteMode ? "Nuevo Presupuesto" : "Nueva Factura / Gasto";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>
-            {type === "QUOTE" ? "Nuevo Presupuesto" : "Nueva Factura / Gasto"}
-          </DialogTitle>
+      <DialogContent className="sm:max-w-lg max-h-[85vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
+          <DialogTitle>{dialogTitle}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="space-y-4 overflow-y-auto flex-1 pr-1">
           <div className="space-y-2">
             <Label>Tipo</Label>
-            <Select value={type} onValueChange={setType}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="INVOICE">Factura</SelectItem>
-                <SelectItem value="EXPENSE">Gasto</SelectItem>
-                <SelectItem value="QUOTE">Presupuesto</SelectItem>
-              </SelectContent>
-            </Select>
+            {isQuoteMode ? (
+              <Input value="Presupuesto" disabled className="bg-muted" />
+            ) : (
+              <Select value={type} onValueChange={setType}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="INVOICE">Factura</SelectItem>
+                  <SelectItem value="EXPENSE">Gasto</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           <div className="space-y-2">
-            <Label>{type === "EXPENSE" ? "Proveedor / Empresa" : "Cliente"}</Label>
+            <Label>{type === "EXPENSE" ? "Proveedor / Empresa" : "Cliente"} *</Label>
             <Select value={clientId} onValueChange={setClientId}>
               <SelectTrigger><SelectValue placeholder="Selecciona destinatario" /></SelectTrigger>
               <SelectContent>
@@ -187,7 +203,17 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
             <Input
               value={concept}
               onChange={(e) => setConcept(e.target.value)}
-              placeholder="Ej: Servicio de consultoría marzo 2026"
+              placeholder={isQuoteMode ? "Ej: Propuesta de diseño web" : "Ej: Servicio de consultoría marzo 2026"}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Descripción</Label>
+            <Textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Añade información adicional o detalles del servicio..."
+              rows={3}
             />
           </div>
 
@@ -198,7 +224,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>{vatIncluded ? "Importe con IVA (€)" : "Importe neto (€)"}</Label>
+              <Label>{vatIncluded ? "Importe con IVA (€)" : "Importe neto (€)"} *</Label>
               <Input
                 type="number"
                 min="0"
@@ -256,7 +282,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: Props) => {
             </div>
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter className="flex-shrink-0">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button onClick={handleSubmit} disabled={submitting}>
             {submitting ? "Guardando..." : "Crear"}
