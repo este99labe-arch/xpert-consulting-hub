@@ -49,6 +49,7 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
 
   const [clientId, setClientId] = useState("");
   const [concept, setConcept] = useState("");
+  const [description, setDescription] = useState("");
   const [issueDate, setIssueDate] = useState("");
   const [amount, setAmount] = useState("");
   const [vatPercentage, setVatPercentage] = useState("21");
