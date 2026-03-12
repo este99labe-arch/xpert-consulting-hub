@@ -15,7 +15,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 const CreateEmployeeDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) => {
-  const { accountId } = useAuth();
+  const { accountId, role } = useAuth();
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
