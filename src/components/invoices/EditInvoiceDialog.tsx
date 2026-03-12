@@ -166,6 +166,7 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
         const resolvedClientId = await resolveClientId(clientId);
         updatePayload.client_id = resolvedClientId;
         updatePayload.concept = concept.trim();
+        updatePayload.description = description.trim();
         updatePayload.issue_date = issueDate;
         updatePayload.amount_net = amountNet;
         updatePayload.vat_percentage = vatNum;
