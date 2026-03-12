@@ -198,7 +198,7 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Editar {invoiceNumber}</DialogTitle>
           <DialogDescription>
