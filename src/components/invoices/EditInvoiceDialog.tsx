@@ -22,20 +22,8 @@ const statusLabels: Record<string, string> = {
   ACCEPTED: "Aceptado", REJECTED: "Rechazado", INVOICED: "Facturado",
 };
 
-const statusFlow: Record<string, string[]> = {
-  DRAFT: ["SENT"],
-  SENT: ["PAID", "OVERDUE"],
-  OVERDUE: ["PAID"],
-  PAID: [],
-};
-
-const quoteStatusFlow: Record<string, string[]> = {
-  DRAFT: ["SENT"],
-  SENT: ["ACCEPTED", "REJECTED"],
-  ACCEPTED: ["INVOICED"],
-  REJECTED: [],
-  INVOICED: [],
-};
+const allInvoiceStatuses = ["DRAFT", "SENT", "PAID", "OVERDUE", "CANCELLED"];
+const allQuoteStatuses = ["DRAFT", "SENT", "ACCEPTED", "REJECTED", "INVOICED", "CANCELLED"];
 
 interface Props {
   open: boolean;
@@ -61,8 +49,8 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
 
   const isDraft = invoice?.status === "DRAFT";
   const isQuote = invoice?.type === "QUOTE";
-  const flow = isQuote ? quoteStatusFlow : statusFlow;
-  const nextStatuses = flow[invoice?.status || ""] || [];
+  const allStatuses = isQuote ? allQuoteStatuses : allInvoiceStatuses;
+  const nextStatuses = allStatuses.filter((s) => s !== invoice?.status);
 
   useEffect(() => {
     if (invoice && open) {

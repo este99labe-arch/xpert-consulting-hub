@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import GlobalSearch from "@/components/shared/GlobalSearch";
 import NotificationBell from "@/components/shared/NotificationBell";
@@ -18,7 +19,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import {
-  LayoutDashboard, Users, FileText, Calculator, UserCog, Clock, Settings, LogOut, Package, ArrowRightLeft, ChevronDown, BarChart3,
+  LayoutDashboard, Users, FileText, Calculator, UserCog, Clock, Settings, LogOut, Package, ArrowRightLeft, ChevronDown, BarChart3, HelpCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -59,6 +60,7 @@ const SidebarInner = () => {
   const { signOut, user, accountId, role } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const [showTutorial, setShowTutorial] = useState(false);
 
   const { data: accountInfo } = useQuery({
     queryKey: ["account-info", accountId],
@@ -224,6 +226,10 @@ const SidebarInner = () => {
                   <Settings className="h-4 w-4 mr-2" />
                   Mi perfil
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowTutorial(true)}>
+                  <HelpCircle className="h-4 w-4 mr-2" />
+                  Ver tutorial
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={signOut} className="text-destructive focus:text-destructive">
                   <LogOut className="h-4 w-4 mr-2" />
@@ -240,7 +246,7 @@ const SidebarInner = () => {
             </ErrorBoundary>
           </div>
         </main>
-        <OnboardingTour />
+        <OnboardingTour forceShow={showTutorial} onClose={() => setShowTutorial(false)} />
       </SidebarInset>
     </>
   );
