@@ -49,8 +49,8 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
 
   const isDraft = invoice?.status === "DRAFT";
   const isQuote = invoice?.type === "QUOTE";
-  const flow = isQuote ? quoteStatusFlow : statusFlow;
-  const nextStatuses = flow[invoice?.status || ""] || [];
+  const allStatuses = isQuote ? allQuoteStatuses : allInvoiceStatuses;
+  const nextStatuses = allStatuses.filter((s) => s !== invoice?.status);
 
   useEffect(() => {
     if (invoice && open) {
