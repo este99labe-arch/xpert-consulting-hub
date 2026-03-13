@@ -246,7 +246,7 @@ const SidebarInner = () => {
             </ErrorBoundary>
           </div>
         </main>
-        <OnboardingTour />
+        <OnboardingTour forceShow={showTutorial} onClose={() => setShowTutorial(false)} />
       </SidebarInset>
     </>
   );
