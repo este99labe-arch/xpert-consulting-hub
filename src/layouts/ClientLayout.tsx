@@ -60,6 +60,7 @@ const SidebarInner = () => {
   const { signOut, user, accountId, role } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const [showTutorial, setShowTutorial] = useState(false);
 
   const { data: accountInfo } = useQuery({
     queryKey: ["account-info", accountId],
