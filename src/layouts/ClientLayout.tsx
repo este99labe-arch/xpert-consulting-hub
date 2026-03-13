@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import GlobalSearch from "@/components/shared/GlobalSearch";
 import NotificationBell from "@/components/shared/NotificationBell";
