@@ -70,7 +70,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
       if (!accountId) return [];
       const { data, error } = await supabase
         .from("business_clients")
-        .select("id, name")
+        .select("id, name, default_vat_percentage")
         .eq("account_id", accountId)
         .eq("status", "ACTIVE");
       if (error) throw error;
@@ -78,6 +78,16 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
     },
     enabled: !!accountId && open,
   });
+
+  // Apply client's default VAT when selected
+  useEffect(() => {
+    if (clientId && !clientId.startsWith("__self__")) {
+      const selected = clients.find((c: any) => c.id === clientId);
+      if (selected?.default_vat_percentage != null) {
+        setVatPercentage(String(selected.default_vat_percentage));
+      }
+    }
+  }, [clientId, clients]);
 
   const resolveClientId = async (selectedId: string): Promise<string> => {
     if (!selectedId.startsWith("__self__")) return selectedId;

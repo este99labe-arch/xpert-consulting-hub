@@ -271,30 +271,72 @@ export type Database = {
       business_clients: {
         Row: {
           account_id: string
+          address: string | null
+          auto_journal_entry: boolean | null
+          billing_address: string | null
+          billing_city: string | null
+          billing_country: string | null
+          billing_postal_code: string | null
+          city: string | null
+          country: string | null
           created_at: string
+          default_vat_percentage: number | null
           email: string | null
           id: string
           name: string
+          notes: string | null
+          phone: string | null
+          plan_id: string | null
+          postal_code: string | null
           status: string
           tax_id: string
+          website: string | null
         }
         Insert: {
           account_id: string
+          address?: string | null
+          auto_journal_entry?: boolean | null
+          billing_address?: string | null
+          billing_city?: string | null
+          billing_country?: string | null
+          billing_postal_code?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
+          default_vat_percentage?: number | null
           email?: string | null
           id?: string
           name: string
+          notes?: string | null
+          phone?: string | null
+          plan_id?: string | null
+          postal_code?: string | null
           status?: string
           tax_id: string
+          website?: string | null
         }
         Update: {
           account_id?: string
+          address?: string | null
+          auto_journal_entry?: boolean | null
+          billing_address?: string | null
+          billing_city?: string | null
+          billing_country?: string | null
+          billing_postal_code?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
+          default_vat_percentage?: number | null
           email?: string | null
           id?: string
           name?: string
+          notes?: string | null
+          phone?: string | null
+          plan_id?: string | null
+          postal_code?: string | null
           status?: string
           tax_id?: string
+          website?: string | null
         }
         Relationships: [
           {
@@ -302,6 +344,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_clients_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "client_plans"
             referencedColumns: ["id"]
           },
         ]
@@ -350,6 +399,98 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_contacts: {
+        Row: {
+          account_id: string
+          client_id: string
+          created_at: string
+          email: string | null
+          id: string
+          is_primary: boolean | null
+          name: string
+          phone: string | null
+          position: string | null
+        }
+        Insert: {
+          account_id: string
+          client_id: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_primary?: boolean | null
+          name: string
+          phone?: string | null
+          position?: string | null
+        }
+        Update: {
+          account_id?: string
+          client_id?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_primary?: boolean | null
+          name?: string
+          phone?: string | null
+          position?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_contacts_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_contacts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "business_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_plans: {
+        Row: {
+          account_id: string
+          created_at: string
+          description: string | null
+          features: string[] | null
+          id: string
+          is_active: boolean | null
+          name: string
+          price: number
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          description?: string | null
+          features?: string[] | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          price?: number
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          description?: string | null
+          features?: string[] | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_plans_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
         ]
