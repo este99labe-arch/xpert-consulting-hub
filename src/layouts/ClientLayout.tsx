@@ -226,6 +226,10 @@ const SidebarInner = () => {
                   <Settings className="h-4 w-4 mr-2" />
                   Mi perfil
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowTutorial(true)}>
+                  <HelpCircle className="h-4 w-4 mr-2" />
+                  Ver tutorial
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={signOut} className="text-destructive focus:text-destructive">
                   <LogOut className="h-4 w-4 mr-2" />
