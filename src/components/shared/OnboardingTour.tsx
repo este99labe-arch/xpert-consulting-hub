@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 
-const STORAGE_KEY = "onboarding_completed";
+const STORAGE_PREFIX = "onboarding_completed_";
 
 const steps = [
   {
@@ -31,19 +32,35 @@ const steps = [
   },
 ];
 
-const OnboardingTour = () => {
+interface OnboardingTourProps {
+  forceShow?: boolean;
+  onClose?: () => void;
+}
+
+const OnboardingTour = ({ forceShow, onClose }: OnboardingTourProps) => {
+  const { user } = useAuth();
   const [current, setCurrent] = useState(0);
   const [visible, setVisible] = useState(false);
 
+  const storageKey = user?.id ? `${STORAGE_PREFIX}${user.id}` : null;
+
   useEffect(() => {
-    if (!localStorage.getItem(STORAGE_KEY)) {
+    if (forceShow) {
+      setCurrent(0);
+      setVisible(true);
+      return;
+    }
+    if (storageKey && !localStorage.getItem(storageKey)) {
       setVisible(true);
     }
-  }, []);
+  }, [storageKey, forceShow]);
 
   const dismiss = () => {
-    localStorage.setItem(STORAGE_KEY, "true");
+    if (storageKey) {
+      localStorage.setItem(storageKey, "true");
+    }
     setVisible(false);
+    onClose?.();
   };
 
   const next = () => {

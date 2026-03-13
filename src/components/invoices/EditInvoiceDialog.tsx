@@ -22,20 +22,8 @@ const statusLabels: Record<string, string> = {
   ACCEPTED: "Aceptado", REJECTED: "Rechazado", INVOICED: "Facturado",
 };
 
-const statusFlow: Record<string, string[]> = {
-  DRAFT: ["SENT"],
-  SENT: ["PAID", "OVERDUE"],
-  OVERDUE: ["PAID"],
-  PAID: [],
-};
-
-const quoteStatusFlow: Record<string, string[]> = {
-  DRAFT: ["SENT"],
-  SENT: ["ACCEPTED", "REJECTED"],
-  ACCEPTED: ["INVOICED"],
-  REJECTED: [],
-  INVOICED: [],
-};
+const allInvoiceStatuses = ["DRAFT", "SENT", "PAID", "OVERDUE", "CANCELLED"];
+const allQuoteStatuses = ["DRAFT", "SENT", "ACCEPTED", "REJECTED", "INVOICED", "CANCELLED"];
 
 interface Props {
   open: boolean;
