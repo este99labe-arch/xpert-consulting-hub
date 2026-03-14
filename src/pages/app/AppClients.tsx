@@ -31,6 +31,16 @@ const AppClients = () => {
   const [showCreate, setShowCreate] = useState(false);
   const [deletingClientId, setDeletingClientId] = useState<string | null>(null);
 
+  const { data: account } = useQuery({
+    queryKey: ["my-account-info", accountId],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("accounts").select("id, name, tax_id").eq("id", accountId!).single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!accountId,
+  });
+
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ["business-clients", accountId],
     queryFn: async () => {
@@ -43,6 +53,13 @@ const AppClients = () => {
       return data || [];
     },
     enabled: !!accountId,
+  });
+
+  // Filter out self-referencing client (own company) from the list
+  const externalClients = clients.filter((c: any) => {
+    if (!account) return true;
+    const isSelf = c.name === account.name && (c.tax_id === account.tax_id || c.tax_id === "PROPIA");
+    return !isSelf;
   });
 
   const deleteMutation = useMutation({
