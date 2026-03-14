@@ -24,6 +24,8 @@ import { format, differenceInBusinessDays, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import { Plus, Loader2, CalendarIcon } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import PaginationControls from "@/components/shared/PaginationControls";
+import { usePagination } from "@/hooks/use-pagination";
 
 const LEAVE_TYPES = [
   { value: "VACATION", label: "Vacaciones" },
@@ -101,6 +103,8 @@ const LeaveTab = () => {
     },
   });
 
+  const pagination = usePagination(requests);
+
   if (isLoading) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
 
   return (
@@ -128,7 +132,7 @@ const LeaveTab = () => {
               {requests.length === 0 ? (
                 <TableRow><TableCell colSpan={isManager ? 8 : 5} className="text-center text-muted-foreground py-8">No hay solicitudes de ausencia</TableCell></TableRow>
               ) : (
-                requests.map((r: any) => {
+                pagination.paginatedItems.map((r: any) => {
                   const days = differenceInBusinessDays(parseISO(r.end_date), parseISO(r.start_date)) + 1;
                   const typeLabel = LEAVE_TYPES.find(t => t.value === r.type)?.label || r.type;
                   const st = STATUS_MAP[r.status] || { label: r.status, variant: "outline" as const };
@@ -160,6 +164,21 @@ const LeaveTab = () => {
               )}
             </TableBody>
           </Table>
+          {requests.length > 0 && (
+            <div className="px-4 pb-4">
+              <PaginationControls
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                totalItems={pagination.totalItems}
+                pageSize={pagination.pageSize}
+                startIndex={pagination.startIndex}
+                endIndex={pagination.endIndex}
+                onPageChange={pagination.setCurrentPage}
+                onPageSizeChange={pagination.setPageSize}
+                pageSizeOptions={pagination.pageSizeOptions}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 

@@ -18,6 +18,8 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
+import PaginationControls from "@/components/shared/PaginationControls";
+import { usePagination } from "@/hooks/use-pagination";
 
 const frequencyLabels: Record<string, string> = {
   MONTHLY: "Mensual",
@@ -86,6 +88,8 @@ const RecurringInvoicesTab = ({ accountId, isManager }: RecurringInvoicesTabProp
     },
     enabled: !!accountId,
   });
+
+  const pagination = usePagination(recurring);
 
   const openCreate = () => {
     setEditingId(null);
@@ -234,56 +238,71 @@ const RecurringInvoicesTab = ({ accountId, isManager }: RecurringInvoicesTabProp
           ) : recurring.length === 0 ? (
             <p className="text-sm text-muted-foreground py-8 text-center">No hay facturas recurrentes configuradas</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Concepto</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Frecuencia</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead>Próxima</TableHead>
-                  <TableHead>Estado</TableHead>
-                  {isManager && <TableHead className="text-right">Acciones</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recurring.map((r: any) => (
-                  <TableRow key={r.id}>
-                    <TableCell className="font-medium">{r.business_clients?.name || "—"}</TableCell>
-                    <TableCell className="max-w-[200px] truncate">{r.concept || "—"}</TableCell>
-                    <TableCell>{r.type === "INVOICE" ? "Factura" : "Gasto"}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{frequencyLabels[r.frequency] || r.frequency}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right font-mono font-semibold">{fmtMoney(r.amount_total)}</TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      {format(new Date(r.next_run_date), "dd MMM yyyy", { locale: es })}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={r.is_active ? "default" : "secondary"}>
-                        {r.is_active ? "Activa" : "Pausada"}
-                      </Badge>
-                    </TableCell>
-                    {isManager && (
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleActive(r.id, r.is_active)}>
-                            {r.is_active ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(r)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteId(r.id)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    )}
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Concepto</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Frecuencia</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
+                    <TableHead>Próxima</TableHead>
+                    <TableHead>Estado</TableHead>
+                    {isManager && <TableHead className="text-right">Acciones</TableHead>}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {pagination.paginatedItems.map((r: any) => (
+                    <TableRow key={r.id}>
+                      <TableCell className="font-medium">{r.business_clients?.name || "—"}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">{r.concept || "—"}</TableCell>
+                      <TableCell>{r.type === "INVOICE" ? "Factura" : "Gasto"}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{frequencyLabels[r.frequency] || r.frequency}</Badge>
+                      </TableCell>
+                      <TableCell className="text-right font-mono font-semibold">{fmtMoney(r.amount_total)}</TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        {format(new Date(r.next_run_date), "dd MMM yyyy", { locale: es })}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={r.is_active ? "default" : "secondary"}>
+                          {r.is_active ? "Activa" : "Pausada"}
+                        </Badge>
+                      </TableCell>
+                      {isManager && (
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleActive(r.id, r.is_active)}>
+                              {r.is_active ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(r)}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteId(r.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <div className="pt-4">
+                <PaginationControls
+                  currentPage={pagination.currentPage}
+                  totalPages={pagination.totalPages}
+                  totalItems={pagination.totalItems}
+                  pageSize={pagination.pageSize}
+                  startIndex={pagination.startIndex}
+                  endIndex={pagination.endIndex}
+                  onPageChange={pagination.setCurrentPage}
+                  onPageSizeChange={pagination.setPageSize}
+                  pageSizeOptions={pagination.pageSizeOptions}
+                />
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

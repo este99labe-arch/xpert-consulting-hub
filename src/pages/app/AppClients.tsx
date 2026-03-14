@@ -21,6 +21,8 @@ import { Plus, Search, Loader2, Trash2, Users, AlertCircle, Eye } from "lucide-r
 import { toast } from "@/hooks/use-toast";
 import EmptyState from "@/components/shared/EmptyState";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
+import PaginationControls from "@/components/shared/PaginationControls";
+import { usePagination } from "@/hooks/use-pagination";
 
 const AppClients = () => {
   const { accountId } = useAuth();
@@ -55,7 +57,6 @@ const AppClients = () => {
     enabled: !!accountId,
   });
 
-  // Filter out self-referencing client (own company) from the list
   const externalClients = clients.filter((c: any) => {
     if (!account) return true;
     const isSelf = c.name === account.name && (c.tax_id === account.tax_id || c.tax_id === "PROPIA");
@@ -85,6 +86,8 @@ const AppClients = () => {
     return matchSearch && matchStatus;
   });
 
+  const pagination = usePagination(filtered);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -109,11 +112,11 @@ const AppClients = () => {
           <Input
             placeholder="Buscar por nombre o NIF/CIF..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); pagination.resetPage(); }}
             className="pl-9"
           />
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); pagination.resetPage(); }}>
           <SelectTrigger className="w-[160px]">
             <SelectValue />
           </SelectTrigger>
@@ -148,7 +151,7 @@ const AppClients = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((client: any) => (
+                {pagination.paginatedItems.map((client: any) => (
                   <TableRow
                     key={client.id}
                     className="cursor-pointer"
@@ -185,6 +188,19 @@ const AppClients = () => {
                 ))}
               </TableBody>
             </Table>
+            <div className="px-4 pb-4">
+              <PaginationControls
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                totalItems={pagination.totalItems}
+                pageSize={pagination.pageSize}
+                startIndex={pagination.startIndex}
+                endIndex={pagination.endIndex}
+                onPageChange={pagination.setCurrentPage}
+                onPageSizeChange={pagination.setPageSize}
+                pageSizeOptions={pagination.pageSizeOptions}
+              />
+            </div>
           </CardContent>
         </Card>
       )}

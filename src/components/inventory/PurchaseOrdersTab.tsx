@@ -5,6 +5,8 @@ import { Plus } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { PurchaseOrder, statusLabels, statusColors } from "./types";
+import PaginationControls from "@/components/shared/PaginationControls";
+import { usePagination } from "@/hooks/use-pagination";
 
 const nextStatus: Record<string, string> = { DRAFT: "PENDING", PENDING: "ORDERED", ORDERED: "RECEIVED" };
 
@@ -15,49 +17,68 @@ interface PurchaseOrdersTabProps {
   onUpdateStatus: (order: PurchaseOrder, newStatus: string) => void;
 }
 
-const PurchaseOrdersTab = ({ orders, isManager, onNewOrder, onUpdateStatus }: PurchaseOrdersTabProps) => (
-  <div className="space-y-4">
-    <div className="flex items-center gap-2">
-      {isManager && (
-        <Button size="sm" onClick={onNewOrder}><Plus className="h-4 w-4 mr-1" />Nueva Orden</Button>
-      )}
-    </div>
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Fecha</TableHead><TableHead>Producto</TableHead>
-            <TableHead className="text-right">Cantidad</TableHead><TableHead>Estado</TableHead>
-            <TableHead>Fecha Est.</TableHead><TableHead>Notas</TableHead>{isManager && <TableHead />}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {orders.length === 0 && (
-            <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Sin órdenes de compra</TableCell></TableRow>
-          )}
-          {orders.map(o => (
-            <TableRow key={o.id}>
-              <TableCell className="text-sm">{format(new Date(o.created_at), "dd/MM/yyyy", { locale: es })}</TableCell>
-              <TableCell>{o.products?.name} <span className="text-xs text-muted-foreground">({o.products?.sku})</span></TableCell>
-              <TableCell className="text-right font-mono">{o.quantity}</TableCell>
-              <TableCell><Badge className={statusColors[o.status]}>{statusLabels[o.status]}</Badge></TableCell>
-              <TableCell className="text-sm">{o.estimated_date ? format(new Date(o.estimated_date), "dd/MM/yyyy") : "—"}</TableCell>
-              <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{o.notes}</TableCell>
-              {isManager && (
-                <TableCell>
-                  {o.status !== "RECEIVED" && (
-                    <Button size="sm" variant="outline" onClick={() => onUpdateStatus(o, nextStatus[o.status])}>
-                      → {statusLabels[nextStatus[o.status]]}
-                    </Button>
-                  )}
-                </TableCell>
-              )}
+const PurchaseOrdersTab = ({ orders, isManager, onNewOrder, onUpdateStatus }: PurchaseOrdersTabProps) => {
+  const pagination = usePagination(orders);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        {isManager && (
+          <Button size="sm" onClick={onNewOrder}><Plus className="h-4 w-4 mr-1" />Nueva Orden</Button>
+        )}
+      </div>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Fecha</TableHead><TableHead>Producto</TableHead>
+              <TableHead className="text-right">Cantidad</TableHead><TableHead>Estado</TableHead>
+              <TableHead>Fecha Est.</TableHead><TableHead>Notas</TableHead>{isManager && <TableHead />}
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {orders.length === 0 && (
+              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Sin órdenes de compra</TableCell></TableRow>
+            )}
+            {pagination.paginatedItems.map(o => (
+              <TableRow key={o.id}>
+                <TableCell className="text-sm">{format(new Date(o.created_at), "dd/MM/yyyy", { locale: es })}</TableCell>
+                <TableCell>{o.products?.name} <span className="text-xs text-muted-foreground">({o.products?.sku})</span></TableCell>
+                <TableCell className="text-right font-mono">{o.quantity}</TableCell>
+                <TableCell><Badge className={statusColors[o.status]}>{statusLabels[o.status]}</Badge></TableCell>
+                <TableCell className="text-sm">{o.estimated_date ? format(new Date(o.estimated_date), "dd/MM/yyyy") : "—"}</TableCell>
+                <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{o.notes}</TableCell>
+                {isManager && (
+                  <TableCell>
+                    {o.status !== "RECEIVED" && (
+                      <Button size="sm" variant="outline" onClick={() => onUpdateStatus(o, nextStatus[o.status])}>
+                        → {statusLabels[nextStatus[o.status]]}
+                      </Button>
+                    )}
+                  </TableCell>
+                )}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        {orders.length > 0 && (
+          <div className="px-4 pb-4">
+            <PaginationControls
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              totalItems={pagination.totalItems}
+              pageSize={pagination.pageSize}
+              startIndex={pagination.startIndex}
+              endIndex={pagination.endIndex}
+              onPageChange={pagination.setCurrentPage}
+              onPageSizeChange={pagination.setPageSize}
+              pageSizeOptions={pagination.pageSizeOptions}
+            />
+          </div>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default PurchaseOrdersTab;

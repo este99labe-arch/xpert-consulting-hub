@@ -8,6 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Loader2, Activity } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import PaginationControls from "@/components/shared/PaginationControls";
+import { usePagination } from "@/hooks/use-pagination";
 
 const actionLabels: Record<string, string> = {
   CREATE: "Crear",
@@ -50,7 +52,7 @@ const AuditActivityTab = ({ accountId }: AuditActivityTabProps) => {
         .select("*")
         .eq("account_id", accountId)
         .order("created_at", { ascending: false })
-        .limit(100);
+        .limit(500);
 
       if (entityFilter !== "ALL") {
         query = query.eq("entity_type", entityFilter);
@@ -65,6 +67,8 @@ const AuditActivityTab = ({ accountId }: AuditActivityTabProps) => {
     },
     enabled: !!accountId,
   });
+
+  const pagination = usePagination(logs);
 
   if (isLoading) {
     return (
@@ -85,7 +89,7 @@ const AuditActivityTab = ({ accountId }: AuditActivityTabProps) => {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-wrap gap-3">
-          <Select value={entityFilter} onValueChange={setEntityFilter}>
+          <Select value={entityFilter} onValueChange={v => { setEntityFilter(v); pagination.resetPage(); }}>
             <SelectTrigger className="w-44">
               <SelectValue placeholder="Tipo de entidad" />
             </SelectTrigger>
@@ -96,7 +100,7 @@ const AuditActivityTab = ({ accountId }: AuditActivityTabProps) => {
               ))}
             </SelectContent>
           </Select>
-          <Select value={actionFilter} onValueChange={setActionFilter}>
+          <Select value={actionFilter} onValueChange={v => { setActionFilter(v); pagination.resetPage(); }}>
             <SelectTrigger className="w-40">
               <SelectValue placeholder="Acción" />
             </SelectTrigger>
@@ -126,7 +130,7 @@ const AuditActivityTab = ({ accountId }: AuditActivityTabProps) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {logs.map((log: any) => (
+                {pagination.paginatedItems.map((log: any) => (
                   <TableRow key={log.id}>
                     <TableCell className="text-xs whitespace-nowrap">
                       {format(new Date(log.created_at), "dd MMM yyyy HH:mm", { locale: es })}
@@ -150,6 +154,19 @@ const AuditActivityTab = ({ accountId }: AuditActivityTabProps) => {
                 ))}
               </TableBody>
             </Table>
+            <div className="px-4 pb-4">
+              <PaginationControls
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                totalItems={pagination.totalItems}
+                pageSize={pagination.pageSize}
+                startIndex={pagination.startIndex}
+                endIndex={pagination.endIndex}
+                onPageChange={pagination.setCurrentPage}
+                onPageSizeChange={pagination.setPageSize}
+                pageSizeOptions={pagination.pageSizeOptions}
+              />
+            </div>
           </div>
         )}
       </CardContent>

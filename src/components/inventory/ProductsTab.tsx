@@ -6,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search, Plus, Download } from "lucide-react";
 import { Product } from "./types";
+import PaginationControls from "@/components/shared/PaginationControls";
+import { usePagination } from "@/hooks/use-pagination";
 
 interface ProductsTabProps {
   products: Product[];
@@ -30,6 +32,8 @@ const ProductsTab = ({ products, isManager, onNewProduct, onEditProduct, onToggl
     return true;
   }), [products, search, catFilter, statusFilter]);
 
+  const pagination = usePagination(filtered);
+
   const exportCSV = () => {
     const header = "Nombre,SKU,Categoría,Unidad,Stock Actual,Stock Mínimo,Precio Coste,Precio Venta,Activo\n";
     const rows = products.map(p => `"${p.name}","${p.sku}","${p.category}","${p.unit}",${p.current_stock},${p.min_stock},${p.cost_price},${p.sale_price},${p.is_active ? "Sí" : "No"}`).join("\n");
@@ -42,16 +46,16 @@ const ProductsTab = ({ products, isManager, onNewProduct, onEditProduct, onToggl
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar por nombre o SKU..." className="pl-8" value={search} onChange={e => setSearch(e.target.value)} />
+          <Input placeholder="Buscar por nombre o SKU..." className="pl-8" value={search} onChange={e => { setSearch(e.target.value); pagination.resetPage(); }} />
         </div>
-        <Select value={catFilter} onValueChange={setCatFilter}>
+        <Select value={catFilter} onValueChange={v => { setCatFilter(v); pagination.resetPage(); }}>
           <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">Todas las categorías</SelectItem>
             {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select value={statusFilter} onValueChange={v => { setStatusFilter(v); pagination.resetPage(); }}>
           <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">Todos</SelectItem>
@@ -80,7 +84,7 @@ const ProductsTab = ({ products, isManager, onNewProduct, onEditProduct, onToggl
             {filtered.length === 0 && (
               <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">No se encontraron productos</TableCell></TableRow>
             )}
-            {filtered.map(p => {
+            {pagination.paginatedItems.map(p => {
               const isLow = p.is_active && p.current_stock <= p.min_stock;
               const isWarning = p.is_active && !isLow && p.current_stock < p.min_stock * 1.5;
               return (
@@ -106,6 +110,21 @@ const ProductsTab = ({ products, isManager, onNewProduct, onEditProduct, onToggl
             })}
           </TableBody>
         </Table>
+        {filtered.length > 0 && (
+          <div className="px-4 pb-4">
+            <PaginationControls
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              totalItems={pagination.totalItems}
+              pageSize={pagination.pageSize}
+              startIndex={pagination.startIndex}
+              endIndex={pagination.endIndex}
+              onPageChange={pagination.setCurrentPage}
+              onPageSizeChange={pagination.setPageSize}
+              pageSizeOptions={pagination.pageSizeOptions}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

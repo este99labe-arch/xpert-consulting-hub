@@ -6,6 +6,8 @@ import { Plus, Download, RotateCcw } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Product, StockMovement, movementTypeLabels, movementTypeIcons } from "./types";
+import PaginationControls from "@/components/shared/PaginationControls";
+import { usePagination } from "@/hooks/use-pagination";
 
 interface MovementsTabProps {
   movements: StockMovement[];
@@ -24,6 +26,8 @@ const MovementsTab = ({ movements, products, isManager, onNewMovement }: Movemen
     return true;
   }), [movements, typeFilter, productFilter]);
 
+  const pagination = usePagination(filtered);
+
   const exportCSV = () => {
     const header = "Fecha,Producto,SKU,Tipo,Cantidad,Razón,Notas\n";
     const rows = movements.map(m => `"${format(new Date(m.created_at), "dd/MM/yyyy HH:mm")}","${m.products?.name || ""}","${m.products?.sku || ""}","${movementTypeLabels[m.type]}",${m.quantity},"${m.reason}","${m.notes || ""}"`).join("\n");
@@ -34,7 +38,7 @@ const MovementsTab = ({ movements, products, isManager, onNewMovement }: Movemen
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
+        <Select value={typeFilter} onValueChange={v => { setTypeFilter(v); pagination.resetPage(); }}>
           <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">Todos los tipos</SelectItem>
@@ -43,7 +47,7 @@ const MovementsTab = ({ movements, products, isManager, onNewMovement }: Movemen
             <SelectItem value="ADJUSTMENT">Ajuste</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={productFilter} onValueChange={setProductFilter}>
+        <Select value={productFilter} onValueChange={v => { setProductFilter(v); pagination.resetPage(); }}>
           <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">Todos los productos</SelectItem>
@@ -69,7 +73,7 @@ const MovementsTab = ({ movements, products, isManager, onNewMovement }: Movemen
             {filtered.length === 0 && (
               <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Sin movimientos</TableCell></TableRow>
             )}
-            {filtered.map(m => {
+            {pagination.paginatedItems.map(m => {
               const Icon = movementTypeIcons[m.type] || RotateCcw;
               return (
                 <TableRow key={m.id}>
@@ -89,6 +93,21 @@ const MovementsTab = ({ movements, products, isManager, onNewMovement }: Movemen
             })}
           </TableBody>
         </Table>
+        {filtered.length > 0 && (
+          <div className="px-4 pb-4">
+            <PaginationControls
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              totalItems={pagination.totalItems}
+              pageSize={pagination.pageSize}
+              startIndex={pagination.startIndex}
+              endIndex={pagination.endIndex}
+              onPageChange={pagination.setCurrentPage}
+              onPageSizeChange={pagination.setPageSize}
+              pageSizeOptions={pagination.pageSizeOptions}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

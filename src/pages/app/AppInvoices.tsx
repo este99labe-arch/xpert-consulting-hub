@@ -26,6 +26,8 @@ import InvoicePreviewDialog from "@/components/invoices/InvoicePreviewDialog";
 import EditInvoiceDialog from "@/components/invoices/EditInvoiceDialog";
 import InvoiceActionsMenu from "@/components/invoices/InvoiceActionsMenu";
 import RecurringInvoicesTab from "@/components/invoices/RecurringInvoicesTab";
+import PaginationControls from "@/components/shared/PaginationControls";
+import { usePagination } from "@/hooks/use-pagination";
 import { dispatchWebhook } from "@/lib/webhooks";
 
 const statusColors: Record<string, string> = {
@@ -113,7 +115,6 @@ const AppInvoices = () => {
     return matchesSearch && matchesStatus && matchesType;
   });
 
-
   const filteredQuotes = quotes.filter((q: any) => {
     const matchesSearch =
       !quoteSearch ||
@@ -124,13 +125,15 @@ const AppInvoices = () => {
     return matchesSearch && matchesStatus;
   });
 
-  // KPIs
+  const invoicePagination = usePagination(filtered);
+  const quotePagination = usePagination(filteredQuotes);
+
+  // KPIs (computed on ALL data, not paginated)
   const totalIncome = filteredInvoices.filter((i: any) => i.type === "INVOICE").reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
   const totalExpenses = filteredInvoices.filter((i: any) => i.type === "EXPENSE").reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
   const totalPaid = filteredInvoices.filter((i: any) => i.status === "PAID" && i.type === "INVOICE").reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
   const totalPending = filteredInvoices.filter((i: any) => i.status !== "PAID" && i.type === "INVOICE").reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
 
-  // Quote KPIs
   const totalQuotes = quotes.reduce((sum: number, q: any) => sum + Number(q.amount_total), 0);
   const acceptedQuotes = quotes.filter((q: any) => q.status === "ACCEPTED" || q.status === "INVOICED").reduce((sum: number, q: any) => sum + Number(q.amount_total), 0);
   const pendingQuotes = quotes.filter((q: any) => q.status === "DRAFT" || q.status === "SENT").reduce((sum: number, q: any) => sum + Number(q.amount_total), 0);
@@ -185,14 +188,11 @@ const AppInvoices = () => {
     }
   }
 
-  // Delete handlers
   const handleDeleteClick = (inv: any) => {
     setDeleteInvoice(inv);
     if (isManager) {
-      // Show direct confirmation
       setDeleteReasonDialog(false);
     } else {
-      // Show reason dialog for employees
       setDeleteReason("");
       setDeleteReasonDialog(true);
     }
@@ -239,10 +239,8 @@ const AppInvoices = () => {
 
   const handleApproveDelete = async (request: any) => {
     try {
-      // Delete the invoice
       const { error: delErr } = await supabase.from("invoices").delete().eq("id", request.invoice_id);
       if (delErr) throw delErr;
-      // Update request status
       await supabase.from("invoice_delete_requests" as any).update({
         status: "APPROVED", reviewed_by: user?.id, reviewed_at: new Date().toISOString(),
       } as any).eq("id", request.id);
@@ -265,6 +263,22 @@ const AppInvoices = () => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     }
   };
+
+  const renderPagination = (p: ReturnType<typeof usePagination>) => (
+    <div className="px-4 pb-4">
+      <PaginationControls
+        currentPage={p.currentPage}
+        totalPages={p.totalPages}
+        totalItems={p.totalItems}
+        pageSize={p.pageSize}
+        startIndex={p.startIndex}
+        endIndex={p.endIndex}
+        onPageChange={p.setCurrentPage}
+        onPageSizeChange={p.setPageSize}
+        pageSizeOptions={p.pageSizeOptions}
+      />
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -358,9 +372,9 @@ const AppInvoices = () => {
       <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar por nº factura, cliente o concepto..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input placeholder="Buscar por nº factura, cliente o concepto..." value={search} onChange={(e) => { setSearch(e.target.value); invoicePagination.resetPage(); }} className="pl-9" />
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); invoicePagination.resetPage(); }}>
           <SelectTrigger className="w-[160px]"><SelectValue placeholder="Estado" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">Todos</SelectItem>
@@ -370,7 +384,7 @@ const AppInvoices = () => {
             <SelectItem value="OVERDUE">Vencida</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
+        <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v); invoicePagination.resetPage(); }}>
           <SelectTrigger className="w-[160px]"><SelectValue placeholder="Tipo" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">Todos</SelectItem>
@@ -388,52 +402,55 @@ const AppInvoices = () => {
           ) : filtered.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">No se encontraron facturas</div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nº</TableHead>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Concepto</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((inv: any) => (
-                  <TableRow key={inv.id} className="cursor-pointer hover:bg-accent/50" onClick={() => setPreviewInvoice(inv)}>
-                    <TableCell className="font-mono font-semibold text-sm">
-                      {inv.invoice_number || inv.id.slice(0, 8).toUpperCase()}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      {format(new Date(inv.issue_date), "dd MMM yyyy", { locale: es })}
-                    </TableCell>
-                    <TableCell>{inv.business_clients?.name || "—"}</TableCell>
-                    <TableCell className="max-w-[200px] truncate">{inv.concept || "—"}</TableCell>
-                    <TableCell>{typeLabels[inv.type] || inv.type}</TableCell>
-                    <TableCell className="text-right font-mono font-semibold">
-                      €{Number(inv.amount_total).toLocaleString("es-ES", { minimumFractionDigits: 2 })}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className={statusColors[inv.status]}>
-                        {statusLabels[inv.status] || inv.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                      <InvoiceActionsMenu
-                        onPreview={() => setPreviewInvoice(inv)}
-                        onExport={() => handleExportPdf(inv.id)}
-                        onEdit={() => setEditInvoice(inv)}
-                        onDelete={() => handleDeleteClick(inv)}
-                        onSendEmail={inv.business_clients?.email ? () => handleSendEmail(inv.id) : undefined}
-                      />
-                    </TableCell>
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nº</TableHead>
+                    <TableHead>Fecha</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Concepto</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {invoicePagination.paginatedItems.map((inv: any) => (
+                    <TableRow key={inv.id} className="cursor-pointer hover:bg-accent/50" onClick={() => setPreviewInvoice(inv)}>
+                      <TableCell className="font-mono font-semibold text-sm">
+                        {inv.invoice_number || inv.id.slice(0, 8).toUpperCase()}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        {format(new Date(inv.issue_date), "dd MMM yyyy", { locale: es })}
+                      </TableCell>
+                      <TableCell>{inv.business_clients?.name || "—"}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">{inv.concept || "—"}</TableCell>
+                      <TableCell>{typeLabels[inv.type] || inv.type}</TableCell>
+                      <TableCell className="text-right font-mono font-semibold">
+                        €{Number(inv.amount_total).toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className={statusColors[inv.status]}>
+                          {statusLabels[inv.status] || inv.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                        <InvoiceActionsMenu
+                          onPreview={() => setPreviewInvoice(inv)}
+                          onExport={() => handleExportPdf(inv.id)}
+                          onEdit={() => setEditInvoice(inv)}
+                          onDelete={() => handleDeleteClick(inv)}
+                          onSendEmail={inv.business_clients?.email ? () => handleSendEmail(inv.id) : undefined}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              {renderPagination(invoicePagination)}
+            </>
           )}
         </CardContent>
       </Card>
@@ -476,9 +493,9 @@ const AppInvoices = () => {
           <div className="flex flex-wrap gap-3">
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Buscar presupuesto..." value={quoteSearch} onChange={(e) => setQuoteSearch(e.target.value)} className="pl-9" />
+              <Input placeholder="Buscar presupuesto..." value={quoteSearch} onChange={(e) => { setQuoteSearch(e.target.value); quotePagination.resetPage(); }} className="pl-9" />
             </div>
-            <Select value={quoteStatusFilter} onValueChange={setQuoteStatusFilter}>
+            <Select value={quoteStatusFilter} onValueChange={(v) => { setQuoteStatusFilter(v); quotePagination.resetPage(); }}>
               <SelectTrigger className="w-[160px]"><SelectValue placeholder="Estado" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">Todos</SelectItem>
@@ -497,50 +514,53 @@ const AppInvoices = () => {
               {filteredQuotes.length === 0 ? (
                 <div className="p-8 text-center text-muted-foreground">No se encontraron presupuestos</div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Nº</TableHead>
-                      <TableHead>Fecha</TableHead>
-                      <TableHead>Cliente</TableHead>
-                      <TableHead>Concepto</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
-                      <TableHead>Estado</TableHead>
-                      <TableHead className="text-right">Acciones</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredQuotes.map((q: any) => (
-                      <TableRow key={q.id} className="cursor-pointer hover:bg-accent/50" onClick={() => setPreviewInvoice(q)}>
-                        <TableCell className="font-mono font-semibold text-sm">
-                          {q.invoice_number || q.id.slice(0, 8).toUpperCase()}
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap">
-                          {format(new Date(q.issue_date), "dd MMM yyyy", { locale: es })}
-                        </TableCell>
-                        <TableCell>{q.business_clients?.name || "—"}</TableCell>
-                        <TableCell className="max-w-[200px] truncate">{q.concept || "—"}</TableCell>
-                        <TableCell className="text-right font-mono font-semibold">
-                          €{Number(q.amount_total).toLocaleString("es-ES", { minimumFractionDigits: 2 })}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary" className={statusColors[q.status]}>
-                            {statusLabels[q.status] || q.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                          <InvoiceActionsMenu
-                            onPreview={() => setPreviewInvoice(q)}
-                            onExport={() => handleExportPdf(q.id)}
-                            onEdit={() => setEditInvoice(q)}
-                            onDelete={() => handleDeleteClick(q)}
-                            onSendEmail={q.business_clients?.email ? () => handleSendEmail(q.id) : undefined}
-                          />
-                        </TableCell>
+                <>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Nº</TableHead>
+                        <TableHead>Fecha</TableHead>
+                        <TableHead>Cliente</TableHead>
+                        <TableHead>Concepto</TableHead>
+                        <TableHead className="text-right">Total</TableHead>
+                        <TableHead>Estado</TableHead>
+                        <TableHead className="text-right">Acciones</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {quotePagination.paginatedItems.map((q: any) => (
+                        <TableRow key={q.id} className="cursor-pointer hover:bg-accent/50" onClick={() => setPreviewInvoice(q)}>
+                          <TableCell className="font-mono font-semibold text-sm">
+                            {q.invoice_number || q.id.slice(0, 8).toUpperCase()}
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap">
+                            {format(new Date(q.issue_date), "dd MMM yyyy", { locale: es })}
+                          </TableCell>
+                          <TableCell>{q.business_clients?.name || "—"}</TableCell>
+                          <TableCell className="max-w-[200px] truncate">{q.concept || "—"}</TableCell>
+                          <TableCell className="text-right font-mono font-semibold">
+                            €{Number(q.amount_total).toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="secondary" className={statusColors[q.status]}>
+                              {statusLabels[q.status] || q.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                            <InvoiceActionsMenu
+                              onPreview={() => setPreviewInvoice(q)}
+                              onExport={() => handleExportPdf(q.id)}
+                              onEdit={() => setEditInvoice(q)}
+                              onDelete={() => handleDeleteClick(q)}
+                              onSendEmail={q.business_clients?.email ? () => handleSendEmail(q.id) : undefined}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  {renderPagination(quotePagination)}
+                </>
               )}
             </CardContent>
           </Card>
