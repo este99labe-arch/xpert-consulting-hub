@@ -11,6 +11,8 @@ import {
 import { Download } from "lucide-react";
 import { format, startOfYear, endOfYear } from "date-fns";
 import { ChartAccount, JournalEntryLine, EUR } from "./types";
+import PaginationControls from "@/components/shared/PaginationControls";
+import { usePagination } from "@/hooks/use-pagination";
 
 interface LedgerTabProps {
   chartAccounts: ChartAccount[];
@@ -41,6 +43,8 @@ const LedgerTab = ({ chartAccounts, allLines }: LedgerTabProps) => {
     });
   }, [ledgerLines]);
 
+  const pagination = usePagination(ledgerWithBalance);
+
   const exportCSV = () => {
     const acc = chartAccounts.find(c => c.id === ledgerAccountId);
     const header = "Fecha,Nº Asiento,Descripción,Debe,Haber,Saldo\n";
@@ -54,7 +58,7 @@ const LedgerTab = ({ chartAccounts, allLines }: LedgerTabProps) => {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        <Select value={ledgerAccountId} onValueChange={setLedgerAccountId}>
+        <Select value={ledgerAccountId} onValueChange={v => { setLedgerAccountId(v); pagination.resetPage(); }}>
           <SelectTrigger className="w-[300px]"><SelectValue placeholder="Seleccionar cuenta..." /></SelectTrigger>
           <SelectContent>
             {chartAccounts.filter(c => c.is_active).map(c => (
@@ -87,7 +91,7 @@ const LedgerTab = ({ chartAccounts, allLines }: LedgerTabProps) => {
             <TableBody>
               {ledgerWithBalance.length === 0 ? (
                 <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Sin movimientos</TableCell></TableRow>
-              ) : ledgerWithBalance.map(l => (
+              ) : pagination.paginatedItems.map(l => (
                 <TableRow key={l.id}>
                   <TableCell>{l.journal_entries?.date ? format(new Date(l.journal_entries.date), "dd/MM/yyyy") : ""}</TableCell>
                   <TableCell className="font-mono text-sm">{l.journal_entries?.entry_number}</TableCell>
@@ -99,6 +103,21 @@ const LedgerTab = ({ chartAccounts, allLines }: LedgerTabProps) => {
               ))}
             </TableBody>
           </Table>
+          {ledgerWithBalance.length > 0 && (
+            <div className="px-4 pb-4">
+              <PaginationControls
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                totalItems={pagination.totalItems}
+                pageSize={pagination.pageSize}
+                startIndex={pagination.startIndex}
+                endIndex={pagination.endIndex}
+                onPageChange={pagination.setCurrentPage}
+                onPageSizeChange={pagination.setPageSize}
+                pageSizeOptions={pagination.pageSizeOptions}
+              />
+            </div>
+          )}
         </Card>
       ) : (
         <Card><CardContent className="py-12 text-center text-muted-foreground">Selecciona una cuenta para ver su libro mayor</CardContent></Card>

@@ -15,6 +15,8 @@ import {
 import { Search, Plus, Pencil, Trash2, MoreHorizontal, Check, X, Clock, Link } from "lucide-react";
 import { format } from "date-fns";
 import { JournalEntry, DeleteRequest } from "./types";
+import PaginationControls from "@/components/shared/PaginationControls";
+import { usePagination } from "@/hooks/use-pagination";
 
 interface JournalEntriesTabProps {
   entries: JournalEntry[];
@@ -47,6 +49,8 @@ const JournalEntriesTab = ({
       return true;
     });
   }, [entries, entryFilter]);
+
+  const pagination = usePagination(filteredEntries);
 
   return (
     <div className="space-y-4">
@@ -106,9 +110,9 @@ const JournalEntriesTab = ({
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar asiento..." className="pl-8" value={entryFilter.search} onChange={e => setEntryFilter(prev => ({ ...prev, search: e.target.value }))} />
+          <Input placeholder="Buscar asiento..." className="pl-8" value={entryFilter.search} onChange={e => { setEntryFilter(prev => ({ ...prev, search: e.target.value })); pagination.resetPage(); }} />
         </div>
-        <Select value={entryFilter.status} onValueChange={v => setEntryFilter(prev => ({ ...prev, status: v }))}>
+        <Select value={entryFilter.status} onValueChange={v => { setEntryFilter(prev => ({ ...prev, status: v })); pagination.resetPage(); }}>
           <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">Todos</SelectItem>
@@ -137,7 +141,7 @@ const JournalEntriesTab = ({
           <TableBody>
             {filteredEntries.length === 0 ? (
               <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Sin asientos</TableCell></TableRow>
-            ) : filteredEntries.map(e => (
+            ) : pagination.paginatedItems.map(e => (
               <TableRow key={e.id}>
                 <TableCell className="font-mono text-sm">
                   {e.entry_number}
@@ -189,6 +193,21 @@ const JournalEntriesTab = ({
             ))}
           </TableBody>
         </Table>
+        {filteredEntries.length > 0 && (
+          <div className="px-4 pb-4">
+            <PaginationControls
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              totalItems={pagination.totalItems}
+              pageSize={pagination.pageSize}
+              startIndex={pagination.startIndex}
+              endIndex={pagination.endIndex}
+              onPageChange={pagination.setCurrentPage}
+              onPageSizeChange={pagination.setPageSize}
+              pageSizeOptions={pagination.pageSizeOptions}
+            />
+          </div>
+        )}
       </Card>
     </div>
   );

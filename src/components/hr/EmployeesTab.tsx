@@ -9,6 +9,8 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Search, Loader2, UserCheck, UserX } from "lucide-react";
+import PaginationControls from "@/components/shared/PaginationControls";
+import { usePagination } from "@/hooks/use-pagination";
 
 const EmployeesTab = () => {
   const { accountId, role, user } = useAuth();
@@ -55,6 +57,8 @@ const EmployeesTab = () => {
     return email.toLowerCase().includes(search.toLowerCase()) || role.toLowerCase().includes(search.toLowerCase());
   });
 
+  const pagination = usePagination(filtered);
+
   if (isLoading) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
 
   return (
@@ -62,7 +66,7 @@ const EmployeesTab = () => {
       <div className="flex items-center gap-4">
         <div className="relative max-w-sm flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar por email o rol..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input placeholder="Buscar por email o rol..." value={search} onChange={(e) => { setSearch(e.target.value); pagination.resetPage(); }} className="pl-9" />
         </div>
       </div>
 
@@ -81,7 +85,7 @@ const EmployeesTab = () => {
               {filtered.length === 0 ? (
                 <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">No se encontraron empleados</TableCell></TableRow>
               ) : (
-                filtered.map((emp: any) => (
+                pagination.paginatedItems.map((emp: any) => (
                   <TableRow key={emp.id}>
                     <TableCell className="font-medium">{emailMap.get(emp.user_id) || emp.user_id}</TableCell>
                     <TableCell>
@@ -100,6 +104,21 @@ const EmployeesTab = () => {
               )}
             </TableBody>
           </Table>
+          {filtered.length > 0 && (
+            <div className="px-4 pb-4">
+              <PaginationControls
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                totalItems={pagination.totalItems}
+                pageSize={pagination.pageSize}
+                startIndex={pagination.startIndex}
+                endIndex={pagination.endIndex}
+                onPageChange={pagination.setCurrentPage}
+                onPageSizeChange={pagination.setPageSize}
+                pageSizeOptions={pagination.pageSizeOptions}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
