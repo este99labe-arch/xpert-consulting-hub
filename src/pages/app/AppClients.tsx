@@ -77,7 +77,7 @@ const AppClients = () => {
     },
   });
 
-  const filtered = clients.filter((c: any) => {
+  const filtered = externalClients.filter((c: any) => {
     const matchSearch =
       c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.tax_id.toLowerCase().includes(search.toLowerCase());
