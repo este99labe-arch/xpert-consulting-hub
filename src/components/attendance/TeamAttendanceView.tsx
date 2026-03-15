@@ -1,9 +1,9 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Download, Loader2, Users, Building2 } from "lucide-react";
+import { Download, Loader2, Users, Building2, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import MasterAccountSelector from "@/components/shared/MasterAccountSelector";
@@ -32,8 +32,7 @@ const TeamAttendanceView = ({
   teamLoading, teamSummary, teamRecordsCount,
   selectedMonth, onExport, formatMinutes,
 }: TeamAttendanceViewProps) => (
-  <>
-    {/* Master Admin client selector */}
+  <div className="space-y-5">
     {isMasterAdmin && (
       <MasterAccountSelector
         title="Asistencia"
@@ -44,63 +43,73 @@ const TeamAttendanceView = ({
     )}
 
     {isMasterAdmin && !selectedClientAccountId ? (
-      <Card>
+      <Card className="border shadow-sm">
         <CardContent className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-          <Building2 className="h-10 w-10 mb-3 opacity-50" />
-          <p>Selecciona un cliente para ver la asistencia de sus empleados</p>
+          <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3">
+            <Building2 className="h-5 w-5" />
+          </div>
+          <p className="text-sm">Selecciona un cliente para ver la asistencia de su equipo</p>
         </CardContent>
       </Card>
     ) : (
       <>
-        {/* Export button */}
-        <div className="flex justify-end">
-          <Button variant="outline" size="sm" onClick={onExport} disabled={teamRecordsCount === 0}>
-            <Download className="h-4 w-4 mr-1" /> Exportar CSV
+        {/* Header with export */}
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold capitalize">
+            {format(selectedMonth, "MMMM yyyy", { locale: es })}
+          </h3>
+          <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={onExport} disabled={teamRecordsCount === 0}>
+            <Download className="h-3.5 w-3.5" /> Exportar CSV
           </Button>
         </div>
 
-        {/* Team summary */}
         {teamLoading ? (
-          <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+          <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
         ) : teamSummary.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-              <Users className="h-8 w-8 mb-2 opacity-50" />
+          <Card className="border shadow-sm">
+            <CardContent className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+              <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                <Users className="h-5 w-5" />
+              </div>
               <p className="text-sm">No hay registros de asistencia para este mes</p>
             </CardContent>
           </Card>
         ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Resumen del Equipo — {format(selectedMonth, "MMMM yyyy", { locale: es })}</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Empleado</TableHead>
-                    <TableHead>Días Fichados</TableHead>
-                    <TableHead>Horas Trabajadas</TableHead>
-                    <TableHead>Media Diaria</TableHead>
+          <Card className="border shadow-sm overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/20 hover:bg-muted/20">
+                  <TableHead className="text-[11px] font-semibold uppercase tracking-wider">Empleado</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase tracking-wider">Días</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase tracking-wider">Horas totales</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase tracking-wider">Media diaria</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {teamSummary.map(emp => (
+                  <TableRow key={emp.userId}>
+                    <TableCell className="py-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-[11px] font-semibold text-primary">
+                          {emp.email.charAt(0).toUpperCase()}
+                        </div>
+                        <span className="text-sm font-medium">{emp.email}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-3 text-sm tabular-nums">{emp.days}</TableCell>
+                    <TableCell className="py-3 text-sm font-medium tabular-nums">{formatMinutes(emp.worked)}</TableCell>
+                    <TableCell className="py-3 text-sm text-muted-foreground tabular-nums">
+                      {emp.days > 0 ? formatMinutes(Math.round(emp.worked / emp.days)) : "—"}
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {teamSummary.map(emp => (
-                    <TableRow key={emp.userId}>
-                      <TableCell className="font-medium">{emp.email}</TableCell>
-                      <TableCell>{emp.days}</TableCell>
-                      <TableCell>{formatMinutes(emp.worked)}</TableCell>
-                      <TableCell>{emp.days > 0 ? formatMinutes(Math.round(emp.worked / emp.days)) : "—"}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
+                ))}
+              </TableBody>
+            </Table>
           </Card>
         )}
       </>
     )}
-  </>
+  </div>
 );
 
 export default TeamAttendanceView;

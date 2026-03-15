@@ -39,7 +39,6 @@ const AppAttendance = () => {
 
   const effectiveAccountId = isMasterAdmin ? (selectedClientAccountId || accountId) : accountId;
 
-  // Fetch account settings
   const { data: settings } = useQuery({
     queryKey: ["account-settings", effectiveAccountId],
     queryFn: async () => {
@@ -63,7 +62,6 @@ const AppAttendance = () => {
   const monthEnd = endOfMonth(selectedMonth);
   const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
-  // My attendance (month)
   const { data: myMonthRecords = [], isLoading: myMonthLoading } = useQuery({
     queryKey: ["my-attendance-month", user?.id, format(monthStart, "yyyy-MM"), effectiveAccountId],
     queryFn: async () => {
@@ -81,7 +79,6 @@ const AppAttendance = () => {
     enabled: !!user && !!effectiveAccountId,
   });
 
-  // Team attendance
   const { data: teamRecords = [], isLoading: teamLoading } = useQuery({
     queryKey: ["team-attendance", effectiveAccountId, format(monthStart, "yyyy-MM")],
     queryFn: async () => {
@@ -98,7 +95,6 @@ const AppAttendance = () => {
     enabled: isManager && !!effectiveAccountId && activeTab === "team",
   });
 
-  // Team profiles
   const teamUserIds = useMemo(() => [...new Set(teamRecords.map(r => r.user_id))], [teamRecords]);
   const { data: teamProfiles = [] } = useQuery({
     queryKey: ["team-profiles", teamUserIds, isManager],
@@ -121,7 +117,6 @@ const AppAttendance = () => {
     return map;
   }, [teamProfiles]);
 
-  // Monthly calculations
   const expectedWorkDaysInMonth = monthDays.filter(d => {
     const dayCode = DAY_CODES[d.getDay()];
     return workDays.includes(dayCode) && d <= new Date();
@@ -137,7 +132,6 @@ const AppAttendance = () => {
 
   const balanceMins = workedMonthMins - expectedMonthMins;
 
-  // Weekly chart data
   const weeklyChartData = useMemo(() => {
     const weeksMap: Record<string, { worked: number; expected: number; label: string }> = {};
     monthDays.forEach(day => {
@@ -161,13 +155,11 @@ const AppAttendance = () => {
     }));
   }, [monthDays, myMonthRecords, workDays, dailyExpectedMins]);
 
-  // Today
   const todayStr = format(new Date(), "yyyy-MM-dd");
   const todayRecord = myMonthRecords.find(r => r.work_date === todayStr);
   const hasCheckedIn = !!todayRecord?.check_in;
   const hasCheckedOut = !!todayRecord?.check_out;
 
-  // Mutations
   const checkInMutation = useMutation({
     mutationFn: async () => {
       const now = new Date().toISOString();
@@ -210,7 +202,6 @@ const AppAttendance = () => {
     onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
   });
 
-  // Team summary
   const teamSummary = useMemo(() => {
     const map: Record<string, { worked: number; days: number }> = {};
     teamRecords.forEach(r => {
@@ -225,7 +216,6 @@ const AppAttendance = () => {
     }));
   }, [teamRecords, teamEmailMap]);
 
-  // Export CSV
   const handleExport = () => {
     const rows = [["Email", "Fecha", "Entrada", "Salida", "Horas"]];
     teamRecords.forEach(r => {
@@ -247,29 +237,53 @@ const AppAttendance = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Asistencia</h1>
-        {isManager && (
-          <div className="flex gap-2">
-            <Button variant={activeTab === "my" ? "default" : "outline"} size="sm" onClick={() => setActiveTab("my")}>
-              <Clock className="h-4 w-4 mr-1" /> Mis Fichajes
-            </Button>
-            <Button variant={activeTab === "team" ? "default" : "outline"} size="sm" onClick={() => setActiveTab("team")}>
-              <Users className="h-4 w-4 mr-1" /> Equipo
-            </Button>
-          </div>
-        )}
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Control Horario</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Gestiona tus fichajes y consulta tu historial
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {isManager && (
+            <div className="flex rounded-lg border border-border bg-muted/50 p-0.5">
+              <button
+                onClick={() => setActiveTab("my")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  activeTab === "my"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Clock className="h-3.5 w-3.5" />
+                Mis Fichajes
+              </button>
+              <button
+                onClick={() => setActiveTab("team")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  activeTab === "team"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Users className="h-3.5 w-3.5" />
+                Equipo
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Month selector */}
-      <div className="flex items-center gap-3">
-        <Button variant="outline" size="icon" onClick={() => setSelectedMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1))}>
+      {/* Month navigator */}
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1))}>
           <ChevronLeft className="h-4 w-4" />
         </Button>
         <span className="text-sm font-medium capitalize min-w-[140px] text-center">
           {format(selectedMonth, "MMMM yyyy", { locale: es })}
         </span>
-        <Button variant="outline" size="icon" onClick={() => setSelectedMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1))}>
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1))}>
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
