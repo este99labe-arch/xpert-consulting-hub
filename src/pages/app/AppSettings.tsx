@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   Loader2, KeyRound, UserPlus, AlertCircle, Settings, Users, CalendarDays,
-  Clock, ShieldCheck, Save, User, Lock, Check, X, Mail, Activity, Key, Webhook, MessageSquare,
+  Clock, ShieldCheck, Save, User, Lock, Unlock, Check, X, Mail, Activity, Key, Webhook, MessageSquare, ShieldAlert,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import AuditActivityTab from "@/components/settings/AuditActivityTab";
