@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   Loader2, KeyRound, UserPlus, AlertCircle, Settings, Users, CalendarDays,
-  Clock, ShieldCheck, Save, User, Lock, Check, X, Mail, Activity, Key, Webhook, MessageSquare,
+  Clock, ShieldCheck, Save, User, Lock, Unlock, Check, X, Mail, Activity, Key, Webhook, MessageSquare, ShieldAlert,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import AuditActivityTab from "@/components/settings/AuditActivityTab";
@@ -55,6 +55,11 @@ const PROFILE_FIELD_LABELS: Record<string, string> = {
   social_security_number: "Nº Seguridad Social",
   start_date: "Fecha de inicio",
 };
+
+// Sensitive fields require unlock + confirmation
+const SENSITIVE_PROFILE_FIELDS = new Set(["dni", "social_security_number"]);
+// Manager-only fields: employees cannot edit these at all
+const MANAGER_ONLY_FIELDS = new Set(["department", "position", "start_date"]);
 
 // ─── EMPRESA TAB ─────────────────────────────────────────
 const CompanyTab = ({ accountId, isManager }: { accountId: string; isManager: boolean }) => {
@@ -180,6 +185,9 @@ const ProfileTab = ({ userId, accountId, isManager }: { userId: string; accountI
   const [editField, setEditField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const [saving, setSaving] = useState(false);
+  const [unlockedSensitive, setUnlockedSensitive] = useState<Set<string>>(new Set());
+  const [confirmingField, setConfirmingField] = useState<string | null>(null);
+  const [confirmValue, setConfirmValue] = useState("");
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["my-profile", userId],
@@ -209,26 +217,24 @@ const ProfileTab = ({ userId, accountId, isManager }: { userId: string; accountI
     enabled: !!userId && !isManager,
   });
 
-  const handleSaveField = async (fieldName: string) => {
+  const doSave = async (fieldName: string, value: string) => {
     setSaving(true);
     try {
       if (isManager) {
-        // Managers update directly
         const { error } = await supabase
           .from("employee_profiles")
-          .update({ [fieldName]: editValue || null, updated_at: new Date().toISOString() })
+          .update({ [fieldName]: value || null, updated_at: new Date().toISOString() })
           .eq("user_id", userId);
         if (error) throw error;
         toast({ title: "Perfil actualizado" });
         queryClient.invalidateQueries({ queryKey: ["my-profile"] });
       } else {
-        // Employees create change request
         const { error } = await supabase.from("profile_change_requests").insert({
           user_id: userId,
           account_id: accountId,
           field_name: fieldName,
           old_value: profile?.[fieldName as keyof typeof profile]?.toString() || null,
-          new_value: editValue,
+          new_value: value,
         });
         if (error) throw error;
         toast({ title: "Solicitud enviada", description: "Tu cambio será revisado por un administrador." });
@@ -236,10 +242,20 @@ const ProfileTab = ({ userId, accountId, isManager }: { userId: string; accountI
       }
       setEditField(null);
       setEditValue("");
+      setUnlockedSensitive((prev) => { const n = new Set(prev); n.delete(fieldName); return n; });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSaveField = (fieldName: string) => {
+    if (SENSITIVE_PROFILE_FIELDS.has(fieldName)) {
+      setConfirmingField(fieldName);
+      setConfirmValue(editValue);
+    } else {
+      doSave(fieldName, editValue);
     }
   };
 
@@ -260,65 +276,132 @@ const ProfileTab = ({ userId, accountId, isManager }: { userId: string; accountI
   const pendingFieldSet = new Set(pendingRequests.map((r: any) => r.field_name));
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Mi Perfil</CardTitle>
-        <CardDescription>
-          {isManager
-            ? "Puedes editar directamente tu información personal."
-            : "Los cambios serán revisados por tu administrador antes de aplicarse."}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {fields.map((field) => {
-            const value = profile[field as keyof typeof profile];
-            const hasPending = pendingFieldSet.has(field);
-            const isEditing = editField === field;
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Mi Perfil</CardTitle>
+          <CardDescription>
+            {isManager
+              ? "Puedes editar directamente tu información personal."
+              : "Los cambios serán revisados por tu administrador antes de aplicarse. Algunos campos solo pueden ser editados por un administrador."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {fields.map((field) => {
+              const value = profile[field as keyof typeof profile];
+              const hasPending = pendingFieldSet.has(field);
+              const isEditing = editField === field;
+              const isSensitive = SENSITIVE_PROFILE_FIELDS.has(field);
+              const isManagerOnly = MANAGER_ONLY_FIELDS.has(field);
+              const isSensitiveLocked = isSensitive && !unlockedSensitive.has(field);
 
-            return (
-              <div key={field} className="space-y-1 p-3 rounded-lg border bg-card">
-                <div className="flex items-center justify-between">
-                  <Label className="text-muted-foreground text-xs">{PROFILE_FIELD_LABELS[field]}</Label>
-                  {hasPending && <Badge variant="outline" className="text-xs">Pendiente</Badge>}
-                </div>
-                {isEditing ? (
-                  <div className="flex gap-2 items-center">
-                    <Input
-                      type={field.includes("date") ? "date" : "text"}
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      className="h-8 text-sm"
-                      autoFocus
-                    />
-                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => handleSaveField(field)} disabled={saving}>
-                      {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
-                    </Button>
-                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => { setEditField(null); setEditValue(""); }}>
-                      <X className="h-3 w-3" />
-                    </Button>
+              // Employees cannot edit manager-only fields
+              const canEdit = isManager || !isManagerOnly;
+
+              return (
+                <div key={field} className="space-y-1 p-3 rounded-lg border bg-card">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-muted-foreground text-xs flex items-center gap-1">
+                      {PROFILE_FIELD_LABELS[field]}
+                      {isSensitive && <ShieldAlert className="h-3 w-3 text-amber-500" />}
+                      {isManagerOnly && !isManager && <Lock className="h-3 w-3 text-muted-foreground" />}
+                    </Label>
+                    <div className="flex items-center gap-1">
+                      {hasPending && <Badge variant="outline" className="text-xs">Pendiente</Badge>}
+                      {isSensitive && canEdit && !isEditing && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0"
+                          onClick={() => {
+                            setUnlockedSensitive((prev) => {
+                              const n = new Set(prev);
+                              if (n.has(field)) n.delete(field); else n.add(field);
+                              return n;
+                            });
+                          }}
+                          title={isSensitiveLocked ? "Desbloquear campo" : "Bloquear campo"}
+                        >
+                          {isSensitiveLocked ? (
+                            <Lock className="h-3 w-3 text-muted-foreground" />
+                          ) : (
+                            <Unlock className="h-3 w-3 text-amber-500" />
+                          )}
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                ) : (
-                  <p
-                    className={`text-sm font-medium cursor-pointer hover:text-primary transition-colors ${hasPending ? "opacity-60" : ""}`}
-                    onClick={() => {
-                      if (!hasPending) {
-                        setEditField(field);
-                        setEditValue(value?.toString() || "");
-                      }
-                    }}
-                  >
-                    {value?.toString() || <span className="text-muted-foreground italic">Sin datos</span>}
-                  </p>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
+                  {isEditing ? (
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        type={field.includes("date") ? "date" : "text"}
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="h-8 text-sm"
+                        autoFocus
+                      />
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => handleSaveField(field)} disabled={saving}>
+                        {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => { setEditField(null); setEditValue(""); }}>
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <p
+                      className={`text-sm font-medium transition-colors ${
+                        canEdit && !hasPending && !(isSensitive && isSensitiveLocked)
+                          ? "cursor-pointer hover:text-primary"
+                          : "cursor-default"
+                      } ${hasPending ? "opacity-60" : ""}`}
+                      onClick={() => {
+                        if (!hasPending && canEdit && !(isSensitive && isSensitiveLocked)) {
+                          setEditField(field);
+                          setEditValue(value?.toString() || "");
+                        }
+                      }}
+                    >
+                      {value?.toString() || <span className="text-muted-foreground italic">Sin datos</span>}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      <AlertDialog open={!!confirmingField} onOpenChange={(v) => !v && setConfirmingField(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <ShieldAlert className="h-5 w-5 text-amber-500" />
+              Confirmar cambio sensible
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Estás modificando un dato sensible ({confirmingField ? PROFILE_FIELD_LABELS[confirmingField] : ""}). ¿Estás seguro de que deseas guardar este cambio?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setConfirmingField(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              if (confirmingField) {
+                doSave(confirmingField, confirmValue);
+                setConfirmingField(null);
+              }
+            }}>
+              Confirmar y Guardar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
+
+
 
 // ─── HORARIO TAB ─────────────────────────────────────────
 const ScheduleTab = ({ accountId, isManager }: { accountId: string; isManager: boolean }) => {
