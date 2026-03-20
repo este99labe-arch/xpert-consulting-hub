@@ -56,6 +56,11 @@ const PROFILE_FIELD_LABELS: Record<string, string> = {
   start_date: "Fecha de inicio",
 };
 
+// Sensitive fields require unlock + confirmation
+const SENSITIVE_PROFILE_FIELDS = new Set(["dni", "social_security_number"]);
+// Manager-only fields: employees cannot edit these at all
+const MANAGER_ONLY_FIELDS = new Set(["department", "position", "start_date"]);
+
 // ─── EMPRESA TAB ─────────────────────────────────────────
 const CompanyTab = ({ accountId, isManager }: { accountId: string; isManager: boolean }) => {
   const queryClient = useQueryClient();
