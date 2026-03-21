@@ -180,25 +180,30 @@ const AppDashboard = () => {
         prevActiveClients={prev.clients}
       />
 
-      {/* Row 1: Revenue chart + Attendance */}
+      {/* Row 1: Revenue chart + Reminders */}
       <div className="grid gap-5 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <RevenueChart data={chartData} period={chartPeriod} onPeriodChange={setChartPeriod} />
         </div>
         <div className="lg:col-span-1">
-          <TodayAttendanceWidget />
+          <RemindersWidget />
         </div>
       </div>
 
-      {/* Row 2: Invoice status + Top clients + Low stock */}
+      {/* Row 2: Invoice status + Top clients + Attendance */}
       <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
         <InvoiceStatusChart data={statusData} />
         <TopClients clients={topClients} />
-        <LowStockAlerts products={lowStockProducts} />
+        <TodayAttendanceWidget />
       </div>
 
-      {/* Row 3: Recent activity (full width) */}
-      <RecentActivity invoices={recent} />
+      {/* Row 3: Low stock + Recent activity */}
+      <div className="grid gap-5 lg:grid-cols-3">
+        <LowStockAlerts products={lowStockProducts} />
+        <div className="lg:col-span-2">
+          <RecentActivity invoices={recent} />
+        </div>
+      </div>
     </div>
   );
 };
