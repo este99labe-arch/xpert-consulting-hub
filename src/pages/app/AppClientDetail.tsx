@@ -132,6 +132,14 @@ const AppClientDetail = () => {
           </TabsContent>
         )}
       </Tabs>
+
+      <CreateReminderDialog
+        open={showReminder}
+        onOpenChange={setShowReminder}
+        defaultEntityType="CLIENT"
+        defaultEntityId={id}
+        defaultEntityLabel={client.name}
+      />
     </div>
   );
 };
