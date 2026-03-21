@@ -14,6 +14,7 @@ import TopClients from "@/components/dashboard/TopClients";
 import RecentActivity from "@/components/dashboard/RecentActivity";
 import QuickActions from "@/components/dashboard/QuickActions";
 import TodayAttendanceWidget from "@/components/dashboard/TodayAttendanceWidget";
+import RemindersWidget from "@/components/dashboard/RemindersWidget";
 
 type Period = "7d" | "30d" | "90d" | "year";
 
