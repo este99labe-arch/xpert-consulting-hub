@@ -644,6 +644,16 @@ const AppInvoices = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {reminderInvoice && (
+        <CreateReminderDialog
+          open={!!reminderInvoice}
+          onOpenChange={(open) => !open && setReminderInvoice(null)}
+          defaultEntityType={reminderInvoice.type === "QUOTE" ? "QUOTE" : reminderInvoice.type === "EXPENSE" ? "EXPENSE" : "INVOICE"}
+          defaultEntityId={reminderInvoice.id}
+          defaultEntityLabel={`${reminderInvoice.invoice_number || ""} — ${reminderInvoice.concept || reminderInvoice.business_clients?.name || ""}`}
+        />
+      )}
     </div>
   );
 };
