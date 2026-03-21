@@ -19,6 +19,7 @@ const AppClientDetail = () => {
   const { accountId, role } = useAuth();
   const queryClient = useQueryClient();
   const isAdmin = role === "MASTER_ADMIN" || role === "MANAGER";
+  const [showReminder, setShowReminder] = useState(false);
 
   const { data: client, isLoading } = useQuery({
     queryKey: ["business-client", id],
