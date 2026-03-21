@@ -71,6 +71,9 @@ const AppInvoices = () => {
   const [deleteReasonDialog, setDeleteReasonDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  // Reminder state
+  const [reminderInvoice, setReminderInvoice] = useState<any>(null);
+
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ["invoices", accountId],
     queryFn: async () => {
