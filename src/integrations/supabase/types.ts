@@ -1293,6 +1293,59 @@ export type Database = {
           },
         ]
       }
+      reminders: {
+        Row: {
+          account_id: string
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          entity_id: string | null
+          entity_label: string | null
+          entity_type: string | null
+          id: string
+          is_completed: boolean
+          remind_at: string
+          title: string
+        }
+        Insert: {
+          account_id: string
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          entity_id?: string | null
+          entity_label?: string | null
+          entity_type?: string | null
+          id?: string
+          is_completed?: boolean
+          remind_at: string
+          title: string
+        }
+        Update: {
+          account_id?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          entity_id?: string | null
+          entity_label?: string | null
+          entity_type?: string | null
+          id?: string
+          is_completed?: boolean
+          remind_at?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminders_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       roles: {
         Row: {
           code: string

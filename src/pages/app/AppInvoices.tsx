@@ -18,6 +18,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
 import { FileText, TrendingUp, TrendingDown, DollarSign, Plus, Search, Trash2, Check, X, RefreshCw, ClipboardList } from "lucide-react";
+import CreateReminderDialog from "@/components/reminders/CreateReminderDialog";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
@@ -69,6 +70,9 @@ const AppInvoices = () => {
   const [deleteReason, setDeleteReason] = useState("");
   const [deleteReasonDialog, setDeleteReasonDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  // Reminder state
+  const [reminderInvoice, setReminderInvoice] = useState<any>(null);
 
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ["invoices", accountId],
@@ -443,6 +447,7 @@ const AppInvoices = () => {
                           onEdit={() => setEditInvoice(inv)}
                           onDelete={() => handleDeleteClick(inv)}
                           onSendEmail={inv.business_clients?.email ? () => handleSendEmail(inv.id) : undefined}
+                          onReminder={() => setReminderInvoice(inv)}
                         />
                       </TableCell>
                     </TableRow>
@@ -553,6 +558,7 @@ const AppInvoices = () => {
                               onEdit={() => setEditInvoice(q)}
                               onDelete={() => handleDeleteClick(q)}
                               onSendEmail={q.business_clients?.email ? () => handleSendEmail(q.id) : undefined}
+                              onReminder={() => setReminderInvoice(q)}
                             />
                           </TableCell>
                         </TableRow>
@@ -638,6 +644,16 @@ const AppInvoices = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {reminderInvoice && (
+        <CreateReminderDialog
+          open={!!reminderInvoice}
+          onOpenChange={(open) => !open && setReminderInvoice(null)}
+          defaultEntityType={reminderInvoice.type === "QUOTE" ? "QUOTE" : reminderInvoice.type === "EXPENSE" ? "EXPENSE" : "INVOICE"}
+          defaultEntityId={reminderInvoice.id}
+          defaultEntityLabel={`${reminderInvoice.invoice_number || ""} — ${reminderInvoice.concept || reminderInvoice.business_clients?.name || ""}`}
+        />
+      )}
     </div>
   );
 };

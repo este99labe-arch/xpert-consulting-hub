@@ -5,7 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, CalendarClock } from "lucide-react";
+import CreateReminderDialog from "@/components/reminders/CreateReminderDialog";
 import { toast } from "@/hooks/use-toast";
 import ClientInfoTab from "@/components/clients/ClientInfoTab";
 import ClientContactsTab from "@/components/clients/ClientContactsTab";
@@ -18,6 +19,7 @@ const AppClientDetail = () => {
   const { accountId, role } = useAuth();
   const queryClient = useQueryClient();
   const isAdmin = role === "MASTER_ADMIN" || role === "MANAGER";
+  const [showReminder, setShowReminder] = useState(false);
 
   const { data: client, isLoading } = useQuery({
     queryKey: ["business-client", id],
@@ -74,14 +76,20 @@ const AppClientDetail = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/app/clients")}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold">{client.name}</h1>
-          <p className="text-sm text-muted-foreground">{client.tax_id}</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/app/clients")}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold">{client.name}</h1>
+            <p className="text-sm text-muted-foreground">{client.tax_id}</p>
+          </div>
         </div>
+        <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setShowReminder(true)}>
+          <CalendarClock className="h-4 w-4" />
+          Recordatorio
+        </Button>
       </div>
 
       <Tabs defaultValue="info" className="w-full">
@@ -124,6 +132,14 @@ const AppClientDetail = () => {
           </TabsContent>
         )}
       </Tabs>
+
+      <CreateReminderDialog
+        open={showReminder}
+        onOpenChange={setShowReminder}
+        defaultEntityType="CLIENT"
+        defaultEntityId={id}
+        defaultEntityLabel={client.name}
+      />
     </div>
   );
 };

@@ -20,6 +20,7 @@ import {
   Trash2,
   CheckCheck,
   AlertTriangle,
+  CalendarClock,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
@@ -29,6 +30,7 @@ const typeIcons: Record<string, any> = {
   LEAVE_PENDING: Clock,
   INVOICE_OVERDUE: FileText,
   DELETE_REQUEST: Trash2,
+  REMINDER: CalendarClock,
 };
 
 const typeColors: Record<string, string> = {
@@ -36,6 +38,7 @@ const typeColors: Record<string, string> = {
   LEAVE_PENDING: "text-blue-500",
   INVOICE_OVERDUE: "text-destructive",
   DELETE_REQUEST: "text-yellow-600",
+  REMINDER: "text-primary",
 };
 
 interface Notification {

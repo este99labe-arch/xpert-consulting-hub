@@ -1,4 +1,4 @@
-import { MoreHorizontal, Eye, Download, Pencil, Trash2, Mail } from "lucide-react";
+import { MoreHorizontal, Eye, Download, Pencil, Trash2, Mail, CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -10,9 +10,10 @@ interface Props {
   onEdit: () => void;
   onDelete: () => void;
   onSendEmail?: () => void;
+  onReminder?: () => void;
 }
 
-const InvoiceActionsMenu = ({ onPreview, onExport, onEdit, onDelete, onSendEmail }: Props) => {
+const InvoiceActionsMenu = ({ onPreview, onExport, onEdit, onDelete, onSendEmail, onReminder }: Props) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -39,6 +40,15 @@ const InvoiceActionsMenu = ({ onPreview, onExport, onEdit, onDelete, onSendEmail
           <Pencil className="h-4 w-4 mr-2" />
           Editar
         </DropdownMenuItem>
+        {onReminder && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={onReminder}>
+              <CalendarClock className="h-4 w-4 mr-2" />
+              Crear recordatorio
+            </DropdownMenuItem>
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
           <Trash2 className="h-4 w-4 mr-2" />
