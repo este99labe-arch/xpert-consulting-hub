@@ -447,6 +447,7 @@ const AppInvoices = () => {
                           onEdit={() => setEditInvoice(inv)}
                           onDelete={() => handleDeleteClick(inv)}
                           onSendEmail={inv.business_clients?.email ? () => handleSendEmail(inv.id) : undefined}
+                          onReminder={() => setReminderInvoice(inv)}
                         />
                       </TableCell>
                     </TableRow>
