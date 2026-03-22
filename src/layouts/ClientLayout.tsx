@@ -19,8 +19,9 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import {
-  LayoutDashboard, Users, FileText, Calculator, UserCog, Clock, Settings, LogOut, Package, ArrowRightLeft, ChevronDown, BarChart3, HelpCircle,
+  LayoutDashboard, Users, FileText, Calculator, UserCog, Clock, Settings, LogOut, Package, ArrowRightLeft, ChevronDown, BarChart3, HelpCircle, CalendarClock,
 } from "lucide-react";
+import ReminderNotifier from "@/components/reminders/ReminderNotifier";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
