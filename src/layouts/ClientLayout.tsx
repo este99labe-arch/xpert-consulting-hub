@@ -19,8 +19,9 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import {
-  LayoutDashboard, Users, FileText, Calculator, UserCog, Clock, Settings, LogOut, Package, ArrowRightLeft, ChevronDown, BarChart3, HelpCircle,
+  LayoutDashboard, Users, FileText, Calculator, UserCog, Clock, Settings, LogOut, Package, ArrowRightLeft, ChevronDown, BarChart3, HelpCircle, CalendarClock,
 } from "lucide-react";
+import ReminderNotifier from "@/components/reminders/ReminderNotifier";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -41,6 +42,7 @@ const moduleIcons: Record<string, any> = {
   ATTENDANCE: Clock,
   INVENTORY: Package,
   REPORTS: BarChart3,
+  TASKS: CalendarClock,
   SETTINGS: Settings,
 };
 
@@ -53,6 +55,7 @@ const modulePaths: Record<string, string> = {
   ATTENDANCE: "/app/attendance",
   INVENTORY: "/app/inventory",
   REPORTS: "/app/reports",
+  TASKS: "/app/tasks",
   SETTINGS: "/app/settings",
 };
 
@@ -140,6 +143,18 @@ const SidebarInner = () => {
                 </SidebarMenuItem>
               );
             })}
+            {/* Tareas - always visible */}
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                isActive={location.pathname === "/app/tasks"}
+                onClick={() => navigate("/app/tasks")}
+                tooltip="Tareas"
+                className="h-10 rounded-lg"
+              >
+                <CalendarClock className="h-4 w-4" />
+                <span>Tareas</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={location.pathname === "/app/settings"}
@@ -200,6 +215,7 @@ const SidebarInner = () => {
         </SidebarFooter>
       </Sidebar>
       <GlobalSearch />
+      <ReminderNotifier />
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b bg-background/80 backdrop-blur-sm px-6">
           <div className="flex items-center gap-3">

@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CalendarClock, Plus, Bell, Clock } from "lucide-react";
+import { CalendarClock, Plus, Bell, Clock, ExternalLink } from "lucide-react";
 import { format, formatDistanceToNow, isPast, isToday } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import CreateReminderDialog from "@/components/reminders/CreateReminderDialog";
 
 const entityTypeIcons: Record<string, string> = {
@@ -24,8 +25,9 @@ const entityTypeIcons: Record<string, string> = {
 };
 
 const RemindersWidget = () => {
-  const { user, accountId } = useAuth();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [showCreate, setShowCreate] = useState(false);
 
   const { data: reminders = [] } = useQuery({
@@ -48,7 +50,7 @@ const RemindersWidget = () => {
     mutationFn: async (id: string) => {
       const { error } = await supabase
         .from("reminders")
-        .update({ is_completed: true, completed_at: new Date().toISOString() })
+        .update({ is_completed: true, completed_at: new Date().toISOString(), status: "DONE" })
         .eq("id", id);
       if (error) throw error;
     },
@@ -73,10 +75,15 @@ const RemindersWidget = () => {
                 <Badge variant="destructive" className="text-[10px] px-1.5 py-0 h-4">{overdueCount}</Badge>
               )}
             </CardTitle>
-            <Button size="sm" variant="ghost" className="h-7 gap-1 text-xs" onClick={() => setShowCreate(true)}>
-              <Plus className="h-3.5 w-3.5" />
-              Nuevo
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => navigate("/app/tasks")}>
+                <ExternalLink className="h-3.5 w-3.5" />
+              </Button>
+              <Button size="sm" variant="ghost" className="h-7 gap-1 text-xs" onClick={() => setShowCreate(true)}>
+                <Plus className="h-3.5 w-3.5" />
+                Nuevo
+              </Button>
+            </div>
           </div>
           {(todayCount > 0 || overdueCount > 0) && (
             <div className="flex gap-2 mt-1">
@@ -120,19 +127,26 @@ const RemindersWidget = () => {
                       }`}
                     >
                       <Checkbox
-                        className="mt-0.5"
+                        className="mt-0.5 shrink-0"
                         checked={false}
                         onCheckedChange={() => completeMutation.mutate(r.id)}
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
                           {r.entity_type && (
-                            <span className="text-xs">{entityTypeIcons[r.entity_type] || "📌"}</span>
+                            <span className="text-xs shrink-0">{entityTypeIcons[r.entity_type] || "📌"}</span>
                           )}
-                          <span className="font-medium truncate">{r.title}</span>
+                          <span className="font-medium break-words line-clamp-2">{r.title}</span>
                         </div>
                         {r.entity_label && (
-                          <p className="text-xs text-muted-foreground truncate">{r.entity_label}</p>
+                          <p className="text-xs text-muted-foreground break-words line-clamp-1 mt-0.5">{r.entity_label}</p>
+                        )}
+                        {r.labels && (r.labels as string[]).length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {(r.labels as string[]).map((label: string) => (
+                              <Badge key={label} variant="secondary" className="text-[10px] px-1.5 py-0 h-4">{label}</Badge>
+                            ))}
+                          </div>
                         )}
                         <p className={`text-xs mt-0.5 ${isOverdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>
                           {isOverdue

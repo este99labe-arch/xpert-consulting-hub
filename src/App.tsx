@@ -26,6 +26,7 @@ import AppClientDetail from "@/pages/app/AppClientDetail";
 import AppSettings from "@/pages/app/AppSettings";
 import AppInventory from "@/pages/app/AppInventory";
 import AppReports from "@/pages/app/AppReports";
+import AppTasks from "@/pages/app/AppTasks";
 
 const queryClient = new QueryClient();
 
@@ -74,6 +75,7 @@ const App = () => (
               <Route path="attendance" element={<AppAttendance />} />
               <Route path="inventory" element={<AppInventory />} />
               <Route path="reports" element={<AppReports />} />
+              <Route path="tasks" element={<AppTasks />} />
               <Route path="settings" element={<AppSettings />} />
             </Route>
 
