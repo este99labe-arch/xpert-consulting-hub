@@ -26,6 +26,7 @@ import AppClientDetail from "@/pages/app/AppClientDetail";
 import AppSettings from "@/pages/app/AppSettings";
 import AppInventory from "@/pages/app/AppInventory";
 import AppReports from "@/pages/app/AppReports";
+import AppTasks from "@/pages/app/AppTasks";
 
 const queryClient = new QueryClient();
 
