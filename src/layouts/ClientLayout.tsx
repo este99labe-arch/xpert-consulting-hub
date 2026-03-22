@@ -55,6 +55,7 @@ const modulePaths: Record<string, string> = {
   ATTENDANCE: "/app/attendance",
   INVENTORY: "/app/inventory",
   REPORTS: "/app/reports",
+  TASKS: "/app/tasks",
   SETTINGS: "/app/settings",
 };
 
