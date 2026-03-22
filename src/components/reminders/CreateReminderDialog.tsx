@@ -9,10 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { CalendarClock, Loader2 } from "lucide-react";
+import { CalendarClock, Loader2, X, Plus } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
@@ -34,6 +35,8 @@ const entityTypeLabels: Record<string, string> = {
   OTHER: "Otro",
 };
 
+const SUGGESTED_LABELS = ["Urgente", "Revisión", "Pago", "Seguimiento", "Legal", "Contabilidad"];
+
 const CreateReminderDialog = ({
   open,
   onOpenChange,
@@ -50,12 +53,28 @@ const CreateReminderDialog = ({
   const [entityType, setEntityType] = useState(defaultEntityType || "");
   const [entityId] = useState(defaultEntityId || "");
   const [entityLabel] = useState(defaultEntityLabel || "");
+  const [labels, setLabels] = useState<string[]>([]);
+  const [newLabel, setNewLabel] = useState("");
 
   const resetForm = () => {
     setTitle("");
     setDescription("");
     setRemindAt("");
     setEntityType(defaultEntityType || "");
+    setLabels([]);
+    setNewLabel("");
+  };
+
+  const addLabel = (label: string) => {
+    const trimmed = label.trim();
+    if (trimmed && !labels.includes(trimmed)) {
+      setLabels([...labels, trimmed]);
+    }
+    setNewLabel("");
+  };
+
+  const removeLabel = (label: string) => {
+    setLabels(labels.filter((l) => l !== label));
   };
 
   const createMutation = useMutation({
@@ -69,12 +88,15 @@ const CreateReminderDialog = ({
         entity_type: entityType || null,
         entity_id: entityId || null,
         entity_label: entityLabel || null,
+        labels,
+        status: "REMINDER",
       });
       if (error) throw error;
     },
     onSuccess: () => {
       toast({ title: "Recordatorio creado", description: `Se te notificará el ${format(new Date(remindAt), "dd/MM/yyyy HH:mm")}` });
       queryClient.invalidateQueries({ queryKey: ["reminders"] });
+      queryClient.invalidateQueries({ queryKey: ["reminders-all"] });
       resetForm();
       onOpenChange(false);
     },
@@ -129,6 +151,52 @@ const CreateReminderDialog = ({
               onChange={(e) => setRemindAt(e.target.value)}
               min={format(new Date(), "yyyy-MM-dd'T'HH:mm")}
             />
+          </div>
+
+          {/* Labels */}
+          <div className="space-y-1.5">
+            <Label>Etiquetas</Label>
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {labels.map((label) => (
+                <Badge key={label} variant="secondary" className="gap-1 pr-1">
+                  {label}
+                  <button onClick={() => removeLabel(label)} className="hover:bg-foreground/10 rounded-full p-0.5">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+            <div className="flex gap-1.5">
+              <Input
+                placeholder="Nueva etiqueta..."
+                value={newLabel}
+                onChange={(e) => setNewLabel(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addLabel(newLabel))}
+                className="h-8 text-sm"
+              />
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-8 px-2 shrink-0"
+                onClick={() => addLabel(newLabel)}
+                disabled={!newLabel.trim()}
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-1 mt-1.5">
+              {SUGGESTED_LABELS.filter((l) => !labels.includes(l)).map((l) => (
+                <button
+                  key={l}
+                  type="button"
+                  onClick={() => addLabel(l)}
+                  className="text-[10px] px-2 py-0.5 rounded-full border border-border hover:bg-accent transition-colors text-muted-foreground"
+                >
+                  + {l}
+                </button>
+              ))}
+            </div>
           </div>
 
           {defaultEntityLabel && (
