@@ -42,6 +42,7 @@ const moduleIcons: Record<string, any> = {
   ATTENDANCE: Clock,
   INVENTORY: Package,
   REPORTS: BarChart3,
+  TASKS: CalendarClock,
   SETTINGS: Settings,
 };
 
