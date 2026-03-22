@@ -75,6 +75,7 @@ const App = () => (
               <Route path="attendance" element={<AppAttendance />} />
               <Route path="inventory" element={<AppInventory />} />
               <Route path="reports" element={<AppReports />} />
+              <Route path="tasks" element={<AppTasks />} />
               <Route path="settings" element={<AppSettings />} />
             </Route>
 
