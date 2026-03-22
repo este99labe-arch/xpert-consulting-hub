@@ -1305,7 +1305,9 @@ export type Database = {
           entity_type: string | null
           id: string
           is_completed: boolean
+          labels: string[]
           remind_at: string
+          status: string
           title: string
         }
         Insert: {
@@ -1319,7 +1321,9 @@ export type Database = {
           entity_type?: string | null
           id?: string
           is_completed?: boolean
+          labels?: string[]
           remind_at: string
+          status?: string
           title: string
         }
         Update: {
@@ -1333,7 +1337,9 @@ export type Database = {
           entity_type?: string | null
           id?: string
           is_completed?: boolean
+          labels?: string[]
           remind_at?: string
+          status?: string
           title?: string
         }
         Relationships: [
