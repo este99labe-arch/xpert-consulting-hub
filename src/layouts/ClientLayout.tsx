@@ -126,6 +126,23 @@ const SidebarInner = () => {
         </SidebarHeader>
         <SidebarContent className="px-3 py-4 scrollbar-hide">
           <SidebarMenu>
+            {modules.filter((mod) => mod.code !== "SETTINGS").map((mod) => {
+              const Icon = moduleIcons[mod.code] || LayoutDashboard;
+              const path = modulePaths[mod.code] || "/app/dashboard";
+              return (
+                <SidebarMenuItem key={mod.code}>
+                  <SidebarMenuButton
+                    isActive={location.pathname === path}
+                    onClick={() => navigate(path)}
+                    tooltip={mod.name}
+                    className="h-10 rounded-lg"
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span>{mod.name}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
             {/* Tareas - always visible */}
             <SidebarMenuItem>
               <SidebarMenuButton
