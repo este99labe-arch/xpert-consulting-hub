@@ -481,7 +481,6 @@ const AppInvoices = () => {
                       <TableCell className="whitespace-nowrap text-muted-foreground">
                         {inv.paid_at ? format(new Date(inv.paid_at), "dd MMM yyyy", { locale: es }) : "—"}
                       </TableCell>
-                      </TableCell>
                       <TableCell>{inv.business_clients?.name || "—"}</TableCell>
                       <TableCell className="max-w-[200px] truncate">{inv.concept || "—"}</TableCell>
                       <TableCell>{typeLabels[inv.type] || inv.type}</TableCell>
