@@ -180,6 +180,16 @@ const AppDashboard = () => {
         prevPendingCount={prev.pending}
         prevOverdueCount={prev.overdue}
         prevActiveClients={prev.clients}
+        onKpiClick={(key) => {
+          switch (key) {
+            case "income": navigate("/app/invoices?type=INVOICE"); break;
+            case "expense": navigate("/app/invoices?type=EXPENSE"); break;
+            case "balance": navigate("/app/invoices"); break;
+            case "pending": navigate("/app/invoices?status=SENT"); break;
+            case "overdue": navigate("/app/invoices?status=OVERDUE"); break;
+            case "clients": navigate("/app/clients"); break;
+          }
+        }}
       />
 
       {/* Row 1: Revenue chart + Reminders */}
