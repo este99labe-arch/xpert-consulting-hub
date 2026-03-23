@@ -455,11 +455,12 @@ const AppInvoices = () => {
             <div className="p-8 text-center text-muted-foreground">No se encontraron facturas</div>
           ) : (
             <>
-              <Table>
+               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nº</TableHead>
-                    <TableHead>Fecha</TableHead>
+                    <TableHead>F. Emisión</TableHead>
+                    <TableHead>F. Pago</TableHead>
                     <TableHead>Cliente</TableHead>
                     <TableHead>Concepto</TableHead>
                     <TableHead>Tipo</TableHead>
@@ -476,6 +477,10 @@ const AppInvoices = () => {
                       </TableCell>
                       <TableCell className="whitespace-nowrap">
                         {format(new Date(inv.issue_date), "dd MMM yyyy", { locale: es })}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-muted-foreground">
+                        {inv.paid_at ? format(new Date(inv.paid_at), "dd MMM yyyy", { locale: es }) : "—"}
+                      </TableCell>
                       </TableCell>
                       <TableCell>{inv.business_clients?.name || "—"}</TableCell>
                       <TableCell className="max-w-[200px] truncate">{inv.concept || "—"}</TableCell>
