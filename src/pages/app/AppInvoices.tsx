@@ -134,7 +134,10 @@ const AppInvoices = () => {
       (inv.invoice_number || "").toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === "ALL" || inv.status === statusFilter;
     const matchesType = typeFilter === "ALL" || inv.type === typeFilter;
-    return matchesSearch && matchesStatus && matchesType;
+    const issueDate = new Date(inv.issue_date);
+    const matchesDateFrom = !dateFrom || issueDate >= dateFrom;
+    const matchesDateTo = !dateTo || issueDate <= dateTo;
+    return matchesSearch && matchesStatus && matchesType && matchesDateFrom && matchesDateTo;
   });
 
   const filteredQuotes = quotes.filter((q: any) => {
