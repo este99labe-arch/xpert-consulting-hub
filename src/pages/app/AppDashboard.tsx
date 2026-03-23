@@ -75,7 +75,7 @@ const AppDashboard = () => {
 
   // KPI calculations
   const calc = (list: any[]) => {
-    const income = list.filter((i: any) => i.type === "INCOME").reduce((s: number, i: any) => s + Number(i.amount_total), 0);
+    const income = list.filter((i: any) => i.type === "INVOICE").reduce((s: number, i: any) => s + Number(i.amount_total), 0);
     const expense = list.filter((i: any) => i.type === "EXPENSE").reduce((s: number, i: any) => s + Number(i.amount_total), 0);
     const pending = list.filter((i: any) => i.status === "DRAFT" || i.status === "SENT").length;
     const overdue = list.filter((i: any) => i.status === "SENT" && differenceInDays(now, parseISO(i.issue_date)) > 30).length;
