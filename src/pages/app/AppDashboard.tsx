@@ -23,6 +23,7 @@ const periodDays: Record<Period, number> = { "7d": 7, "30d": 30, "90d": 90, year
 
 const AppDashboard = () => {
   const { accountId } = useAuth();
+  const navigate = useNavigate();
   const [period, setPeriod] = useState<Period>("30d");
   const [chartPeriod, setChartPeriod] = useState("30d");
 
