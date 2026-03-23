@@ -59,15 +59,29 @@ const AppInvoices = () => {
   const queryClient = useQueryClient();
   const isManager = role === "MANAGER" || role === "MASTER_ADMIN";
 
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("ALL");
-  const [typeFilter, setTypeFilter] = useState<string>("ALL");
+  const [statusFilter, setStatusFilter] = useState<string>(searchParams.get("status") || "ALL");
+  const [typeFilter, setTypeFilter] = useState<string>(searchParams.get("type") || "ALL");
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [previewInvoice, setPreviewInvoice] = useState<any>(null);
   const [editInvoice, setEditInvoice] = useState<any>(null);
   const [quoteSearch, setQuoteSearch] = useState("");
   const [quoteStatusFilter, setQuoteStatusFilter] = useState<string>("ALL");
   const [activeTab, setActiveTab] = useState("invoices");
+
+  // Sync URL params on mount
+  useEffect(() => {
+    const urlStatus = searchParams.get("status");
+    const urlType = searchParams.get("type");
+    if (urlStatus) setStatusFilter(urlStatus);
+    if (urlType) setTypeFilter(urlType);
+    // Clear URL params after reading
+    if (urlStatus || urlType) setSearchParams({}, { replace: true });
+  }, []);
 
   // Delete state
   const [deleteInvoice, setDeleteInvoice] = useState<any>(null);
