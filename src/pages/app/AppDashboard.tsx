@@ -94,7 +94,7 @@ const AppDashboard = () => {
       return Array.from({ length: 7 }, (_, i) => {
         const day = startOfDay(subDays(now, 6 - i));
         const dayStr = format(day, "yyyy-MM-dd");
-        const inc = invoices.filter((inv: any) => inv.type === "INCOME" && inv.issue_date === dayStr).reduce((s: number, inv: any) => s + Number(inv.amount_total), 0);
+        const inc = invoices.filter((inv: any) => inv.type === "INVOICE" && inv.issue_date === dayStr).reduce((s: number, inv: any) => s + Number(inv.amount_total), 0);
         const exp = invoices.filter((inv: any) => inv.type === "EXPENSE" && inv.issue_date === dayStr).reduce((s: number, inv: any) => s + Number(inv.amount_total), 0);
         return { label: format(day, "EEE", { locale: es }), income: inc, expense: exp };
       });
@@ -103,7 +103,7 @@ const AppDashboard = () => {
       return Array.from({ length: 30 }, (_, i) => {
         const day = startOfDay(subDays(now, 29 - i));
         const dayStr = format(day, "yyyy-MM-dd");
-        const inc = invoices.filter((inv: any) => inv.type === "INCOME" && inv.issue_date === dayStr).reduce((s: number, inv: any) => s + Number(inv.amount_total), 0);
+        const inc = invoices.filter((inv: any) => inv.type === "INVOICE" && inv.issue_date === dayStr).reduce((s: number, inv: any) => s + Number(inv.amount_total), 0);
         const exp = invoices.filter((inv: any) => inv.type === "EXPENSE" && inv.issue_date === dayStr).reduce((s: number, inv: any) => s + Number(inv.amount_total), 0);
         return { label: format(day, "dd", { locale: es }), income: inc, expense: exp };
       });
@@ -112,7 +112,7 @@ const AppDashboard = () => {
     return Array.from({ length: 12 }, (_, i) => {
       const month = startOfMonth(subMonths(now, 11 - i));
       const monthStr = format(month, "yyyy-MM");
-      const inc = invoices.filter((inv: any) => inv.type === "INCOME" && inv.issue_date.startsWith(monthStr)).reduce((s: number, inv: any) => s + Number(inv.amount_total), 0);
+      const inc = invoices.filter((inv: any) => inv.type === "INVOICE" && inv.issue_date.startsWith(monthStr)).reduce((s: number, inv: any) => s + Number(inv.amount_total), 0);
       const exp = invoices.filter((inv: any) => inv.type === "EXPENSE" && inv.issue_date.startsWith(monthStr)).reduce((s: number, inv: any) => s + Number(inv.amount_total), 0);
       return { label: format(month, "MMM", { locale: es }), income: inc, expense: exp };
     });
