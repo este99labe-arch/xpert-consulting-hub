@@ -772,6 +772,7 @@ export type Database = {
           id: string
           invoice_number: string | null
           issue_date: string
+          paid_at: string | null
           status: string
           type: string
           vat_percentage: number
@@ -790,6 +791,7 @@ export type Database = {
           id?: string
           invoice_number?: string | null
           issue_date: string
+          paid_at?: string | null
           status?: string
           type: string
           vat_percentage: number
@@ -808,6 +810,7 @@ export type Database = {
           id?: string
           invoice_number?: string | null
           issue_date?: string
+          paid_at?: string | null
           status?: string
           type?: string
           vat_percentage?: number
