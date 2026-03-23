@@ -16,6 +16,7 @@ interface KpiCardsProps {
   prevPendingCount: number;
   prevOverdueCount: number;
   prevActiveClients: number;
+  onKpiClick?: (kpiKey: string) => void;
 }
 
 const EUR = (n: number) =>
@@ -41,6 +42,7 @@ const ChangeIndicator = ({ current, previous }: { current: number; previous: num
 const KpiCards = (props: KpiCardsProps) => {
   const kpis = [
     {
+      key: "income",
       label: "Ingresos",
       value: EUR(props.income),
       icon: TrendingUp,
@@ -49,6 +51,7 @@ const KpiCards = (props: KpiCardsProps) => {
       change: <ChangeIndicator current={props.income} previous={props.prevIncome} />,
     },
     {
+      key: "expense",
       label: "Gastos",
       value: EUR(props.expense),
       icon: TrendingDown,
@@ -57,6 +60,7 @@ const KpiCards = (props: KpiCardsProps) => {
       change: <ChangeIndicator current={props.expense} previous={props.prevExpense} />,
     },
     {
+      key: "balance",
       label: "Balance",
       value: EUR(props.balance),
       icon: BarChart3,
@@ -65,6 +69,7 @@ const KpiCards = (props: KpiCardsProps) => {
       change: null,
     },
     {
+      key: "pending",
       label: "Pendientes",
       value: String(props.pendingCount),
       icon: FileText,
@@ -73,6 +78,7 @@ const KpiCards = (props: KpiCardsProps) => {
       change: <ChangeIndicator current={props.pendingCount} previous={props.prevPendingCount} />,
     },
     {
+      key: "overdue",
       label: "Vencidas",
       value: String(props.overdueCount),
       icon: DollarSign,
@@ -81,6 +87,7 @@ const KpiCards = (props: KpiCardsProps) => {
       change: <ChangeIndicator current={props.overdueCount} previous={props.prevOverdueCount} />,
     },
     {
+      key: "clients",
       label: "Clientes Activos",
       value: String(props.activeClients),
       icon: Users,
@@ -97,9 +104,14 @@ const KpiCards = (props: KpiCardsProps) => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-medium text-muted-foreground">{kpi.label}</span>
-              <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${kpi.bg}`}>
+              <button
+                type="button"
+                onClick={() => props.onKpiClick?.(kpi.key)}
+                className={`flex h-8 w-8 items-center justify-center rounded-lg ${kpi.bg} hover:ring-2 hover:ring-primary/30 transition-all cursor-pointer`}
+                title={`Ver detalle de ${kpi.label}`}
+              >
                 <kpi.icon className={`h-3.5 w-3.5 ${kpi.color}`} />
-              </div>
+              </button>
             </div>
             <p className={`text-xl font-bold tracking-tight ${kpi.color}`}>{kpi.value}</p>
             {kpi.change && <div className="mt-1">{kpi.change}</div>}

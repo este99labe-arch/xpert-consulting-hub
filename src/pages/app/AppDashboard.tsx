@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -22,6 +23,7 @@ const periodDays: Record<Period, number> = { "7d": 7, "30d": 30, "90d": 90, year
 
 const AppDashboard = () => {
   const { accountId } = useAuth();
+  const navigate = useNavigate();
   const [period, setPeriod] = useState<Period>("30d");
   const [chartPeriod, setChartPeriod] = useState("30d");
 
@@ -75,7 +77,7 @@ const AppDashboard = () => {
 
   // KPI calculations
   const calc = (list: any[]) => {
-    const income = list.filter((i: any) => i.type === "INCOME").reduce((s: number, i: any) => s + Number(i.amount_total), 0);
+    const income = list.filter((i: any) => i.type === "INVOICE").reduce((s: number, i: any) => s + Number(i.amount_total), 0);
     const expense = list.filter((i: any) => i.type === "EXPENSE").reduce((s: number, i: any) => s + Number(i.amount_total), 0);
     const pending = list.filter((i: any) => i.status === "DRAFT" || i.status === "SENT").length;
     const overdue = list.filter((i: any) => i.status === "SENT" && differenceInDays(now, parseISO(i.issue_date)) > 30).length;
@@ -92,7 +94,7 @@ const AppDashboard = () => {
       return Array.from({ length: 7 }, (_, i) => {
         const day = startOfDay(subDays(now, 6 - i));
         const dayStr = format(day, "yyyy-MM-dd");
-        const inc = invoices.filter((inv: any) => inv.type === "INCOME" && inv.issue_date === dayStr).reduce((s: number, inv: any) => s + Number(inv.amount_total), 0);
+        const inc = invoices.filter((inv: any) => inv.type === "INVOICE" && inv.issue_date === dayStr).reduce((s: number, inv: any) => s + Number(inv.amount_total), 0);
         const exp = invoices.filter((inv: any) => inv.type === "EXPENSE" && inv.issue_date === dayStr).reduce((s: number, inv: any) => s + Number(inv.amount_total), 0);
         return { label: format(day, "EEE", { locale: es }), income: inc, expense: exp };
       });
@@ -101,7 +103,7 @@ const AppDashboard = () => {
       return Array.from({ length: 30 }, (_, i) => {
         const day = startOfDay(subDays(now, 29 - i));
         const dayStr = format(day, "yyyy-MM-dd");
-        const inc = invoices.filter((inv: any) => inv.type === "INCOME" && inv.issue_date === dayStr).reduce((s: number, inv: any) => s + Number(inv.amount_total), 0);
+        const inc = invoices.filter((inv: any) => inv.type === "INVOICE" && inv.issue_date === dayStr).reduce((s: number, inv: any) => s + Number(inv.amount_total), 0);
         const exp = invoices.filter((inv: any) => inv.type === "EXPENSE" && inv.issue_date === dayStr).reduce((s: number, inv: any) => s + Number(inv.amount_total), 0);
         return { label: format(day, "dd", { locale: es }), income: inc, expense: exp };
       });
@@ -110,7 +112,7 @@ const AppDashboard = () => {
     return Array.from({ length: 12 }, (_, i) => {
       const month = startOfMonth(subMonths(now, 11 - i));
       const monthStr = format(month, "yyyy-MM");
-      const inc = invoices.filter((inv: any) => inv.type === "INCOME" && inv.issue_date.startsWith(monthStr)).reduce((s: number, inv: any) => s + Number(inv.amount_total), 0);
+      const inc = invoices.filter((inv: any) => inv.type === "INVOICE" && inv.issue_date.startsWith(monthStr)).reduce((s: number, inv: any) => s + Number(inv.amount_total), 0);
       const exp = invoices.filter((inv: any) => inv.type === "EXPENSE" && inv.issue_date.startsWith(monthStr)).reduce((s: number, inv: any) => s + Number(inv.amount_total), 0);
       return { label: format(month, "MMM", { locale: es }), income: inc, expense: exp };
     });
@@ -178,6 +180,16 @@ const AppDashboard = () => {
         prevPendingCount={prev.pending}
         prevOverdueCount={prev.overdue}
         prevActiveClients={prev.clients}
+        onKpiClick={(key) => {
+          switch (key) {
+            case "income": navigate("/app/invoices?type=INVOICE"); break;
+            case "expense": navigate("/app/invoices?type=EXPENSE"); break;
+            case "balance": navigate("/app/invoices"); break;
+            case "pending": navigate("/app/invoices?status=SENT"); break;
+            case "overdue": navigate("/app/invoices?status=OVERDUE"); break;
+            case "clients": navigate("/app/clients"); break;
+          }
+        }}
       />
 
       {/* Row 1: Revenue chart + Reminders */}

@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,10 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
-import { FileText, TrendingUp, TrendingDown, DollarSign, Plus, Search, Trash2, Check, X, RefreshCw, ClipboardList } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { FileText, TrendingUp, TrendingDown, DollarSign, Plus, Search, Trash2, Check, X, RefreshCw, ClipboardList, CalendarIcon } from "lucide-react";
 import CreateReminderDialog from "@/components/reminders/CreateReminderDialog";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -55,15 +59,29 @@ const AppInvoices = () => {
   const queryClient = useQueryClient();
   const isManager = role === "MANAGER" || role === "MASTER_ADMIN";
 
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("ALL");
-  const [typeFilter, setTypeFilter] = useState<string>("ALL");
+  const [statusFilter, setStatusFilter] = useState<string>(searchParams.get("status") || "ALL");
+  const [typeFilter, setTypeFilter] = useState<string>(searchParams.get("type") || "ALL");
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [previewInvoice, setPreviewInvoice] = useState<any>(null);
   const [editInvoice, setEditInvoice] = useState<any>(null);
   const [quoteSearch, setQuoteSearch] = useState("");
   const [quoteStatusFilter, setQuoteStatusFilter] = useState<string>("ALL");
   const [activeTab, setActiveTab] = useState("invoices");
+
+  // Sync URL params on mount
+  useEffect(() => {
+    const urlStatus = searchParams.get("status");
+    const urlType = searchParams.get("type");
+    if (urlStatus) setStatusFilter(urlStatus);
+    if (urlType) setTypeFilter(urlType);
+    // Clear URL params after reading
+    if (urlStatus || urlType) setSearchParams({}, { replace: true });
+  }, []);
 
   // Delete state
   const [deleteInvoice, setDeleteInvoice] = useState<any>(null);
@@ -116,7 +134,10 @@ const AppInvoices = () => {
       (inv.invoice_number || "").toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === "ALL" || inv.status === statusFilter;
     const matchesType = typeFilter === "ALL" || inv.type === typeFilter;
-    return matchesSearch && matchesStatus && matchesType;
+    const issueDate = new Date(inv.issue_date);
+    const matchesDateFrom = !dateFrom || issueDate >= dateFrom;
+    const matchesDateTo = !dateTo || issueDate <= dateTo;
+    return matchesSearch && matchesStatus && matchesType && matchesDateFrom && matchesDateTo;
   });
 
   const filteredQuotes = quotes.filter((q: any) => {
@@ -373,13 +394,13 @@ const AppInvoices = () => {
       )}
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-3 items-end">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Buscar por nº factura, cliente o concepto..." value={search} onChange={(e) => { setSearch(e.target.value); invoicePagination.resetPage(); }} className="pl-9" />
         </div>
         <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); invoicePagination.resetPage(); }}>
-          <SelectTrigger className="w-[160px]"><SelectValue placeholder="Estado" /></SelectTrigger>
+          <SelectTrigger className="w-[140px]"><SelectValue placeholder="Estado" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">Todos</SelectItem>
             <SelectItem value="DRAFT">Borrador</SelectItem>
@@ -389,13 +410,40 @@ const AppInvoices = () => {
           </SelectContent>
         </Select>
         <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v); invoicePagination.resetPage(); }}>
-          <SelectTrigger className="w-[160px]"><SelectValue placeholder="Tipo" /></SelectTrigger>
+          <SelectTrigger className="w-[140px]"><SelectValue placeholder="Tipo" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">Todos</SelectItem>
             <SelectItem value="INVOICE">Factura</SelectItem>
             <SelectItem value="EXPENSE">Gasto</SelectItem>
           </SelectContent>
         </Select>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className={cn("w-[140px] justify-start text-left font-normal", !dateFrom && "text-muted-foreground")}>
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {dateFrom ? format(dateFrom, "dd/MM/yy") : "Desde"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar mode="single" selected={dateFrom} onSelect={(d) => { setDateFrom(d); invoicePagination.resetPage(); }} className={cn("p-3 pointer-events-auto")} />
+          </PopoverContent>
+        </Popover>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className={cn("w-[140px] justify-start text-left font-normal", !dateTo && "text-muted-foreground")}>
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {dateTo ? format(dateTo, "dd/MM/yy") : "Hasta"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar mode="single" selected={dateTo} onSelect={(d) => { setDateTo(d); invoicePagination.resetPage(); }} className={cn("p-3 pointer-events-auto")} />
+          </PopoverContent>
+        </Popover>
+        {(dateFrom || dateTo) && (
+          <Button variant="ghost" size="sm" onClick={() => { setDateFrom(undefined); setDateTo(undefined); invoicePagination.resetPage(); }}>
+            <X className="h-4 w-4 mr-1" /> Limpiar fechas
+          </Button>
+        )}
       </div>
 
       {/* Table */}
@@ -407,11 +455,12 @@ const AppInvoices = () => {
             <div className="p-8 text-center text-muted-foreground">No se encontraron facturas</div>
           ) : (
             <>
-              <Table>
+               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nº</TableHead>
-                    <TableHead>Fecha</TableHead>
+                    <TableHead>F. Emisión</TableHead>
+                    <TableHead>F. Pago</TableHead>
                     <TableHead>Cliente</TableHead>
                     <TableHead>Concepto</TableHead>
                     <TableHead>Tipo</TableHead>
@@ -428,6 +477,9 @@ const AppInvoices = () => {
                       </TableCell>
                       <TableCell className="whitespace-nowrap">
                         {format(new Date(inv.issue_date), "dd MMM yyyy", { locale: es })}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-muted-foreground">
+                        {inv.paid_at ? format(new Date(inv.paid_at), "dd MMM yyyy", { locale: es }) : "—"}
                       </TableCell>
                       <TableCell>{inv.business_clients?.name || "—"}</TableCell>
                       <TableCell className="max-w-[200px] truncate">{inv.concept || "—"}</TableCell>

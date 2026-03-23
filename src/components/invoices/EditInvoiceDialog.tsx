@@ -145,6 +145,12 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
       }
 
       const updatePayload: any = { status };
+      // Set paid_at when transitioning to PAID, clear when leaving PAID
+      if (status === "PAID" && invoice.status !== "PAID") {
+        updatePayload.paid_at = new Date().toISOString();
+      } else if (status !== "PAID" && invoice.status === "PAID") {
+        updatePayload.paid_at = null;
+      }
 
       if (isDraft) {
         if (!clientId || !concept.trim() || !amount) {

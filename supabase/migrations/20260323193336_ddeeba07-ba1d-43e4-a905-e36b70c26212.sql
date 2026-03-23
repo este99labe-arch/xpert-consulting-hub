@@ -1,0 +1,1 @@
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS paid_at timestamp with time zone DEFAULT NULL;
