@@ -368,26 +368,26 @@ const AppAccounting = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">Contabilidad</h1>
         {isMaster && <MasterAccountClearButton onClear={() => setSelectedAccountId("")} />}
       </div>
 
       <Tabs defaultValue="dashboard">
-        <TabsList className="flex-wrap">
+        <TabsList className="w-full sm:w-auto flex-wrap">
           <TabsTrigger value="dashboard">Resumen</TabsTrigger>
-          <TabsTrigger value="chart">Plan Contable</TabsTrigger>
+          <TabsTrigger value="chart"><span className="hidden sm:inline">Plan Contable</span><span className="sm:hidden">Plan</span></TabsTrigger>
           <TabsTrigger value="entries" className="relative">
-            Asientos
+            <span className="hidden sm:inline">Asientos</span><span className="sm:hidden">Asien.</span>
             {isManager && pendingDeleteRequests.length > 0 && (
               <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold h-4 w-4">
                 {pendingDeleteRequests.length}
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="ledger">Libro Mayor</TabsTrigger>
-          <TabsTrigger value="pl">Resultados</TabsTrigger>
-          <TabsTrigger value="taxes">Impuestos</TabsTrigger>
+          <TabsTrigger value="ledger"><span className="hidden sm:inline">Libro Mayor</span><span className="sm:hidden">Mayor</span></TabsTrigger>
+          <TabsTrigger value="pl"><span className="hidden sm:inline">Resultados</span><span className="sm:hidden">P&L</span></TabsTrigger>
+          <TabsTrigger value="taxes"><span className="hidden sm:inline">Impuestos</span><span className="sm:hidden">IVA</span></TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard">
