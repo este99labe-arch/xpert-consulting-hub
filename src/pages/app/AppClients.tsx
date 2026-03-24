@@ -167,7 +167,7 @@ const AppClients = () => {
                         {client.status === "ACTIVE" ? "Activo" : "Inactivo"}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="text-muted-foreground hidden lg:table-cell">
                       {new Date(client.created_at).toLocaleDateString("es-ES")}
                     </TableCell>
                     <TableCell className="text-right space-x-1">
