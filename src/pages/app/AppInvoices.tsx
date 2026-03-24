@@ -574,13 +574,14 @@ const AppInvoices = () => {
                 <div className="p-8 text-center text-muted-foreground">No se encontraron presupuestos</div>
               ) : (
                 <>
+                  <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>Nº</TableHead>
-                        <TableHead>Fecha</TableHead>
+                        <TableHead className="hidden sm:table-cell">Fecha</TableHead>
                         <TableHead>Cliente</TableHead>
-                        <TableHead>Concepto</TableHead>
+                        <TableHead className="hidden md:table-cell">Concepto</TableHead>
                         <TableHead className="text-right">Total</TableHead>
                         <TableHead>Estado</TableHead>
                         <TableHead className="text-right">Acciones</TableHead>
