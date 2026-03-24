@@ -455,15 +455,16 @@ const AppInvoices = () => {
             <div className="p-8 text-center text-muted-foreground">No se encontraron facturas</div>
           ) : (
             <>
+               <div className="overflow-x-auto">
                <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nº</TableHead>
-                    <TableHead>F. Emisión</TableHead>
-                    <TableHead>F. Pago</TableHead>
+                    <TableHead className="hidden md:table-cell">F. Emisión</TableHead>
+                    <TableHead className="hidden lg:table-cell">F. Pago</TableHead>
                     <TableHead>Cliente</TableHead>
-                    <TableHead>Concepto</TableHead>
-                    <TableHead>Tipo</TableHead>
+                    <TableHead className="hidden sm:table-cell">Concepto</TableHead>
+                    <TableHead className="hidden md:table-cell">Tipo</TableHead>
                     <TableHead className="text-right">Total</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
