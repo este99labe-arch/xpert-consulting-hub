@@ -593,11 +593,11 @@ const AppInvoices = () => {
                           <TableCell className="font-mono font-semibold text-sm">
                             {q.invoice_number || q.id.slice(0, 8).toUpperCase()}
                           </TableCell>
-                          <TableCell className="whitespace-nowrap">
+                          <TableCell className="whitespace-nowrap hidden sm:table-cell">
                             {format(new Date(q.issue_date), "dd MMM yyyy", { locale: es })}
                           </TableCell>
                           <TableCell>{q.business_clients?.name || "—"}</TableCell>
-                          <TableCell className="max-w-[200px] truncate">{q.concept || "—"}</TableCell>
+                          <TableCell className="max-w-[200px] truncate hidden md:table-cell">{q.concept || "—"}</TableCell>
                           <TableCell className="text-right font-mono font-semibold">
                             €{Number(q.amount_total).toLocaleString("es-ES", { minimumFractionDigits: 2 })}
                           </TableCell>
