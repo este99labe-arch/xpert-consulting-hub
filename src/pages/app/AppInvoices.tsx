@@ -620,6 +620,7 @@ const AppInvoices = () => {
                       ))}
                     </TableBody>
                   </Table>
+                  </div>
                   {renderPagination(quotePagination)}
                 </>
               )}
