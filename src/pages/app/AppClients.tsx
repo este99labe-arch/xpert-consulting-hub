@@ -189,7 +189,8 @@ const AppClients = () => {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+              </Table>
+            </div>
             <div className="px-4 pb-4">
               <PaginationControls
                 currentPage={pagination.currentPage}
