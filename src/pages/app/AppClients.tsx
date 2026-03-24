@@ -160,8 +160,8 @@ const AppClients = () => {
                     onClick={() => navigate(`/app/clients/${client.id}`)}
                   >
                     <TableCell className="font-medium">{client.name}</TableCell>
-                    <TableCell>{client.tax_id}</TableCell>
-                    <TableCell className="text-muted-foreground">{client.email || "—"}</TableCell>
+                    <TableCell className="hidden sm:table-cell">{client.tax_id}</TableCell>
+                    <TableCell className="text-muted-foreground hidden md:table-cell">{client.email || "—"}</TableCell>
                     <TableCell>
                       <Badge variant={client.status === "ACTIVE" ? "default" : "secondary"}>
                         {client.status === "ACTIVE" ? "Activo" : "Inactivo"}
