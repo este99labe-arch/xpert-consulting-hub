@@ -312,17 +312,17 @@ const AppInvoices = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <div className="flex items-center justify-between">
-          <TabsList>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <TabsList className="w-full sm:w-auto">
             <TabsTrigger value="invoices">Facturas</TabsTrigger>
             <TabsTrigger value="quotes">
-              <ClipboardList className="h-4 w-4 mr-1" /> Presupuestos
+              <ClipboardList className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Presupuestos</span><span className="sm:hidden">Presup.</span>
             </TabsTrigger>
             <TabsTrigger value="recurring">
-              <RefreshCw className="h-4 w-4 mr-1" /> Recurrentes
+              <RefreshCw className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Recurrentes</span><span className="sm:hidden">Recur.</span>
             </TabsTrigger>
           </TabsList>
-          <Button onClick={() => setDialogOpen(true)}>
+          <Button onClick={() => setDialogOpen(true)} className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" /> {activeTab === "quotes" ? "Nuevo presupuesto" : "Nuevo"}
           </Button>
         </div>
