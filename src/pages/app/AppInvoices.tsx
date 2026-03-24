@@ -476,15 +476,15 @@ const AppInvoices = () => {
                       <TableCell className="font-mono font-semibold text-sm">
                         {inv.invoice_number || inv.id.slice(0, 8).toUpperCase()}
                       </TableCell>
-                      <TableCell className="whitespace-nowrap">
+                      <TableCell className="whitespace-nowrap hidden md:table-cell">
                         {format(new Date(inv.issue_date), "dd MMM yyyy", { locale: es })}
                       </TableCell>
-                      <TableCell className="whitespace-nowrap text-muted-foreground">
+                      <TableCell className="whitespace-nowrap text-muted-foreground hidden lg:table-cell">
                         {inv.paid_at ? format(new Date(inv.paid_at), "dd MMM yyyy", { locale: es }) : "—"}
                       </TableCell>
                       <TableCell>{inv.business_clients?.name || "—"}</TableCell>
-                      <TableCell className="max-w-[200px] truncate">{inv.concept || "—"}</TableCell>
-                      <TableCell>{typeLabels[inv.type] || inv.type}</TableCell>
+                      <TableCell className="max-w-[200px] truncate hidden sm:table-cell">{inv.concept || "—"}</TableCell>
+                      <TableCell className="hidden md:table-cell">{typeLabels[inv.type] || inv.type}</TableCell>
                       <TableCell className="text-right font-mono font-semibold">
                         €{Number(inv.amount_total).toLocaleString("es-ES", { minimumFractionDigits: 2 })}
                       </TableCell>
