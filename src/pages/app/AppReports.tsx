@@ -699,18 +699,18 @@ const AppReports = () => {
       </div>
 
       <Tabs defaultValue="pl" className="space-y-4">
-        <TabsList className="flex-wrap">
-          <TabsTrigger value="pl" className="gap-2">
+        <TabsList className="w-full sm:w-auto flex-wrap">
+          <TabsTrigger value="pl" className="gap-1.5">
             <TrendingUp className="h-4 w-4" /> PyG
           </TabsTrigger>
-          <TabsTrigger value="invoices" className="gap-2">
-            <FileText className="h-4 w-4" /> Facturación
+          <TabsTrigger value="invoices" className="gap-1.5">
+            <FileText className="h-4 w-4" /> <span className="hidden sm:inline">Facturación</span><span className="sm:hidden">Fact.</span>
           </TabsTrigger>
-          <TabsTrigger value="attendance" className="gap-2">
-            <Clock className="h-4 w-4" /> Asistencia
+          <TabsTrigger value="attendance" className="gap-1.5">
+            <Clock className="h-4 w-4" /> <span className="hidden sm:inline">Asistencia</span><span className="sm:hidden">Asist.</span>
           </TabsTrigger>
-          <TabsTrigger value="inventory" className="gap-2">
-            <Package className="h-4 w-4" /> Inventario
+          <TabsTrigger value="inventory" className="gap-1.5">
+            <Package className="h-4 w-4" /> <span className="hidden sm:inline">Inventario</span><span className="sm:hidden">Inv.</span>
           </TabsTrigger>
         </TabsList>
 
