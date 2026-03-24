@@ -316,10 +316,10 @@ const AppInvoices = () => {
           <TabsList className="w-full sm:w-auto">
             <TabsTrigger value="invoices">Facturas</TabsTrigger>
             <TabsTrigger value="quotes">
-              <ClipboardList className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Presupuestos</span><span className="sm:hidden">Presup.</span>
+              <ClipboardList className="h-4 w-4 mr-1" /> Presupuestos
             </TabsTrigger>
             <TabsTrigger value="recurring">
-              <RefreshCw className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Recurrentes</span><span className="sm:hidden">Recur.</span>
+              <RefreshCw className="h-4 w-4 mr-1" /> Recurrentes
             </TabsTrigger>
           </TabsList>
           <Button onClick={() => setDialogOpen(true)} className="w-full sm:w-auto">
