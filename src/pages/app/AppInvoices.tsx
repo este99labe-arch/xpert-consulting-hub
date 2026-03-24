@@ -507,6 +507,7 @@ const AppInvoices = () => {
                   ))}
                 </TableBody>
               </Table>
+              </div>
               {renderPagination(invoicePagination)}
             </>
           )}
