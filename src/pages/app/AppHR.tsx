@@ -16,18 +16,18 @@ const AppHR = () => {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Recursos Humanos</h1>
       <Tabs defaultValue="employees" className="space-y-4">
-        <TabsList>
+        <TabsList className="w-full sm:w-auto flex-wrap">
           <TabsTrigger value="employees">
-            <Users className="h-4 w-4 mr-2" />Empleados
+            <Users className="h-4 w-4 mr-1 sm:mr-2" /><span className="hidden sm:inline">Empleados</span><span className="sm:hidden">Emp.</span>
           </TabsTrigger>
           <TabsTrigger value="leave">
-            <CalendarDays className="h-4 w-4 mr-2" />Ausencias
+            <CalendarDays className="h-4 w-4 mr-1 sm:mr-2" /><span className="hidden sm:inline">Ausencias</span><span className="sm:hidden">Aus.</span>
           </TabsTrigger>
           <TabsTrigger value="calendar">
-            <CalendarIcon className="h-4 w-4 mr-2" />Calendario
+            <CalendarIcon className="h-4 w-4 mr-1 sm:mr-2" /><span className="hidden sm:inline">Calendario</span><span className="sm:hidden">Cal.</span>
           </TabsTrigger>
           <TabsTrigger value="documents">
-            <FileText className="h-4 w-4 mr-2" />Documentación
+            <FileText className="h-4 w-4 mr-1 sm:mr-2" /><span className="hidden sm:inline">Documentación</span><span className="sm:hidden">Docs</span>
           </TabsTrigger>
         </TabsList>
 

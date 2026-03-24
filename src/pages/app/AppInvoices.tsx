@@ -312,17 +312,17 @@ const AppInvoices = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <div className="flex items-center justify-between">
-          <TabsList>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <TabsList className="w-full sm:w-auto">
             <TabsTrigger value="invoices">Facturas</TabsTrigger>
             <TabsTrigger value="quotes">
-              <ClipboardList className="h-4 w-4 mr-1" /> Presupuestos
+              <ClipboardList className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Presupuestos</span><span className="sm:hidden">Presup.</span>
             </TabsTrigger>
             <TabsTrigger value="recurring">
-              <RefreshCw className="h-4 w-4 mr-1" /> Recurrentes
+              <RefreshCw className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Recurrentes</span><span className="sm:hidden">Recur.</span>
             </TabsTrigger>
           </TabsList>
-          <Button onClick={() => setDialogOpen(true)}>
+          <Button onClick={() => setDialogOpen(true)} className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" /> {activeTab === "quotes" ? "Nuevo presupuesto" : "Nuevo"}
           </Button>
         </div>
@@ -455,15 +455,16 @@ const AppInvoices = () => {
             <div className="p-8 text-center text-muted-foreground">No se encontraron facturas</div>
           ) : (
             <>
+               <div className="overflow-x-auto">
                <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nº</TableHead>
-                    <TableHead>F. Emisión</TableHead>
-                    <TableHead>F. Pago</TableHead>
+                    <TableHead className="hidden md:table-cell">F. Emisión</TableHead>
+                    <TableHead className="hidden lg:table-cell">F. Pago</TableHead>
                     <TableHead>Cliente</TableHead>
-                    <TableHead>Concepto</TableHead>
-                    <TableHead>Tipo</TableHead>
+                    <TableHead className="hidden sm:table-cell">Concepto</TableHead>
+                    <TableHead className="hidden md:table-cell">Tipo</TableHead>
                     <TableHead className="text-right">Total</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
@@ -475,15 +476,15 @@ const AppInvoices = () => {
                       <TableCell className="font-mono font-semibold text-sm">
                         {inv.invoice_number || inv.id.slice(0, 8).toUpperCase()}
                       </TableCell>
-                      <TableCell className="whitespace-nowrap">
+                      <TableCell className="whitespace-nowrap hidden md:table-cell">
                         {format(new Date(inv.issue_date), "dd MMM yyyy", { locale: es })}
                       </TableCell>
-                      <TableCell className="whitespace-nowrap text-muted-foreground">
+                      <TableCell className="whitespace-nowrap text-muted-foreground hidden lg:table-cell">
                         {inv.paid_at ? format(new Date(inv.paid_at), "dd MMM yyyy", { locale: es }) : "—"}
                       </TableCell>
                       <TableCell>{inv.business_clients?.name || "—"}</TableCell>
-                      <TableCell className="max-w-[200px] truncate">{inv.concept || "—"}</TableCell>
-                      <TableCell>{typeLabels[inv.type] || inv.type}</TableCell>
+                      <TableCell className="max-w-[200px] truncate hidden sm:table-cell">{inv.concept || "—"}</TableCell>
+                      <TableCell className="hidden md:table-cell">{typeLabels[inv.type] || inv.type}</TableCell>
                       <TableCell className="text-right font-mono font-semibold">
                         €{Number(inv.amount_total).toLocaleString("es-ES", { minimumFractionDigits: 2 })}
                       </TableCell>
@@ -506,6 +507,7 @@ const AppInvoices = () => {
                   ))}
                 </TableBody>
               </Table>
+              </div>
               {renderPagination(invoicePagination)}
             </>
           )}
@@ -572,13 +574,14 @@ const AppInvoices = () => {
                 <div className="p-8 text-center text-muted-foreground">No se encontraron presupuestos</div>
               ) : (
                 <>
+                  <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>Nº</TableHead>
-                        <TableHead>Fecha</TableHead>
+                        <TableHead className="hidden sm:table-cell">Fecha</TableHead>
                         <TableHead>Cliente</TableHead>
-                        <TableHead>Concepto</TableHead>
+                        <TableHead className="hidden md:table-cell">Concepto</TableHead>
                         <TableHead className="text-right">Total</TableHead>
                         <TableHead>Estado</TableHead>
                         <TableHead className="text-right">Acciones</TableHead>
@@ -590,11 +593,11 @@ const AppInvoices = () => {
                           <TableCell className="font-mono font-semibold text-sm">
                             {q.invoice_number || q.id.slice(0, 8).toUpperCase()}
                           </TableCell>
-                          <TableCell className="whitespace-nowrap">
+                          <TableCell className="whitespace-nowrap hidden sm:table-cell">
                             {format(new Date(q.issue_date), "dd MMM yyyy", { locale: es })}
                           </TableCell>
                           <TableCell>{q.business_clients?.name || "—"}</TableCell>
-                          <TableCell className="max-w-[200px] truncate">{q.concept || "—"}</TableCell>
+                          <TableCell className="max-w-[200px] truncate hidden md:table-cell">{q.concept || "—"}</TableCell>
                           <TableCell className="text-right font-mono font-semibold">
                             €{Number(q.amount_total).toLocaleString("es-ES", { minimumFractionDigits: 2 })}
                           </TableCell>
@@ -617,6 +620,7 @@ const AppInvoices = () => {
                       ))}
                     </TableBody>
                   </Table>
+                  </div>
                   {renderPagination(quotePagination)}
                 </>
               )}

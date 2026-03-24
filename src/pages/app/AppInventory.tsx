@@ -144,24 +144,24 @@ const AppInventory = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">Inventario</h1>
         {isMaster && <MasterAccountClearButton onClear={() => setSelectedAccountId("")} />}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><Package className="h-8 w-8 text-primary" /><div><p className="text-2xl font-bold">{products.length}</p><p className="text-xs text-muted-foreground">Productos totales</p></div></div></CardContent></Card>
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><Package className="h-8 w-8 text-primary" /><div><p className="text-2xl font-bold">{products.length}</p><p className="text-xs text-muted-foreground">Productos</p></div></div></CardContent></Card>
         <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><AlertTriangle className="h-8 w-8 text-destructive" /><div><p className="text-2xl font-bold">{lowStockProducts.length}</p><p className="text-xs text-muted-foreground">Stock bajo</p></div></div></CardContent></Card>
-        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><TrendingUp className="h-8 w-8 text-success" /><div><p className="text-2xl font-bold">{inventoryValue.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}</p><p className="text-xs text-muted-foreground">Valor del inventario</p></div></div></CardContent></Card>
-        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><TrendingDown className="h-8 w-8 text-muted-foreground" /><div><p className="text-2xl font-bold">{thisMonthMovements.length}</p><p className="text-xs text-muted-foreground">Movimientos este mes</p></div></div></CardContent></Card>
+        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><TrendingUp className="h-8 w-8 text-success" /><div><p className="text-lg sm:text-2xl font-bold">{inventoryValue.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}</p><p className="text-xs text-muted-foreground">Valor inventario</p></div></div></CardContent></Card>
+        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><TrendingDown className="h-8 w-8 text-muted-foreground" /><div><p className="text-2xl font-bold">{thisMonthMovements.length}</p><p className="text-xs text-muted-foreground">Movimientos</p></div></div></CardContent></Card>
       </div>
 
       <Tabs defaultValue="products">
-        <TabsList>
+        <TabsList className="w-full sm:w-auto flex-wrap">
           <TabsTrigger value="products">Productos</TabsTrigger>
-          <TabsTrigger value="movements">Movimientos</TabsTrigger>
+          <TabsTrigger value="movements"><span className="hidden sm:inline">Movimientos</span><span className="sm:hidden">Mov.</span></TabsTrigger>
           <TabsTrigger value="alerts">Alertas {lowStockProducts.length > 0 && <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-[10px]">{lowStockProducts.length}</Badge>}</TabsTrigger>
-          <TabsTrigger value="orders">Órdenes de Compra</TabsTrigger>
+          <TabsTrigger value="orders"><span className="hidden sm:inline">Órdenes de Compra</span><span className="sm:hidden">Órdenes</span></TabsTrigger>
         </TabsList>
 
         <TabsContent value="products">

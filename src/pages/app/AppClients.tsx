@@ -98,11 +98,12 @@ const AppClients = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">Clientes</h1>
         <Button onClick={() => setShowCreate(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Nuevo Cliente
+          <span className="hidden sm:inline">Nuevo Cliente</span>
+          <span className="sm:hidden">Nuevo</span>
         </Button>
       </div>
 
@@ -139,14 +140,15 @@ const AppClients = () => {
       ) : (
         <Card>
           <CardContent className="p-0">
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Nombre</TableHead>
-                  <TableHead>NIF/CIF</TableHead>
-                  <TableHead>Email</TableHead>
+                  <TableHead className="hidden sm:table-cell">NIF/CIF</TableHead>
+                  <TableHead className="hidden md:table-cell">Email</TableHead>
                   <TableHead>Estado</TableHead>
-                  <TableHead>Creado</TableHead>
+                  <TableHead className="hidden lg:table-cell">Creado</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -158,14 +160,14 @@ const AppClients = () => {
                     onClick={() => navigate(`/app/clients/${client.id}`)}
                   >
                     <TableCell className="font-medium">{client.name}</TableCell>
-                    <TableCell>{client.tax_id}</TableCell>
-                    <TableCell className="text-muted-foreground">{client.email || "—"}</TableCell>
+                    <TableCell className="hidden sm:table-cell">{client.tax_id}</TableCell>
+                    <TableCell className="text-muted-foreground hidden md:table-cell">{client.email || "—"}</TableCell>
                     <TableCell>
                       <Badge variant={client.status === "ACTIVE" ? "default" : "secondary"}>
                         {client.status === "ACTIVE" ? "Activo" : "Inactivo"}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="text-muted-foreground hidden lg:table-cell">
                       {new Date(client.created_at).toLocaleDateString("es-ES")}
                     </TableCell>
                     <TableCell className="text-right space-x-1">
@@ -187,7 +189,8 @@ const AppClients = () => {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+              </Table>
+            </div>
             <div className="px-4 pb-4">
               <PaginationControls
                 currentPage={pagination.currentPage}
