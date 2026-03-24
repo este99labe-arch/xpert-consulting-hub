@@ -918,23 +918,22 @@ const AppSettings = () => {
       <h1 className="text-2xl font-bold">Configuración</h1>
 
       <Tabs defaultValue="company" className="space-y-4">
-        <div className="overflow-x-auto -mx-1 px-1">
-        <TabsList className="w-full sm:w-auto flex-wrap">
-          <TabsTrigger value="company" className="gap-1.5">
-            <Settings className="h-4 w-4" /> <span className="hidden sm:inline">Empresa</span>
+        <TabsList className="w-full sm:w-auto">
+          <TabsTrigger value="company" className="gap-1">
+            <Settings className="h-4 w-4" /> <span className="hidden md:inline">Empresa</span>
           </TabsTrigger>
-          <TabsTrigger value="profile" className="gap-1.5">
-            <User className="h-4 w-4" /> <span className="hidden sm:inline">Mi Perfil</span>
+          <TabsTrigger value="profile" className="gap-1">
+            <User className="h-4 w-4" /> <span className="hidden md:inline">Perfil</span>
           </TabsTrigger>
-          <TabsTrigger value="schedule" className="gap-1.5">
-            <Clock className="h-4 w-4" /> <span className="hidden sm:inline">Horario</span>
+          <TabsTrigger value="schedule" className="gap-1">
+            <Clock className="h-4 w-4" /> <span className="hidden md:inline">Horario</span>
           </TabsTrigger>
-          <TabsTrigger value="security" className="gap-1.5">
-            <Lock className="h-4 w-4" /> <span className="hidden sm:inline">Seguridad</span>
+          <TabsTrigger value="security" className="gap-1">
+            <Lock className="h-4 w-4" /> <span className="hidden md:inline">Seguridad</span>
           </TabsTrigger>
           {isManager && (
-            <TabsTrigger value="users" className="gap-1.5">
-              <Users className="h-4 w-4" /> <span className="hidden sm:inline">Usuarios</span>
+            <TabsTrigger value="users" className="gap-1">
+              <Users className="h-4 w-4" /> <span className="hidden md:inline">Usuarios</span>
               {pendingCount > 0 && (
                 <Badge variant="destructive" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs rounded-full">
                   {pendingCount}
@@ -943,27 +942,26 @@ const AppSettings = () => {
             </TabsTrigger>
           )}
           {isManager && (
-            <TabsTrigger value="activity" className="gap-1.5">
+            <TabsTrigger value="activity" className="gap-1">
               <Activity className="h-4 w-4" /> <span className="hidden lg:inline">Actividad</span>
             </TabsTrigger>
           )}
           {isManager && (
-            <TabsTrigger value="api" className="gap-1.5">
+            <TabsTrigger value="api" className="gap-1">
               <Key className="h-4 w-4" /> <span className="hidden lg:inline">API</span>
             </TabsTrigger>
           )}
           {isManager && (
-            <TabsTrigger value="webhooks" className="gap-1.5">
+            <TabsTrigger value="webhooks" className="gap-1">
               <Webhook className="h-4 w-4" /> <span className="hidden lg:inline">Webhooks</span>
             </TabsTrigger>
           )}
           {isManager && (
-            <TabsTrigger value="whatsapp" className="gap-1.5">
+            <TabsTrigger value="whatsapp" className="gap-1">
               <MessageSquare className="h-4 w-4" /> <span className="hidden lg:inline">WhatsApp</span>
             </TabsTrigger>
           )}
         </TabsList>
-        </div>
 
         <TabsContent value="company">
           <CompanyTab accountId={accountId} isManager={isManager} />

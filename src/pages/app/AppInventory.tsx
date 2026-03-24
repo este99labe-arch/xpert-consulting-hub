@@ -157,11 +157,11 @@ const AppInventory = () => {
       </div>
 
       <Tabs defaultValue="products">
-        <TabsList className="w-full sm:w-auto flex-wrap">
+        <TabsList className="w-full sm:w-auto">
           <TabsTrigger value="products">Productos</TabsTrigger>
-          <TabsTrigger value="movements"><span className="hidden sm:inline">Movimientos</span><span className="sm:hidden">Mov.</span></TabsTrigger>
+          <TabsTrigger value="movements">Movimientos</TabsTrigger>
           <TabsTrigger value="alerts">Alertas {lowStockProducts.length > 0 && <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-[10px]">{lowStockProducts.length}</Badge>}</TabsTrigger>
-          <TabsTrigger value="orders"><span className="hidden sm:inline">Órdenes de Compra</span><span className="sm:hidden">Órdenes</span></TabsTrigger>
+          <TabsTrigger value="orders">Órdenes</TabsTrigger>
         </TabsList>
 
         <TabsContent value="products">
