@@ -66,10 +66,10 @@ const MasterAccountSelector = ({
       <div className="space-y-4">
         <h1 className="text-2xl font-bold">{title}</h1>
         <Card>
-          <CardHeader><CardTitle className="text-base">Selecciona un cliente</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">Selecciona una cuenta</CardTitle></CardHeader>
           <CardContent>
             <Select onValueChange={onSelect}>
-              <SelectTrigger><SelectValue placeholder="Seleccionar cliente..." /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Seleccionar cuenta..." /></SelectTrigger>
               <SelectContent>
                 {clientAccounts.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
               </SelectContent>
