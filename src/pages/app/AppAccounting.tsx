@@ -338,9 +338,7 @@ const AppAccounting = () => {
   });
 
   // ---- Render ----
-  if (isMaster && !selectedAccountId) {
-    return <MasterAccountSelector title="Contabilidad" onSelect={setSelectedAccountId} />;
-  }
+  // Master admin no longer blocked — defaults to own account
 
   if (!activeAccountId) return <p className="text-muted-foreground">Sin cuenta asignada.</p>;
 
