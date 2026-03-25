@@ -29,7 +29,7 @@ const AppAccounting = () => {
   const isMaster = role === "MASTER_ADMIN";
 
   const [selectedAccountId, setSelectedAccountId] = useState("");
-  const activeAccountId = isMaster ? selectedAccountId : accountId;
+  const activeAccountId = isMaster ? (selectedAccountId || accountId) : accountId;
 
   // ---- Data Queries ----
   const { data: chartAccounts = [] } = useQuery({
