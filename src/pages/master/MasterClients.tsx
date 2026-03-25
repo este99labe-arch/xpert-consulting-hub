@@ -66,7 +66,7 @@ const MasterClients = () => {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast.success(data?.message || "Cliente eliminado correctamente");
+      toast.success(data?.message || "Cuenta eliminada correctamente");
       queryClient.invalidateQueries({ queryKey: ["master-clients"] });
       setDeleteTarget(null);
     } catch (err: any) {
