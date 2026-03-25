@@ -338,9 +338,7 @@ const AppAccounting = () => {
   });
 
   // ---- Render ----
-  if (isMaster && !selectedAccountId) {
-    return <MasterAccountSelector title="Contabilidad" onSelect={setSelectedAccountId} />;
-  }
+  // Master admin no longer blocked — defaults to own account
 
   if (!activeAccountId) return <p className="text-muted-foreground">Sin cuenta asignada.</p>;
 
@@ -370,8 +368,11 @@ const AppAccounting = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">Contabilidad</h1>
-        {isMaster && <MasterAccountClearButton onClear={() => setSelectedAccountId("")} />}
+        {isMaster && selectedAccountId && <MasterAccountClearButton onClear={() => setSelectedAccountId("")} />}
       </div>
+      {isMaster && !selectedAccountId && (
+        <MasterAccountSelector title="Contabilidad" onSelect={setSelectedAccountId} variant="inline" />
+      )}
 
       <Tabs defaultValue="dashboard">
         <TabsList className="w-full sm:w-auto">
