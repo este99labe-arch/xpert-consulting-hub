@@ -105,8 +105,8 @@ const MasterClients = () => {
       {clients.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-            <p className="text-lg">No hay clientes registrados</p>
-            <p className="text-sm">Crea tu primer cliente para comenzar</p>
+            <p className="text-lg">No hay cuentas registradas</p>
+            <p className="text-sm">Crea tu primera cuenta para comenzar</p>
           </CardContent>
         </Card>
       ) : (
