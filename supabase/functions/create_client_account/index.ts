@@ -53,7 +53,7 @@ serve(async (req) => {
       });
     }
 
-    const { company_name, manager_email, manager_password, module_ids } = await req.json();
+    const { company_name, manager_email, manager_password, module_ids, client_info, primary_contact } = await req.json();
 
     if (!company_name || !manager_email || !manager_password || !module_ids?.length) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
@@ -62,10 +62,25 @@ serve(async (req) => {
       });
     }
 
-    // 1. Create account
+    // 1. Create account with extended info
+    const accountInsert: Record<string, any> = {
+      name: company_name,
+      type: "CLIENT",
+      created_by: user.id,
+    };
+    // Copy relevant fields from client_info to the account
+    if (client_info) {
+      if (client_info.tax_id) accountInsert.tax_id = client_info.tax_id;
+      if (client_info.email) accountInsert.email = client_info.email;
+      if (client_info.phone) accountInsert.phone = client_info.phone;
+      if (client_info.address) accountInsert.address = client_info.address;
+      if (client_info.city) accountInsert.city = client_info.city;
+      if (client_info.postal_code) accountInsert.postal_code = client_info.postal_code;
+    }
+
     const { data: account, error: accountError } = await adminClient
       .from("accounts")
-      .insert({ name: company_name, type: "CLIENT", created_by: user.id })
+      .insert(accountInsert)
       .select("id")
       .single();
 
@@ -106,6 +121,66 @@ serve(async (req) => {
       role_id: managerRole.id,
     });
     if (linkError) throw linkError;
+
+    // 6. Update the synced business_client record in the MASTER account with extended info
+    if (client_info) {
+      // The sync trigger creates a business_client in the MASTER account with name = company_name
+      // Find and update it with the extra fields
+      const { data: masterAccount } = await adminClient
+        .from("accounts")
+        .select("id")
+        .eq("type", "MASTER")
+        .limit(1)
+        .single();
+
+      if (masterAccount) {
+        const { data: syncedClient } = await adminClient
+          .from("business_clients")
+          .select("id")
+          .eq("account_id", masterAccount.id)
+          .eq("name", company_name)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single();
+
+        if (syncedClient) {
+          // Update with extended info
+          await adminClient
+            .from("business_clients")
+            .update({
+              tax_id: client_info.tax_id || "PENDIENTE",
+              email: client_info.email || null,
+              phone: client_info.phone || null,
+              website: client_info.website || null,
+              address: client_info.address || null,
+              city: client_info.city || null,
+              postal_code: client_info.postal_code || null,
+              country: client_info.country || null,
+              billing_address: client_info.billing_address || null,
+              billing_city: client_info.billing_city || null,
+              billing_postal_code: client_info.billing_postal_code || null,
+              billing_country: client_info.billing_country || null,
+              notes: client_info.notes || null,
+            })
+            .eq("id", syncedClient.id);
+
+          // Add primary contact to the synced business client
+          if (primary_contact?.name) {
+            await adminClient
+              .from("client_contacts")
+              .insert({
+                client_id: syncedClient.id,
+                account_id: masterAccount.id,
+                name: primary_contact.name,
+                email: primary_contact.email || null,
+                phone: primary_contact.phone || null,
+                position: primary_contact.position || null,
+                is_primary: true,
+              });
+          }
+        }
+      }
+    }
 
     return new Response(
       JSON.stringify({ success: true, account_id: account.id, user_id: newUser.user.id }),

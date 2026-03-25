@@ -23,6 +23,7 @@ import EmptyState from "@/components/shared/EmptyState";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { usePagination } from "@/hooks/use-pagination";
+import CreateBusinessClientDialog from "@/components/clients/CreateBusinessClientDialog";
 
 const AppClients = () => {
   const { accountId } = useAuth();
@@ -208,7 +209,7 @@ const AppClients = () => {
         </Card>
       )}
 
-      <CreateClientDialog
+      <CreateBusinessClientDialog
         open={showCreate}
         onOpenChange={setShowCreate}
         accountId={accountId!}
@@ -227,72 +228,6 @@ const AppClients = () => {
         loading={deleteMutation.isPending}
       />
     </div>
-  );
-};
-
-/* ---------- Create Dialog (simplified) ---------- */
-
-const CreateClientDialog = ({
-  open, onOpenChange, accountId, onSuccess,
-}: { open: boolean; onOpenChange: (v: boolean) => void; accountId: string; onSuccess: () => void }) => {
-  const [name, setName] = useState("");
-  const [taxId, setTaxId] = useState("");
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    try {
-      const { error: insertError } = await supabase
-        .from("business_clients")
-        .insert({ name, tax_id: taxId, email: email || null, status: "ACTIVE", account_id: accountId });
-      if (insertError) throw insertError;
-      toast({ title: "Cliente creado" });
-      setName(""); setTaxId(""); setEmail("");
-      onSuccess();
-    } catch (err: any) {
-      setError(err.message || "Error al guardar");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Nuevo Cliente</DialogTitle>
-          <DialogDescription>Introduce los datos básicos. Podrás completar el resto desde la ficha del cliente.</DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="flex items-center gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              {error}
-            </div>
-          )}
-          <div className="space-y-2">
-            <Label>Nombre / Razón Social</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} required />
-          </div>
-          <div className="space-y-2">
-            <Label>NIF / CIF</Label>
-            <Input value={taxId} onChange={(e) => setTaxId(e.target.value)} required />
-          </div>
-          <div className="space-y-2">
-            <Label>Email</Label>
-            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-          </div>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-            Crear Cliente
-          </Button>
-        </form>
-      </DialogContent>
-    </Dialog>
   );
 };
 
