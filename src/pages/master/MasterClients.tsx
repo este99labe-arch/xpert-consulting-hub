@@ -201,7 +201,7 @@ const MasterClients = () => {
       <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && !deleting && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Eliminar cliente: {deleteTarget?.name}</AlertDialogTitle>
+            <AlertDialogTitle>Eliminar cuenta: {deleteTarget?.name}</AlertDialogTitle>
             <AlertDialogDescription className="space-y-4">
               <p>¿Qué deseas eliminar? Esta acción no se puede deshacer.</p>
               <RadioGroup
