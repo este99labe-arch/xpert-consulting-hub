@@ -46,7 +46,7 @@ const MasterAccountSelector = ({
               onValueChange={(v) => onSelect(v)}
             >
               <SelectTrigger className="w-72">
-                <SelectValue placeholder="Selecciona un cliente" />
+                <SelectValue placeholder="Selecciona una cuenta" />
               </SelectTrigger>
               <SelectContent>
                 {clientAccounts.map((acc) => (
