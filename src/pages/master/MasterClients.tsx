@@ -66,7 +66,7 @@ const MasterClients = () => {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast.success(data?.message || "Cliente eliminado correctamente");
+      toast.success(data?.message || "Cuenta eliminada correctamente");
       queryClient.invalidateQueries({ queryKey: ["master-clients"] });
       setDeleteTarget(null);
     } catch (err: any) {
@@ -95,18 +95,18 @@ const MasterClients = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Gestión de Clientes</h1>
+        <h1 className="text-2xl font-bold">Gestión de Cuentas</h1>
         <Button onClick={() => setShowCreate(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Nuevo Cliente
+          Nueva Cuenta
         </Button>
       </div>
 
       {clients.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-            <p className="text-lg">No hay clientes registrados</p>
-            <p className="text-sm">Crea tu primer cliente para comenzar</p>
+            <p className="text-lg">No hay cuentas registradas</p>
+            <p className="text-sm">Crea tu primera cuenta para comenzar</p>
           </CardContent>
         </Card>
       ) : (
@@ -115,7 +115,7 @@ const MasterClients = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Empresa</TableHead>
+                  <TableHead>Cuenta</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead>Creado</TableHead>
                   <TableHead>Activo</TableHead>
@@ -176,8 +176,8 @@ const MasterClients = () => {
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Crear Nuevo Cliente</DialogTitle>
-            <DialogDescription>Introduce los datos de la nueva cuenta cliente</DialogDescription>
+            <DialogTitle>Crear Nueva Cuenta</DialogTitle>
+            <DialogDescription>Introduce los datos de la nueva cuenta</DialogDescription>
           </DialogHeader>
           <CreateClientForm onSuccess={() => {
             setShowCreate(false);
@@ -201,7 +201,7 @@ const MasterClients = () => {
       <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && !deleting && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Eliminar cliente: {deleteTarget?.name}</AlertDialogTitle>
+            <AlertDialogTitle>Eliminar cuenta: {deleteTarget?.name}</AlertDialogTitle>
             <AlertDialogDescription className="space-y-4">
               <p>¿Qué deseas eliminar? Esta acción no se puede deshacer.</p>
               <RadioGroup

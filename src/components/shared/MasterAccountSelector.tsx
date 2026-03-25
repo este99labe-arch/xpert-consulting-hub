@@ -46,7 +46,7 @@ const MasterAccountSelector = ({
               onValueChange={(v) => onSelect(v)}
             >
               <SelectTrigger className="w-72">
-                <SelectValue placeholder="Selecciona un cliente" />
+                <SelectValue placeholder="Selecciona una cuenta" />
               </SelectTrigger>
               <SelectContent>
                 {clientAccounts.map((acc) => (
@@ -66,10 +66,10 @@ const MasterAccountSelector = ({
       <div className="space-y-4">
         <h1 className="text-2xl font-bold">{title}</h1>
         <Card>
-          <CardHeader><CardTitle className="text-base">Selecciona un cliente</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">Selecciona una cuenta</CardTitle></CardHeader>
           <CardContent>
             <Select onValueChange={onSelect}>
-              <SelectTrigger><SelectValue placeholder="Seleccionar cliente..." /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Seleccionar cuenta..." /></SelectTrigger>
               <SelectContent>
                 {clientAccounts.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
               </SelectContent>
@@ -85,7 +85,7 @@ const MasterAccountSelector = ({
 };
 
 export const MasterAccountClearButton = ({ onClear }: { onClear: () => void }) => (
-  <Button variant="outline" size="sm" onClick={onClear}>Cambiar cliente</Button>
+  <Button variant="outline" size="sm" onClick={onClear}>Cambiar cuenta</Button>
 );
 
 export default MasterAccountSelector;

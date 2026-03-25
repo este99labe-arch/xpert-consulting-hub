@@ -20,7 +20,7 @@ import HealthCheck from "@/components/shared/HealthCheck";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/master/dashboard" },
-  { label: "Clientes", icon: Users, path: "/master/clients" },
+  { label: "Cuentas", icon: Users, path: "/master/clients" },
   { label: "Configuración", icon: Settings, path: "/master/settings" },
 ];
 

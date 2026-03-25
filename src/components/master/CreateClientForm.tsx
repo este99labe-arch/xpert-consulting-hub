@@ -117,7 +117,7 @@ const CreateClientForm: React.FC<Props> = ({ onSuccess }) => {
       });
       if (fnError) throw fnError;
       if (data?.error) throw new Error(data.error);
-      toast({ title: "Cliente creado", description: `${form.company_name} ha sido creado correctamente` });
+      toast({ title: "Cuenta creada", description: `${form.company_name} ha sido creada correctamente` });
       onSuccess();
     } catch (err: any) {
       setError(err.message || "Error al crear cliente");

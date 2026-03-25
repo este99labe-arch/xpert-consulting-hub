@@ -27,7 +27,7 @@ const MasterDashboard = () => {
   }
 
   const cards = [
-    { label: "Total Clientes", value: stats?.total ?? 0, icon: Building2, color: "text-primary" },
+    { label: "Total Cuentas", value: stats?.total ?? 0, icon: Building2, color: "text-primary" },
     { label: "Activos", value: stats?.active ?? 0, icon: CheckCircle, color: "text-green-600" },
     { label: "Inactivos", value: stats?.inactive ?? 0, icon: XCircle, color: "text-muted-foreground" },
   ];
