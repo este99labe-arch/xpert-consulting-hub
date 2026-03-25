@@ -128,7 +128,7 @@ const MasterClients = () => {
       )}
 
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Crear Nuevo Cliente</DialogTitle>
             <DialogDescription>Introduce los datos de la nueva cuenta cliente</DialogDescription>
