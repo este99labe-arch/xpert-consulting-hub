@@ -115,7 +115,7 @@ const MasterClients = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Empresa</TableHead>
+                  <TableHead>Cuenta</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead>Creado</TableHead>
                   <TableHead>Activo</TableHead>
