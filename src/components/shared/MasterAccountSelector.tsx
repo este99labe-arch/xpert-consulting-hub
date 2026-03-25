@@ -85,7 +85,7 @@ const MasterAccountSelector = ({
 };
 
 export const MasterAccountClearButton = ({ onClear }: { onClear: () => void }) => (
-  <Button variant="outline" size="sm" onClick={onClear}>Cambiar cliente</Button>
+  <Button variant="outline" size="sm" onClick={onClear}>Cambiar cuenta</Button>
 );
 
 export default MasterAccountSelector;
