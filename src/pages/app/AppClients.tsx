@@ -23,6 +23,7 @@ import EmptyState from "@/components/shared/EmptyState";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { usePagination } from "@/hooks/use-pagination";
+import CreateBusinessClientDialog from "@/components/clients/CreateBusinessClientDialog";
 
 const AppClients = () => {
   const { accountId } = useAuth();
