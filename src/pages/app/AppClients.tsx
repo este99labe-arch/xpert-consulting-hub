@@ -209,7 +209,7 @@ const AppClients = () => {
         </Card>
       )}
 
-      <CreateClientDialog
+      <CreateBusinessClientDialog
         open={showCreate}
         onOpenChange={setShowCreate}
         accountId={accountId!}
