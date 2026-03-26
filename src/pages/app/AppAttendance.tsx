@@ -27,6 +27,16 @@ function timeToMinutes(t: string) {
   return h * 60 + m;
 }
 
+/** Sum worked minutes from an array of records for a given day */
+export function sumDayWorkedMins(records: any[], now?: Date) {
+  return records.reduce((acc: number, r: any) => {
+    if (!r.check_in) return acc;
+    const ci = new Date(r.check_in);
+    const co = r.check_out ? new Date(r.check_out) : (now || new Date());
+    return acc + Math.max(0, differenceInMinutes(co, ci));
+  }, 0);
+}
+
 const AppAttendance = () => {
   const { user, accountId, role } = useAuth();
   const queryClient = useQueryClient();
@@ -72,7 +82,8 @@ const AppAttendance = () => {
         .eq("account_id", effectiveAccountId!)
         .gte("work_date", format(monthStart, "yyyy-MM-dd"))
         .lte("work_date", format(monthEnd, "yyyy-MM-dd"))
-        .order("work_date");
+        .order("work_date")
+        .order("created_at");
       if (error) throw error;
       return data || [];
     },
@@ -88,7 +99,8 @@ const AppAttendance = () => {
         .eq("account_id", effectiveAccountId!)
         .gte("work_date", format(monthStart, "yyyy-MM-dd"))
         .lte("work_date", format(monthEnd, "yyyy-MM-dd"))
-        .order("work_date");
+        .order("work_date")
+        .order("created_at");
       if (error) throw error;
       return data || [];
     },
@@ -123,6 +135,7 @@ const AppAttendance = () => {
   }).length;
   const expectedMonthMins = expectedWorkDaysInMonth * dailyExpectedMins;
 
+  // Sum all completed records
   const workedMonthMins = myMonthRecords.reduce((acc, r) => {
     if (r.check_in && r.check_out) {
       return acc + differenceInMinutes(new Date(r.check_out), new Date(r.check_in));
@@ -143,10 +156,14 @@ const AppAttendance = () => {
       }
       const dayCode = DAY_CODES[day.getDay()];
       if (workDays.includes(dayCode)) weeksMap[key].expected += dailyExpectedMins / 60;
-      const rec = myMonthRecords.find(r => r.work_date === format(day, "yyyy-MM-dd"));
-      if (rec?.check_in && rec?.check_out) {
-        weeksMap[key].worked += differenceInMinutes(new Date(rec.check_out), new Date(rec.check_in)) / 60;
-      }
+      // Sum ALL records for this day
+      const dayStr = format(day, "yyyy-MM-dd");
+      const dayRecords = myMonthRecords.filter(r => r.work_date === dayStr);
+      dayRecords.forEach(rec => {
+        if (rec.check_in && rec.check_out) {
+          weeksMap[key].worked += differenceInMinutes(new Date(rec.check_out), new Date(rec.check_in)) / 60;
+        }
+      });
     });
     return Object.entries(weeksMap).map(([key, val]) => ({
       name: key, label: val.label,
@@ -156,32 +173,34 @@ const AppAttendance = () => {
   }, [monthDays, myMonthRecords, workDays, dailyExpectedMins]);
 
   const todayStr = format(new Date(), "yyyy-MM-dd");
-  const todayRecord = myMonthRecords.find(r => r.work_date === todayStr);
-  const hasCheckedIn = !!todayRecord?.check_in;
-  const hasCheckedOut = !!todayRecord?.check_out;
+  // Multiple records for today
+  const todayRecords = myMonthRecords.filter(r => r.work_date === todayStr);
+  // Active record = one with check_in but no check_out
+  const activeRecord = todayRecords.find(r => r.check_in && !r.check_out);
+  const hasActiveSession = !!activeRecord;
+  // Can check in if there's no active (open) session
+  const canCheckIn = !hasActiveSession;
 
   const checkInMutation = useMutation({
     mutationFn: async () => {
+      // Always create a new record for a new session
       const now = new Date().toISOString();
-      if (todayRecord) {
-        const { error } = await supabase.from("attendance_records").update({ check_in: now }).eq("id", todayRecord.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("attendance_records").insert({ user_id: user!.id, account_id: accountId!, work_date: todayStr, check_in: now });
-        if (error) throw error;
-      }
+      const { error } = await supabase.from("attendance_records").insert({
+        user_id: user!.id, account_id: accountId!, work_date: todayStr, check_in: now,
+      });
+      if (error) throw error;
     },
-    onSuccess: () => { toast({ title: "Entrada registrada" }); queryClient.invalidateQueries({ queryKey: ["my-attendance-month"] }); },
+    onSuccess: () => { toast({ title: "Entrada registrada" }); queryClient.invalidateQueries({ queryKey: ["my-attendance-month"] }); queryClient.invalidateQueries({ queryKey: ["dash-today-attendance"] }); },
     onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
   });
 
   const checkOutMutation = useMutation({
     mutationFn: async () => {
-      if (!todayRecord) throw new Error("No hay entrada registrada");
-      const { error } = await supabase.from("attendance_records").update({ check_out: new Date().toISOString() }).eq("id", todayRecord.id);
+      if (!activeRecord) throw new Error("No hay entrada activa");
+      const { error } = await supabase.from("attendance_records").update({ check_out: new Date().toISOString() }).eq("id", activeRecord.id);
       if (error) throw error;
     },
-    onSuccess: () => { toast({ title: "Salida registrada" }); queryClient.invalidateQueries({ queryKey: ["my-attendance-month"] }); },
+    onSuccess: () => { toast({ title: "Salida registrada" }); queryClient.invalidateQueries({ queryKey: ["my-attendance-month"] }); queryClient.invalidateQueries({ queryKey: ["dash-today-attendance"] }); },
     onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
   });
 
@@ -189,30 +208,27 @@ const AppAttendance = () => {
     mutationFn: async ({ date, checkIn, checkOut }: { date: string; checkIn: string; checkOut: string }) => {
       const ciISO = `${date}T${checkIn}:00`;
       const coISO = `${date}T${checkOut}:00`;
-      const existing = myMonthRecords.find(r => r.work_date === date);
-      if (existing) {
-        const { error } = await supabase.from("attendance_records").update({ check_in: ciISO, check_out: coISO }).eq("id", existing.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("attendance_records").insert({ user_id: user!.id, account_id: accountId!, work_date: date, check_in: ciISO, check_out: coISO });
-        if (error) throw error;
-      }
+      // Always add a new record for manual entry
+      const { error } = await supabase.from("attendance_records").insert({
+        user_id: user!.id, account_id: accountId!, work_date: date, check_in: ciISO, check_out: coISO,
+      });
+      if (error) throw error;
     },
     onSuccess: () => { toast({ title: "Fichaje guardado" }); queryClient.invalidateQueries({ queryKey: ["my-attendance-month"] }); },
     onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
   });
 
   const teamSummary = useMemo(() => {
-    const map: Record<string, { worked: number; days: number }> = {};
+    const map: Record<string, { worked: number; days: Set<string> }> = {};
     teamRecords.forEach(r => {
-      if (!map[r.user_id]) map[r.user_id] = { worked: 0, days: 0 };
+      if (!map[r.user_id]) map[r.user_id] = { worked: 0, days: new Set() };
       if (r.check_in && r.check_out) {
         map[r.user_id].worked += differenceInMinutes(new Date(r.check_out), new Date(r.check_in));
-        map[r.user_id].days += 1;
+        map[r.user_id].days.add(r.work_date);
       }
     });
     return Object.entries(map).map(([userId, data]) => ({
-      userId, email: teamEmailMap[userId] || userId.slice(0, 8), ...data,
+      userId, email: teamEmailMap[userId] || userId.slice(0, 8), worked: data.worked, days: data.days.size,
     }));
   }, [teamRecords, teamEmailMap]);
 
@@ -296,9 +312,10 @@ const AppAttendance = () => {
           expectedMonthMins={expectedMonthMins}
           balanceMins={balanceMins}
           weeklyChartData={weeklyChartData}
-          todayRecord={todayRecord}
-          hasCheckedIn={hasCheckedIn}
-          hasCheckedOut={hasCheckedOut}
+          todayRecords={todayRecords}
+          activeRecord={activeRecord}
+          hasActiveSession={hasActiveSession}
+          canCheckIn={canCheckIn}
           checkInMutation={checkInMutation}
           checkOutMutation={checkOutMutation}
           manualMutation={manualMutation}

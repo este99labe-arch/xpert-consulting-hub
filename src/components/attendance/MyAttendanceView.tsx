@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, Fragment } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  LogIn, LogOut, Loader2, ChevronLeft, ChevronRight, Timer, TrendingUp, TrendingDown, Minus, Play, Square, CheckCircle2, Pencil, X, Save,
+  LogIn, LogOut, Loader2, ChevronLeft, ChevronRight, Timer, TrendingUp, TrendingDown, Minus, Play, Square, CheckCircle2, Pencil, X, Save, Plus,
 } from "lucide-react";
 import {
   startOfWeek, endOfWeek, addWeeks, subWeeks, format, eachDayOfInterval,
@@ -40,9 +40,10 @@ interface MyAttendanceViewProps {
   expectedMonthMins: number;
   balanceMins: number;
   weeklyChartData: { name: string; label: string; worked: number; expected: number }[];
-  todayRecord: AttendanceRecord | undefined;
-  hasCheckedIn: boolean;
-  hasCheckedOut: boolean;
+  todayRecords: AttendanceRecord[];
+  activeRecord: AttendanceRecord | undefined;
+  hasActiveSession: boolean;
+  canCheckIn: boolean;
   checkInMutation: { mutate: () => void; isPending: boolean };
   checkOutMutation: { mutate: () => void; isPending: boolean };
   manualMutation: { mutate: (args: { date: string; checkIn: string; checkOut: string }) => void; isPending: boolean };
@@ -59,16 +60,25 @@ const chartConfig = {
   expected: { label: "Esperadas", color: "hsl(var(--border))" },
 };
 
+function sumRecordsMins(records: AttendanceRecord[], now?: Date) {
+  return records.reduce((acc, r) => {
+    if (!r.check_in) return acc;
+    const ci = new Date(r.check_in);
+    const co = r.check_out ? new Date(r.check_out) : (now || new Date());
+    return acc + Math.max(0, differenceInMinutes(co, ci));
+  }, 0);
+}
+
 const MyAttendanceView = ({
   myMonthRecords, myMonthLoading,
   workedMonthMins, expectedMonthMins, balanceMins,
-  weeklyChartData, todayRecord, hasCheckedIn, hasCheckedOut,
+  weeklyChartData, todayRecords, activeRecord, hasActiveSession, canCheckIn,
   checkInMutation, checkOutMutation, manualMutation,
   workDays, workStart, workEnd, dailyExpectedMins,
   DAY_CODES, formatMinutes,
 }: MyAttendanceViewProps) => {
   const [currentWeek, setCurrentWeek] = useState(new Date());
-  const [editingDay, setEditingDay] = useState<string | null>(null);
+  const [addingDay, setAddingDay] = useState<string | null>(null);
   const [manualIn, setManualIn] = useState("");
   const [manualOut, setManualOut] = useState("");
 
@@ -86,13 +96,15 @@ const MyAttendanceView = ({
     : 0;
 
   const todayWorkedMins = useMemo(() => {
-    if (!todayRecord?.check_in) return 0;
-    const checkIn = new Date(todayRecord.check_in);
-    const end = todayRecord.check_out ? new Date(todayRecord.check_out) : new Date();
-    return Math.max(0, differenceInMinutes(end, checkIn));
-  }, [todayRecord]);
+    return sumRecordsMins(todayRecords, new Date());
+  }, [todayRecords]);
 
   const todayProgress = dailyExpectedMins > 0 ? Math.min(100, Math.round((todayWorkedMins / dailyExpectedMins) * 100)) : 0;
+
+  // Get last check-in/out for display
+  const lastCheckIn = todayRecords.length > 0
+    ? todayRecords.filter(r => r.check_in).sort((a, b) => new Date(b.check_in!).getTime() - new Date(a.check_in!).getTime())[0]
+    : undefined;
 
   return (
     <div className="space-y-5">
@@ -124,26 +136,32 @@ const MyAttendanceView = ({
                 </div>
               </div>
 
-              {/* Check-in/out times */}
-              {todayRecord?.check_in && (
-                <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <LogIn className="h-3 w-3" />
-                    {format(new Date(todayRecord.check_in), "HH:mm")}
-                  </span>
-                  {todayRecord.check_out && (
-                    <span className="flex items-center gap-1">
-                      <LogOut className="h-3 w-3" />
-                      {format(new Date(todayRecord.check_out), "HH:mm")}
+              {/* Today sessions summary */}
+              {todayRecords.length > 0 && (
+                <div className="flex flex-wrap items-center gap-3 mt-3 text-xs text-muted-foreground">
+                  {todayRecords.map((r, i) => (
+                    <span key={r.id} className="flex items-center gap-1">
+                      <LogIn className="h-3 w-3" />
+                      {r.check_in ? format(new Date(r.check_in), "HH:mm") : "—"}
+                      {r.check_out && (
+                        <>
+                          <span className="mx-0.5">→</span>
+                          <LogOut className="h-3 w-3" />
+                          {format(new Date(r.check_out), "HH:mm")}
+                        </>
+                      )}
+                      {!r.check_out && (
+                        <Badge variant="default" className="text-[9px] ml-1 animate-pulse py-0 px-1">Activa</Badge>
+                      )}
                     </span>
-                  )}
+                  ))}
                 </div>
               )}
             </div>
 
             {/* Right: Action button */}
             <div className="flex flex-col items-center gap-2">
-              {!hasCheckedIn && (
+              {canCheckIn && (
                 <Button
                   size="lg"
                   className="h-14 w-14 rounded-full shadow-md"
@@ -156,7 +174,7 @@ const MyAttendanceView = ({
                   }
                 </Button>
               )}
-              {hasCheckedIn && !hasCheckedOut && (
+              {hasActiveSession && (
                 <Button
                   size="lg"
                   variant="destructive"
@@ -170,13 +188,11 @@ const MyAttendanceView = ({
                   }
                 </Button>
               )}
-              {hasCheckedOut && (
-                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
-                  <CheckCircle2 className="h-6 w-6 text-primary" />
-                </div>
-              )}
               <span className="text-[11px] font-medium text-muted-foreground">
-                {!hasCheckedIn ? "Iniciar jornada" : hasCheckedIn && !hasCheckedOut ? "Finalizar" : "Completada"}
+                {canCheckIn
+                  ? (todayRecords.length > 0 ? "Reanudar jornada" : "Iniciar jornada")
+                  : "Finalizar"
+                }
               </span>
             </div>
           </div>
@@ -299,8 +315,7 @@ const MyAttendanceView = ({
             <TableHeader>
               <TableRow className="bg-muted/20 hover:bg-muted/20">
                 <TableHead className="text-[11px] font-semibold uppercase tracking-wider">Día</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider">Entrada</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider">Salida</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider">Sesiones</TableHead>
                 <TableHead className="text-[11px] font-semibold uppercase tracking-wider">Total</TableHead>
                 <TableHead className="text-[11px] font-semibold uppercase tracking-wider">Esperado</TableHead>
                 <TableHead className="text-[11px] font-semibold uppercase tracking-wider">Fuente</TableHead>
@@ -310,92 +325,101 @@ const MyAttendanceView = ({
             <TableBody>
               {weekDays.map(day => {
                 const dateStr = format(day, "yyyy-MM-dd");
-                const record = myMonthRecords.find(r => r.work_date === dateStr);
+                const dayRecords = myMonthRecords.filter(r => r.work_date === dateStr);
                 const dayCode = DAY_CODES[day.getDay()];
                 const isWorkDay = workDays.includes(dayCode);
-                const workedMins = record?.check_in && record?.check_out
-                  ? differenceInMinutes(new Date(record.check_out), new Date(record.check_in)) : 0;
-                const isEditing = editingDay === dateStr;
+                const totalWorkedMins = sumRecordsMins(dayRecords);
                 const isTodayDay = isToday(day);
+                const isAdding = addingDay === dateStr;
+
+                // Get unique sources
+                const sources = [...new Set(dayRecords.map(r => r.source).filter(Boolean))];
 
                 return (
-                  <TableRow
-                    key={dateStr}
-                    className={`
-                      ${isTodayDay ? "bg-primary/[0.04]" : !isWorkDay ? "bg-muted/20" : ""}
-                      ${isTodayDay ? "border-l-2 border-l-primary" : ""}
-                    `}
-                  >
-                    <TableCell className="py-2.5">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium capitalize">{format(day, "EEE", { locale: es })}</span>
-                        <span className="text-xs text-muted-foreground">{format(day, "d")}</span>
-                        {isTodayDay && (
-                          <span className="text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded">Hoy</span>
+                  <Fragment key={dateStr}>
+                    <TableRow
+                      key={dateStr}
+                      className={`
+                        ${isTodayDay ? "bg-primary/[0.04] border-l-2 border-l-primary" : !isWorkDay ? "bg-muted/20" : ""}
+                      `}
+                    >
+                      <TableCell className="py-2.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium capitalize">{format(day, "EEE", { locale: es })}</span>
+                          <span className="text-xs text-muted-foreground">{format(day, "d")}</span>
+                          {isTodayDay && (
+                            <span className="text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded">Hoy</span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-2.5">
+                        {dayRecords.length > 0 ? (
+                          <div className="flex flex-col gap-0.5">
+                            {dayRecords.map((r) => (
+                              <span key={r.id} className="text-xs tabular-nums text-muted-foreground">
+                                {r.check_in ? format(new Date(r.check_in), "HH:mm") : "—"}
+                                {" → "}
+                                {r.check_out ? format(new Date(r.check_out), "HH:mm") : (
+                                  <span className="text-primary font-medium">en curso</span>
+                                )}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground/50 text-sm">—</span>
                         )}
-                      </div>
-                    </TableCell>
-                    {isEditing ? (
-                      <>
-                        <TableCell className="py-2.5">
-                          <Input type="time" className="w-24 h-8 text-xs" value={manualIn} onChange={e => setManualIn(e.target.value)} />
+                      </TableCell>
+                      <TableCell className="py-2.5 text-sm font-medium tabular-nums">
+                        {totalWorkedMins > 0 ? formatMinutes(totalWorkedMins) : <span className="text-muted-foreground/50">—</span>}
+                      </TableCell>
+                      <TableCell className="py-2.5 text-sm text-muted-foreground tabular-nums">
+                        {isWorkDay ? formatMinutes(dailyExpectedMins) : (
+                          <span className="text-xs text-muted-foreground/60">Libre</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="py-2.5">
+                        {sources.map(s => (
+                          <Badge key={s} variant={s === "WHATSAPP" ? "outline" : "secondary"} className="text-[10px] px-1.5 py-0 font-normal mr-1">
+                            {s === "WHATSAPP" ? "WhatsApp" : s === "MIXED" ? "Mixto" : "Web"}
+                          </Badge>
+                        ))}
+                      </TableCell>
+                      <TableCell className="py-2.5 text-right">
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                          onClick={() => {
+                            setAddingDay(dateStr);
+                            setManualIn(workStart);
+                            setManualOut(workEnd);
+                          }}>
+                          <Plus className="h-3 w-3" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                    {isAdding && (
+                      <TableRow key={`${dateStr}-add`} className="bg-muted/10">
+                        <TableCell className="py-2 text-xs text-muted-foreground">Nueva sesión</TableCell>
+                        <TableCell className="py-2" colSpan={2}>
+                          <div className="flex items-center gap-2">
+                            <Input type="time" className="w-24 h-8 text-xs" value={manualIn} onChange={e => setManualIn(e.target.value)} />
+                            <span className="text-xs text-muted-foreground">→</span>
+                            <Input type="time" className="w-24 h-8 text-xs" value={manualOut} onChange={e => setManualOut(e.target.value)} />
+                          </div>
                         </TableCell>
-                        <TableCell className="py-2.5">
-                          <Input type="time" className="w-24 h-8 text-xs" value={manualOut} onChange={e => setManualOut(e.target.value)} />
-                        </TableCell>
-                        <TableCell colSpan={3} className="py-2.5">
+                        <TableCell className="py-2" colSpan={3}>
                           <div className="flex gap-1.5">
                             <Button size="sm" className="h-8 text-xs gap-1" disabled={!manualIn || !manualOut || manualMutation.isPending}
-                              onClick={() => manualMutation.mutate({ date: dateStr, checkIn: manualIn, checkOut: manualOut })}>
+                              onClick={() => { manualMutation.mutate({ date: dateStr, checkIn: manualIn, checkOut: manualOut }); setAddingDay(null); }}>
                               {manualMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
                               Guardar
                             </Button>
-                            <Button size="sm" variant="ghost" className="h-8 text-xs gap-1" onClick={() => setEditingDay(null)}>
+                            <Button size="sm" variant="ghost" className="h-8 text-xs gap-1" onClick={() => setAddingDay(null)}>
                               <X className="h-3 w-3" /> Cancelar
                             </Button>
                           </div>
                         </TableCell>
-                      </>
-                    ) : (
-                      <>
-                        <TableCell className="py-2.5 text-sm tabular-nums">
-                          {record?.check_in ? format(new Date(record.check_in), "HH:mm") : <span className="text-muted-foreground/50">—</span>}
-                        </TableCell>
-                        <TableCell className="py-2.5 text-sm tabular-nums">
-                          {record?.check_out ? format(new Date(record.check_out), "HH:mm") : <span className="text-muted-foreground/50">—</span>}
-                        </TableCell>
-                        <TableCell className="py-2.5 text-sm font-medium tabular-nums">
-                          {workedMins > 0 ? formatMinutes(workedMins) : <span className="text-muted-foreground/50">—</span>}
-                        </TableCell>
-                        <TableCell className="py-2.5 text-sm text-muted-foreground tabular-nums">
-                          {isWorkDay ? formatMinutes(dailyExpectedMins) : (
-                            <span className="text-xs text-muted-foreground/60">Libre</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="py-2.5">
-                          {record?.source && record.source !== "APP" ? (
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-normal">
-                              {record.source === "WHATSAPP" ? "WhatsApp" : record.source === "MIXED" ? "Mixto" : record.source}
-                            </Badge>
-                          ) : record ? (
-                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-normal">Web</Badge>
-                          ) : null}
-                        </TableCell>
-                      </>
+                      </TableRow>
                     )}
-                    <TableCell className="py-2.5 text-right">
-                      {!isEditing && (
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                          onClick={() => {
-                            setEditingDay(dateStr);
-                            setManualIn(record?.check_in ? format(new Date(record.check_in), "HH:mm") : workStart);
-                            setManualOut(record?.check_out ? format(new Date(record.check_out), "HH:mm") : workEnd);
-                          }}>
-                          <Pencil className="h-3 w-3" />
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
+                  </Fragment>
                 );
               })}
             </TableBody>
