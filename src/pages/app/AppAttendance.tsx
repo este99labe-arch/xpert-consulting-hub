@@ -366,6 +366,10 @@ const AppAttendance = () => {
           checkInMutation={checkInMutation}
           checkOutMutation={checkOutMutation}
           manualMutation={manualMutation}
+          onDeleteRecord={handleDeleteRecord}
+          deleteLoading={deleteLoading}
+          isManager={isManager}
+          pendingDeleteRequests={pendingDeleteRequests}
           workDays={workDays}
           workStart={workStart}
           workEnd={workEnd}
