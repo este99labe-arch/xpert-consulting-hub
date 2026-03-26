@@ -336,7 +336,7 @@ const MyAttendanceView = ({
                 const sources = [...new Set(dayRecords.map(r => r.source).filter(Boolean))];
 
                 return (
-                  <>
+                  <Fragment key={dateStr}>
                     <TableRow
                       key={dateStr}
                       className={`
