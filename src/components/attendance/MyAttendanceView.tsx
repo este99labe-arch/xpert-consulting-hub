@@ -367,15 +367,35 @@ const MyAttendanceView = ({
                       <TableCell className="py-2.5">
                         {dayRecords.length > 0 ? (
                           <div className="flex flex-col gap-0.5">
-                            {dayRecords.map((r) => (
-                              <span key={r.id} className="text-xs tabular-nums text-muted-foreground">
-                                {r.check_in ? format(new Date(r.check_in), "HH:mm") : "—"}
-                                {" → "}
-                                {r.check_out ? format(new Date(r.check_out), "HH:mm") : (
-                                  <span className="text-primary font-medium">en curso</span>
-                                )}
-                              </span>
-                            ))}
+                            {dayRecords.map((r) => {
+                              const hasPendingDelete = pendingDeleteRequests.some(dr => dr.attendance_id === r.id);
+                              return (
+                                <div key={r.id} className="flex items-center gap-1 group">
+                                  <span className={`text-xs tabular-nums ${hasPendingDelete ? "line-through text-muted-foreground/40" : "text-muted-foreground"}`}>
+                                    {r.check_in ? format(new Date(r.check_in), "HH:mm") : "—"}
+                                    {" → "}
+                                    {r.check_out ? format(new Date(r.check_out), "HH:mm") : (
+                                      <span className="text-primary font-medium">en curso</span>
+                                    )}
+                                  </span>
+                                  {hasPendingDelete ? (
+                                    <Badge variant="outline" className="text-[9px] px-1 py-0 text-amber-600 border-amber-300">Pendiente</Badge>
+                                  ) : (
+                                    <Button
+                                      variant="ghost" size="icon"
+                                      className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                                      onClick={() => {
+                                        const label = `${r.check_in ? format(new Date(r.check_in), "HH:mm") : "—"} → ${r.check_out ? format(new Date(r.check_out), "HH:mm") : "en curso"}`;
+                                        setDeleteTarget({ id: r.id, label });
+                                        setDeleteReason("");
+                                      }}
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                         ) : (
                           <span className="text-muted-foreground/50 text-sm">—</span>
@@ -438,6 +458,46 @@ const MyAttendanceView = ({
           </Table>
         )}
       </Card>
+
+      {/* Delete reason dialog */}
+      <Dialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Eliminar fichaje</DialogTitle>
+            <DialogDescription>
+              {isManager
+                ? `¿Eliminar la sesión ${deleteTarget?.label}?`
+                : `Se enviará una solicitud al Manager para eliminar la sesión ${deleteTarget?.label}.`
+              }
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Motivo</label>
+            <Textarea
+              placeholder="Indica el motivo de la eliminación..."
+              value={deleteReason}
+              onChange={(e) => setDeleteReason(e.target.value)}
+              className="min-h-[80px]"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setDeleteTarget(null)}>Cancelar</Button>
+            <Button
+              variant="destructive"
+              disabled={!deleteReason.trim() || deleteLoading}
+              onClick={() => {
+                if (deleteTarget) {
+                  onDeleteRecord(deleteTarget.id, deleteReason.trim());
+                  setDeleteTarget(null);
+                }
+              }}
+            >
+              {deleteLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              {isManager ? "Eliminar" : "Solicitar eliminación"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
