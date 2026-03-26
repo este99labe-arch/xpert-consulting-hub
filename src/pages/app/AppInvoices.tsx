@@ -66,7 +66,9 @@ const AppInvoices = () => {
   const [typeFilter, setTypeFilter] = useState<string>(searchParams.get("type") || "ALL");
   const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
+  const location = useLocation();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [createDefaultType, setCreateDefaultType] = useState<"INVOICE" | "EXPENSE" | "QUOTE" | undefined>(undefined);
   const [previewInvoice, setPreviewInvoice] = useState<any>(null);
   const [editInvoice, setEditInvoice] = useState<any>(null);
   const [quoteSearch, setQuoteSearch] = useState("");

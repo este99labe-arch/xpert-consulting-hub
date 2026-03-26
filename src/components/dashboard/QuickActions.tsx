@@ -22,7 +22,7 @@ const QuickActions = () => {
             key={a.label}
             size="sm"
             className={`gap-1.5 text-xs ${a.color}`}
-            onClick={() => navigate(a.path)}
+            onClick={() => navigate(a.path, { state: a.state })}
           >
             <a.icon className="h-3.5 w-3.5" />
             {a.label}
