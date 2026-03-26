@@ -419,7 +419,7 @@ const MyAttendanceView = ({
                         </TableCell>
                       </TableRow>
                     )}
-                  </>
+                  </Fragment>
                 );
               })}
             </TableBody>
