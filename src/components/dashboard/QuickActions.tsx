@@ -9,9 +9,9 @@ const QuickActions = () => {
   const [showReminder, setShowReminder] = useState(false);
 
   const actions = [
-    { label: "Nueva Factura", icon: Plus, path: "/app/invoices", color: "bg-primary text-primary-foreground hover:bg-primary/90" },
-    { label: "Nuevo Gasto", icon: Receipt, path: "/app/invoices", color: "bg-destructive text-destructive-foreground hover:bg-destructive/90" },
-    { label: "Nuevo Cliente", icon: UserPlus, path: "/app/clients", color: "bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))] hover:bg-[hsl(var(--success))]/90" },
+    { label: "Nueva Factura", icon: Plus, path: "/app/invoices", state: { openCreate: true, defaultType: "INVOICE" }, color: "bg-primary text-primary-foreground hover:bg-primary/90" },
+    { label: "Nuevo Gasto", icon: Receipt, path: "/app/invoices", state: { openCreate: true, defaultType: "EXPENSE" }, color: "bg-destructive text-destructive-foreground hover:bg-destructive/90" },
+    { label: "Nuevo Cliente", icon: UserPlus, path: "/app/clients", state: { openCreate: true }, color: "bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))] hover:bg-[hsl(var(--success))]/90" },
   ];
 
   return (
