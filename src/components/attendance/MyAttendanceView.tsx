@@ -3,12 +3,17 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  LogIn, LogOut, Loader2, ChevronLeft, ChevronRight, Timer, TrendingUp, TrendingDown, Minus, Play, Square, CheckCircle2, Pencil, X, Save, Plus,
+  LogIn, LogOut, Loader2, ChevronLeft, ChevronRight, Timer, TrendingUp, TrendingDown, Minus, Play, Square, CheckCircle2, Pencil, X, Save, Plus, Trash2,
 } from "lucide-react";
+import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+} from "@/components/ui/dialog";
 import {
   startOfWeek, endOfWeek, addWeeks, subWeeks, format, eachDayOfInterval,
   differenceInMinutes, isToday,
