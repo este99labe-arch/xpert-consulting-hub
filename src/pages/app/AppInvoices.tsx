@@ -73,6 +73,17 @@ const AppInvoices = () => {
   const [editInvoice, setEditInvoice] = useState<any>(null);
   const [quoteSearch, setQuoteSearch] = useState("");
   const [quoteStatusFilter, setQuoteStatusFilter] = useState<string>("ALL");
+
+  // Auto-open create dialog from dashboard quick actions
+  useEffect(() => {
+    const state = location.state as any;
+    if (state?.openCreate) {
+      setCreateDefaultType(state.defaultType || undefined);
+      setDialogOpen(true);
+      // Clear the state so it doesn't re-trigger
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
   const [activeTab, setActiveTab] = useState("invoices");
 
   // Sync URL params on mount
