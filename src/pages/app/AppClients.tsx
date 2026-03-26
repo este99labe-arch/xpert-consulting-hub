@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,10 +29,20 @@ const AppClients = () => {
   const { accountId } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const location = useLocation();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [showCreate, setShowCreate] = useState(false);
   const [deletingClientId, setDeletingClientId] = useState<string | null>(null);
+
+  // Auto-open create dialog from dashboard quick actions
+  useEffect(() => {
+    const state = location.state as any;
+    if (state?.openCreate) {
+      setShowCreate(true);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const { data: account } = useQuery({
     queryKey: ["my-account-info", accountId],

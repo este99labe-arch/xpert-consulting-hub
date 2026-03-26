@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -66,11 +66,24 @@ const AppInvoices = () => {
   const [typeFilter, setTypeFilter] = useState<string>(searchParams.get("type") || "ALL");
   const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
+  const location = useLocation();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [createDefaultType, setCreateDefaultType] = useState<"INVOICE" | "EXPENSE" | "QUOTE" | undefined>(undefined);
   const [previewInvoice, setPreviewInvoice] = useState<any>(null);
   const [editInvoice, setEditInvoice] = useState<any>(null);
   const [quoteSearch, setQuoteSearch] = useState("");
   const [quoteStatusFilter, setQuoteStatusFilter] = useState<string>("ALL");
+
+  // Auto-open create dialog from dashboard quick actions
+  useEffect(() => {
+    const state = location.state as any;
+    if (state?.openCreate) {
+      setCreateDefaultType(state.defaultType || undefined);
+      setDialogOpen(true);
+      // Clear the state so it doesn't re-trigger
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
   const [activeTab, setActiveTab] = useState("invoices");
 
   // Sync URL params on mount
@@ -635,7 +648,7 @@ const AppInvoices = () => {
         </TabsContent>
       </Tabs>
 
-      <CreateInvoiceDialog open={dialogOpen} onOpenChange={setDialogOpen} defaultType={activeTab === "quotes" ? "QUOTE" : undefined} />
+      <CreateInvoiceDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setCreateDefaultType(undefined); }} defaultType={createDefaultType || (activeTab === "quotes" ? "QUOTE" : undefined)} />
       <InvoicePreviewDialog
         open={!!previewInvoice}
         onOpenChange={() => setPreviewInvoice(null)}
