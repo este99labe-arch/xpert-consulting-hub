@@ -83,6 +83,7 @@ const MyAttendanceView = ({
   workedMonthMins, expectedMonthMins, balanceMins,
   weeklyChartData, todayRecords, activeRecord, hasActiveSession, canCheckIn,
   checkInMutation, checkOutMutation, manualMutation,
+  onDeleteRecord, deleteLoading, isManager, pendingDeleteRequests,
   workDays, workStart, workEnd, dailyExpectedMins,
   DAY_CODES, formatMinutes,
 }: MyAttendanceViewProps) => {
@@ -90,6 +91,8 @@ const MyAttendanceView = ({
   const [addingDay, setAddingDay] = useState<string | null>(null);
   const [manualIn, setManualIn] = useState("");
   const [manualOut, setManualOut] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; label: string } | null>(null);
+  const [deleteReason, setDeleteReason] = useState("");
 
   const weekStart = startOfWeek(currentWeek, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(currentWeek, { weekStartsOn: 1 });
