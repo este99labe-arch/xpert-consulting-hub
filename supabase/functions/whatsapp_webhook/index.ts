@@ -193,74 +193,55 @@ Deno.serve(async (req) => {
       const todayStr = new Date().toISOString().split("T")[0];
       const now = new Date().toISOString();
 
-      // 4. Get existing record for today
-      const { data: existing } = await supabase
+      // 4. Get today's records (multiple sessions allowed)
+      const { data: todayRecords } = await supabase
         .from("attendance_records")
         .select("*")
         .eq("user_id", profile.user_id)
         .eq("account_id", profile.account_id)
         .eq("work_date", todayStr)
-        .maybeSingle();
+        .order("created_at");
+
+      const records = todayRecords || [];
+      // Find active session (check_in without check_out)
+      const activeRecord = records.find((r: any) => r.check_in && !r.check_out);
 
       if (command === "ENTRY") {
-        if (existing?.check_in && !existing?.check_out) {
+        if (activeRecord) {
           await sendWhatsAppReply(
             config.phone_number_id,
             msg.from,
-            `⚠️ Ya tienes una entrada registrada hoy a las ${new Date(existing.check_in).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}. Envía "salida" cuando termines.`,
+            `⚠️ Ya tienes una sesión activa desde las ${new Date(activeRecord.check_in).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}. Envía "salida" para cerrarla antes de abrir otra.`,
             accessToken
           );
           continue;
         }
 
-        if (existing) {
-          // Update existing record with new check_in
-          await supabase
-            .from("attendance_records")
-            .update({
-              check_in: now,
-              check_out: null,
-              source: "WHATSAPP",
-              phone_number: senderPhone,
-              location_lat: locationLat,
-              location_lng: locationLng,
-            })
-            .eq("id", existing.id);
-        } else {
-          await supabase.from("attendance_records").insert({
-            user_id: profile.user_id,
-            account_id: profile.account_id,
-            work_date: todayStr,
-            check_in: now,
-            source: "WHATSAPP",
-            phone_number: senderPhone,
-            location_lat: locationLat,
-            location_lng: locationLng,
-          });
-        }
+        // Create a new session record
+        await supabase.from("attendance_records").insert({
+          user_id: profile.user_id,
+          account_id: profile.account_id,
+          work_date: todayStr,
+          check_in: now,
+          source: "WHATSAPP",
+          phone_number: senderPhone,
+          location_lat: locationLat,
+          location_lng: locationLng,
+        });
 
+        const sessionNum = records.filter((r: any) => r.check_out).length + 1;
         await sendWhatsAppReply(
           config.phone_number_id,
           msg.from,
-          `✅ Entrada registrada a las ${new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}. ¡Buen día ${profile.first_name || ""}!`,
+          `✅ Entrada registrada a las ${new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}${sessionNum > 1 ? ` (sesión ${sessionNum})` : ""}. ¡Buen día ${profile.first_name || ""}!`,
           accessToken
         );
       } else if (command === "EXIT") {
-        if (!existing || !existing.check_in) {
+        if (!activeRecord) {
           await sendWhatsAppReply(
             config.phone_number_id,
             msg.from,
-            `⚠️ No tienes una entrada registrada hoy. Envía "entrada" primero.`,
-            accessToken
-          );
-          continue;
-        }
-
-        if (existing.check_out) {
-          await sendWhatsAppReply(
-            config.phone_number_id,
-            msg.from,
-            `⚠️ Ya tienes registrada la salida de hoy.`,
+            `⚠️ No tienes una sesión activa. Envía "entrada" primero.`,
             accessToken
           );
           continue;
@@ -270,23 +251,32 @@ Deno.serve(async (req) => {
           .from("attendance_records")
           .update({
             check_out: now,
-            source: existing.source === "WHATSAPP" ? "WHATSAPP" : "MIXED",
-            location_lat: locationLat || existing.location_lat,
-            location_lng: locationLng || existing.location_lng,
+            source: activeRecord.source === "WHATSAPP" ? "WHATSAPP" : "MIXED",
+            location_lat: locationLat || activeRecord.location_lat,
+            location_lng: locationLng || activeRecord.location_lng,
           })
-          .eq("id", existing.id);
+          .eq("id", activeRecord.id);
 
-        const checkInTime = new Date(existing.check_in);
-        const mins = Math.round(
-          (new Date().getTime() - checkInTime.getTime()) / 60000
+        // Calculate total worked today across all sessions
+        const sessionMins = Math.round(
+          (new Date().getTime() - new Date(activeRecord.check_in).getTime()) / 60000
         );
-        const hours = Math.floor(mins / 60);
-        const remainMins = mins % 60;
+        const totalMins = records.reduce((acc: number, r: any) => {
+          if (r.check_in && r.check_out) {
+            return acc + Math.round((new Date(r.check_out).getTime() - new Date(r.check_in).getTime()) / 60000);
+          }
+          return acc;
+        }, 0) + sessionMins;
+
+        const totalH = Math.floor(totalMins / 60);
+        const totalM = totalMins % 60;
+        const sesH = Math.floor(sessionMins / 60);
+        const sesM = sessionMins % 60;
 
         await sendWhatsAppReply(
           config.phone_number_id,
           msg.from,
-          `✅ Salida registrada. Has trabajado ${hours}h ${remainMins}m hoy. ¡Hasta mañana ${profile.first_name || ""}!`,
+          `✅ Salida registrada (${sesH}h ${sesM}m esta sesión). Total hoy: ${totalH}h ${totalM}m. ${profile.first_name || ""}`,
           accessToken
         );
       }
