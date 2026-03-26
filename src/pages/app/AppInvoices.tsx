@@ -648,7 +648,7 @@ const AppInvoices = () => {
         </TabsContent>
       </Tabs>
 
-      <CreateInvoiceDialog open={dialogOpen} onOpenChange={setDialogOpen} defaultType={activeTab === "quotes" ? "QUOTE" : undefined} />
+      <CreateInvoiceDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setCreateDefaultType(undefined); }} defaultType={createDefaultType || (activeTab === "quotes" ? "QUOTE" : undefined)} />
       <InvoicePreviewDialog
         open={!!previewInvoice}
         onOpenChange={() => setPreviewInvoice(null)}
