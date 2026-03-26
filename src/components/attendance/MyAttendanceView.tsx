@@ -52,6 +52,10 @@ interface MyAttendanceViewProps {
   checkInMutation: { mutate: () => void; isPending: boolean };
   checkOutMutation: { mutate: () => void; isPending: boolean };
   manualMutation: { mutate: (args: { date: string; checkIn: string; checkOut: string }) => void; isPending: boolean };
+  onDeleteRecord: (recordId: string, reason: string) => void;
+  deleteLoading: boolean;
+  isManager: boolean;
+  pendingDeleteRequests: { id: string; attendance_id: string; reason: string; created_at: string }[];
   workDays: string[];
   workStart: string;
   workEnd: string;
