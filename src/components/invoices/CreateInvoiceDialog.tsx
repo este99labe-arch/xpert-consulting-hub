@@ -65,7 +65,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
   });
 
   const { data: clients = [] } = useQuery({
-    queryKey: ["business_clients", accountId],
+    queryKey: ["business_clients", accountId, account?.name],
     queryFn: async () => {
       if (!accountId) return [];
       const { data, error } = await supabase
@@ -74,7 +74,8 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
         .eq("account_id", accountId)
         .eq("status", "ACTIVE");
       if (error) throw error;
-      return data || [];
+      // Filter out the self-company entry to avoid duplicates with "Mi empresa"
+      return (data || []).filter((c: any) => c.name !== account?.name);
     },
     enabled: !!accountId && open,
   });
