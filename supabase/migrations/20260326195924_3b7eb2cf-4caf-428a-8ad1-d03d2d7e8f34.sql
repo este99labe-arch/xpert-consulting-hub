@@ -1,0 +1,1 @@
+ALTER TABLE public.attendance_records DROP CONSTRAINT attendance_records_user_id_work_date_key;
