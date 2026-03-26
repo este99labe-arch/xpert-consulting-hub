@@ -218,6 +218,53 @@ const AppAttendance = () => {
     onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
   });
 
+  // Pending delete requests for current user's records
+  const { data: pendingDeleteRequests = [] } = useQuery({
+    queryKey: ["attendance-delete-requests", user?.id, effectiveAccountId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("attendance_delete_requests")
+        .select("id, attendance_id, reason, created_at")
+        .eq("account_id", effectiveAccountId!)
+        .eq("status", "PENDING");
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user && !!effectiveAccountId,
+  });
+
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const handleDeleteRecord = async (recordId: string, reason: string) => {
+    setDeleteLoading(true);
+    try {
+      if (isManager) {
+        // Managers delete directly
+        const { error } = await supabase.from("attendance_records").delete().eq("id", recordId);
+        if (error) throw error;
+        toast({ title: "Fichaje eliminado" });
+      } else {
+        // Employees submit a delete request
+        const { error } = await supabase.from("attendance_delete_requests").insert({
+          attendance_id: recordId,
+          account_id: accountId!,
+          requested_by: user!.id,
+          reason,
+        });
+        if (error) throw error;
+        toast({ title: "Solicitud enviada", description: "Un Manager revisará tu solicitud." });
+      }
+      queryClient.invalidateQueries({ queryKey: ["my-attendance-month"] });
+      queryClient.invalidateQueries({ queryKey: ["attendance-delete-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["dash-today-attendance"] });
+      queryClient.invalidateQueries({ queryKey: ["team-attendance"] });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
   const teamSummary = useMemo(() => {
     const map: Record<string, { worked: number; days: Set<string> }> = {};
     teamRecords.forEach(r => {
@@ -319,6 +366,10 @@ const AppAttendance = () => {
           checkInMutation={checkInMutation}
           checkOutMutation={checkOutMutation}
           manualMutation={manualMutation}
+          onDeleteRecord={handleDeleteRecord}
+          deleteLoading={deleteLoading}
+          isManager={isManager}
+          pendingDeleteRequests={pendingDeleteRequests}
           workDays={workDays}
           workStart={workStart}
           workEnd={workEnd}
@@ -339,6 +390,27 @@ const AppAttendance = () => {
           selectedMonth={selectedMonth}
           onExport={handleExport}
           formatMinutes={formatMinutes}
+          pendingDeleteRequests={pendingDeleteRequests}
+          teamRecords={teamRecords}
+          teamEmailMap={teamEmailMap}
+          onApproveDelete={async (requestId: string, attendanceId: string) => {
+            // Delete the attendance record, then update request status
+            await supabase.from("attendance_records").delete().eq("id", attendanceId);
+            await supabase.from("attendance_delete_requests").update({
+              status: "APPROVED", reviewed_by: user!.id, reviewed_at: new Date().toISOString(),
+            }).eq("id", requestId);
+            queryClient.invalidateQueries({ queryKey: ["attendance-delete-requests"] });
+            queryClient.invalidateQueries({ queryKey: ["team-attendance"] });
+            queryClient.invalidateQueries({ queryKey: ["my-attendance-month"] });
+            toast({ title: "Fichaje eliminado y solicitud aprobada" });
+          }}
+          onRejectDelete={async (requestId: string) => {
+            await supabase.from("attendance_delete_requests").update({
+              status: "REJECTED", reviewed_by: user!.id, reviewed_at: new Date().toISOString(),
+            }).eq("id", requestId);
+            queryClient.invalidateQueries({ queryKey: ["attendance-delete-requests"] });
+            toast({ title: "Solicitud rechazada" });
+          }}
         />
       )}
     </div>
