@@ -114,7 +114,49 @@ const LeaveTab = () => {
         <Button onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-2" />Nueva Solicitud</Button>
       </div>
 
-      <Card>
+      {/* Mobile cards */}
+      <div className="space-y-3 md:hidden">
+        {requests.length === 0 ? (
+          <Card className="p-8 text-center text-muted-foreground">No hay solicitudes de ausencia</Card>
+        ) : (
+          pagination.paginatedItems.map((r: any) => {
+            const days = differenceInBusinessDays(parseISO(r.end_date), parseISO(r.start_date)) + 1;
+            const typeLabel = LEAVE_TYPES.find(t => t.value === r.type)?.label || r.type;
+            const st = STATUS_MAP[r.status] || { label: r.status, variant: "outline" as const };
+            return (
+              <Card key={r.id} className="p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-sm">{typeLabel}</span>
+                  <Badge variant={st.variant}>{st.label}</Badge>
+                </div>
+                {isManager && <p className="text-xs text-muted-foreground">{leaveEmailMap.get(r.user_id)?.split("@")[0] || r.user_id.slice(0, 8)}</p>}
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{format(parseISO(r.start_date), "dd/MM/yyyy")} → {format(parseISO(r.end_date), "dd/MM/yyyy")}</span>
+                  <span>{days} días</span>
+                </div>
+                {isManager && r.status === "PENDING" && (
+                  <div className="flex items-center gap-1 pt-1 border-t">
+                    <Button size="sm" variant="outline" className="flex-1" onClick={() => updateStatusMutation.mutate({ id: r.id, status: "APPROVED" })}>Aprobar</Button>
+                    <Button size="sm" variant="destructive" className="flex-1" onClick={() => updateStatusMutation.mutate({ id: r.id, status: "REJECTED" })}>Rechazar</Button>
+                  </div>
+                )}
+              </Card>
+            );
+          })
+        )}
+        {requests.length > 0 && (
+          <PaginationControls
+            currentPage={pagination.currentPage} totalPages={pagination.totalPages}
+            totalItems={pagination.totalItems} pageSize={pagination.pageSize}
+            startIndex={pagination.startIndex} endIndex={pagination.endIndex}
+            onPageChange={pagination.setCurrentPage} onPageSizeChange={pagination.setPageSize}
+            pageSizeOptions={pagination.pageSizeOptions}
+          />
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <Card className="hidden md:block">
         <CardContent className="p-0">
           <Table>
             <TableHeader>
@@ -167,14 +209,10 @@ const LeaveTab = () => {
           {requests.length > 0 && (
             <div className="px-4 pb-4">
               <PaginationControls
-                currentPage={pagination.currentPage}
-                totalPages={pagination.totalPages}
-                totalItems={pagination.totalItems}
-                pageSize={pagination.pageSize}
-                startIndex={pagination.startIndex}
-                endIndex={pagination.endIndex}
-                onPageChange={pagination.setCurrentPage}
-                onPageSizeChange={pagination.setPageSize}
+                currentPage={pagination.currentPage} totalPages={pagination.totalPages}
+                totalItems={pagination.totalItems} pageSize={pagination.pageSize}
+                startIndex={pagination.startIndex} endIndex={pagination.endIndex}
+                onPageChange={pagination.setCurrentPage} onPageSizeChange={pagination.setPageSize}
                 pageSizeOptions={pagination.pageSizeOptions}
               />
             </div>

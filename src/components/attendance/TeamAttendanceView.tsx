@@ -137,7 +137,38 @@ const TeamAttendanceView = ({
               </CardContent>
             </Card>
           ) : (
-            <Card className="border shadow-sm overflow-hidden">
+            {/* Mobile cards */}
+            <div className="space-y-3 md:hidden">
+              {teamSummary.map(emp => (
+                <Card key={emp.userId} className="p-4">
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-[11px] font-semibold text-primary">
+                      {emp.email.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="text-sm font-medium truncate">{emp.email}</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div>
+                      <p className="text-[10px] text-muted-foreground uppercase">Días</p>
+                      <p className="text-sm font-medium tabular-nums">{emp.days}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground uppercase">Total</p>
+                      <p className="text-sm font-medium tabular-nums">{formatMinutes(emp.worked)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground uppercase">Media</p>
+                      <p className="text-sm text-muted-foreground tabular-nums">
+                        {emp.days > 0 ? formatMinutes(Math.round(emp.worked / emp.days)) : "—"}
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+
+            {/* Desktop table */}
+            <Card className="border shadow-sm overflow-hidden hidden md:block">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/20 hover:bg-muted/20">
