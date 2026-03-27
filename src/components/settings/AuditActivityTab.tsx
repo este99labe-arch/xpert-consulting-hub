@@ -119,7 +119,8 @@ const AuditActivityTab = ({ accountId }: AuditActivityTabProps) => {
             <p className="text-sm">Sin registros de actividad</p>
           </div>
         ) : (
-        {/* Mobile cards */}
+          <>
+          {/* Mobile cards */}
           <div className="space-y-3 md:hidden">
             {pagination.paginatedItems.map((log: any) => (
               <Card key={log.id} className="p-4 space-y-1.5">
