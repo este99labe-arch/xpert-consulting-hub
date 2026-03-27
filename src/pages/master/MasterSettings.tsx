@@ -166,6 +166,7 @@ const MasterSettings = () => {
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
             </div>
           ) : (
+            <>
             {/* Mobile cards */}
             <div className="space-y-3 md:hidden">
               {filteredUsers.map((u: any) => (
