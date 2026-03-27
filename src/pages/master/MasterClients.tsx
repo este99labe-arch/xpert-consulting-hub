@@ -110,6 +110,7 @@ const MasterClients = () => {
           </CardContent>
         </Card>
       ) : (
+        <>
         {/* Mobile cards */}
         <div className="space-y-3 md:hidden">
           {clients.map((client) => (
