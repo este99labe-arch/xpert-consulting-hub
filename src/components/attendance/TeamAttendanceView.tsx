@@ -200,6 +200,7 @@ const TeamAttendanceView = ({
                 </TableBody>
               </Table>
             </Card>
+            </>
           )}
         </>
       )}
