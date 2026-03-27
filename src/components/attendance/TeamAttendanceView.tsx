@@ -137,6 +137,7 @@ const TeamAttendanceView = ({
               </CardContent>
             </Card>
           ) : (
+            <>
             {/* Mobile cards */}
             <div className="space-y-3 md:hidden">
               {teamSummary.map(emp => (
