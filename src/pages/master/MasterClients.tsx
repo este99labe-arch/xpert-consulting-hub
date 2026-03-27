@@ -185,6 +185,7 @@ const MasterClients = () => {
             </Table>
           </CardContent>
         </Card>
+        </>
       )}
 
       {/* Create dialog */}

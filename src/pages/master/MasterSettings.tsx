@@ -241,6 +241,7 @@ const MasterSettings = () => {
                 </Table>
               </CardContent>
             </Card>
+            </>
           )}
         </TabsContent>
 
