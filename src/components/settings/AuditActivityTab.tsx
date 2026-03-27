@@ -119,14 +119,44 @@ const AuditActivityTab = ({ accountId }: AuditActivityTabProps) => {
             <p className="text-sm">Sin registros de actividad</p>
           </div>
         ) : (
-          <div className="rounded-md border overflow-auto">
+        {/* Mobile cards */}
+          <div className="space-y-3 md:hidden">
+            {pagination.paginatedItems.map((log: any) => (
+              <Card key={log.id} className="p-4 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Badge variant="secondary" className={`text-xs ${actionColors[log.action] || ""}`}>
+                    {actionLabels[log.action] || log.action}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    {format(new Date(log.created_at), "dd MMM HH:mm", { locale: es })}
+                  </span>
+                </div>
+                <p className="text-sm">{entityLabels[log.entity_type] || log.entity_type}</p>
+                {log.details && Object.keys(log.details).length > 0 && (
+                  <p className="text-xs text-muted-foreground truncate">
+                    {Object.entries(log.details).map(([k, v]) => `${k}: ${v}`).join(", ")}
+                  </p>
+                )}
+              </Card>
+            ))}
+            <PaginationControls
+              currentPage={pagination.currentPage} totalPages={pagination.totalPages}
+              totalItems={pagination.totalItems} pageSize={pagination.pageSize}
+              startIndex={pagination.startIndex} endIndex={pagination.endIndex}
+              onPageChange={pagination.setCurrentPage} onPageSizeChange={pagination.setPageSize}
+              pageSizeOptions={pagination.pageSizeOptions}
+            />
+          </div>
+
+          {/* Desktop table */}
+          <div className="rounded-md border overflow-auto hidden md:block">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Fecha</TableHead>
                   <TableHead>Acción</TableHead>
                   <TableHead>Entidad</TableHead>
-                  <TableHead className="hidden md:table-cell">Detalles</TableHead>
+                  <TableHead>Detalles</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -143,7 +173,7 @@ const AuditActivityTab = ({ accountId }: AuditActivityTabProps) => {
                     <TableCell className="text-sm">
                       {entityLabels[log.entity_type] || log.entity_type}
                     </TableCell>
-                    <TableCell className="hidden md:table-cell text-xs text-muted-foreground max-w-xs truncate">
+                    <TableCell className="text-xs text-muted-foreground max-w-xs truncate">
                       {log.details && Object.keys(log.details).length > 0
                         ? Object.entries(log.details)
                             .map(([k, v]) => `${k}: ${v}`)
@@ -156,14 +186,10 @@ const AuditActivityTab = ({ accountId }: AuditActivityTabProps) => {
             </Table>
             <div className="px-4 pb-4">
               <PaginationControls
-                currentPage={pagination.currentPage}
-                totalPages={pagination.totalPages}
-                totalItems={pagination.totalItems}
-                pageSize={pagination.pageSize}
-                startIndex={pagination.startIndex}
-                endIndex={pagination.endIndex}
-                onPageChange={pagination.setCurrentPage}
-                onPageSizeChange={pagination.setPageSize}
+                currentPage={pagination.currentPage} totalPages={pagination.totalPages}
+                totalItems={pagination.totalItems} pageSize={pagination.pageSize}
+                startIndex={pagination.startIndex} endIndex={pagination.endIndex}
+                onPageChange={pagination.setCurrentPage} onPageSizeChange={pagination.setPageSize}
                 pageSizeOptions={pagination.pageSizeOptions}
               />
             </div>
