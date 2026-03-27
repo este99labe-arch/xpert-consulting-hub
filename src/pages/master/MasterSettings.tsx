@@ -166,7 +166,38 @@ const MasterSettings = () => {
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
             </div>
           ) : (
-            <Card>
+            {/* Mobile cards */}
+            <div className="space-y-3 md:hidden">
+              {filteredUsers.map((u: any) => (
+                <Card key={u.user_id} className="p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-sm truncate">{u.email}</span>
+                    <Badge variant={u.is_active ? "default" : "outline"} className="shrink-0">
+                      {u.is_active ? "Activo" : "Inactivo"}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">{u.account_name}</span>
+                    <Badge variant={u.role === "MASTER_ADMIN" ? "default" : "secondary"}>
+                      <ShieldCheck className="h-3 w-3 mr-1" />{u.role}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-1 pt-1 border-t">
+                    <Button variant="outline" size="sm" onClick={() => setShowResetDialog(u)}>
+                      <KeyRound className="h-3 w-3 mr-1" /> Reset
+                    </Button>
+                    {u.is_active && u.user_id !== user?.id && (
+                      <Button variant="outline" size="sm" onClick={() => handleDeactivateUser(u.user_id)}>
+                        Desactivar
+                      </Button>
+                    )}
+                  </div>
+                </Card>
+              ))}
+            </div>
+
+            {/* Desktop table */}
+            <Card className="hidden md:block">
               <CardContent className="p-0">
                 <Table>
                   <TableHeader>
@@ -185,8 +216,7 @@ const MasterSettings = () => {
                         <TableCell className="text-muted-foreground">{u.account_name}</TableCell>
                         <TableCell>
                           <Badge variant={u.role === "MASTER_ADMIN" ? "default" : "secondary"}>
-                            <ShieldCheck className="h-3 w-3 mr-1" />
-                            {u.role}
+                            <ShieldCheck className="h-3 w-3 mr-1" />{u.role}
                           </Badge>
                         </TableCell>
                         <TableCell>

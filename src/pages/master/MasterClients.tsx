@@ -110,7 +110,36 @@ const MasterClients = () => {
           </CardContent>
         </Card>
       ) : (
-        <Card>
+        {/* Mobile cards */}
+        <div className="space-y-3 md:hidden">
+          {clients.map((client) => (
+            <Card key={client.id} className="p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="font-medium">{client.name}</span>
+                <Badge variant={client.is_active ? "default" : "secondary"}>
+                  {client.is_active ? "Activo" : "Inactivo"}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span>{new Date(client.created_at).toLocaleDateString("es-ES")}</span>
+                <Switch
+                  checked={client.is_active}
+                  onCheckedChange={(checked) => toggleActive.mutate({ id: client.id, is_active: checked })}
+                />
+              </div>
+              <div className="flex items-center gap-2 pt-1 border-t">
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => setSelectedAccountId(client.id)}>Gestionar</Button>
+                <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/10 border-destructive/30"
+                  onClick={() => { setDeleteTarget({ id: client.id, name: client.name }); setDeleteMode("account_only"); }}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {/* Desktop table */}
+        <Card className="hidden md:block">
           <CardContent className="p-0">
             <Table>
               <TableHeader>
@@ -137,29 +166,14 @@ const MasterClients = () => {
                     <TableCell>
                       <Switch
                         checked={client.is_active}
-                        onCheckedChange={(checked) =>
-                          toggleActive.mutate({ id: client.id, is_active: checked })
-                        }
+                        onCheckedChange={(checked) => toggleActive.mutate({ id: client.id, is_active: checked })}
                       />
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setSelectedAccountId(client.id)}
-                        >
-                          Gestionar
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-destructive hover:bg-destructive/10 border-destructive/30"
-                          onClick={() => {
-                            setDeleteTarget({ id: client.id, name: client.name });
-                            setDeleteMode("account_only");
-                          }}
-                        >
+                        <Button variant="outline" size="sm" onClick={() => setSelectedAccountId(client.id)}>Gestionar</Button>
+                        <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/10 border-destructive/30"
+                          onClick={() => { setDeleteTarget({ id: client.id, name: client.name }); setDeleteMode("account_only"); }}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
