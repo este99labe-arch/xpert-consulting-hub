@@ -195,6 +195,7 @@ const AuditActivityTab = ({ accountId }: AuditActivityTabProps) => {
               />
             </div>
           </div>
+          </>
         )}
       </CardContent>
     </Card>
