@@ -461,8 +461,47 @@ const AppInvoices = () => {
         </div>
       </div>
 
-      {/* Table */}
-      <Card>
+      {/* Mobile cards */}
+      <div className="space-y-3 md:hidden">
+        {isLoading ? (
+          <div className="p-8 text-center text-muted-foreground">Cargando facturas...</div>
+        ) : filtered.length === 0 ? (
+          <div className="p-8 text-center text-muted-foreground">No se encontraron facturas</div>
+        ) : (
+          <>
+            {invoicePagination.paginatedItems.map((inv: any) => (
+              <Card key={inv.id} className="p-4 space-y-2 cursor-pointer active:bg-accent/50" onClick={() => setPreviewInvoice(inv)}>
+                <div className="flex items-center justify-between">
+                  <span className="font-mono font-semibold text-sm">{inv.invoice_number || inv.id.slice(0, 8).toUpperCase()}</span>
+                  <Badge variant="secondary" className={statusColors[inv.status]}>{statusLabels[inv.status] || inv.status}</Badge>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="truncate">{inv.business_clients?.name || "—"}</span>
+                  <span className="font-mono font-semibold">€{Number(inv.amount_total).toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{format(new Date(inv.issue_date), "dd MMM yyyy", { locale: es })}</span>
+                  <span>{typeLabels[inv.type] || inv.type}</span>
+                </div>
+                <div className="flex justify-end pt-1 border-t" onClick={(e) => e.stopPropagation()}>
+                  <InvoiceActionsMenu
+                    onPreview={() => setPreviewInvoice(inv)}
+                    onExport={() => handleExportPdf(inv.id)}
+                    onEdit={() => setEditInvoice(inv)}
+                    onDelete={() => handleDeleteClick(inv)}
+                    onSendEmail={inv.business_clients?.email ? () => handleSendEmail(inv.id) : undefined}
+                    onReminder={() => setReminderInvoice(inv)}
+                  />
+                </div>
+              </Card>
+            ))}
+            {renderPagination(invoicePagination)}
+          </>
+        )}
+      </div>
+
+      {/* Desktop Table */}
+      <Card className="hidden md:block">
         <CardContent className="p-0">
           {isLoading ? (
             <div className="p-8 text-center text-muted-foreground">Cargando facturas...</div>
@@ -475,11 +514,11 @@ const AppInvoices = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nº</TableHead>
-                    <TableHead className="hidden md:table-cell">F. Emisión</TableHead>
+                    <TableHead>F. Emisión</TableHead>
                     <TableHead className="hidden lg:table-cell">F. Pago</TableHead>
                     <TableHead>Cliente</TableHead>
-                    <TableHead className="hidden sm:table-cell">Concepto</TableHead>
-                    <TableHead className="hidden md:table-cell">Tipo</TableHead>
+                    <TableHead>Concepto</TableHead>
+                    <TableHead>Tipo</TableHead>
                     <TableHead className="text-right">Total</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
@@ -491,15 +530,15 @@ const AppInvoices = () => {
                       <TableCell className="font-mono font-semibold text-sm">
                         {inv.invoice_number || inv.id.slice(0, 8).toUpperCase()}
                       </TableCell>
-                      <TableCell className="whitespace-nowrap hidden md:table-cell">
+                      <TableCell className="whitespace-nowrap">
                         {format(new Date(inv.issue_date), "dd MMM yyyy", { locale: es })}
                       </TableCell>
                       <TableCell className="whitespace-nowrap text-muted-foreground hidden lg:table-cell">
                         {inv.paid_at ? format(new Date(inv.paid_at), "dd MMM yyyy", { locale: es }) : "—"}
                       </TableCell>
                       <TableCell>{inv.business_clients?.name || "—"}</TableCell>
-                      <TableCell className="max-w-[200px] truncate hidden sm:table-cell">{inv.concept || "—"}</TableCell>
-                      <TableCell className="hidden md:table-cell">{typeLabels[inv.type] || inv.type}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">{inv.concept || "—"}</TableCell>
+                      <TableCell>{typeLabels[inv.type] || inv.type}</TableCell>
                       <TableCell className="text-right font-mono font-semibold">
                         €{Number(inv.amount_total).toLocaleString("es-ES", { minimumFractionDigits: 2 })}
                       </TableCell>

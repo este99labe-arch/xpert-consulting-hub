@@ -70,7 +70,41 @@ const EmployeesTab = () => {
         </div>
       </div>
 
-      <Card>
+      {/* Mobile cards */}
+      <div className="space-y-3 md:hidden">
+        {filtered.length === 0 ? (
+          <Card className="p-8 text-center text-muted-foreground">No se encontraron empleados</Card>
+        ) : (
+          pagination.paginatedItems.map((emp: any) => (
+            <Card key={emp.id} className="p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-medium text-sm truncate">{emailMap.get(emp.user_id) || emp.user_id}</span>
+                <Badge variant="outline">{(emp as any).roles?.code || "—"}</Badge>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                {emp.is_active ? (
+                  <span className="flex items-center gap-1"><UserCheck className="h-4 w-4 text-primary" />Activo</span>
+                ) : (
+                  <span className="flex items-center gap-1 text-muted-foreground"><UserX className="h-4 w-4" />Inactivo</span>
+                )}
+                <span className="text-muted-foreground text-xs">{new Date(emp.created_at).toLocaleDateString("es-ES")}</span>
+              </div>
+            </Card>
+          ))
+        )}
+        {filtered.length > 0 && (
+          <PaginationControls
+            currentPage={pagination.currentPage} totalPages={pagination.totalPages}
+            totalItems={pagination.totalItems} pageSize={pagination.pageSize}
+            startIndex={pagination.startIndex} endIndex={pagination.endIndex}
+            onPageChange={pagination.setCurrentPage} onPageSizeChange={pagination.setPageSize}
+            pageSizeOptions={pagination.pageSizeOptions}
+          />
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <Card className="hidden md:block">
         <CardContent className="p-0">
           <Table>
             <TableHeader>
@@ -107,14 +141,10 @@ const EmployeesTab = () => {
           {filtered.length > 0 && (
             <div className="px-4 pb-4">
               <PaginationControls
-                currentPage={pagination.currentPage}
-                totalPages={pagination.totalPages}
-                totalItems={pagination.totalItems}
-                pageSize={pagination.pageSize}
-                startIndex={pagination.startIndex}
-                endIndex={pagination.endIndex}
-                onPageChange={pagination.setCurrentPage}
-                onPageSizeChange={pagination.setPageSize}
+                currentPage={pagination.currentPage} totalPages={pagination.totalPages}
+                totalItems={pagination.totalItems} pageSize={pagination.pageSize}
+                startIndex={pagination.startIndex} endIndex={pagination.endIndex}
+                onPageChange={pagination.setCurrentPage} onPageSizeChange={pagination.setPageSize}
                 pageSizeOptions={pagination.pageSizeOptions}
               />
             </div>

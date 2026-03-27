@@ -17,7 +17,39 @@ const AlertsTab = ({ lowStockProducts, isManager, onQuickOrder }: AlertsTabProps
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border">
+      {/* Mobile cards */}
+      <div className="space-y-3 md:hidden">
+        {lowStockProducts.sort((a, b) => (a.current_stock - a.min_stock) - (b.current_stock - b.min_stock)).map(p => (
+          <Card key={p.id} className="p-4 space-y-2 border-destructive/20 bg-destructive/5">
+            <div className="flex items-center justify-between">
+              <span className="font-medium text-sm">{p.name}</span>
+              <span className="font-mono text-xs text-muted-foreground">{p.sku}</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center text-xs">
+              <div>
+                <p className="text-muted-foreground">Actual</p>
+                <p className="text-destructive font-bold">{p.current_stock} {p.unit}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Mínimo</p>
+                <p className="font-medium">{p.min_stock} {p.unit}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Déficit</p>
+                <p className="text-destructive font-bold">{p.current_stock - p.min_stock} {p.unit}</p>
+              </div>
+            </div>
+            {isManager && (
+              <Button size="sm" variant="outline" className="w-full" onClick={() => onQuickOrder(p)}>
+                <ShoppingCart className="h-4 w-4 mr-1" />Pedir
+              </Button>
+            )}
+          </Card>
+        ))}
+      </div>
+
+      {/* Desktop table */}
+      <div className="rounded-md border hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>

@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -61,7 +62,45 @@ const MovementsTab = ({ movements, products, isManager, onNewMovement }: Movemen
           </>
         )}
       </div>
-      <div className="rounded-md border">
+      {/* Mobile cards */}
+      <div className="space-y-3 md:hidden">
+        {filtered.length === 0 ? (
+          <Card className="p-8 text-center text-muted-foreground">Sin movimientos</Card>
+        ) : (
+          pagination.paginatedItems.map(m => {
+            const Icon = movementTypeIcons[m.type] || RotateCcw;
+            return (
+              <Card key={m.id} className="p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-sm">{m.products?.name}</span>
+                  <div className="flex items-center gap-1">
+                    <Icon className={`h-4 w-4 ${m.type === "IN" ? "text-green-600" : m.type === "OUT" ? "text-destructive" : "text-muted-foreground"}`} />
+                    <span className="text-sm">{movementTypeLabels[m.type]}</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{format(new Date(m.created_at), "dd/MM/yyyy HH:mm", { locale: es })}</span>
+                  <span className="font-mono font-medium text-foreground">{m.type === "OUT" ? `-${m.quantity}` : m.quantity}</span>
+                </div>
+                <div className="text-xs text-muted-foreground capitalize">{m.reason}</div>
+                {m.notes && <p className="text-xs text-muted-foreground truncate">{m.notes}</p>}
+              </Card>
+            );
+          })
+        )}
+        {filtered.length > 0 && (
+          <PaginationControls
+            currentPage={pagination.currentPage} totalPages={pagination.totalPages}
+            totalItems={pagination.totalItems} pageSize={pagination.pageSize}
+            startIndex={pagination.startIndex} endIndex={pagination.endIndex}
+            onPageChange={pagination.setCurrentPage} onPageSizeChange={pagination.setPageSize}
+            pageSizeOptions={pagination.pageSizeOptions}
+          />
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="rounded-md border hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -81,7 +120,7 @@ const MovementsTab = ({ movements, products, isManager, onNewMovement }: Movemen
                   <TableCell>{m.products?.name} <span className="text-xs text-muted-foreground">({m.products?.sku})</span></TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
-                      <Icon className={`h-4 w-4 ${m.type === "IN" ? "text-success" : m.type === "OUT" ? "text-destructive" : "text-muted-foreground"}`} />
+                      <Icon className={`h-4 w-4 ${m.type === "IN" ? "text-green-600" : m.type === "OUT" ? "text-destructive" : "text-muted-foreground"}`} />
                       {movementTypeLabels[m.type]}
                     </div>
                   </TableCell>
@@ -96,14 +135,10 @@ const MovementsTab = ({ movements, products, isManager, onNewMovement }: Movemen
         {filtered.length > 0 && (
           <div className="px-4 pb-4">
             <PaginationControls
-              currentPage={pagination.currentPage}
-              totalPages={pagination.totalPages}
-              totalItems={pagination.totalItems}
-              pageSize={pagination.pageSize}
-              startIndex={pagination.startIndex}
-              endIndex={pagination.endIndex}
-              onPageChange={pagination.setCurrentPage}
-              onPageSizeChange={pagination.setPageSize}
+              currentPage={pagination.currentPage} totalPages={pagination.totalPages}
+              totalItems={pagination.totalItems} pageSize={pagination.pageSize}
+              startIndex={pagination.startIndex} endIndex={pagination.endIndex}
+              onPageChange={pagination.setCurrentPage} onPageSizeChange={pagination.setPageSize}
               pageSizeOptions={pagination.pageSizeOptions}
             />
           </div>

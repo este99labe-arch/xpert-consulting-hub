@@ -239,6 +239,46 @@ const RecurringInvoicesTab = ({ accountId, isManager }: RecurringInvoicesTabProp
             <p className="text-sm text-muted-foreground py-8 text-center">No hay facturas recurrentes configuradas</p>
           ) : (
             <>
+              {/* Mobile cards */}
+              <div className="space-y-3 md:hidden">
+                {pagination.paginatedItems.map((r: any) => (
+                  <Card key={r.id} className="p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-sm truncate">{r.business_clients?.name || "—"}</span>
+                      <Badge variant={r.is_active ? "default" : "secondary"}>{r.is_active ? "Activa" : "Pausada"}</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground truncate">{r.concept || "—"}</p>
+                    <div className="flex items-center justify-between text-xs">
+                      <span>{r.type === "INVOICE" ? "Factura" : "Gasto"} · <Badge variant="outline" className="text-[10px]">{frequencyLabels[r.frequency] || r.frequency}</Badge></span>
+                      <span className="font-mono font-semibold">{fmtMoney(r.amount_total)}</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground">Próxima: {format(new Date(r.next_run_date), "dd MMM yyyy", { locale: es })}</div>
+                    {isManager && (
+                      <div className="flex items-center gap-1 pt-1 border-t">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleActive(r.id, r.is_active)}>
+                          {r.is_active ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(r)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteId(r.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </Card>
+                ))}
+                <PaginationControls
+                  currentPage={pagination.currentPage} totalPages={pagination.totalPages}
+                  totalItems={pagination.totalItems} pageSize={pagination.pageSize}
+                  startIndex={pagination.startIndex} endIndex={pagination.endIndex}
+                  onPageChange={pagination.setCurrentPage} onPageSizeChange={pagination.setPageSize}
+                  pageSizeOptions={pagination.pageSizeOptions}
+                />
+              </div>
+
+              {/* Desktop table */}
+              <div className="hidden md:block">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -291,16 +331,13 @@ const RecurringInvoicesTab = ({ accountId, isManager }: RecurringInvoicesTabProp
               </Table>
               <div className="pt-4">
                 <PaginationControls
-                  currentPage={pagination.currentPage}
-                  totalPages={pagination.totalPages}
-                  totalItems={pagination.totalItems}
-                  pageSize={pagination.pageSize}
-                  startIndex={pagination.startIndex}
-                  endIndex={pagination.endIndex}
-                  onPageChange={pagination.setCurrentPage}
-                  onPageSizeChange={pagination.setPageSize}
+                  currentPage={pagination.currentPage} totalPages={pagination.totalPages}
+                  totalItems={pagination.totalItems} pageSize={pagination.pageSize}
+                  startIndex={pagination.startIndex} endIndex={pagination.endIndex}
+                  onPageChange={pagination.setCurrentPage} onPageSizeChange={pagination.setPageSize}
                   pageSizeOptions={pagination.pageSizeOptions}
                 />
+              </div>
               </div>
             </>
           )}
