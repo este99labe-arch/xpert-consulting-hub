@@ -23,7 +23,7 @@ const statusLabels: Record<string, string> = {
   ACCEPTED: "Aceptado", REJECTED: "Rechazado", INVOICED: "Facturado",
 };
 
-const allInvoiceStatuses = ["DRAFT", "SENT", "PAID", "OVERDUE", "CANCELLED"];
+const allInvoiceStatuses = ["DRAFT", "SENT", "PARTIALLY_PAID", "PAID", "OVERDUE", "CANCELLED"];
 const allQuoteStatuses = ["DRAFT", "SENT", "ACCEPTED", "REJECTED", "INVOICED", "CANCELLED"];
 
 interface Props {
