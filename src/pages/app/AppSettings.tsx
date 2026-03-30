@@ -1010,6 +1010,11 @@ const AppSettings = () => {
             <WhatsAppConfigTab accountId={accountId} isManager={isManager} />
           </TabsContent>
         )}
+        {isManager && (
+          <TabsContent value="invoicetemplate">
+            <InvoiceTemplateTab accountId={accountId} isManager={isManager} />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
