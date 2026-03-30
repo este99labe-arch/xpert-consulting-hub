@@ -962,6 +962,11 @@ const AppSettings = () => {
               <MessageSquare className="h-4 w-4" /> <span className="hidden lg:inline">WhatsApp</span>
             </TabsTrigger>
           )}
+          {isManager && (
+            <TabsTrigger value="invoicetemplate" className="gap-1">
+              <FileText className="h-4 w-4" /> <span className="hidden lg:inline">Facturas</span>
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="company">
