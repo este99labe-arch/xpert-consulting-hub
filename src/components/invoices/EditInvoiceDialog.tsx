@@ -347,6 +347,19 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
             </div>
           )}
 
+          {/* Partial payments — only for invoices/expenses, not drafts */}
+          {invoice?.type !== "QUOTE" && invoice?.status !== "DRAFT" && (
+            <>
+              <Separator />
+              <InvoicePaymentsPanel
+                invoice={invoice}
+                onStatusChanged={() => {
+                  queryClient.invalidateQueries({ queryKey: ["invoices"] });
+                }}
+              />
+            </>
+          )}
+
           {/* Attachment — always editable */}
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground uppercase tracking-wide">Archivo adjunto</Label>
