@@ -39,6 +39,7 @@ const statusColors: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground",
   SENT: "bg-primary/10 text-primary",
   PAID: "bg-green-100 text-green-800",
+  PARTIALLY_PAID: "bg-amber-100 text-amber-800",
   OVERDUE: "bg-destructive/10 text-destructive",
   ACCEPTED: "bg-green-100 text-green-800",
   REJECTED: "bg-destructive/10 text-destructive",
@@ -46,7 +47,7 @@ const statusColors: Record<string, string> = {
 };
 
 const statusLabels: Record<string, string> = {
-  DRAFT: "Borrador", SENT: "Enviada", PAID: "Pagada", OVERDUE: "Vencida",
+  DRAFT: "Borrador", SENT: "Enviada", PAID: "Pagada", PARTIALLY_PAID: "Pago parcial", OVERDUE: "Vencida",
   ACCEPTED: "Aceptado", REJECTED: "Rechazado", INVOICED: "Facturado",
 };
 
