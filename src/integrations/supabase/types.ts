@@ -54,6 +54,7 @@ export type Database = {
         Row: {
           account_id: string
           id: string
+          invoice_template: string
           updated_at: string
           vacation_days_per_year: number
           work_days: string[]
@@ -63,6 +64,7 @@ export type Database = {
         Insert: {
           account_id: string
           id?: string
+          invoice_template?: string
           updated_at?: string
           vacation_days_per_year?: number
           work_days?: string[]
@@ -72,6 +74,7 @@ export type Database = {
         Update: {
           account_id?: string
           id?: string
+          invoice_template?: string
           updated_at?: string
           vacation_days_per_year?: number
           work_days?: string[]
