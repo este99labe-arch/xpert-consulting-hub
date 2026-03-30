@@ -16,13 +16,14 @@ import { Separator } from "@/components/ui/separator";
 import { Loader2, ArrowRight } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import InvoiceAttachment from "@/components/invoices/InvoiceAttachment";
+import InvoicePaymentsPanel from "@/components/invoices/InvoicePaymentsPanel";
 
 const statusLabels: Record<string, string> = {
-  DRAFT: "Borrador", SENT: "Enviada", PAID: "Pagada", OVERDUE: "Vencida",
+  DRAFT: "Borrador", SENT: "Enviada", PAID: "Pagada", PARTIALLY_PAID: "Pago parcial", OVERDUE: "Vencida",
   ACCEPTED: "Aceptado", REJECTED: "Rechazado", INVOICED: "Facturado",
 };
 
-const allInvoiceStatuses = ["DRAFT", "SENT", "PAID", "OVERDUE", "CANCELLED"];
+const allInvoiceStatuses = ["DRAFT", "SENT", "PARTIALLY_PAID", "PAID", "OVERDUE", "CANCELLED"];
 const allQuoteStatuses = ["DRAFT", "SENT", "ACCEPTED", "REJECTED", "INVOICED", "CANCELLED"];
 
 interface Props {
@@ -344,6 +345,19 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
                 <span className="font-mono">€{Number(invoice.amount_total).toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
               </div>
             </div>
+          )}
+
+          {/* Partial payments — only for invoices/expenses, not drafts */}
+          {invoice?.type !== "QUOTE" && invoice?.status !== "DRAFT" && (
+            <>
+              <Separator />
+              <InvoicePaymentsPanel
+                invoice={invoice}
+                onStatusChanged={() => {
+                  queryClient.invalidateQueries({ queryKey: ["invoices"] });
+                }}
+              />
+            </>
           )}
 
           {/* Attachment — always editable */}

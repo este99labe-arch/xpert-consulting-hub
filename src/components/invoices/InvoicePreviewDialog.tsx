@@ -11,7 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import InvoiceAttachment from "@/components/invoices/InvoiceAttachment";
 
 const statusLabels: Record<string, string> = {
-  DRAFT: "Borrador", SENT: "Enviada", PAID: "Pagada", OVERDUE: "Vencida",
+  DRAFT: "Borrador", SENT: "Enviada", PAID: "Pagada", PARTIALLY_PAID: "Pago parcial", OVERDUE: "Vencida",
 };
 
 interface Props {

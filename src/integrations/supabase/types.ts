@@ -808,6 +808,57 @@ export type Database = {
           },
         ]
       }
+      invoice_payments: {
+        Row: {
+          account_id: string
+          amount: number
+          created_at: string
+          created_by: string
+          id: string
+          invoice_id: string
+          method: string
+          notes: string | null
+          payment_date: string
+        }
+        Insert: {
+          account_id: string
+          amount: number
+          created_at?: string
+          created_by: string
+          id?: string
+          invoice_id: string
+          method?: string
+          notes?: string | null
+          payment_date?: string
+        }
+        Update: {
+          account_id?: string
+          amount?: number
+          created_at?: string
+          created_by?: string
+          id?: string
+          invoice_id?: string
+          method?: string
+          notes?: string | null
+          payment_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_payments_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           account_id: string
