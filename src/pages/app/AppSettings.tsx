@@ -29,6 +29,7 @@ import AuditActivityTab from "@/components/settings/AuditActivityTab";
 import ApiKeysTab from "@/components/settings/ApiKeysTab";
 import WebhooksTab from "@/components/settings/WebhooksTab";
 import WhatsAppConfigTab from "@/components/settings/WhatsAppConfigTab";
+import InvoiceTemplateTab from "@/components/settings/InvoiceTemplateTab";
 import CreateEmployeeDialog from "@/components/hr/CreateEmployeeDialog";
 
 const WEEKDAYS = [
