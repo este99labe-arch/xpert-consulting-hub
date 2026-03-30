@@ -16,9 +16,10 @@ import { Separator } from "@/components/ui/separator";
 import { Loader2, ArrowRight } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import InvoiceAttachment from "@/components/invoices/InvoiceAttachment";
+import InvoicePaymentsPanel from "@/components/invoices/InvoicePaymentsPanel";
 
 const statusLabels: Record<string, string> = {
-  DRAFT: "Borrador", SENT: "Enviada", PAID: "Pagada", OVERDUE: "Vencida",
+  DRAFT: "Borrador", SENT: "Enviada", PAID: "Pagada", PARTIALLY_PAID: "Pago parcial", OVERDUE: "Vencida",
   ACCEPTED: "Aceptado", REJECTED: "Rechazado", INVOICED: "Facturado",
 };
 
