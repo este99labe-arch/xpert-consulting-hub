@@ -420,6 +420,7 @@ const AppInvoices = () => {
               <SelectItem value="ALL">Todos</SelectItem>
               <SelectItem value="DRAFT">Borrador</SelectItem>
               <SelectItem value="SENT">Enviada</SelectItem>
+              <SelectItem value="PARTIALLY_PAID">Pago parcial</SelectItem>
               <SelectItem value="PAID">Pagada</SelectItem>
               <SelectItem value="OVERDUE">Vencida</SelectItem>
             </SelectContent>
