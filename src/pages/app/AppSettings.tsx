@@ -22,13 +22,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   Loader2, KeyRound, UserPlus, AlertCircle, Settings, Users, CalendarDays,
-  Clock, ShieldCheck, Save, User, Lock, Unlock, Check, X, Mail, Activity, Key, Webhook, MessageSquare, ShieldAlert,
+  Clock, ShieldCheck, Save, User, Lock, Unlock, Check, X, Mail, Activity, Key, Webhook, MessageSquare, ShieldAlert, FileText,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import AuditActivityTab from "@/components/settings/AuditActivityTab";
 import ApiKeysTab from "@/components/settings/ApiKeysTab";
 import WebhooksTab from "@/components/settings/WebhooksTab";
 import WhatsAppConfigTab from "@/components/settings/WhatsAppConfigTab";
+import InvoiceTemplateTab from "@/components/settings/InvoiceTemplateTab";
 import CreateEmployeeDialog from "@/components/hr/CreateEmployeeDialog";
 
 const WEEKDAYS = [
@@ -961,6 +962,11 @@ const AppSettings = () => {
               <MessageSquare className="h-4 w-4" /> <span className="hidden lg:inline">WhatsApp</span>
             </TabsTrigger>
           )}
+          {isManager && (
+            <TabsTrigger value="invoicetemplate" className="gap-1">
+              <FileText className="h-4 w-4" /> <span className="hidden lg:inline">Facturas</span>
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="company">
@@ -1002,6 +1008,11 @@ const AppSettings = () => {
         {isManager && (
           <TabsContent value="whatsapp">
             <WhatsAppConfigTab accountId={accountId} isManager={isManager} />
+          </TabsContent>
+        )}
+        {isManager && (
+          <TabsContent value="invoicetemplate">
+            <InvoiceTemplateTab accountId={accountId} isManager={isManager} />
           </TabsContent>
         )}
       </Tabs>
