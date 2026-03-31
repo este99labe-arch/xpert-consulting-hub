@@ -43,6 +43,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
   const [attachmentPath, setAttachmentPath] = useState<string | null>(null);
   const [attachmentName, setAttachmentName] = useState<string | null>(null);
 
+  const [vatIncluded, setVatIncluded] = useState(false);
   const [lines, setLines] = useState<InvoiceLineInput[]>([
     { description: "", quantity: "1", unitPrice: "" },
   ]);
