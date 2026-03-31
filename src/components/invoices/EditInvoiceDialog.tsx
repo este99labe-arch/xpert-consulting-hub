@@ -47,6 +47,7 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
   const [submitting, setSubmitting] = useState(false);
   const [attachmentPath, setAttachmentPath] = useState<string | null>(null);
   const [attachmentName, setAttachmentName] = useState<string | null>(null);
+  const [vatIncluded, setVatIncluded] = useState(false);
   const [lines, setLines] = useState<LineInput[]>([{ description: "", quantity: "1", unitPrice: "" }]);
 
   const isDraft = invoice?.status === "DRAFT";
