@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { INVOICE_TEMPLATES, type InvoiceTemplateId, renderInvoiceHtml, type InvoiceData } from "@/components/invoices/invoiceTemplates";
+import { INVOICE_TEMPLATES, type InvoiceTemplateId, renderInvoiceHtml, type InvoiceData, type InvoiceLine } from "@/components/invoices/invoiceTemplates";
 
 interface Props {
   accountId: string;
@@ -18,11 +18,17 @@ const sampleData: InvoiceData = {
   invoiceNumber: "FAC-2026-001",
   issueDate: "15 de marzo de 2026",
   concept: "Servicios de consultoría empresarial",
-  description: "Asesoramiento estratégico y análisis de procesos — Mes de Marzo 2026",
+  lines: [
+    { description: "Consultoría estratégica — Marzo 2026", quantity: 20, unitPrice: 50, amount: 1000 },
+    { description: "Análisis de procesos internos", quantity: 10, unitPrice: 50, amount: 500 },
+  ],
   amountNet: 1500,
   amountVat: 315,
-  amountTotal: 1815,
+  amountTotal: 1590,
   vatPercentage: 21,
+  irpfPercentage: 15,
+  irpfAmount: 225,
+  specialMentions: "Operación sujeta a retención de IRPF según Art. 101 LIRPF",
   status: "SENT",
   statusLabel: "Enviada",
   company: {

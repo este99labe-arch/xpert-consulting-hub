@@ -53,10 +53,20 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEma
     queryKey: ["invoice-payments", invoice?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("invoice_payments")
-        .select("*")
-        .eq("invoice_id", invoice!.id)
-        .order("payment_date", { ascending: true });
+        .from("invoice_payments").select("*")
+        .eq("invoice_id", invoice!.id).order("payment_date", { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!invoice?.id && open,
+  });
+
+  const { data: invoiceLines = [] } = useQuery({
+    queryKey: ["invoice-lines", invoice?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("invoice_lines").select("*")
+        .eq("invoice_id", invoice!.id).order("sort_order", { ascending: true });
       if (error) throw error;
       return data || [];
     },
@@ -67,10 +77,8 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEma
     queryKey: ["email-log", invoice?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("email_log")
-        .select("*")
-        .eq("invoice_id", invoice!.id)
-        .order("sent_at", { ascending: false });
+        .from("email_log").select("*")
+        .eq("invoice_id", invoice!.id).order("sent_at", { ascending: false });
       if (error) throw error;
       return data || [];
     },
@@ -80,7 +88,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEma
   if (!invoice) return null;
 
   const client = invoice.business_clients;
-  const typeLabel = invoice.type === "INVOICE" ? "FACTURA" : "GASTO";
+  const typeLabel = invoice.type === "INVOICE" ? "FACTURA" : invoice.type === "QUOTE" ? "PRESUPUESTO" : "GASTO";
   const invoiceNumber = invoice.invoice_number || invoice.id.slice(0, 8).toUpperCase();
   const template: InvoiceTemplateId = templateOverride || ((accountSettings as any)?.invoice_template as InvoiceTemplateId) || "classic";
 
@@ -92,12 +100,24 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEma
     typeLabel,
     invoiceNumber,
     issueDate: format(new Date(invoice.issue_date), "dd 'de' MMMM 'de' yyyy", { locale: es }),
+    operationDate: invoice.operation_date
+      ? format(new Date(invoice.operation_date), "dd 'de' MMMM 'de' yyyy", { locale: es })
+      : undefined,
     concept: invoice.concept,
     description: invoice.description,
+    lines: invoiceLines.length > 0 ? invoiceLines.map((l: any) => ({
+      description: l.description,
+      quantity: l.quantity,
+      unitPrice: l.unit_price,
+      amount: l.amount,
+    })) : undefined,
     amountNet: invoice.amount_net,
     amountVat: invoice.amount_vat,
     amountTotal: invoice.amount_total,
     vatPercentage: invoice.vat_percentage,
+    irpfPercentage: invoice.irpf_percentage || 0,
+    irpfAmount: invoice.irpf_amount || 0,
+    specialMentions: invoice.special_mentions || undefined,
     status: invoice.status,
     statusLabel: statusLabels[invoice.status] || invoice.status,
     company: {
@@ -149,9 +169,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEma
             <div className="flex items-center gap-1.5">
               <Palette className="h-4 w-4 text-muted-foreground" />
               <Select value={template} onValueChange={(v) => setTemplateOverride(v as InvoiceTemplateId)}>
-                <SelectTrigger className="h-8 w-[130px] text-xs">
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger className="h-8 w-[130px] text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {INVOICE_TEMPLATES.map(t => (
                     <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
@@ -179,25 +197,19 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEma
         {invoice.attachment_path && invoice.attachment_name && (
           <div className="px-6 py-2 border-b bg-muted/20">
             <InvoiceAttachment
-              accountId={accountId || ""}
-              invoiceId={invoice.id}
-              attachmentPath={invoice.attachment_path}
-              attachmentName={invoice.attachment_name}
-              onUploaded={() => {}}
-              readOnly
+              accountId={accountId || ""} invoiceId={invoice.id}
+              attachmentPath={invoice.attachment_path} attachmentName={invoice.attachment_name}
+              onUploaded={() => {}} readOnly
             />
           </div>
         )}
 
-        {/* A4 Preview via iframe */}
+        {/* A4 Preview */}
         <div className="p-4 flex justify-center bg-muted/30">
           <div className="w-full max-w-[700px] shadow-lg rounded-lg overflow-hidden bg-white">
             <iframe
-              ref={iframeRef}
-              srcDoc={html}
-              title="Vista previa factura"
-              className="w-full border-0"
-              style={{ minHeight: "80vh", height: "1100px" }}
+              ref={iframeRef} srcDoc={html} title="Vista previa factura"
+              className="w-full border-0" style={{ minHeight: "80vh", height: "1100px" }}
               sandbox="allow-same-origin"
             />
           </div>
