@@ -191,12 +191,13 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEma
 
         {/* A4 Preview via iframe */}
         <div className="p-4 flex justify-center bg-muted/30">
-          <div className="w-full max-w-[700px] shadow-lg rounded-lg overflow-hidden bg-white" style={{ aspectRatio: "210/297" }}>
+          <div className="w-full max-w-[700px] shadow-lg rounded-lg overflow-hidden bg-white">
             <iframe
               ref={iframeRef}
               srcDoc={html}
               title="Vista previa factura"
-              className="w-full h-full border-0"
+              className="w-full border-0"
+              style={{ minHeight: "80vh", height: "1100px" }}
               sandbox="allow-same-origin"
             />
           </div>
