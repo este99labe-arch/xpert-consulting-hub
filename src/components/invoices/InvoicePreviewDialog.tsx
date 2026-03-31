@@ -209,8 +209,19 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEma
           <div className="w-full max-w-[700px] shadow-lg rounded-lg overflow-hidden bg-white">
             <iframe
               ref={iframeRef} srcDoc={html} title="Vista previa factura"
-              className="w-full border-0" style={{ minHeight: "80vh", height: "1100px" }}
+              className="w-full border-0"
+              style={{ minHeight: "900px", height: "auto" }}
               sandbox="allow-same-origin"
+              onLoad={(e) => {
+                const frame = e.currentTarget;
+                try {
+                  const doc = frame.contentDocument || frame.contentWindow?.document;
+                  if (doc?.body) {
+                    const h = doc.body.scrollHeight + 40;
+                    frame.style.height = `${Math.max(900, h)}px`;
+                  }
+                } catch (_) {}
+              }}
             />
           </div>
         </div>

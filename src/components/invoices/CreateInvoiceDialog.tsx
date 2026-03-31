@@ -43,6 +43,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
   const [attachmentPath, setAttachmentPath] = useState<string | null>(null);
   const [attachmentName, setAttachmentName] = useState<string | null>(null);
 
+  const [vatIncluded, setVatIncluded] = useState(false);
   const [lines, setLines] = useState<InvoiceLineInput[]>([
     { description: "", quantity: "1", unitPrice: "" },
   ]);
@@ -61,7 +62,8 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
     const price = parseFloat(l.unitPrice) || 0;
     return +(qty * price).toFixed(2);
   });
-  const amountNet = lineAmounts.reduce((s, a) => s + a, 0);
+  const rawTotal = lineAmounts.reduce((s, a) => s + a, 0);
+  const amountNet = vatIncluded && vatNum > 0 ? +(rawTotal / (1 + vatNum / 100)).toFixed(2) : rawTotal;
   const amountVat = +(amountNet * vatNum / 100).toFixed(2);
   const irpfAmount = +(amountNet * irpfNum / 100).toFixed(2);
   const amountTotal = +(amountNet + amountVat - irpfAmount).toFixed(2);
@@ -321,7 +323,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
           </div>
 
           {/* Tax config */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>IVA (%)</Label>
               <Select value={vatPercentage} onValueChange={setVatPercentage}>
@@ -345,6 +347,12 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
                   <SelectItem value="19">19%</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="flex items-end pb-1">
+              <div className="flex items-center gap-2">
+                <Switch checked={vatIncluded} onCheckedChange={setVatIncluded} />
+                <Label className="text-sm">IVA incluido</Label>
+              </div>
             </div>
           </div>
 

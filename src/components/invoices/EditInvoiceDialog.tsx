@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Loader2, ArrowRight, Plus, Trash2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import InvoiceAttachment from "@/components/invoices/InvoiceAttachment";
 import InvoicePaymentsPanel from "@/components/invoices/InvoicePaymentsPanel";
@@ -47,6 +48,7 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
   const [submitting, setSubmitting] = useState(false);
   const [attachmentPath, setAttachmentPath] = useState<string | null>(null);
   const [attachmentName, setAttachmentName] = useState<string | null>(null);
+  const [vatIncluded, setVatIncluded] = useState(false);
   const [lines, setLines] = useState<LineInput[]>([{ description: "", quantity: "1", unitPrice: "" }]);
 
   const isDraft = invoice?.status === "DRAFT";
@@ -108,7 +110,8 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
     const price = parseFloat(l.unitPrice) || 0;
     return +(qty * price).toFixed(2);
   });
-  const amountNet = lineAmounts.reduce((s, a) => s + a, 0);
+  const rawTotal = lineAmounts.reduce((s, a) => s + a, 0);
+  const amountNet = vatIncluded && vatNum > 0 ? +(rawTotal / (1 + vatNum / 100)).toFixed(2) : rawTotal;
   const amountVat = +(amountNet * vatNum / 100).toFixed(2);
   const irpfAmount = +(amountNet * irpfNum / 100).toFixed(2);
   const amountTotal = +(amountNet + amountVat - irpfAmount).toFixed(2);
@@ -373,6 +376,12 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
                       <SelectItem value="19">19%</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="flex items-end pb-1">
+                  <div className="flex items-center gap-2">
+                    <Switch checked={vatIncluded} onCheckedChange={setVatIncluded} />
+                    <Label className="text-sm">IVA incluido</Label>
+                  </div>
                 </div>
               </div>
 
