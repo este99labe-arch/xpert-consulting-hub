@@ -811,6 +811,54 @@ export type Database = {
           },
         ]
       }
+      invoice_lines: {
+        Row: {
+          account_id: string
+          amount: number
+          description: string
+          id: string
+          invoice_id: string
+          quantity: number
+          sort_order: number
+          unit_price: number
+        }
+        Insert: {
+          account_id: string
+          amount?: number
+          description?: string
+          id?: string
+          invoice_id: string
+          quantity?: number
+          sort_order?: number
+          unit_price?: number
+        }
+        Update: {
+          account_id?: string
+          amount?: number
+          description?: string
+          id?: string
+          invoice_id?: string
+          quantity?: number
+          sort_order?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_lines_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_lines_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_payments: {
         Row: {
           account_id: string
@@ -876,8 +924,12 @@ export type Database = {
           description: string | null
           id: string
           invoice_number: string | null
+          irpf_amount: number
+          irpf_percentage: number
           issue_date: string
+          operation_date: string | null
           paid_at: string | null
+          special_mentions: string | null
           status: string
           type: string
           vat_percentage: number
@@ -895,8 +947,12 @@ export type Database = {
           description?: string | null
           id?: string
           invoice_number?: string | null
+          irpf_amount?: number
+          irpf_percentage?: number
           issue_date: string
+          operation_date?: string | null
           paid_at?: string | null
+          special_mentions?: string | null
           status?: string
           type: string
           vat_percentage: number
@@ -914,8 +970,12 @@ export type Database = {
           description?: string | null
           id?: string
           invoice_number?: string | null
+          irpf_amount?: number
+          irpf_percentage?: number
           issue_date?: string
+          operation_date?: string | null
           paid_at?: string | null
+          special_mentions?: string | null
           status?: string
           type?: string
           vat_percentage?: number
