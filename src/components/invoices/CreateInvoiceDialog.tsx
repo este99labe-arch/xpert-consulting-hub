@@ -62,7 +62,8 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
     const price = parseFloat(l.unitPrice) || 0;
     return +(qty * price).toFixed(2);
   });
-  const amountNet = lineAmounts.reduce((s, a) => s + a, 0);
+  const rawTotal = lineAmounts.reduce((s, a) => s + a, 0);
+  const amountNet = vatIncluded && vatNum > 0 ? +(rawTotal / (1 + vatNum / 100)).toFixed(2) : rawTotal;
   const amountVat = +(amountNet * vatNum / 100).toFixed(2);
   const irpfAmount = +(amountNet * irpfNum / 100).toFixed(2);
   const amountTotal = +(amountNet + amountVat - irpfAmount).toFixed(2);
