@@ -376,6 +376,12 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="flex items-end pb-1">
+                  <div className="flex items-center gap-2">
+                    <Switch checked={vatIncluded} onCheckedChange={setVatIncluded} />
+                    <Label className="text-sm">IVA incluido</Label>
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-2">

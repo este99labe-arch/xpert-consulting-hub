@@ -323,7 +323,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
           </div>
 
           {/* Tax config */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>IVA (%)</Label>
               <Select value={vatPercentage} onValueChange={setVatPercentage}>
@@ -347,6 +347,12 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
                   <SelectItem value="19">19%</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="flex items-end pb-1">
+              <div className="flex items-center gap-2">
+                <Switch checked={vatIncluded} onCheckedChange={setVatIncluded} />
+                <Label className="text-sm">IVA incluido</Label>
+              </div>
             </div>
           </div>
 
