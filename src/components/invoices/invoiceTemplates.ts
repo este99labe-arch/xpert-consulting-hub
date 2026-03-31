@@ -14,16 +14,28 @@ export const INVOICE_TEMPLATES: InvoiceTemplateInfo[] = [
   { id: "minimal", name: "Minimalista", description: "Diseño limpio y elegante con máximo espacio en blanco" },
 ];
 
+export interface InvoiceLine {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  amount: number;
+}
+
 export interface InvoiceData {
   typeLabel: string;
   invoiceNumber: string;
   issueDate: string;
+  operationDate?: string;
   concept: string;
   description?: string;
+  lines?: InvoiceLine[];
   amountNet: number;
   amountVat: number;
   amountTotal: number;
   vatPercentage: number;
+  irpfPercentage?: number;
+  irpfAmount?: number;
+  specialMentions?: string;
   status: string;
   statusLabel: string;
   company: {
@@ -57,11 +69,77 @@ const statusColors: Record<string, { bg: string; color: string }> = {
   OVERDUE: { bg: "#fee2e2", color: "#991b1b" },
 };
 
+function renderLinesTable(d: InvoiceData, thBg: string, thColor: string, borderColor: string): string {
+  const hasLines = d.lines && d.lines.length > 0;
+  const rows = hasLines
+    ? d.lines!.map(l => `<tr>
+        <td style="font-weight:600">${l.description || "—"}</td>
+        <td class="r">${l.quantity}</td>
+        <td class="r">€${fmtMoney(l.unitPrice)}</td>
+        <td class="r b">€${fmtMoney(l.amount)}</td>
+      </tr>`).join("")
+    : `<tr>
+        <td style="font-weight:600">${d.concept || "—"}</td>
+        <td class="r">1</td>
+        <td class="r">€${fmtMoney(d.amountNet)}</td>
+        <td class="r b">€${fmtMoney(d.amountNet)}</td>
+      </tr>
+      ${d.description ? `<tr><td colspan="4" class="desc-cell">${d.description}</td></tr>` : ""}`;
+
+  return `<table>
+    <thead><tr>
+      <th style="background:${thBg};color:${thColor};border-bottom-color:${borderColor}">Descripción del servicio</th>
+      <th class="r" style="width:80px;background:${thBg};color:${thColor};border-bottom-color:${borderColor}">Cant.</th>
+      <th class="r" style="width:120px;background:${thBg};color:${thColor};border-bottom-color:${borderColor}">Precio ud.</th>
+      <th class="r" style="width:120px;background:${thBg};color:${thColor};border-bottom-color:${borderColor}">Importe</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+function renderTotals(d: InvoiceData): string {
+  const totalPaid = d.payments?.reduce((s, p) => s + p.amount, 0) || 0;
+  const balance = d.amountTotal - totalPaid;
+  const hasIrpf = (d.irpfPercentage || 0) > 0;
+
+  return `
+    <div class="t-row"><span>Base imponible</span><span class="mono">€${fmtMoney(d.amountNet)}</span></div>
+    <div class="t-row"><span>IVA (${d.vatPercentage}%)</span><span class="mono">€${fmtMoney(d.amountVat)}</span></div>
+    ${hasIrpf ? `<div class="t-row"><span>IRPF (−${d.irpfPercentage}%)</span><span class="mono">−€${fmtMoney(d.irpfAmount || 0)}</span></div>` : ""}
+    <div class="t-divider"></div>
+    <div class="t-total"><span>Total</span><span class="mono">€${fmtMoney(d.amountTotal)}</span></div>
+    ${totalPaid > 0 ? `
+    <div class="t-row" style="color:#16a34a;font-weight:600"><span>Pagado</span><span class="mono">€${fmtMoney(totalPaid)}</span></div>
+    <div class="t-balance"><span>Saldo pendiente</span><span class="mono">€${fmtMoney(balance)}</span></div>
+    ` : ""}`;
+}
+
+function renderPayments(d: InvoiceData, labelColor: string, rowBg: string, rowBorder?: string): string {
+  if (!d.payments || d.payments.length === 0) return "";
+  return `<div class="payments">
+    <h3 style="color:${labelColor}">Pagos registrados</h3>
+    ${d.payments.map(p => `<div class="pay-row" style="background:${rowBg}${rowBorder ? `;border:1px solid ${rowBorder}` : ""}"><span>${p.date} — ${p.method}</span><span style="font-weight:600">€${fmtMoney(p.amount)}</span></div>`).join("")}
+  </div>`;
+}
+
+function renderSpecialMentions(d: InvoiceData): string {
+  if (!d.specialMentions) return "";
+  return `<div class="special-mentions" style="margin-bottom:20px;padding:12px 16px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:11px;color:#92400e;line-height:1.6">
+    <strong>Mención especial:</strong> ${d.specialMentions}
+  </div>`;
+}
+
+function renderMetaDates(d: InvoiceData): string {
+  let html = `<div class="meta-box"><div class="meta-label">Fecha de emisión</div><div class="meta-value">${d.issueDate}</div></div>`;
+  if (d.operationDate) {
+    html += `<div class="meta-box"><div class="meta-label">Fecha de operación</div><div class="meta-value">${d.operationDate}</div></div>`;
+  }
+  return html;
+}
+
 // ─── CLASSIC TEMPLATE ───────────────────────────────────────
 function classicTemplate(d: InvoiceData): string {
   const sc = statusColors[d.status] || statusColors.DRAFT;
-  const totalPaid = d.payments?.reduce((s, p) => s + p.amount, 0) || 0;
-  const balance = d.amountTotal - totalPaid;
   return `<!DOCTYPE html>
 <html lang="es"><head><meta charset="utf-8"><title>${d.typeLabel} ${d.invoiceNumber}</title>
 <style>
@@ -89,8 +167,8 @@ th.r{text-align:right}
 td{padding:14px 16px;border-bottom:1px solid #f1f5f9;font-size:13px}
 td.r{text-align:right;font-family:'SF Mono','Fira Code','Courier New',monospace;font-size:12px}
 td.b{font-weight:700}
-.desc-cell{color:#64748b;font-size:12px;padding:0 16px 14px;border-bottom:1px solid #f1f5f9}
-.totals{display:flex;justify-content:flex-end;margin-bottom:32px}
+.desc-cell{color:#64748b;font-size:12px;padding:4px 16px 14px;border-bottom:1px solid #f1f5f9}
+.totals{display:flex;justify-content:flex-end;margin-bottom:24px}
 .totals-box{width:300px;background:#f8fafc;border-radius:8px;padding:20px;border:1px solid #e2e8f0}
 .t-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:#64748b}
 .t-row .mono{font-family:'SF Mono','Fira Code','Courier New',monospace;font-size:12px}
@@ -98,9 +176,9 @@ td.b{font-weight:700}
 .t-total{display:flex;justify-content:space-between;padding:8px 0;font-size:20px;font-weight:800;color:#0f172a}
 .t-total .mono{font-family:'SF Mono','Fira Code','Courier New',monospace}
 .t-balance{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:#dc2626;font-weight:600}
-.payments{margin-bottom:28px}
-.payments h3{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#94a3b8;font-weight:700;margin-bottom:12px}
-.pay-row{display:flex;justify-content:space-between;padding:8px 16px;background:#f0fdf4;border-radius:6px;margin-bottom:4px;font-size:12px}
+.payments{margin-bottom:24px}
+.payments h3{font-size:11px;text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:12px}
+.pay-row{display:flex;justify-content:space-between;padding:8px 16px;border-radius:6px;margin-bottom:4px;font-size:12px}
 .footer{margin-top:auto;padding-top:24px;border-top:1px solid #e2e8f0;text-align:center;font-size:10px;color:#94a3b8}
 @media print{body{margin:0;width:100%}.page{box-shadow:none}}
 </style></head><body><div class="page">
@@ -144,55 +222,19 @@ td.b{font-weight:700}
 </div>
 
 <div class="meta-row">
-  <div class="meta-box">
-    <div class="meta-label">Nº Documento</div>
-    <div class="meta-value">${d.invoiceNumber}</div>
-  </div>
-  <div class="meta-box">
-    <div class="meta-label">Fecha de emisión</div>
-    <div class="meta-value">${d.issueDate}</div>
-  </div>
-  <div class="meta-box">
-    <div class="meta-label">Estado</div>
-    <div class="meta-value">${d.statusLabel}</div>
-  </div>
+  <div class="meta-box"><div class="meta-label">Nº Documento</div><div class="meta-value">${d.invoiceNumber}</div></div>
+  ${renderMetaDates(d)}
 </div>
 
-<table>
-  <thead><tr>
-    <th>Concepto</th>
-    <th class="r" style="width:140px">Base imponible</th>
-    <th class="r" style="width:100px">IVA (${d.vatPercentage}%)</th>
-    <th class="r" style="width:130px">Total</th>
-  </tr></thead>
-  <tbody>
-    <tr>
-      <td style="font-weight:600">${d.concept || "—"}</td>
-      <td class="r">€${fmtMoney(d.amountNet)}</td>
-      <td class="r">€${fmtMoney(d.amountVat)}</td>
-      <td class="r b">€${fmtMoney(d.amountTotal)}</td>
-    </tr>
-    ${d.description ? `<tr><td colspan="4" class="desc-cell">${d.description}</td></tr>` : ""}
-  </tbody>
-</table>
+${renderLinesTable(d, "#f8fafc", "#94a3b8", "#e2e8f0")}
 
-${d.payments && d.payments.length > 0 ? `
-<div class="payments">
-  <h3>Pagos registrados</h3>
-  ${d.payments.map(p => `<div class="pay-row"><span>${p.date} — ${p.method}</span><span style="font-weight:600">€${fmtMoney(p.amount)}</span></div>`).join("")}
-</div>
-` : ""}
+${renderSpecialMentions(d)}
+
+${renderPayments(d, "#94a3b8", "#f0fdf4")}
 
 <div class="totals">
   <div class="totals-box">
-    <div class="t-row"><span>Base imponible</span><span class="mono">€${fmtMoney(d.amountNet)}</span></div>
-    <div class="t-row"><span>IVA (${d.vatPercentage}%)</span><span class="mono">€${fmtMoney(d.amountVat)}</span></div>
-    <div class="t-divider"></div>
-    <div class="t-total"><span>Total</span><span class="mono">€${fmtMoney(d.amountTotal)}</span></div>
-    ${totalPaid > 0 ? `
-    <div class="t-row" style="color:#16a34a;font-weight:600"><span>Pagado</span><span class="mono">€${fmtMoney(totalPaid)}</span></div>
-    <div class="t-balance"><span>Saldo pendiente</span><span class="mono">€${fmtMoney(balance)}</span></div>
-    ` : ""}
+    ${renderTotals(d)}
   </div>
 </div>
 
@@ -208,6 +250,7 @@ function modernTemplate(d: InvoiceData): string {
   const sc = statusColors[d.status] || statusColors.DRAFT;
   const totalPaid = d.payments?.reduce((s, p) => s + p.amount, 0) || 0;
   const balance = d.amountTotal - totalPaid;
+  const hasIrpf = (d.irpfPercentage || 0) > 0;
   const accent = "#2563eb";
   return `<!DOCTYPE html>
 <html lang="es"><head><meta charset="utf-8"><title>${d.typeLabel} ${d.invoiceNumber}</title>
@@ -243,18 +286,18 @@ th.r{text-align:right}
 td{padding:16px 18px;font-size:13px;border-bottom:1px solid #f1f5f9}
 td.r{text-align:right;font-family:'SF Mono','Fira Code','Courier New',monospace;font-size:12px}
 td.b{font-weight:700}
-.desc-cell{color:#64748b;font-size:12px;padding:0 18px 16px;border-bottom:1px solid #f1f5f9}
-.totals{display:flex;justify-content:flex-end;margin-bottom:28px}
+.desc-cell{color:#64748b;font-size:12px;padding:4px 18px 16px;border-bottom:1px solid #f1f5f9}
+.totals{display:flex;justify-content:flex-end;margin-bottom:24px}
 .totals-box{width:300px;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0}
 .t-row{display:flex;justify-content:space-between;padding:10px 20px;font-size:13px;color:#64748b;background:#fafbfc}
 .t-row .mono{font-family:'SF Mono','Fira Code','Courier New',monospace;font-size:12px}
+.t-divider{height:0}
 .t-total{display:flex;justify-content:space-between;padding:14px 20px;font-size:18px;font-weight:800;color:white;background:${accent}}
 .t-total .mono{font-family:'SF Mono','Fira Code','Courier New',monospace}
 .t-balance{display:flex;justify-content:space-between;padding:10px 20px;font-size:13px;color:#dc2626;font-weight:600;background:#fef2f2}
-.t-paid{display:flex;justify-content:space-between;padding:10px 20px;font-size:13px;color:#16a34a;font-weight:600;background:#f0fdf4}
-.payments{margin-bottom:28px}
-.payments h3{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:${accent};font-weight:700;margin-bottom:12px}
-.pay-row{display:flex;justify-content:space-between;padding:10px 16px;background:#f0f9ff;border-radius:8px;margin-bottom:4px;font-size:12px;border:1px solid #bfdbfe}
+.payments{margin-bottom:24px}
+.payments h3{font-size:11px;text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:12px}
+.pay-row{display:flex;justify-content:space-between;padding:10px 16px;border-radius:8px;margin-bottom:4px;font-size:12px}
 .footer{margin-top:auto;padding-top:20px;border-top:2px solid ${accent};text-align:center;font-size:10px;color:#94a3b8}
 @media print{body{margin:0;width:100%}}
 </style></head><body><div class="page">
@@ -301,41 +344,23 @@ td.b{font-weight:700}
 <div class="meta-strip">
   <div class="meta-item"><div class="meta-item-label">Nº Documento</div><div class="meta-item-value">${d.invoiceNumber}</div></div>
   <div class="meta-item"><div class="meta-item-label">Fecha emisión</div><div class="meta-item-value">${d.issueDate}</div></div>
-  <div class="meta-item"><div class="meta-item-label">Estado</div><div class="meta-item-value">${d.statusLabel}</div></div>
+  ${d.operationDate ? `<div class="meta-item"><div class="meta-item-label">Fecha operación</div><div class="meta-item-value">${d.operationDate}</div></div>` : ""}
 </div>
 
-<table>
-  <thead><tr>
-    <th>Concepto</th>
-    <th class="r" style="width:140px">Base imponible</th>
-    <th class="r" style="width:100px">IVA (${d.vatPercentage}%)</th>
-    <th class="r" style="width:130px">Total</th>
-  </tr></thead>
-  <tbody>
-    <tr>
-      <td style="font-weight:600">${d.concept || "—"}</td>
-      <td class="r">€${fmtMoney(d.amountNet)}</td>
-      <td class="r">€${fmtMoney(d.amountVat)}</td>
-      <td class="r b">€${fmtMoney(d.amountTotal)}</td>
-    </tr>
-    ${d.description ? `<tr><td colspan="4" class="desc-cell">${d.description}</td></tr>` : ""}
-  </tbody>
-</table>
+${renderLinesTable(d, accent, "white", accent)}
 
-${d.payments && d.payments.length > 0 ? `
-<div class="payments">
-  <h3>Pagos registrados</h3>
-  ${d.payments.map(p => `<div class="pay-row"><span>${p.date} — ${p.method}</span><span style="font-weight:600">€${fmtMoney(p.amount)}</span></div>`).join("")}
-</div>
-` : ""}
+${renderSpecialMentions(d)}
+
+${renderPayments(d, accent, "#f0f9ff", "#bfdbfe")}
 
 <div class="totals">
   <div class="totals-box">
     <div class="t-row"><span>Base imponible</span><span class="mono">€${fmtMoney(d.amountNet)}</span></div>
     <div class="t-row"><span>IVA (${d.vatPercentage}%)</span><span class="mono">€${fmtMoney(d.amountVat)}</span></div>
+    ${hasIrpf ? `<div class="t-row"><span>IRPF (−${d.irpfPercentage}%)</span><span class="mono">−€${fmtMoney(d.irpfAmount || 0)}</span></div>` : ""}
     <div class="t-total"><span>Total</span><span class="mono">€${fmtMoney(d.amountTotal)}</span></div>
     ${totalPaid > 0 ? `
-    <div class="t-paid"><span>Pagado</span><span class="mono">€${fmtMoney(totalPaid)}</span></div>
+    <div class="t-row" style="color:#16a34a;font-weight:600;background:#f0fdf4"><span>Pagado</span><span class="mono">€${fmtMoney(totalPaid)}</span></div>
     <div class="t-balance"><span>Saldo pendiente</span><span class="mono">€${fmtMoney(balance)}</span></div>
     ` : ""}
   </div>
@@ -352,6 +377,24 @@ ${d.payments && d.payments.length > 0 ? `
 function minimalTemplate(d: InvoiceData): string {
   const totalPaid = d.payments?.reduce((s, p) => s + p.amount, 0) || 0;
   const balance = d.amountTotal - totalPaid;
+  const hasIrpf = (d.irpfPercentage || 0) > 0;
+  const hasLines = d.lines && d.lines.length > 0;
+
+  const rows = hasLines
+    ? d.lines!.map(l => `<tr>
+        <td style="font-weight:600">${l.description || "—"}</td>
+        <td class="r">${l.quantity}</td>
+        <td class="r">€${fmtMoney(l.unitPrice)}</td>
+        <td class="r b">€${fmtMoney(l.amount)}</td>
+      </tr>`).join("")
+    : `<tr>
+        <td style="font-weight:600">${d.concept || "—"}</td>
+        <td class="r">1</td>
+        <td class="r">€${fmtMoney(d.amountNet)}</td>
+        <td class="r b">€${fmtMoney(d.amountNet)}</td>
+      </tr>
+      ${d.description ? `<tr><td colspan="4" class="desc-row">${d.description}</td></tr>` : ""}`;
+
   return `<!DOCTYPE html>
 <html lang="es"><head><meta charset="utf-8"><title>${d.typeLabel} ${d.invoiceNumber}</title>
 <style>
@@ -378,10 +421,11 @@ td{padding:16px 0;font-size:14px;border-bottom:1px solid #eee}
 td.r{text-align:right;font-family:'SF Mono','Fira Code','Courier New',monospace;font-size:13px}
 td.b{font-weight:700}
 .desc-row{color:#888;font-size:12px;padding:0 0 16px;border-bottom:1px solid #eee;font-style:italic}
-.totals{display:flex;justify-content:flex-end;margin-bottom:32px}
+.totals{display:flex;justify-content:flex-end;margin-bottom:24px}
 .totals-inner{width:260px}
 .t-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:#888}
 .t-row .mono{font-family:'SF Mono','Fira Code','Courier New',monospace;font-size:12px}
+.t-divider{height:0}
 .t-total{display:flex;justify-content:space-between;padding:12px 0;font-size:24px;font-weight:700;color:#111;border-top:2px solid #111;margin-top:8px}
 .t-total .mono{font-family:'SF Mono','Fira Code','Courier New',monospace}
 .t-paid{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:#16a34a;font-weight:600}
@@ -394,7 +438,7 @@ td.b{font-weight:700}
 </style></head><body><div class="page">
 <div class="header">
   <div class="doc-type">${d.typeLabel}</div>
-  <div class="doc-number">${d.invoiceNumber} · ${d.issueDate}</div>
+  <div class="doc-number">${d.invoiceNumber} · ${d.issueDate}${d.operationDate ? ` · Op: ${d.operationDate}` : ""}</div>
 </div>
 
 <div class="parties">
@@ -424,23 +468,17 @@ td.b{font-weight:700}
 
 <table>
   <thead><tr>
-    <th>Concepto</th>
-    <th class="r" style="width:130px">Base</th>
-    <th class="r" style="width:100px">IVA ${d.vatPercentage}%</th>
-    <th class="r" style="width:120px">Total</th>
+    <th>Descripción</th>
+    <th class="r" style="width:70px">Cant.</th>
+    <th class="r" style="width:110px">Precio ud.</th>
+    <th class="r" style="width:110px">Importe</th>
   </tr></thead>
-  <tbody>
-    <tr>
-      <td style="font-weight:600">${d.concept || "—"}</td>
-      <td class="r">€${fmtMoney(d.amountNet)}</td>
-      <td class="r">€${fmtMoney(d.amountVat)}</td>
-      <td class="r b">€${fmtMoney(d.amountTotal)}</td>
-    </tr>
-    ${d.description ? `<tr><td colspan="4" class="desc-row">${d.description}</td></tr>` : ""}
-  </tbody>
+  <tbody>${rows}</tbody>
 </table>
 
 <div class="rule"></div>
+
+${d.specialMentions ? `<div style="margin-bottom:20px;font-size:11px;color:#666;font-style:italic"><strong>Nota:</strong> ${d.specialMentions}</div>` : ""}
 
 ${d.payments && d.payments.length > 0 ? `
 <div class="payments">
@@ -454,6 +492,7 @@ ${d.payments && d.payments.length > 0 ? `
   <div class="totals-inner">
     <div class="t-row"><span>Base imponible</span><span class="mono">€${fmtMoney(d.amountNet)}</span></div>
     <div class="t-row"><span>IVA (${d.vatPercentage}%)</span><span class="mono">€${fmtMoney(d.amountVat)}</span></div>
+    ${hasIrpf ? `<div class="t-row"><span>IRPF (−${d.irpfPercentage}%)</span><span class="mono">−€${fmtMoney(d.irpfAmount || 0)}</span></div>` : ""}
     <div class="t-total"><span>Total</span><span class="mono">€${fmtMoney(d.amountTotal)}</span></div>
     ${totalPaid > 0 ? `
     <div class="t-paid"><span>Pagado</span><span class="mono">€${fmtMoney(totalPaid)}</span></div>
