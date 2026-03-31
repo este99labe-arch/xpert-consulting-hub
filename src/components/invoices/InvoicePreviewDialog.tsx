@@ -206,7 +206,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEma
 
         {/* A4 Preview */}
         <div className="p-4 flex justify-center bg-muted/30">
-          <div className="w-full max-w-[700px] shadow-lg rounded-lg overflow-hidden bg-white">
+          <div className="w-full max-w-[860px] shadow-lg rounded-lg overflow-hidden bg-white">
             <iframe
               ref={iframeRef} srcDoc={html} title="Vista previa factura"
               className="w-full border-0"
