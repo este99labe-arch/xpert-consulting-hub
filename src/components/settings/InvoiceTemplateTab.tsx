@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { INVOICE_TEMPLATES, type InvoiceTemplateId, renderInvoiceHtml, type InvoiceData } from "@/components/invoices/invoiceTemplates";
+import { INVOICE_TEMPLATES, type InvoiceTemplateId, renderInvoiceHtml, type InvoiceData, type InvoiceLine } from "@/components/invoices/invoiceTemplates";
 
 interface Props {
   accountId: string;
