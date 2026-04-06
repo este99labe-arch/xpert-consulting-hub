@@ -87,6 +87,7 @@ const AppInvoices = () => {
     }
   }, [location.state]);
   const [activeTab, setActiveTab] = useState("invoices");
+  const [invoiceViewMode, setInvoiceViewMode] = useState<"list" | "kanban">("list");
 
   // Sync URL params on mount
   useEffect(() => {
