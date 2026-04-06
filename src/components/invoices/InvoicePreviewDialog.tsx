@@ -3,7 +3,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Printer, Download, Mail, Clock, Palette } from "lucide-react";
+import { Printer, Download, Mail, Clock, Palette, Pencil } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
@@ -22,9 +22,10 @@ interface Props {
   invoice: any | null;
   onExport?: () => void;
   onSendEmail?: () => void;
+  onEdit?: () => void;
 }
 
-const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEmail }: Props) => {
+const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEmail, onEdit }: Props) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const { accountId } = useAuth();
   const [templateOverride, setTemplateOverride] = useState<InvoiceTemplateId | null>(null);
@@ -177,6 +178,11 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEma
                 </SelectContent>
               </Select>
             </div>
+            {onEdit && (
+              <Button variant="outline" size="sm" onClick={onEdit}>
+                <Pencil className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Editar</span>
+              </Button>
+            )}
             {onSendEmail && client?.email && (
               <Button variant="outline" size="sm" onClick={onSendEmail}>
                 <Mail className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Email</span>
