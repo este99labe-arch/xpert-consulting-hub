@@ -35,7 +35,7 @@ import RecurringInvoicesTab from "@/components/invoices/RecurringInvoicesTab";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { usePagination } from "@/hooks/use-pagination";
 import { dispatchWebhook } from "@/lib/webhooks";
-
+import InvoiceKanbanView from "@/components/invoices/InvoiceKanbanView";
 const statusColors: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground",
   SENT: "bg-primary/10 text-primary",
