@@ -409,11 +409,21 @@ const AppInvoices = () => {
         </Card>
       )}
 
-      {/* Filters */}
+      {/* Filters + View Toggle */}
       <div className="space-y-3">
-        <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar por nº factura, cliente o concepto..." value={search} onChange={(e) => { setSearch(e.target.value); invoicePagination.resetPage(); }} className="pl-9" />
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Buscar por nº factura, cliente o concepto..." value={search} onChange={(e) => { setSearch(e.target.value); invoicePagination.resetPage(); }} className="pl-9" />
+          </div>
+          <ToggleGroup type="single" value={invoiceViewMode} onValueChange={(v) => v && setInvoiceViewMode(v as "list" | "kanban")} className="hidden sm:flex">
+            <ToggleGroupItem value="list" aria-label="Vista lista" className="px-2.5">
+              <List className="h-4 w-4" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="kanban" aria-label="Vista kanban" className="px-2.5">
+              <LayoutGrid className="h-4 w-4" />
+            </ToggleGroupItem>
+          </ToggleGroup>
         </div>
         <div className="flex flex-wrap gap-2 items-center">
           <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); invoicePagination.resetPage(); }}>
@@ -462,6 +472,15 @@ const AppInvoices = () => {
               <X className="h-4 w-4 mr-1" /> Limpiar
             </Button>
           )}
+          {/* Mobile view toggle */}
+          <ToggleGroup type="single" value={invoiceViewMode} onValueChange={(v) => v && setInvoiceViewMode(v as "list" | "kanban")} className="sm:hidden">
+            <ToggleGroupItem value="list" aria-label="Vista lista" className="px-2.5">
+              <List className="h-4 w-4" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="kanban" aria-label="Vista kanban" className="px-2.5">
+              <LayoutGrid className="h-4 w-4" />
+            </ToggleGroupItem>
+          </ToggleGroup>
         </div>
       </div>
 
