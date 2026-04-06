@@ -204,12 +204,14 @@ const MasterClients = () => {
 
       {/* Modules dialog */}
       <Dialog open={!!selectedAccountId} onOpenChange={() => setSelectedAccountId(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[85vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Gestionar Módulos</DialogTitle>
             <DialogDescription>Activa o desactiva módulos para esta cuenta</DialogDescription>
           </DialogHeader>
-          {selectedAccountId && <ModuleManager accountId={selectedAccountId} />}
+          <div className="overflow-y-auto flex-1 pr-1">
+            {selectedAccountId && <ModuleManager accountId={selectedAccountId} />}
+          </div>
         </DialogContent>
       </Dialog>
 
