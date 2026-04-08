@@ -67,10 +67,6 @@ const AppInventory = () => {
   // ---- KPIs ----
   const lowStockProducts = products.filter(p => p.is_active && p.current_stock <= p.min_stock);
   const inventoryValue = products.reduce((s, p) => s + p.current_stock * p.cost_price, 0);
-  const thisMonthMovements = movements.filter(m => {
-    const d = new Date(m.created_at); const now = new Date();
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-  });
 
   // ---- Product Dialog ----
   const [productDialog, setProductDialog] = useState(false);
