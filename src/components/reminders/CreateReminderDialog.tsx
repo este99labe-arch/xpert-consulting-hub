@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -10,10 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import { CalendarClock, Loader2, X, Plus } from "lucide-react";
+import { CalendarClock, Loader2, X, Search, FileText, BookOpen } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
@@ -26,16 +23,22 @@ interface CreateReminderDialogProps {
 }
 
 const entityTypeLabels: Record<string, string> = {
-  CLIENT: "Cliente",
   INVOICE: "Factura",
-  QUOTE: "Presupuesto",
   EXPENSE: "Gasto",
   JOURNAL_ENTRY: "Asiento contable",
-  ATTENDANCE: "Asistencia",
-  OTHER: "Otro",
 };
 
-const SUGGESTED_LABELS = ["Urgente", "Revisión", "Pago", "Seguimiento", "Legal", "Contabilidad"];
+const entityTypeIcons: Record<string, React.ReactNode> = {
+  INVOICE: <FileText className="h-3.5 w-3.5 text-blue-500" />,
+  EXPENSE: <FileText className="h-3.5 w-3.5 text-red-500" />,
+  JOURNAL_ENTRY: <BookOpen className="h-3.5 w-3.5 text-purple-500" />,
+};
+
+interface LinkedResource {
+  type: string;
+  id: string;
+  label: string;
+}
 
 const CreateReminderDialog = ({
   open,
@@ -50,32 +53,68 @@ const CreateReminderDialog = ({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [remindAt, setRemindAt] = useState("");
-  const [entityType, setEntityType] = useState(defaultEntityType || "");
-  const [entityId] = useState(defaultEntityId || "");
-  const [entityLabel] = useState(defaultEntityLabel || "");
-  const [labels, setLabels] = useState<string[]>([]);
-  const [newLabel, setNewLabel] = useState("");
+  const [linkedResource, setLinkedResource] = useState<LinkedResource | null>(
+    defaultEntityType && defaultEntityId && defaultEntityLabel
+      ? { type: defaultEntityType, id: defaultEntityId, label: defaultEntityLabel }
+      : null
+  );
+  const [resourceSearch, setResourceSearch] = useState("");
+  const [showResourcePicker, setShowResourcePicker] = useState(false);
 
   const resetForm = () => {
     setTitle("");
     setDescription("");
     setRemindAt("");
-    setEntityType(defaultEntityType || "");
-    setLabels([]);
-    setNewLabel("");
+    setLinkedResource(
+      defaultEntityType && defaultEntityId && defaultEntityLabel
+        ? { type: defaultEntityType, id: defaultEntityId, label: defaultEntityLabel }
+        : null
+    );
+    setResourceSearch("");
+    setShowResourcePicker(false);
   };
 
-  const addLabel = (label: string) => {
-    const trimmed = label.trim();
-    if (trimmed && !labels.includes(trimmed)) {
-      setLabels([...labels, trimmed]);
-    }
-    setNewLabel("");
-  };
+  // Search invoices/expenses
+  const { data: invoiceResults = [] } = useQuery({
+    queryKey: ["resource-search-invoices", accountId, resourceSearch],
+    queryFn: async () => {
+      if (!accountId || !resourceSearch.trim()) return [];
+      const { data } = await supabase
+        .from("invoices")
+        .select("id, invoice_number, concept, type, amount_total, business_clients(name)")
+        .eq("account_id", accountId)
+        .or(`invoice_number.ilike.%${resourceSearch}%,concept.ilike.%${resourceSearch}%`)
+        .limit(8);
+      return (data || []).map((inv: any) => ({
+        type: inv.type === "EXPENSE" ? "EXPENSE" : "INVOICE",
+        id: inv.id,
+        label: `${inv.invoice_number || "Sin nº"} — ${inv.concept} (${inv.business_clients?.name || ""}) ${Number(inv.amount_total).toFixed(2)}€`,
+      }));
+    },
+    enabled: showResourcePicker && resourceSearch.trim().length >= 2,
+  });
 
-  const removeLabel = (label: string) => {
-    setLabels(labels.filter((l) => l !== label));
-  };
+  // Search journal entries
+  const { data: journalResults = [] } = useQuery({
+    queryKey: ["resource-search-journals", accountId, resourceSearch],
+    queryFn: async () => {
+      if (!accountId || !resourceSearch.trim()) return [];
+      const { data } = await supabase
+        .from("journal_entries")
+        .select("id, entry_number, description, date")
+        .eq("account_id", accountId)
+        .or(`entry_number.ilike.%${resourceSearch}%,description.ilike.%${resourceSearch}%`)
+        .limit(5);
+      return (data || []).map((je: any) => ({
+        type: "JOURNAL_ENTRY",
+        id: je.id,
+        label: `${je.entry_number || "Sin nº"} — ${je.description} (${je.date})`,
+      }));
+    },
+    enabled: showResourcePicker && resourceSearch.trim().length >= 2,
+  });
+
+  const allResults = [...invoiceResults, ...journalResults];
 
   const createMutation = useMutation({
     mutationFn: async () => {
@@ -85,10 +124,10 @@ const CreateReminderDialog = ({
         title,
         description,
         remind_at: new Date(remindAt).toISOString(),
-        entity_type: entityType || null,
-        entity_id: entityId || null,
-        entity_label: entityLabel || null,
-        labels,
+        entity_type: linkedResource?.type || null,
+        entity_id: linkedResource?.id || null,
+        entity_label: linkedResource?.label || null,
+        labels: [],
         status: "REMINDER",
       });
       if (error) throw error;
@@ -153,75 +192,71 @@ const CreateReminderDialog = ({
             />
           </div>
 
-          {/* Labels */}
+          {/* Linked resource */}
           <div className="space-y-1.5">
-            <Label>Etiquetas</Label>
-            <div className="flex flex-wrap gap-1.5 mb-2">
-              {labels.map((label) => (
-                <Badge key={label} variant="secondary" className="gap-1 pr-1">
-                  {label}
-                  <button onClick={() => removeLabel(label)} className="hover:bg-foreground/10 rounded-full p-0.5">
-                    <X className="h-3 w-3" />
+            <Label>Vincular a recurso (opcional)</Label>
+
+            {linkedResource ? (
+              <div className="flex items-center gap-2 rounded-md border border-border bg-muted/50 p-2.5 text-sm">
+                {entityTypeIcons[linkedResource.type]}
+                <span className="flex-1 truncate">
+                  <span className="font-medium text-muted-foreground mr-1">
+                    {entityTypeLabels[linkedResource.type] || linkedResource.type}:
+                  </span>
+                  {linkedResource.label}
+                </span>
+                {!defaultEntityId && (
+                  <button
+                    type="button"
+                    onClick={() => setLinkedResource(null)}
+                    className="hover:bg-foreground/10 rounded-full p-0.5"
+                  >
+                    <X className="h-3.5 w-3.5" />
                   </button>
-                </Badge>
-              ))}
-            </div>
-            <div className="flex gap-1.5">
-              <Input
-                placeholder="Nueva etiqueta..."
-                value={newLabel}
-                onChange={(e) => setNewLabel(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addLabel(newLabel))}
-                className="h-8 text-sm"
-              />
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="h-8 px-2 shrink-0"
-                onClick={() => addLabel(newLabel)}
-                disabled={!newLabel.trim()}
-              >
-                <Plus className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-1 mt-1.5">
-              {SUGGESTED_LABELS.filter((l) => !labels.includes(l)).map((l) => (
-                <button
-                  key={l}
-                  type="button"
-                  onClick={() => addLabel(l)}
-                  className="text-[10px] px-2 py-0.5 rounded-full border border-border hover:bg-accent transition-colors text-muted-foreground"
-                >
-                  + {l}
-                </button>
-              ))}
-            </div>
+                )}
+              </div>
+            ) : (
+              <div className="relative">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar factura, gasto o asiento..."
+                    value={resourceSearch}
+                    onChange={(e) => {
+                      setResourceSearch(e.target.value);
+                      setShowResourcePicker(true);
+                    }}
+                    onFocus={() => setShowResourcePicker(true)}
+                    className="h-9 pl-8 text-sm"
+                  />
+                </div>
+
+                {showResourcePicker && resourceSearch.trim().length >= 2 && (
+                  <div className="absolute z-50 mt-1 w-full rounded-md border border-border bg-popover shadow-md max-h-52 overflow-y-auto">
+                    {allResults.length === 0 ? (
+                      <p className="p-3 text-xs text-muted-foreground text-center">Sin resultados</p>
+                    ) : (
+                      allResults.map((r) => (
+                        <button
+                          key={`${r.type}-${r.id}`}
+                          type="button"
+                          className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors"
+                          onClick={() => {
+                            setLinkedResource(r);
+                            setResourceSearch("");
+                            setShowResourcePicker(false);
+                          }}
+                        >
+                          {entityTypeIcons[r.type]}
+                          <span className="truncate">{r.label}</span>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-
-          {defaultEntityLabel && (
-            <div className="rounded-md bg-muted p-3 text-sm">
-              <span className="text-muted-foreground">Vinculado a: </span>
-              <span className="font-medium">{entityTypeLabels[defaultEntityType || ""] || defaultEntityType} — {defaultEntityLabel}</span>
-            </div>
-          )}
-
-          {!defaultEntityType && (
-            <div className="space-y-1.5">
-              <Label>Categoría (opcional)</Label>
-              <Select value={entityType} onValueChange={setEntityType}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sin categoría" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Sin categoría</SelectItem>
-                  {Object.entries(entityTypeLabels).map(([key, label]) => (
-                    <SelectItem key={key} value={key}>{label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
         </div>
 
         <DialogFooter>
