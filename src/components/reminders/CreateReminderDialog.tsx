@@ -159,7 +159,7 @@ const CreateReminderDialog = ({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 overflow-hidden">
           <div className="space-y-1.5">
             <Label htmlFor="reminder-title">Título *</Label>
             <Input
