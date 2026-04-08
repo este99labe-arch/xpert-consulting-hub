@@ -26,8 +26,9 @@ import {
 } from "lucide-react";
 
 // ── CSV Parser ──────────────────────────────────────────────────────
-function parseCSV(text: string): Record<string, string>[] {
-  const lines = text.split(/\r?\n/).filter((l) => l.trim());
+function parseCSV(text: string, skipRows = 0): Record<string, string>[] {
+  const allLines = text.split(/\r?\n/);
+  const lines = allLines.slice(skipRows).filter((l) => l.trim());
   if (lines.length < 2) return [];
   // detect separator
   const sep = lines[0].includes(";") ? ";" : ",";
@@ -38,6 +39,10 @@ function parseCSV(text: string): Record<string, string>[] {
     headers.forEach((h, i) => (obj[h] = vals[i] || ""));
     return obj;
   });
+}
+
+function getRawLines(text: string): string[] {
+  return text.split(/\r?\n/);
 }
 
 function normalizeAmount(raw: string): number | null {
