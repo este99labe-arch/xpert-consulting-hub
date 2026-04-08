@@ -21,7 +21,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { FileText, TrendingUp, TrendingDown, DollarSign, Plus, Search, Trash2, Check, X, RefreshCw, ClipboardList, CalendarIcon, List, LayoutGrid } from "lucide-react";
+import { FileText, TrendingUp, TrendingDown, DollarSign, Plus, Search, Trash2, Check, X, RefreshCw, ClipboardList, CalendarIcon, List, LayoutGrid, Landmark } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import CreateReminderDialog from "@/components/reminders/CreateReminderDialog";
 import { format } from "date-fns";
@@ -37,6 +37,7 @@ import { useServerPagination } from "@/hooks/use-server-pagination";
 import { usePagination } from "@/hooks/use-pagination";
 import { dispatchWebhook } from "@/lib/webhooks";
 import InvoiceKanbanView from "@/components/invoices/InvoiceKanbanView";
+import BankReconciliationTab from "@/components/invoices/BankReconciliationTab";
 
 const statusColors: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground",
@@ -420,6 +421,9 @@ const AppInvoices = () => {
             <TabsTrigger value="recurring">
               <RefreshCw className="h-4 w-4 mr-1" /> Recurrentes
             </TabsTrigger>
+            <TabsTrigger value="reconciliation">
+              <Landmark className="h-4 w-4 mr-1" /> Conciliación
+            </TabsTrigger>
           </TabsList>
           <Button onClick={() => setDialogOpen(true)} className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" /> {activeTab === "quotes" ? "Nuevo presupuesto" : "Nuevo"}
@@ -796,6 +800,10 @@ const AppInvoices = () => {
 
         <TabsContent value="recurring">
           <RecurringInvoicesTab accountId={accountId || ""} isManager={isManager} />
+        </TabsContent>
+
+        <TabsContent value="reconciliation">
+          <BankReconciliationTab />
         </TabsContent>
       </Tabs>
 
