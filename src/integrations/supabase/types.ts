@@ -985,6 +985,7 @@ export type Database = {
           special_mentions: string | null
           status: string
           type: string
+          vat_included: boolean
           vat_percentage: number
         }
         Insert: {
@@ -1008,6 +1009,7 @@ export type Database = {
           special_mentions?: string | null
           status?: string
           type: string
+          vat_included?: boolean
           vat_percentage: number
         }
         Update: {
@@ -1031,6 +1033,7 @@ export type Database = {
           special_mentions?: string | null
           status?: string
           type?: string
+          vat_included?: boolean
           vat_percentage?: number
         }
         Relationships: [
