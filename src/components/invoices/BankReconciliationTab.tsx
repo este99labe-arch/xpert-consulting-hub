@@ -713,7 +713,7 @@ const BankReconciliationTab = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="__none__">Sin asignar</SelectItem>
-                        {Object.keys(csvPreview.rows[0]).map((h) => (
+                        {Object.keys(csvPreview.rows[0]).filter((h) => h.trim() !== "").map((h) => (
                           <SelectItem key={h} value={h}>{h}</SelectItem>
                         ))}
                       </SelectContent>
