@@ -26,8 +26,9 @@ import {
 } from "lucide-react";
 
 // ── CSV Parser ──────────────────────────────────────────────────────
-function parseCSV(text: string): Record<string, string>[] {
-  const lines = text.split(/\r?\n/).filter((l) => l.trim());
+function parseCSV(text: string, skipRows = 0): Record<string, string>[] {
+  const allLines = text.split(/\r?\n/);
+  const lines = allLines.slice(skipRows).filter((l) => l.trim());
   if (lines.length < 2) return [];
   // detect separator
   const sep = lines[0].includes(";") ? ";" : ",";
@@ -40,10 +41,14 @@ function parseCSV(text: string): Record<string, string>[] {
   });
 }
 
+function getRawLines(text: string): string[] {
+  return text.split(/\r?\n/);
+}
+
 function normalizeAmount(raw: string): number | null {
   if (!raw) return null;
-  // handle "1.234,56" (ES) and "1,234.56" (EN)
-  let cleaned = raw.replace(/[^\d.,-]/g, "");
+  // normalize unicode minus (U+2212) to regular hyphen
+  let cleaned = raw.replace(/\u2212/g, "-").replace(/[^\d.,-]/g, "");
   if (cleaned.includes(",") && cleaned.includes(".")) {
     if (cleaned.lastIndexOf(",") > cleaned.lastIndexOf(".")) {
       cleaned = cleaned.replace(/\./g, "").replace(",", ".");
@@ -98,6 +103,9 @@ const BankReconciliationTab = () => {
 
   // CSV preview state
   const [csvPreview, setCsvPreview] = useState<{ rows: Record<string, string>[]; fileName: string } | null>(null);
+  const [csvRawText, setCsvRawText] = useState<string>("");
+  const [csvSkipRows, setCsvSkipRows] = useState<number>(0);
+  const [csvRawLines, setCsvRawLines] = useState<string[]>([]);
   const [columnMapping, setColumnMapping] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -208,13 +216,10 @@ const BankReconciliationTab = () => {
   });
 
   // ── Handlers ────────────────────────────────────────────────────────
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const text = await file.text();
-    const rows = parseCSV(text);
+  const applySkipRows = (text: string, skip: number, fileName: string) => {
+    const rows = parseCSV(text, skip);
     if (rows.length === 0) {
-      toast({ title: "Error", description: "El CSV no contiene datos válidos", variant: "destructive" });
+      toast({ title: "Error", description: "No se encontraron datos con ese número de filas a saltar", variant: "destructive" });
       return;
     }
     const headers = Object.keys(rows[0]);
@@ -227,8 +232,27 @@ const BankReconciliationTab = () => {
       reference: guessColumn(headers, ["referencia", "reference", "ref"]) || "",
     };
     setColumnMapping(mapping);
-    setCsvPreview({ rows, fileName: file.name });
+    setCsvPreview({ rows, fileName });
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const text = await file.text();
+    const rawLines = getRawLines(text);
+    setCsvRawText(text);
+    setCsvRawLines(rawLines);
+    setCsvSkipRows(0);
+    applySkipRows(text, 0, file.name);
     if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const handleSkipRowsChange = (newSkip: number) => {
+    if (newSkip < 0) return;
+    setCsvSkipRows(newSkip);
+    if (csvRawText && csvPreview) {
+      applySkipRows(csvRawText, newSkip, csvPreview.fileName);
+    }
   };
 
   const handleConfirmImport = async () => {
@@ -681,8 +705,8 @@ const BankReconciliationTab = () => {
       />
 
       {/* ── CSV Preview / Column Mapping Dialog ── */}
-      <Dialog open={!!csvPreview} onOpenChange={() => setCsvPreview(null)}>
-        <DialogContent className="max-w-2xl">
+      <Dialog open={!!csvPreview} onOpenChange={() => { setCsvPreview(null); setCsvRawText(""); setCsvRawLines([]); setCsvSkipRows(0); }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Mapear columnas del CSV</DialogTitle>
             <DialogDescription>
@@ -691,6 +715,29 @@ const BankReconciliationTab = () => {
           </DialogHeader>
           {csvPreview && (
             <div className="space-y-4">
+              {/* Skip rows control */}
+              <div className="flex items-center gap-3 p-3 rounded-md bg-muted/50 border">
+                <label className="text-sm font-medium whitespace-nowrap">Filas a saltar (cabecera del banco):</label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={csvRawLines.length - 2}
+                  value={csvSkipRows}
+                  onChange={(e) => handleSkipRowsChange(parseInt(e.target.value) || 0)}
+                  className="w-20"
+                />
+                <span className="text-xs text-muted-foreground">
+                  Total líneas: {csvRawLines.length}
+                </span>
+              </div>
+              {csvSkipRows > 0 && csvRawLines.length > 0 && (
+                <details className="text-xs">
+                  <summary className="cursor-pointer text-muted-foreground hover:text-foreground">Ver líneas saltadas</summary>
+                  <pre className="mt-1 p-2 bg-muted rounded text-[10px] max-h-24 overflow-auto">
+                    {csvRawLines.slice(0, csvSkipRows).map((l, i) => `${i + 1}: ${l}`).join("\n")}
+                  </pre>
+                </details>
+              )}
               <div className="grid grid-cols-2 gap-3">
                 {[
                   { key: "date", label: "Fecha transacción *", required: true },
