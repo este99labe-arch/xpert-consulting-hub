@@ -103,6 +103,9 @@ const BankReconciliationTab = () => {
 
   // CSV preview state
   const [csvPreview, setCsvPreview] = useState<{ rows: Record<string, string>[]; fileName: string } | null>(null);
+  const [csvRawText, setCsvRawText] = useState<string>("");
+  const [csvSkipRows, setCsvSkipRows] = useState<number>(0);
+  const [csvRawLines, setCsvRawLines] = useState<string[]>([]);
   const [columnMapping, setColumnMapping] = useState<Record<string, string>>({});
 
   useEffect(() => {
