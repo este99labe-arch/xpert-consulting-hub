@@ -410,7 +410,7 @@ const AppAccounting = () => {
 
         <TabsContent value="entries">
           <JournalEntriesTab
-            entries={entries} pendingDeleteRequests={pendingDeleteRequests}
+            accountId={activeAccountId!} pendingDeleteRequests={pendingDeleteRequests}
             isManager={isManager} canEditEntry={canEditEntry} canDeleteEntry={canDeleteEntry}
             onCreateEntry={openCreateEntry} onEditEntry={openEditEntry}
             onPostEntry={(id) => postEntry.mutate(id)}

@@ -168,7 +168,7 @@ const AppInventory = () => {
           <ProductsTab products={products} isManager={isManager} onNewProduct={openNewProduct} onEditProduct={openEditProduct} onToggleActive={(p) => toggleProductActive.mutate(p)} />
         </TabsContent>
         <TabsContent value="movements">
-          <MovementsTab movements={movements} products={products} isManager={isManager} onNewMovement={() => { setMovForm({ product_id: "", type: "IN", quantity: "", reason: "manual", notes: "" }); setMovDialog(true); }} />
+          <MovementsTab accountId={activeAccountId!} products={products} isManager={isManager} onNewMovement={() => { setMovForm({ product_id: "", type: "IN", quantity: "", reason: "manual", notes: "" }); setMovDialog(true); }} />
         </TabsContent>
         <TabsContent value="alerts">
           <AlertsTab lowStockProducts={lowStockProducts} isManager={isManager} onQuickOrder={openQuickOrder} />
