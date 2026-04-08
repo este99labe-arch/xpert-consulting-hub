@@ -1,4 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -8,30 +10,60 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Product, StockMovement, movementTypeLabels, movementTypeIcons } from "./types";
 import PaginationControls from "@/components/shared/PaginationControls";
-import { usePagination } from "@/hooks/use-pagination";
+import { useServerPagination } from "@/hooks/use-server-pagination";
 
 interface MovementsTabProps {
-  movements: StockMovement[];
+  accountId: string;
   products: Product[];
   isManager: boolean;
   onNewMovement: () => void;
 }
 
-const MovementsTab = ({ movements, products, isManager, onNewMovement }: MovementsTabProps) => {
+const MovementsTab = ({ accountId, products, isManager, onNewMovement }: MovementsTabProps) => {
   const [typeFilter, setTypeFilter] = useState("ALL");
   const [productFilter, setProductFilter] = useState("ALL");
 
-  const filtered = useMemo(() => movements.filter(m => {
-    if (typeFilter !== "ALL" && m.type !== typeFilter) return false;
-    if (productFilter !== "ALL" && m.product_id !== productFilter) return false;
-    return true;
-  }), [movements, typeFilter, productFilter]);
+  const pagination = useServerPagination();
 
-  const pagination = usePagination(filtered);
+  // Server-side paginated query
+  const { data: movementResult } = useQuery({
+    queryKey: ["stock-movements-paginated", accountId, pagination.currentPage, pagination.pageSize, typeFilter, productFilter],
+    queryFn: async () => {
+      let query = supabase
+        .from("stock_movements")
+        .select("*, products(name, sku)", { count: "exact" })
+        .eq("account_id", accountId)
+        .order("created_at", { ascending: false });
 
-  const exportCSV = () => {
+      if (typeFilter !== "ALL") query = query.eq("type", typeFilter);
+      if (productFilter !== "ALL") query = query.eq("product_id", productFilter);
+
+      query = query.range(pagination.rangeFrom, pagination.rangeTo);
+
+      const { data, error, count } = await query;
+      if (error) throw error;
+      return { data: (data || []) as StockMovement[], count: count || 0 };
+    },
+    enabled: !!accountId,
+  });
+
+  useEffect(() => {
+    if (movementResult) pagination.setTotalItems(movementResult.count);
+  }, [movementResult?.count]);
+
+  const movements = movementResult?.data || [];
+
+  const exportCSV = async () => {
+    // Fetch all movements for export (no pagination)
+    const { data: allMovements } = await supabase
+      .from("stock_movements")
+      .select("*, products(name, sku)")
+      .eq("account_id", accountId)
+      .order("created_at", { ascending: false })
+      .limit(10000);
+
     const header = "Fecha,Producto,SKU,Tipo,Cantidad,Razón,Notas\n";
-    const rows = movements.map(m => `"${format(new Date(m.created_at), "dd/MM/yyyy HH:mm")}","${m.products?.name || ""}","${m.products?.sku || ""}","${movementTypeLabels[m.type]}",${m.quantity},"${m.reason}","${m.notes || ""}"`).join("\n");
+    const rows = (allMovements || []).map((m: any) => `"${format(new Date(m.created_at), "dd/MM/yyyy HH:mm")}","${m.products?.name || ""}","${m.products?.sku || ""}","${movementTypeLabels[m.type]}",${m.quantity},"${m.reason}","${m.notes || ""}"`).join("\n");
     const blob = new Blob([header + rows], { type: "text/csv" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "movimientos.csv"; a.click();
   };
@@ -64,10 +96,10 @@ const MovementsTab = ({ movements, products, isManager, onNewMovement }: Movemen
       </div>
       {/* Mobile cards */}
       <div className="space-y-3 md:hidden">
-        {filtered.length === 0 ? (
+        {movements.length === 0 ? (
           <Card className="p-8 text-center text-muted-foreground">Sin movimientos</Card>
         ) : (
-          pagination.paginatedItems.map(m => {
+          movements.map(m => {
             const Icon = movementTypeIcons[m.type] || RotateCcw;
             return (
               <Card key={m.id} className="p-4 space-y-2">
@@ -88,7 +120,7 @@ const MovementsTab = ({ movements, products, isManager, onNewMovement }: Movemen
             );
           })
         )}
-        {filtered.length > 0 && (
+        {movements.length > 0 && (
           <PaginationControls
             currentPage={pagination.currentPage} totalPages={pagination.totalPages}
             totalItems={pagination.totalItems} pageSize={pagination.pageSize}
@@ -109,10 +141,10 @@ const MovementsTab = ({ movements, products, isManager, onNewMovement }: Movemen
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.length === 0 && (
+            {movements.length === 0 && (
               <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Sin movimientos</TableCell></TableRow>
             )}
-            {pagination.paginatedItems.map(m => {
+            {movements.map(m => {
               const Icon = movementTypeIcons[m.type] || RotateCcw;
               return (
                 <TableRow key={m.id}>
@@ -132,7 +164,7 @@ const MovementsTab = ({ movements, products, isManager, onNewMovement }: Movemen
             })}
           </TableBody>
         </Table>
-        {filtered.length > 0 && (
+        {movements.length > 0 && (
           <div className="px-4 pb-4">
             <PaginationControls
               currentPage={pagination.currentPage} totalPages={pagination.totalPages}

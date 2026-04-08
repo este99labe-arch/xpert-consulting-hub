@@ -1789,6 +1789,7 @@ export type Database = {
       }
       get_user_account_id: { Args: { _user_id: string }; Returns: string }
       has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
+      invoice_kpis: { Args: { _account_id: string }; Returns: Json }
     }
     Enums: {
       [_ in never]: never

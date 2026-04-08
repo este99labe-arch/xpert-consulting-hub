@@ -41,12 +41,15 @@ const AppInventory = () => {
     enabled: !!activeAccountId,
   });
 
-  const { data: movements = [] } = useQuery({
-    queryKey: ["stock-movements", activeAccountId],
+  // Movements count for KPI (lightweight)
+  const { data: movementCount = 0 } = useQuery({
+    queryKey: ["stock-movements-count", activeAccountId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("stock_movements").select("*, products(name, sku)").eq("account_id", activeAccountId!).order("created_at", { ascending: false }).limit(200);
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const { count, error } = await supabase.from("stock_movements").select("*", { count: "exact", head: true }).eq("account_id", activeAccountId!).gte("created_at", startOfMonth);
       if (error) throw error;
-      return (data || []) as StockMovement[];
+      return count || 0;
     },
     enabled: !!activeAccountId,
   });
@@ -64,10 +67,6 @@ const AppInventory = () => {
   // ---- KPIs ----
   const lowStockProducts = products.filter(p => p.is_active && p.current_stock <= p.min_stock);
   const inventoryValue = products.reduce((s, p) => s + p.current_stock * p.cost_price, 0);
-  const thisMonthMovements = movements.filter(m => {
-    const d = new Date(m.created_at); const now = new Date();
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-  });
 
   // ---- Product Dialog ----
   const [productDialog, setProductDialog] = useState(false);
@@ -153,7 +152,7 @@ const AppInventory = () => {
         <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><Package className="h-8 w-8 text-primary" /><div><p className="text-2xl font-bold">{products.length}</p><p className="text-xs text-muted-foreground">Productos</p></div></div></CardContent></Card>
         <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><AlertTriangle className="h-8 w-8 text-destructive" /><div><p className="text-2xl font-bold">{lowStockProducts.length}</p><p className="text-xs text-muted-foreground">Stock bajo</p></div></div></CardContent></Card>
         <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><TrendingUp className="h-8 w-8 text-success" /><div><p className="text-lg sm:text-2xl font-bold">{inventoryValue.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}</p><p className="text-xs text-muted-foreground">Valor inventario</p></div></div></CardContent></Card>
-        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><TrendingDown className="h-8 w-8 text-muted-foreground" /><div><p className="text-2xl font-bold">{thisMonthMovements.length}</p><p className="text-xs text-muted-foreground">Movimientos</p></div></div></CardContent></Card>
+        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><TrendingDown className="h-8 w-8 text-muted-foreground" /><div><p className="text-2xl font-bold">{movementCount}</p><p className="text-xs text-muted-foreground">Mov. este mes</p></div></div></CardContent></Card>
       </div>
 
       <Tabs defaultValue="products">
@@ -168,7 +167,7 @@ const AppInventory = () => {
           <ProductsTab products={products} isManager={isManager} onNewProduct={openNewProduct} onEditProduct={openEditProduct} onToggleActive={(p) => toggleProductActive.mutate(p)} />
         </TabsContent>
         <TabsContent value="movements">
-          <MovementsTab movements={movements} products={products} isManager={isManager} onNewMovement={() => { setMovForm({ product_id: "", type: "IN", quantity: "", reason: "manual", notes: "" }); setMovDialog(true); }} />
+          <MovementsTab accountId={activeAccountId!} products={products} isManager={isManager} onNewMovement={() => { setMovForm({ product_id: "", type: "IN", quantity: "", reason: "manual", notes: "" }); setMovDialog(true); }} />
         </TabsContent>
         <TabsContent value="alerts">
           <AlertsTab lowStockProducts={lowStockProducts} isManager={isManager} onQuickOrder={openQuickOrder} />
