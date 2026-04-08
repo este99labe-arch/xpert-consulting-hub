@@ -216,13 +216,10 @@ const BankReconciliationTab = () => {
   });
 
   // ── Handlers ────────────────────────────────────────────────────────
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const text = await file.text();
-    const rows = parseCSV(text);
+  const applySkipRows = (text: string, skip: number, fileName: string) => {
+    const rows = parseCSV(text, skip);
     if (rows.length === 0) {
-      toast({ title: "Error", description: "El CSV no contiene datos válidos", variant: "destructive" });
+      toast({ title: "Error", description: "No se encontraron datos con ese número de filas a saltar", variant: "destructive" });
       return;
     }
     const headers = Object.keys(rows[0]);
@@ -235,8 +232,27 @@ const BankReconciliationTab = () => {
       reference: guessColumn(headers, ["referencia", "reference", "ref"]) || "",
     };
     setColumnMapping(mapping);
-    setCsvPreview({ rows, fileName: file.name });
+    setCsvPreview({ rows, fileName });
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const text = await file.text();
+    const rawLines = getRawLines(text);
+    setCsvRawText(text);
+    setCsvRawLines(rawLines);
+    setCsvSkipRows(0);
+    applySkipRows(text, 0, file.name);
     if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const handleSkipRowsChange = (newSkip: number) => {
+    if (newSkip < 0) return;
+    setCsvSkipRows(newSkip);
+    if (csvRawText && csvPreview) {
+      applySkipRows(csvRawText, newSkip, csvPreview.fileName);
+    }
   };
 
   const handleConfirmImport = async () => {
