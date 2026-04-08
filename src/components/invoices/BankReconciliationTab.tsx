@@ -47,8 +47,8 @@ function getRawLines(text: string): string[] {
 
 function normalizeAmount(raw: string): number | null {
   if (!raw) return null;
-  // handle "1.234,56" (ES) and "1,234.56" (EN)
-  let cleaned = raw.replace(/[^\d.,-]/g, "");
+  // normalize unicode minus (U+2212) to regular hyphen
+  let cleaned = raw.replace(/\u2212/g, "-").replace(/[^\d.,-]/g, "");
   if (cleaned.includes(",") && cleaned.includes(".")) {
     if (cleaned.lastIndexOf(",") > cleaned.lastIndexOf(".")) {
       cleaned = cleaned.replace(/\./g, "").replace(",", ".");
