@@ -152,7 +152,7 @@ const AppInventory = () => {
         <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><Package className="h-8 w-8 text-primary" /><div><p className="text-2xl font-bold">{products.length}</p><p className="text-xs text-muted-foreground">Productos</p></div></div></CardContent></Card>
         <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><AlertTriangle className="h-8 w-8 text-destructive" /><div><p className="text-2xl font-bold">{lowStockProducts.length}</p><p className="text-xs text-muted-foreground">Stock bajo</p></div></div></CardContent></Card>
         <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><TrendingUp className="h-8 w-8 text-success" /><div><p className="text-lg sm:text-2xl font-bold">{inventoryValue.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}</p><p className="text-xs text-muted-foreground">Valor inventario</p></div></div></CardContent></Card>
-        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><TrendingDown className="h-8 w-8 text-muted-foreground" /><div><p className="text-2xl font-bold">{thisMonthMovements.length}</p><p className="text-xs text-muted-foreground">Movimientos</p></div></div></CardContent></Card>
+        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><TrendingDown className="h-8 w-8 text-muted-foreground" /><div><p className="text-2xl font-bold">{movementCount}</p><p className="text-xs text-muted-foreground">Mov. este mes</p></div></div></CardContent></Card>
       </div>
 
       <Tabs defaultValue="products">
