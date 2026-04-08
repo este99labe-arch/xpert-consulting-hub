@@ -421,6 +421,9 @@ const AppInvoices = () => {
             <TabsTrigger value="recurring">
               <RefreshCw className="h-4 w-4 mr-1" /> Recurrentes
             </TabsTrigger>
+            <TabsTrigger value="reconciliation">
+              <Landmark className="h-4 w-4 mr-1" /> Conciliación
+            </TabsTrigger>
           </TabsList>
           <Button onClick={() => setDialogOpen(true)} className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" /> {activeTab === "quotes" ? "Nuevo presupuesto" : "Nuevo"}
@@ -797,6 +800,10 @@ const AppInvoices = () => {
 
         <TabsContent value="recurring">
           <RecurringInvoicesTab accountId={accountId || ""} isManager={isManager} />
+        </TabsContent>
+
+        <TabsContent value="reconciliation">
+          <BankReconciliationTab />
         </TabsContent>
       </Tabs>
 
