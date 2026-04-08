@@ -705,8 +705,8 @@ const BankReconciliationTab = () => {
       />
 
       {/* ── CSV Preview / Column Mapping Dialog ── */}
-      <Dialog open={!!csvPreview} onOpenChange={() => setCsvPreview(null)}>
-        <DialogContent className="max-w-2xl">
+      <Dialog open={!!csvPreview} onOpenChange={() => { setCsvPreview(null); setCsvRawText(""); setCsvRawLines([]); setCsvSkipRows(0); }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Mapear columnas del CSV</DialogTitle>
             <DialogDescription>
@@ -715,6 +715,29 @@ const BankReconciliationTab = () => {
           </DialogHeader>
           {csvPreview && (
             <div className="space-y-4">
+              {/* Skip rows control */}
+              <div className="flex items-center gap-3 p-3 rounded-md bg-muted/50 border">
+                <label className="text-sm font-medium whitespace-nowrap">Filas a saltar (cabecera del banco):</label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={csvRawLines.length - 2}
+                  value={csvSkipRows}
+                  onChange={(e) => handleSkipRowsChange(parseInt(e.target.value) || 0)}
+                  className="w-20"
+                />
+                <span className="text-xs text-muted-foreground">
+                  Total líneas: {csvRawLines.length}
+                </span>
+              </div>
+              {csvSkipRows > 0 && csvRawLines.length > 0 && (
+                <details className="text-xs">
+                  <summary className="cursor-pointer text-muted-foreground hover:text-foreground">Ver líneas saltadas</summary>
+                  <pre className="mt-1 p-2 bg-muted rounded text-[10px] max-h-24 overflow-auto">
+                    {csvRawLines.slice(0, csvSkipRows).map((l, i) => `${i + 1}: ${l}`).join("\n")}
+                  </pre>
+                </details>
+              )}
               <div className="grid grid-cols-2 gap-3">
                 {[
                   { key: "date", label: "Fecha transacción *", required: true },
