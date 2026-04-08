@@ -276,14 +276,26 @@ const AppInvoices = () => {
       const res = await fetch(`https://${projectId}.supabase.co/functions/v1/generate_invoice_pdf`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ invoice_id: invoiceId }),
+        body: JSON.stringify({ invoice_id: invoiceId, format: "pdf" }),
       });
-      if (!res.ok) { const err = await res.json(); throw new Error(err.error || "Error generando PDF"); }
+      if (!res.ok) {
+        const errText = await res.text();
+        let errMsg = "Error generando PDF";
+        try { errMsg = JSON.parse(errText).error || errMsg; } catch {}
+        throw new Error(errMsg);
+      }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      const printWindow = window.open(url, "_blank");
-      if (printWindow) { printWindow.addEventListener("load", () => { printWindow.print(); }); }
-      toast({ title: "Documento listo para imprimir" });
+      const a = document.createElement("a");
+      a.href = url;
+      const disposition = res.headers.get("Content-Disposition");
+      const filenameMatch = disposition?.match(/filename="(.+)"/);
+      a.download = filenameMatch?.[1] || `factura-${invoiceId.slice(0, 8)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast({ title: "PDF descargado correctamente" });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     }
