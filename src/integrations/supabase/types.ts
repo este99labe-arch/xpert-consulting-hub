@@ -322,6 +322,59 @@ export type Database = {
           },
         ]
       }
+      bank_transactions: {
+        Row: {
+          account_id: string
+          amount: number
+          balance: number | null
+          created_at: string
+          description: string
+          id: string
+          is_reconciled: boolean
+          reference: string | null
+          source_file: string | null
+          transaction_date: string
+          uploaded_by: string
+          value_date: string | null
+        }
+        Insert: {
+          account_id: string
+          amount: number
+          balance?: number | null
+          created_at?: string
+          description?: string
+          id?: string
+          is_reconciled?: boolean
+          reference?: string | null
+          source_file?: string | null
+          transaction_date: string
+          uploaded_by: string
+          value_date?: string | null
+        }
+        Update: {
+          account_id?: string
+          amount?: number
+          balance?: number | null
+          created_at?: string
+          description?: string
+          id?: string
+          is_reconciled?: boolean
+          reference?: string | null
+          source_file?: string | null
+          transaction_date?: string
+          uploaded_by?: string
+          value_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_transactions_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_clients: {
         Row: {
           account_id: string
@@ -1385,6 +1438,64 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reconciliation_matches: {
+        Row: {
+          account_id: string
+          bank_transaction_id: string
+          confidence: number | null
+          id: string
+          invoice_id: string
+          match_type: string
+          matched_at: string
+          matched_by: string
+          notes: string | null
+        }
+        Insert: {
+          account_id: string
+          bank_transaction_id: string
+          confidence?: number | null
+          id?: string
+          invoice_id: string
+          match_type?: string
+          matched_at?: string
+          matched_by: string
+          notes?: string | null
+        }
+        Update: {
+          account_id?: string
+          bank_transaction_id?: string
+          confidence?: number | null
+          id?: string
+          invoice_id?: string
+          match_type?: string
+          matched_at?: string
+          matched_by?: string
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reconciliation_matches_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reconciliation_matches_bank_transaction_id_fkey"
+            columns: ["bank_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "bank_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reconciliation_matches_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
             referencedColumns: ["id"]
           },
         ]
