@@ -33,9 +33,11 @@ import EditInvoiceDialog from "@/components/invoices/EditInvoiceDialog";
 import InvoiceActionsMenu from "@/components/invoices/InvoiceActionsMenu";
 import RecurringInvoicesTab from "@/components/invoices/RecurringInvoicesTab";
 import PaginationControls from "@/components/shared/PaginationControls";
+import { useServerPagination } from "@/hooks/use-server-pagination";
 import { usePagination } from "@/hooks/use-pagination";
 import { dispatchWebhook } from "@/lib/webhooks";
 import InvoiceKanbanView from "@/components/invoices/InvoiceKanbanView";
+
 const statusColors: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground",
   SENT: "bg-primary/10 text-primary",
@@ -64,6 +66,7 @@ const AppInvoices = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>(searchParams.get("status") || "ALL");
   const [typeFilter, setTypeFilter] = useState<string>(searchParams.get("type") || "ALL");
   const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
@@ -74,7 +77,18 @@ const AppInvoices = () => {
   const [previewInvoice, setPreviewInvoice] = useState<any>(null);
   const [editInvoice, setEditInvoice] = useState<any>(null);
   const [quoteSearch, setQuoteSearch] = useState("");
+  const [debouncedQuoteSearch, setDebouncedQuoteSearch] = useState("");
   const [quoteStatusFilter, setQuoteStatusFilter] = useState<string>("ALL");
+
+  // Debounce search inputs
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuoteSearch(quoteSearch), 300);
+    return () => clearTimeout(t);
+  }, [quoteSearch]);
 
   // Auto-open create dialog from dashboard quick actions
   useEffect(() => {
@@ -82,7 +96,6 @@ const AppInvoices = () => {
     if (state?.openCreate) {
       setCreateDefaultType(state.defaultType || undefined);
       setDialogOpen(true);
-      // Clear the state so it doesn't re-trigger
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
@@ -95,7 +108,6 @@ const AppInvoices = () => {
     const urlType = searchParams.get("type");
     if (urlStatus) setStatusFilter(urlStatus);
     if (urlType) setTypeFilter(urlType);
-    // Clear URL params after reading
     if (urlStatus || urlType) setSearchParams({}, { replace: true });
   }, []);
 
@@ -108,19 +120,118 @@ const AppInvoices = () => {
   // Reminder state
   const [reminderInvoice, setReminderInvoice] = useState<any>(null);
 
-  const { data: invoices = [], isLoading } = useQuery({
-    queryKey: ["invoices", accountId],
+  // ---- Server-side pagination for invoices (list view) ----
+  const invoicePagination = useServerPagination();
+  const quotePagination = useServerPagination();
+
+  // Server-side KPIs via DB function
+  const { data: kpiData } = useQuery({
+    queryKey: ["invoice-kpis", accountId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("invoice_kpis", { _account_id: accountId! });
+      if (error) throw error;
+      return data as {
+        total_income: number; total_expenses: number; total_paid: number; total_pending: number;
+        total_quotes: number; accepted_quotes: number; pending_quotes: number;
+      };
+    },
+    enabled: !!accountId,
+  });
+
+  // Server-side paginated query for invoices/expenses
+  const { data: invoiceResult, isLoading } = useQuery({
+    queryKey: ["invoices", accountId, invoicePagination.currentPage, invoicePagination.pageSize, debouncedSearch, statusFilter, typeFilter, dateFrom?.toISOString(), dateTo?.toISOString()],
+    queryFn: async () => {
+      if (!accountId) return { data: [], count: 0 };
+      let query = supabase
+        .from("invoices")
+        .select("*, business_clients(name, tax_id, email)", { count: "exact" })
+        .eq("account_id", accountId)
+        .neq("type", "QUOTE")
+        .order("issue_date", { ascending: false });
+
+      if (debouncedSearch) {
+        query = query.or(`concept.ilike.%${debouncedSearch}%,invoice_number.ilike.%${debouncedSearch}%`);
+      }
+      if (statusFilter !== "ALL") query = query.eq("status", statusFilter);
+      if (typeFilter !== "ALL") query = query.eq("type", typeFilter);
+      if (dateFrom) query = query.gte("issue_date", format(dateFrom, "yyyy-MM-dd"));
+      if (dateTo) query = query.lte("issue_date", format(dateTo, "yyyy-MM-dd"));
+
+      query = query.range(invoicePagination.rangeFrom, invoicePagination.rangeTo);
+
+      const { data, error, count } = await query;
+      if (error) throw error;
+      return { data: data || [], count: count || 0 };
+    },
+    enabled: !!accountId,
+  });
+
+  // Update pagination total when data loads
+  useEffect(() => {
+    if (invoiceResult) invoicePagination.setTotalItems(invoiceResult.count);
+  }, [invoiceResult?.count]);
+
+  const paginatedInvoices = invoiceResult?.data || [];
+
+  // Server-side paginated query for quotes
+  const { data: quoteResult } = useQuery({
+    queryKey: ["quotes", accountId, quotePagination.currentPage, quotePagination.pageSize, debouncedQuoteSearch, quoteStatusFilter],
+    queryFn: async () => {
+      if (!accountId) return { data: [], count: 0 };
+      let query = supabase
+        .from("invoices")
+        .select("*, business_clients(name, tax_id, email)", { count: "exact" })
+        .eq("account_id", accountId)
+        .eq("type", "QUOTE")
+        .order("issue_date", { ascending: false });
+
+      if (debouncedQuoteSearch) {
+        query = query.or(`concept.ilike.%${debouncedQuoteSearch}%,invoice_number.ilike.%${debouncedQuoteSearch}%`);
+      }
+      if (quoteStatusFilter !== "ALL") query = query.eq("status", quoteStatusFilter);
+
+      query = query.range(quotePagination.rangeFrom, quotePagination.rangeTo);
+
+      const { data, error, count } = await query;
+      if (error) throw error;
+      return { data: data || [], count: count || 0 };
+    },
+    enabled: !!accountId,
+  });
+
+  useEffect(() => {
+    if (quoteResult) quotePagination.setTotalItems(quoteResult.count);
+  }, [quoteResult?.count]);
+
+  const paginatedQuotes = quoteResult?.data || [];
+
+  // Kanban: load ALL non-quote invoices (no pagination) when in kanban mode
+  const { data: kanbanInvoices = [] } = useQuery({
+    queryKey: ["invoices-kanban", accountId, debouncedSearch, statusFilter, typeFilter, dateFrom?.toISOString(), dateTo?.toISOString()],
     queryFn: async () => {
       if (!accountId) return [];
-      const { data, error } = await supabase
+      let query = supabase
         .from("invoices")
         .select("*, business_clients(name, tax_id, email)")
         .eq("account_id", accountId)
-        .order("issue_date", { ascending: false });
+        .neq("type", "QUOTE")
+        .order("issue_date", { ascending: false })
+        .limit(5000);
+
+      if (debouncedSearch) {
+        query = query.or(`concept.ilike.%${debouncedSearch}%,invoice_number.ilike.%${debouncedSearch}%`);
+      }
+      if (statusFilter !== "ALL") query = query.eq("status", statusFilter);
+      if (typeFilter !== "ALL") query = query.eq("type", typeFilter);
+      if (dateFrom) query = query.gte("issue_date", format(dateFrom, "yyyy-MM-dd"));
+      if (dateTo) query = query.lte("issue_date", format(dateTo, "yyyy-MM-dd"));
+
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
-    enabled: !!accountId,
+    enabled: !!accountId && invoiceViewMode === "kanban",
   });
 
   // Pending delete requests (managers only)
@@ -139,45 +250,14 @@ const AppInvoices = () => {
     enabled: !!accountId && isManager,
   });
 
-  const filteredInvoices = invoices.filter((inv: any) => inv.type !== "QUOTE");
-  const quotes = invoices.filter((inv: any) => inv.type === "QUOTE");
-
-  const filtered = filteredInvoices.filter((inv: any) => {
-    const matchesSearch =
-      !search ||
-      (inv.business_clients?.name || "").toLowerCase().includes(search.toLowerCase()) ||
-      (inv.concept || "").toLowerCase().includes(search.toLowerCase()) ||
-      (inv.invoice_number || "").toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === "ALL" || inv.status === statusFilter;
-    const matchesType = typeFilter === "ALL" || inv.type === typeFilter;
-    const issueDate = new Date(inv.issue_date);
-    const matchesDateFrom = !dateFrom || issueDate >= dateFrom;
-    const matchesDateTo = !dateTo || issueDate <= dateTo;
-    return matchesSearch && matchesStatus && matchesType && matchesDateFrom && matchesDateTo;
-  });
-
-  const filteredQuotes = quotes.filter((q: any) => {
-    const matchesSearch =
-      !quoteSearch ||
-      (q.business_clients?.name || "").toLowerCase().includes(quoteSearch.toLowerCase()) ||
-      (q.concept || "").toLowerCase().includes(quoteSearch.toLowerCase()) ||
-      (q.invoice_number || "").toLowerCase().includes(quoteSearch.toLowerCase());
-    const matchesStatus = quoteStatusFilter === "ALL" || q.status === quoteStatusFilter;
-    return matchesSearch && matchesStatus;
-  });
-
-  const invoicePagination = usePagination(filtered);
-  const quotePagination = usePagination(filteredQuotes);
-
-  // KPIs (computed on ALL data, not paginated)
-  const totalIncome = filteredInvoices.filter((i: any) => i.type === "INVOICE").reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
-  const totalExpenses = filteredInvoices.filter((i: any) => i.type === "EXPENSE").reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
-  const totalPaid = filteredInvoices.filter((i: any) => i.status === "PAID" && i.type === "INVOICE").reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
-  const totalPending = filteredInvoices.filter((i: any) => i.status !== "PAID" && i.type === "INVOICE").reduce((sum: number, i: any) => sum + Number(i.amount_total), 0);
-
-  const totalQuotes = quotes.reduce((sum: number, q: any) => sum + Number(q.amount_total), 0);
-  const acceptedQuotes = quotes.filter((q: any) => q.status === "ACCEPTED" || q.status === "INVOICED").reduce((sum: number, q: any) => sum + Number(q.amount_total), 0);
-  const pendingQuotes = quotes.filter((q: any) => q.status === "DRAFT" || q.status === "SENT").reduce((sum: number, q: any) => sum + Number(q.amount_total), 0);
+  // KPIs from server
+  const totalIncome = Number(kpiData?.total_income || 0);
+  const totalExpenses = Number(kpiData?.total_expenses || 0);
+  const totalPaid = Number(kpiData?.total_paid || 0);
+  const totalPending = Number(kpiData?.total_pending || 0);
+  const totalQuotes = Number(kpiData?.total_quotes || 0);
+  const acceptedQuotes = Number(kpiData?.accepted_quotes || 0);
+  const pendingQuotes = Number(kpiData?.pending_quotes || 0);
 
   const kpis = [
     { label: "Facturado", value: `€${totalIncome.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`, icon: TrendingUp, color: "text-primary" },
@@ -248,6 +328,8 @@ const AppInvoices = () => {
       toast({ title: "Factura eliminada" });
       if (accountId) dispatchWebhook(accountId, "invoice.deleted", { invoice_id: deleteInvoice.id, invoice_number: deleteInvoice.invoice_number });
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["invoice-kpis"] });
+      queryClient.invalidateQueries({ queryKey: ["invoices-kanban"] });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
@@ -287,6 +369,7 @@ const AppInvoices = () => {
       } as any).eq("id", request.id);
       toast({ title: "Factura eliminada y solicitud aprobada" });
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["invoice-kpis"] });
       queryClient.invalidateQueries({ queryKey: ["invoice-delete-requests"] });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -305,7 +388,7 @@ const AppInvoices = () => {
     }
   };
 
-  const renderPagination = (p: ReturnType<typeof usePagination>) => (
+  const renderServerPagination = (p: ReturnType<typeof useServerPagination>) => (
     <div className="px-4 pb-4">
       <PaginationControls
         currentPage={p.currentPage}
@@ -414,7 +497,7 @@ const AppInvoices = () => {
         <div className="flex items-center gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Buscar por nº factura, cliente o concepto..." value={search} onChange={(e) => { setSearch(e.target.value); invoicePagination.resetPage(); }} className="pl-9" />
+            <Input placeholder="Buscar por nº factura o concepto..." value={search} onChange={(e) => { setSearch(e.target.value); invoicePagination.resetPage(); }} className="pl-9" />
           </div>
           <ToggleGroup type="single" value={invoiceViewMode} onValueChange={(v) => v && setInvoiceViewMode(v as "list" | "kanban")} className="hidden sm:flex">
             <ToggleGroupItem value="list" aria-label="Vista lista" className="px-2.5">
@@ -485,18 +568,18 @@ const AppInvoices = () => {
       </div>
 
       {invoiceViewMode === "kanban" ? (
-        <InvoiceKanbanView invoices={filtered} onPreview={setPreviewInvoice} />
+        <InvoiceKanbanView invoices={kanbanInvoices} onPreview={setPreviewInvoice} />
       ) : (
         <>
           {/* Mobile cards */}
           <div className="space-y-3 md:hidden">
             {isLoading ? (
               <div className="p-8 text-center text-muted-foreground">Cargando facturas...</div>
-            ) : filtered.length === 0 ? (
+            ) : paginatedInvoices.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">No se encontraron facturas</div>
             ) : (
               <>
-                {invoicePagination.paginatedItems.map((inv: any) => (
+                {paginatedInvoices.map((inv: any) => (
                   <Card key={inv.id} className="p-4 space-y-2 cursor-pointer active:bg-accent/50" onClick={() => setPreviewInvoice(inv)}>
                     <div className="flex items-center justify-between">
                       <span className="font-mono font-semibold text-sm">{inv.invoice_number || inv.id.slice(0, 8).toUpperCase()}</span>
@@ -522,7 +605,7 @@ const AppInvoices = () => {
                     </div>
                   </Card>
                 ))}
-                {renderPagination(invoicePagination)}
+                {renderServerPagination(invoicePagination)}
               </>
             )}
           </div>
@@ -532,7 +615,7 @@ const AppInvoices = () => {
             <CardContent className="p-0">
               {isLoading ? (
                 <div className="p-8 text-center text-muted-foreground">Cargando facturas...</div>
-              ) : filtered.length === 0 ? (
+              ) : paginatedInvoices.length === 0 ? (
                 <div className="p-8 text-center text-muted-foreground">No se encontraron facturas</div>
               ) : (
                 <>
@@ -552,7 +635,7 @@ const AppInvoices = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {invoicePagination.paginatedItems.map((inv: any) => (
+                      {paginatedInvoices.map((inv: any) => (
                         <TableRow key={inv.id} className="cursor-pointer hover:bg-accent/50" onClick={() => setPreviewInvoice(inv)}>
                           <TableCell className="font-mono font-semibold text-sm">
                             {inv.invoice_number || inv.id.slice(0, 8).toUpperCase()}
@@ -589,7 +672,7 @@ const AppInvoices = () => {
                     </TableBody>
                   </Table>
                   </div>
-                  {renderPagination(invoicePagination)}
+                  {renderServerPagination(invoicePagination)}
                 </>
               )}
             </CardContent>
@@ -653,7 +736,7 @@ const AppInvoices = () => {
           {/* Quotes Table */}
           <Card>
             <CardContent className="p-0">
-              {filteredQuotes.length === 0 ? (
+              {paginatedQuotes.length === 0 ? (
                 <div className="p-8 text-center text-muted-foreground">No se encontraron presupuestos</div>
               ) : (
                 <>
@@ -671,7 +754,7 @@ const AppInvoices = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {quotePagination.paginatedItems.map((q: any) => (
+                      {paginatedQuotes.map((q: any) => (
                         <TableRow key={q.id} className="cursor-pointer hover:bg-accent/50" onClick={() => setPreviewInvoice(q)}>
                           <TableCell className="font-mono font-semibold text-sm">
                             {q.invoice_number || q.id.slice(0, 8).toUpperCase()}
@@ -704,7 +787,7 @@ const AppInvoices = () => {
                     </TableBody>
                   </Table>
                   </div>
-                  {renderPagination(quotePagination)}
+                  {renderServerPagination(quotePagination)}
                 </>
               )}
             </CardContent>

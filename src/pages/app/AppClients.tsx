@@ -13,16 +13,12 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Plus, Search, Loader2, Trash2, Users, AlertCircle, Eye } from "lucide-react";
+import { Plus, Search, Loader2, Trash2, Users, Eye } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import EmptyState from "@/components/shared/EmptyState";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import PaginationControls from "@/components/shared/PaginationControls";
-import { usePagination } from "@/hooks/use-pagination";
+import { useServerPagination } from "@/hooks/use-server-pagination";
 import CreateBusinessClientDialog from "@/components/clients/CreateBusinessClientDialog";
 
 const AppClients = () => {
@@ -31,9 +27,16 @@ const AppClients = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [showCreate, setShowCreate] = useState(false);
   const [deletingClientId, setDeletingClientId] = useState<string | null>(null);
+
+  // Debounce search
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(t);
+  }, [search]);
 
   // Auto-open create dialog from dashboard quick actions
   useEffect(() => {
@@ -54,20 +57,40 @@ const AppClients = () => {
     enabled: !!accountId,
   });
 
-  const { data: clients = [], isLoading } = useQuery({
-    queryKey: ["business-clients", accountId],
+  const pagination = useServerPagination();
+
+  // Server-side paginated + filtered query
+  const { data: clientResult, isLoading } = useQuery({
+    queryKey: ["business-clients", accountId, pagination.currentPage, pagination.pageSize, debouncedSearch, statusFilter],
     queryFn: async () => {
-      const { data, error } = await supabase
+      if (!accountId) return { data: [], count: 0 };
+      let query = supabase
         .from("business_clients")
-        .select("*")
-        .eq("account_id", accountId!)
+        .select("*", { count: "exact" })
+        .eq("account_id", accountId)
         .order("created_at", { ascending: false });
+
+      if (debouncedSearch) {
+        query = query.or(`name.ilike.%${debouncedSearch}%,tax_id.ilike.%${debouncedSearch}%`);
+      }
+      if (statusFilter !== "ALL") query = query.eq("status", statusFilter);
+
+      query = query.range(pagination.rangeFrom, pagination.rangeTo);
+
+      const { data, error, count } = await query;
       if (error) throw error;
-      return data || [];
+      return { data: data || [], count: count || 0 };
     },
     enabled: !!accountId,
   });
 
+  useEffect(() => {
+    if (clientResult) pagination.setTotalItems(clientResult.count);
+  }, [clientResult?.count]);
+
+  const clients = clientResult?.data || [];
+
+  // Filter out self-client from display
   const externalClients = clients.filter((c: any) => {
     if (!account) return true;
     const isSelf = c.name === account.name && (c.tax_id === account.tax_id || c.tax_id === "PROPIA");
@@ -88,16 +111,6 @@ const AppClients = () => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     },
   });
-
-  const filtered = externalClients.filter((c: any) => {
-    const matchSearch =
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.tax_id.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = statusFilter === "ALL" || c.status === statusFilter;
-    return matchSearch && matchStatus;
-  });
-
-  const pagination = usePagination(filtered);
 
   if (isLoading) {
     return (
@@ -140,7 +153,7 @@ const AppClients = () => {
         </Select>
       </div>
 
-      {filtered.length === 0 ? (
+      {externalClients.length === 0 && pagination.totalItems === 0 ? (
         <EmptyState
           icon={Users}
           title="No hay clientes"
@@ -164,7 +177,7 @@ const AppClients = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {pagination.paginatedItems.map((client: any) => (
+                {externalClients.map((client: any) => (
                   <TableRow
                     key={client.id}
                     className="cursor-pointer"
