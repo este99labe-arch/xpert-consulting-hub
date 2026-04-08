@@ -37,6 +37,7 @@ import { useServerPagination } from "@/hooks/use-server-pagination";
 import { usePagination } from "@/hooks/use-pagination";
 import { dispatchWebhook } from "@/lib/webhooks";
 import InvoiceKanbanView from "@/components/invoices/InvoiceKanbanView";
+import BankReconciliationTab from "@/components/invoices/BankReconciliationTab";
 
 const statusColors: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground",
