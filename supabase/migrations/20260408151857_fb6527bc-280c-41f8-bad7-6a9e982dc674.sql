@@ -1,0 +1,1 @@
+ALTER TABLE public.invoices ADD COLUMN vat_included boolean NOT NULL DEFAULT false;
