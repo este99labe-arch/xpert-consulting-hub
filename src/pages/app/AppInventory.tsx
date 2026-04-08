@@ -41,12 +41,15 @@ const AppInventory = () => {
     enabled: !!activeAccountId,
   });
 
-  const { data: movements = [] } = useQuery({
-    queryKey: ["stock-movements", activeAccountId],
+  // Movements count for KPI (lightweight)
+  const { data: movementCount = 0 } = useQuery({
+    queryKey: ["stock-movements-count", activeAccountId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("stock_movements").select("*, products(name, sku)").eq("account_id", activeAccountId!).order("created_at", { ascending: false }).limit(200);
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const { count, error } = await supabase.from("stock_movements").select("*", { count: "exact", head: true }).eq("account_id", activeAccountId!).gte("created_at", startOfMonth);
       if (error) throw error;
-      return (data || []) as StockMovement[];
+      return count || 0;
     },
     enabled: !!activeAccountId,
   });

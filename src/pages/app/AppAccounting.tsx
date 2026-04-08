@@ -42,6 +42,7 @@ const AppAccounting = () => {
     enabled: !!activeAccountId,
   });
 
+  // entries query kept lightweight - used only for editing entry lines
   const { data: entries = [] } = useQuery({
     queryKey: ["journal-entries", activeAccountId],
     queryFn: async () => {
