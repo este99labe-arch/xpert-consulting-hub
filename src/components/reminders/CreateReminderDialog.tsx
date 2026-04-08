@@ -132,8 +132,8 @@ const CreateReminderDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md max-w-[calc(100vw-2rem)]">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-md max-w-[calc(100vw-2rem)] max-h-[90vh] flex flex-col">
+        <DialogHeader className="shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <CalendarClock className="h-5 w-5 text-primary" />
             Nuevo Recordatorio
@@ -143,129 +143,132 @@ const CreateReminderDialog = ({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="reminder-title">Título *</Label>
-            <Input
-              id="reminder-title"
-              placeholder="Ej: Revisar factura pendiente"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-          </div>
+        <ScrollArea className="flex-1 min-h-0 -mx-6 px-6">
+          <div className="space-y-3 pb-1">
+            <div className="space-y-1">
+              <Label htmlFor="reminder-title" className="text-xs">Título *</Label>
+              <Input
+                id="reminder-title"
+                placeholder="Ej: Revisar factura pendiente"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="h-8 text-sm"
+              />
+            </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="reminder-desc">Descripción</Label>
-            <Textarea
-              id="reminder-desc"
-              placeholder="Detalles adicionales..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={2}
-            />
-          </div>
+            <div className="space-y-1">
+              <Label htmlFor="reminder-desc" className="text-xs">Descripción</Label>
+              <Textarea
+                id="reminder-desc"
+                placeholder="Detalles adicionales..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={2}
+                className="text-sm min-h-[52px]"
+              />
+            </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="reminder-date">Fecha y hora del recordatorio *</Label>
-            <Input
-              id="reminder-date"
-              type="datetime-local"
-              value={remindAt}
-              onChange={(e) => setRemindAt(e.target.value)}
-              min={format(new Date(), "yyyy-MM-dd'T'HH:mm")}
-            />
-          </div>
+            <div className="space-y-1">
+              <Label htmlFor="reminder-date" className="text-xs">Fecha y hora *</Label>
+              <Input
+                id="reminder-date"
+                type="datetime-local"
+                value={remindAt}
+                onChange={(e) => setRemindAt(e.target.value)}
+                min={format(new Date(), "yyyy-MM-dd'T'HH:mm")}
+                className="h-8 text-sm"
+              />
+            </div>
 
-          {/* Resource linking */}
-          <div className="space-y-2">
-            <Label>Vincular a recurso (opcional)</Label>
+            {/* Resource linking */}
+            <div className="space-y-1.5">
+              <Label className="text-xs">Vincular a recurso (opcional)</Label>
 
-            {hasDefault ? (
-              <div className="flex items-center gap-2 rounded-md border border-border bg-muted/50 p-2.5 text-sm">
-                {RESOURCE_TYPES.find((t) => t.value === resourceType)?.icon}
-                <span className="flex-1 min-w-0 truncate text-xs">
-                  <span className="font-medium text-muted-foreground mr-1">
-                    {RESOURCE_TYPES.find((t) => t.value === resourceType)?.label}:
+              {hasDefault ? (
+                <div className="flex items-center gap-2 rounded-md border border-border bg-muted/50 p-2 text-xs">
+                  {RESOURCE_TYPES.find((t) => t.value === resourceType)?.icon}
+                  <span className="flex-1 min-w-0 truncate">
+                    <span className="font-medium text-muted-foreground mr-1">
+                      {RESOURCE_TYPES.find((t) => t.value === resourceType)?.label}:
+                    </span>
+                    {resourceLabel}
                   </span>
-                  {resourceLabel}
-                </span>
-              </div>
-            ) : (
-              <>
-                {/* Step 1: Select type */}
-                <Select
-                  value={resourceType || "__none__"}
-                  onValueChange={(v) => {
-                    const val = v === "__none__" ? "" : v;
-                    setResourceType(val);
-                    setResourceId("");
-                    setResourceLabel("");
-                  }}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Seleccionar tipo de recurso" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none__">Sin vincular</SelectItem>
-                    {RESOURCE_TYPES.map((rt) => (
-                      <SelectItem key={rt.value} value={rt.value}>
-                        <span className="flex items-center gap-2">
-                          {rt.icon} {rt.label}
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                {/* Step 2: Select specific resource */}
-                {resourceType && (
+                </div>
+              ) : (
+                <>
                   <Select
-                    value={resourceId || "__none__"}
+                    value={resourceType || "__none__"}
                     onValueChange={(v) => {
                       const val = v === "__none__" ? "" : v;
-                      setResourceId(val);
-                      const found = resources.find((r: any) => r.id === val);
-                      setResourceLabel(found?.label || "");
+                      setResourceType(val);
+                      setResourceId("");
+                      setResourceLabel("");
                     }}
                   >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder={loadingResources ? "Cargando..." : "Seleccionar recurso"} />
+                    <SelectTrigger className="w-full h-8 text-sm">
+                      <SelectValue placeholder="Seleccionar tipo de recurso" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="__none__">Sin seleccionar</SelectItem>
-                      <ScrollArea className="max-h-[200px]">
-                        {resources.map((r: any) => (
-                          <SelectItem key={r.id} value={r.id}>
-                            <span className="block max-w-[320px] truncate text-xs">{r.label}</span>
-                          </SelectItem>
-                        ))}
-                      </ScrollArea>
+                      <SelectItem value="__none__">Sin vincular</SelectItem>
+                      {RESOURCE_TYPES.map((rt) => (
+                        <SelectItem key={rt.value} value={rt.value}>
+                          <span className="flex items-center gap-2">
+                            {rt.icon} {rt.label}
+                          </span>
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
-                )}
 
-                {/* Show selected resource */}
-                {resourceId && resourceLabel && (
-                  <div className="flex items-center gap-2 rounded-md border border-border bg-muted/50 p-2 text-xs">
-                    {RESOURCE_TYPES.find((t) => t.value === resourceType)?.icon}
-                    <span className="flex-1 min-w-0 truncate">{resourceLabel}</span>
-                    <button
-                      type="button"
-                      onClick={() => { setResourceId(""); setResourceLabel(""); }}
-                      className="hover:bg-foreground/10 rounded-full p-0.5 shrink-0"
+                  {resourceType && (
+                    <Select
+                      value={resourceId || "__none__"}
+                      onValueChange={(v) => {
+                        const val = v === "__none__" ? "" : v;
+                        setResourceId(val);
+                        const found = resources.find((r: any) => r.id === val);
+                        setResourceLabel(found?.label || "");
+                      }}
                     >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </div>
+                      <SelectTrigger className="w-full h-8 text-sm">
+                        <SelectValue placeholder={loadingResources ? "Cargando..." : "Seleccionar recurso"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">Sin seleccionar</SelectItem>
+                        <ScrollArea className="max-h-[200px]">
+                          {resources.map((r: any) => (
+                            <SelectItem key={r.id} value={r.id}>
+                              <span className="block max-w-[320px] truncate text-xs">{r.label}</span>
+                            </SelectItem>
+                          ))}
+                        </ScrollArea>
+                      </SelectContent>
+                    </Select>
+                  )}
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+                  {resourceId && resourceLabel && (
+                    <div className="flex items-center gap-2 rounded-md border border-border bg-muted/50 p-1.5 text-xs">
+                      {RESOURCE_TYPES.find((t) => t.value === resourceType)?.icon}
+                      <span className="flex-1 min-w-0 truncate">{resourceLabel}</span>
+                      <button
+                        type="button"
+                        onClick={() => { setResourceId(""); setResourceLabel(""); }}
+                        className="hover:bg-foreground/10 rounded-full p-0.5 shrink-0"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </ScrollArea>
+
+        <DialogFooter className="shrink-0">
+          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button
+            size="sm"
             onClick={() => createMutation.mutate()}
             disabled={!canSubmit || createMutation.isPending}
           >
