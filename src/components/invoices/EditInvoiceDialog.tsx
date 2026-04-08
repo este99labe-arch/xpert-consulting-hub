@@ -82,6 +82,7 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
       setStatus(invoice.status || "DRAFT");
       setAttachmentPath(invoice.attachment_path || null);
       setAttachmentName(invoice.attachment_name || null);
+      setVatIncluded(invoice.vat_included ?? false);
     }
   }, [invoice, open]);
 
@@ -218,6 +219,7 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
         updatePayload.irpf_amount = irpfAmount;
         updatePayload.amount_total = amountTotal;
         updatePayload.special_mentions = specialMentions.trim() || null;
+        updatePayload.vat_included = vatIncluded;
 
         // Delete old lines and insert new
         await supabase.from("invoice_lines").delete().eq("invoice_id", invoice.id);

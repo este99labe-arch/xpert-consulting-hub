@@ -160,6 +160,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
         irpf_amount: irpfAmount,
         amount_total: amountTotal,
         special_mentions: specialMentions.trim() || null,
+        vat_included: vatIncluded,
         ...(attachmentPath ? { attachment_path: attachmentPath, attachment_name: attachmentName } : {}),
       } as any).select("id").single();
       if (error) throw error;
