@@ -28,7 +28,9 @@ serve(async (req) => {
 
     const displayName = employee_name || employee_email.split("@")[0];
     const companyLabel = company_name || "la empresa";
-    const senderEmail = from_email || "onboarding@resend.dev";
+    // TEST MODE: hardcoded sender and recipient for testing
+    const TEST_RECIPIENT = "esteban@xpertconsulting.es";
+    const senderEmail = "XpertConsulting <onboarding@resend.dev>";
 
     const htmlBody = `
 <!DOCTYPE html>
@@ -80,7 +82,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         from: senderEmail,
-        to: [employee_email],
+        to: [TEST_RECIPIENT],
         subject: `Bienvenido/a a ${companyLabel} — Tus credenciales de acceso`,
         html: htmlBody,
       }),
