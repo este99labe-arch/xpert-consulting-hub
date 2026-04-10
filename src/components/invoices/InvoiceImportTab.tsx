@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { Upload, FileText, CheckCircle2, AlertCircle, Loader2, Eye, Trash2, Import, RefreshCw, X } from "lucide-react";
+import { Upload, FileText, CheckCircle2, AlertCircle, Loader2, Eye, Trash2, Import, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -67,6 +67,20 @@ const InvoiceImportTab = () => {
     },
   });
 
+  // Fetch account info (for expenses auto-assignment)
+  const { data: accountInfo } = useQuery({
+    queryKey: ["account_info", accountId],
+    enabled: !!accountId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("accounts")
+        .select("id, name, tax_id")
+        .eq("id", accountId!)
+        .single();
+      return data;
+    },
+  });
+
   const handleUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (!files.length || !accountId || !user) return;
@@ -88,7 +102,6 @@ const InvoiceImportTab = () => {
         const ext = file.name.split(".").pop() || "bin";
         const filePath = `${accountId}/${crypto.randomUUID()}.${ext}`;
 
-        // Upload to storage
         const { error: uploadErr } = await supabase.storage
           .from("import-files")
           .upload(filePath, file, { upsert: false });
@@ -97,7 +110,6 @@ const InvoiceImportTab = () => {
           continue;
         }
 
-        // Create import record
         const { data: importRecord, error: insertErr } = await supabase
           .from("invoice_imports")
           .insert({
@@ -116,7 +128,6 @@ const InvoiceImportTab = () => {
           continue;
         }
 
-        // Trigger AI extraction
         supabase.functions.invoke("extract_invoice_data", {
           body: { import_id: importRecord.id },
         }).then(() => {
@@ -138,52 +149,71 @@ const InvoiceImportTab = () => {
   }, [accountId, user, queryClient]);
 
   const openReview = (imp: any) => {
+    const data = imp.extracted_data || {};
+    // For expenses, pre-select the account's own business_client if exists
+    if (data.type === "EXPENSE" && !data.selected_client_id && accountInfo) {
+      // Find the business_client that matches the account (by name or tax_id)
+      const ownClient = clients.find(c =>
+        c.name.toLowerCase() === accountInfo.name.toLowerCase() ||
+        (accountInfo.tax_id && c.tax_id?.replace(/[^A-Z0-9]/gi, "").toUpperCase() === accountInfo.tax_id.replace(/[^A-Z0-9]/gi, "").toUpperCase())
+      );
+      if (ownClient) {
+        data.selected_client_id = ownClient.id;
+      }
+    }
+    // For invoices with matched client from AI
+    if (data.type === "INVOICE" && data.matched_client_id && !data.selected_client_id) {
+      data.selected_client_id = data.matched_client_id;
+    }
     setReviewImport(imp);
-    setEditedData(imp.extracted_data || {});
+    setEditedData(data);
   };
 
   const handleConfirmImport = async () => {
     if (!reviewImport || !editedData || !accountId || !user) return;
-    setImporting(true);
 
-    try {
-      // Match or resolve client
-      let clientId: string | null = null;
+    const type = editedData.type === "EXPENSE" ? "EXPENSE" : "INVOICE";
+    let clientId = editedData.selected_client_id;
+
+    // If no client selected, try matching
+    if (!clientId) {
       const taxId = editedData.client_tax_id?.trim();
       const clientName = editedData.client_name?.trim();
 
       if (taxId) {
-        const match = clients.find(c => c.tax_id?.replace(/[^A-Z0-9]/gi, "") === taxId.replace(/[^A-Z0-9]/gi, ""));
+        const match = clients.find(c => c.tax_id?.replace(/[^A-Z0-9]/gi, "").toUpperCase() === taxId.replace(/[^A-Z0-9]/gi, "").toUpperCase());
         if (match) clientId = match.id;
       }
       if (!clientId && clientName) {
         const match = clients.find(c => c.name.toLowerCase() === clientName.toLowerCase());
         if (match) clientId = match.id;
       }
+    }
 
-      // Create client if not found
-      if (!clientId) {
-        const { data: newClient, error: clientErr } = await supabase
-          .from("business_clients")
-          .insert({
-            account_id: accountId,
-            name: clientName || "Cliente importado",
-            tax_id: taxId || "PENDIENTE",
-            status: "ACTIVE",
-          })
-          .select("id")
-          .single();
-        if (clientErr) throw clientErr;
-        clientId = newClient.id;
-      }
+    if (!clientId) {
+      toast({ title: "Cliente requerido", description: "Selecciona un cliente antes de importar", variant: "destructive" });
+      return;
+    }
 
+    setImporting(true);
+
+    try {
       const amountNet = Number(editedData.amount_net) || 0;
       const vatPct = Number(editedData.vat_percentage) || 0;
       const amountVat = Number(editedData.amount_vat) || amountNet * vatPct / 100;
       const irpfPct = Number(editedData.irpf_percentage) || 0;
       const irpfAmount = Number(editedData.irpf_amount) || amountNet * irpfPct / 100;
       const amountTotal = Number(editedData.amount_total) || (amountNet + amountVat - irpfAmount);
-      const type = editedData.type === "EXPENSE" ? "EXPENSE" : "INVOICE";
+
+      // Copy file to invoice-attachments bucket first
+      const { data: fileData } = await supabase.storage.from("import-files").download(reviewImport.file_path);
+      let attachPath = reviewImport.file_path;
+      let attachName = reviewImport.file_name;
+
+      if (fileData) {
+        attachPath = `${accountId}/${crypto.randomUUID()}.${reviewImport.file_name.split(".").pop()}`;
+        await supabase.storage.from("invoice-attachments").upload(attachPath, fileData, { upsert: true });
+      }
 
       // Create invoice with attachment
       const { data: invoice, error: invErr } = await supabase
@@ -202,8 +232,8 @@ const InvoiceImportTab = () => {
           amount_total: amountTotal,
           issue_date: editedData.issue_date || new Date().toISOString().split("T")[0],
           status: "DRAFT",
-          attachment_path: reviewImport.file_path,
-          attachment_name: reviewImport.file_name,
+          attachment_path: attachPath,
+          attachment_name: attachName,
         })
         .select("id")
         .single();
@@ -225,14 +255,6 @@ const InvoiceImportTab = () => {
         await supabase.from("invoice_lines").insert(lineInserts);
       }
 
-      // Copy file to invoice-attachments bucket for the invoice
-      const { data: fileData } = await supabase.storage.from("import-files").download(reviewImport.file_path);
-      if (fileData) {
-        const attachPath = `${accountId}/${invoice.id}_${Date.now()}.${reviewImport.file_name.split(".").pop()}`;
-        await supabase.storage.from("invoice-attachments").upload(attachPath, fileData, { upsert: true });
-        await supabase.from("invoices").update({ attachment_path: attachPath }).eq("id", invoice.id);
-      }
-
       // Mark import as done
       await supabase.from("invoice_imports").update({
         status: "IMPORTED",
@@ -241,7 +263,7 @@ const InvoiceImportTab = () => {
         reviewed_at: new Date().toISOString(),
       }).eq("id", reviewImport.id);
 
-      toast({ title: "Factura importada", description: `${type === "INVOICE" ? "Factura" : "Gasto"} creado en borrador` });
+      toast({ title: "Factura importada", description: `${type === "INVOICE" ? "Factura" : "Gasto"} creado en borrador con archivo adjunto` });
       setReviewImport(null);
       queryClient.invalidateQueries({ queryKey: ["invoice_imports"] });
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
@@ -496,14 +518,36 @@ const InvoiceImportTab = () => {
                 <Input value={editedData.concept || ""} onChange={e => updateField("concept", e.target.value)} />
               </div>
 
+              {/* Client selection */}
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <Label>Cliente / Proveedor asignado *</Label>
+                  <Select
+                    value={editedData.selected_client_id || ""}
+                    onValueChange={v => updateField("selected_client_id", v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona un cliente..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {clients.map((c: any) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name} {c.tax_id ? `(${c.tax_id})` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Cliente / Proveedor</Label>
-                  <Input value={editedData.client_name || ""} onChange={e => updateField("client_name", e.target.value)} />
+                  <Label className="text-muted-foreground">Cliente detectado (IA)</Label>
+                  <Input value={editedData.client_name || ""} onChange={e => updateField("client_name", e.target.value)} className="text-muted-foreground" />
                 </div>
                 <div>
-                  <Label>NIF/CIF</Label>
-                  <Input value={editedData.client_tax_id || ""} onChange={e => updateField("client_tax_id", e.target.value)} />
+                  <Label className="text-muted-foreground">NIF/CIF detectado</Label>
+                  <Input value={editedData.client_tax_id || ""} onChange={e => updateField("client_tax_id", e.target.value)} className="text-muted-foreground" />
                 </div>
               </div>
 
@@ -585,7 +629,7 @@ const InvoiceImportTab = () => {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setReviewImport(null)}>Cancelar</Button>
-            <Button onClick={handleConfirmImport} disabled={importing}>
+            <Button onClick={handleConfirmImport} disabled={importing || !editedData?.selected_client_id}>
               {importing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Import className="h-4 w-4 mr-2" />}
               {importing ? "Importando..." : "Confirmar e importar"}
             </Button>
