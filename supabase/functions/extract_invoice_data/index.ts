@@ -65,9 +65,9 @@ Analiza el documento proporcionado y extrae los siguientes campos. Si no puedes 
 Responde ÚNICAMENTE con el JSON estructurado, sin texto adicional.
 
 Los campos a extraer son:
-- type: "INVOICE" (si es una factura de ingreso/venta) o "EXPENSE" (si es un gasto/compra)
+- type: "INVOICE" (si es una factura de ingreso/venta) o "EXPENSE" (si es un gasto/compra/ticket)
 - concept: Descripción o concepto principal del documento
-- client_name: Nombre del proveedor o cliente
+- client_name: Nombre del proveedor o cliente (la empresa que emite el documento)
 - client_tax_id: NIF/CIF del proveedor o cliente  
 - amount_net: Importe neto (base imponible) como número
 - vat_percentage: Porcentaje de IVA aplicado como número
@@ -143,18 +143,88 @@ Responde con un JSON válido.`;
     }
 
     const confidence = extracted.confidence ?? 0;
-    const newStatus = confidence >= 60 ? "READY" : "ERROR";
-    const errorMsg = confidence < 60
-      ? "Confianza baja en la extracción. Revise los datos manualmente."
-      : null;
 
+    // Low confidence → always needs review
+    if (confidence < 60) {
+      await supabase.from("invoice_imports").update({
+        status: "ERROR",
+        extracted_data: extracted,
+        error_message: "Confianza baja en la extracción. Revise los datos manualmente.",
+      }).eq("id", import_id);
+      console.log(`Import ${import_id} processed: status=ERROR (low confidence ${confidence})`);
+      return;
+    }
+
+    // For EXPENSE type: auto-assign to the uploader's account (resolved client-side)
+    // For INVOICE type: try to match client by tax_id or name
+    const extractedType = extracted.type || "EXPENSE";
+
+    if (extractedType === "INVOICE") {
+      // Try to find matching client in business_clients
+      const accountId = importRecord.account_id;
+      let clientMatched = false;
+
+      const extractedTaxId = (extracted.client_tax_id || "").replace(/[^A-Z0-9]/gi, "").toUpperCase();
+      const extractedName = (extracted.client_name || "").trim().toLowerCase();
+
+      if (extractedTaxId) {
+        const { data: matchByTax } = await supabase
+          .from("business_clients")
+          .select("id, name, tax_id")
+          .eq("account_id", accountId)
+          .eq("status", "ACTIVE");
+
+        if (matchByTax) {
+          const match = matchByTax.find((c: any) =>
+            (c.tax_id || "").replace(/[^A-Z0-9]/gi, "").toUpperCase() === extractedTaxId
+          );
+          if (match) {
+            extracted.matched_client_id = match.id;
+            extracted.matched_client_name = match.name;
+            clientMatched = true;
+          }
+        }
+      }
+
+      if (!clientMatched && extractedName) {
+        const { data: matchByName } = await supabase
+          .from("business_clients")
+          .select("id, name, tax_id")
+          .eq("account_id", accountId)
+          .eq("status", "ACTIVE");
+
+        if (matchByName) {
+          const match = matchByName.find((c: any) =>
+            c.name.trim().toLowerCase() === extractedName
+          );
+          if (match) {
+            extracted.matched_client_id = match.id;
+            extracted.matched_client_name = match.name;
+            clientMatched = true;
+          }
+        }
+      }
+
+      if (!clientMatched) {
+        // No client match → needs review
+        await supabase.from("invoice_imports").update({
+          status: "ERROR",
+          extracted_data: extracted,
+          error_message: "Pendiente asignación de cliente",
+        }).eq("id", import_id);
+        console.log(`Import ${import_id} processed: status=ERROR (no client match), confidence=${confidence}`);
+        return;
+      }
+    }
+
+    // EXPENSE or matched INVOICE → READY
     await supabase.from("invoice_imports").update({
-      status: newStatus,
+      status: "READY",
       extracted_data: extracted,
-      error_message: errorMsg,
+      error_message: null,
     }).eq("id", import_id);
 
-    console.log(`Import ${import_id} processed: status=${newStatus}, confidence=${confidence}`);
+    console.log(`Import ${import_id} processed: status=READY, confidence=${confidence}`);
   } catch (e) {
     console.error("processExtraction error:", e);
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
