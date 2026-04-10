@@ -6,20 +6,25 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+function uint8ToBase64(bytes: Uint8Array): string {
+  const CHUNK_SIZE = 8192;
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
+    const chunk = bytes.subarray(i, Math.min(i + CHUNK_SIZE, bytes.length));
+    for (let j = 0; j < chunk.length; j++) {
+      binary += String.fromCharCode(chunk[j]);
+    }
+  }
+  return btoa(binary);
+}
+
+async function processExtraction(import_id: string) {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const lovableKey = Deno.env.get("LOVABLE_API_KEY")!;
+  const supabase = createClient(supabaseUrl, serviceKey);
 
   try {
-    const { import_id } = await req.json();
-    if (!import_id) throw new Error("import_id is required");
-
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const lovableKey = Deno.env.get("LOVABLE_API_KEY")!;
-
-    const supabase = createClient(supabaseUrl, serviceKey);
-
-    // Get the import record
     const { data: importRecord, error: fetchErr } = await supabase
       .from("invoice_imports")
       .select("*")
@@ -28,7 +33,6 @@ Deno.serve(async (req) => {
 
     if (fetchErr || !importRecord) throw new Error("Import record not found");
 
-    // Download the file from storage
     const { data: fileData, error: dlErr } = await supabase.storage
       .from("import-files")
       .download(importRecord.file_path);
@@ -38,29 +42,24 @@ Deno.serve(async (req) => {
         status: "ERROR",
         error_message: "No se pudo descargar el archivo",
       }).eq("id", import_id);
-      throw new Error("Could not download file");
+      return;
     }
 
-    // Convert file to base64 for AI vision
     const arrayBuffer = await fileData.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    const base64 = uint8ToBase64(new Uint8Array(arrayBuffer));
     const mimeType = importRecord.file_type || "application/octet-stream";
 
-    // Determine if it's an image or PDF
     const isImage = mimeType.startsWith("image/");
     const isPdf = mimeType === "application/pdf";
 
     if (!isImage && !isPdf) {
       await supabase.from("invoice_imports").update({
         status: "ERROR",
-        error_message: "Formato de archivo no soportado para extracción automática. Suba una imagen o PDF.",
+        error_message: "Formato de archivo no soportado. Suba una imagen o PDF.",
       }).eq("id", import_id);
-      return new Response(JSON.stringify({ success: false, error: "Unsupported format" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return;
     }
 
-    // Build AI request with vision
     const systemPrompt = `Eres un asistente experto en extraer datos de facturas y gastos de documentos escaneados.
 Analiza el documento proporcionado y extrae los siguientes campos. Si no puedes identificar un campo, déjalo como null.
 Responde ÚNICAMENTE con el JSON estructurado, sin texto adicional.
@@ -83,12 +82,10 @@ Los campos a extraer son:
 
 Responde con un JSON válido.`;
 
-    const userContent: any[] = [
+    const userContent = [
       {
         type: "image_url",
-        image_url: {
-          url: `data:${mimeType};base64,${base64}`,
-        },
+        image_url: { url: `data:${mimeType};base64,${base64}` },
       },
       {
         type: "text",
@@ -116,28 +113,21 @@ Responde con un JSON válido.`;
     if (!aiResponse.ok) {
       const errText = await aiResponse.text();
       console.error("AI gateway error:", aiResponse.status, errText);
-
       const errorMsg = aiResponse.status === 429
         ? "Límite de peticiones excedido. Intente de nuevo en unos minutos."
         : aiResponse.status === 402
         ? "Créditos de IA agotados."
         : "Error al procesar con IA";
-
       await supabase.from("invoice_imports").update({
         status: "ERROR",
         error_message: errorMsg,
       }).eq("id", import_id);
-
-      return new Response(JSON.stringify({ success: false, error: errorMsg }), {
-        status: aiResponse.status === 429 ? 429 : aiResponse.status === 402 ? 402 : 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return;
     }
 
     const aiData = await aiResponse.json();
     const rawContent = aiData.choices?.[0]?.message?.content || "";
 
-    // Parse JSON from AI response (may be wrapped in ```json ... ```)
     let extracted: any = null;
     try {
       const jsonMatch = rawContent.match(/```(?:json)?\s*([\s\S]*?)```/);
@@ -149,13 +139,9 @@ Responde con un JSON válido.`;
         status: "ERROR",
         error_message: "No se pudieron extraer los datos automáticamente. Revise manualmente.",
       }).eq("id", import_id);
-
-      return new Response(JSON.stringify({ success: false, error: "Parse error" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return;
     }
 
-    // Determine status based on confidence
     const confidence = extracted.confidence ?? 0;
     const newStatus = confidence >= 60 ? "READY" : "ERROR";
     const errorMsg = confidence < 60
@@ -169,8 +155,28 @@ Responde con un JSON válido.`;
     }).eq("id", import_id);
 
     console.log(`Import ${import_id} processed: status=${newStatus}, confidence=${confidence}`);
+  } catch (e) {
+    console.error("processExtraction error:", e);
+    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    await supabase.from("invoice_imports").update({
+      status: "ERROR",
+      error_message: e instanceof Error ? e.message : "Error desconocido",
+    }).eq("id", import_id);
+  }
+}
 
-    return new Response(JSON.stringify({ success: true, status: newStatus, extracted }), {
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  try {
+    const { import_id } = await req.json();
+    if (!import_id) throw new Error("import_id is required");
+
+    // Process in background to avoid timeouts on large files
+    EdgeRuntime.waitUntil(processExtraction(import_id));
+
+    return new Response(JSON.stringify({ success: true, message: "Processing started" }), {
+      status: 202,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
