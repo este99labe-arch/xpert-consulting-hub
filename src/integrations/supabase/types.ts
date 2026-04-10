@@ -864,6 +864,69 @@ export type Database = {
           },
         ]
       }
+      invoice_imports: {
+        Row: {
+          account_id: string
+          created_at: string
+          created_invoice_id: string | null
+          error_message: string | null
+          extracted_data: Json | null
+          file_name: string
+          file_path: string
+          file_type: string | null
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          uploaded_by: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          created_invoice_id?: string | null
+          error_message?: string | null
+          extracted_data?: Json | null
+          file_name: string
+          file_path: string
+          file_type?: string | null
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          uploaded_by: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          created_invoice_id?: string | null
+          error_message?: string | null
+          extracted_data?: Json | null
+          file_name?: string
+          file_path?: string
+          file_type?: string | null
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_imports_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_imports_created_invoice_id_fkey"
+            columns: ["created_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_lines: {
         Row: {
           account_id: string
