@@ -211,7 +211,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Also remove the synced business_client from the master account
+    // Also remove the synced business_client and ALL its related data from the master account
     const { data: masterAccount } = await adminClient
       .from("accounts")
       .select("id")
@@ -220,11 +220,50 @@ Deno.serve(async (req) => {
       .single();
 
     if (masterAccount) {
-      await adminClient
+      // Find the synced business_client in the master account
+      const { data: syncedClient } = await adminClient
         .from("business_clients")
-        .delete()
+        .select("id")
         .eq("account_id", masterAccount.id)
-        .eq("name", account.name);
+        .eq("name", account.name)
+        .maybeSingle();
+
+      if (syncedClient) {
+        // Delete all related data for this synced client in the master account
+        // 1. Journal entry lines via journal entries linked to invoices of this client
+        const { data: masterInvoices } = await adminClient
+          .from("invoices")
+          .select("id")
+          .eq("client_id", syncedClient.id);
+        if (masterInvoices && masterInvoices.length > 0) {
+          const invoiceIds = masterInvoices.map((i: any) => i.id);
+          const { data: linkedEntries } = await adminClient
+            .from("journal_entries")
+            .select("id")
+            .in("invoice_id", invoiceIds);
+          if (linkedEntries && linkedEntries.length > 0) {
+            const entryIds = linkedEntries.map((e: any) => e.id);
+            await adminClient.from("journal_entry_lines").delete().in("entry_id", entryIds);
+            await adminClient.from("journal_entries").delete().in("id", entryIds);
+          }
+          // Delete invoice lines, payments, delete requests, email logs
+          await adminClient.from("invoice_lines").delete().in("invoice_id", invoiceIds);
+          await adminClient.from("invoice_payments").delete().in("invoice_id", invoiceIds);
+          await adminClient.from("invoice_delete_requests").delete().in("invoice_id", invoiceIds);
+          await adminClient.from("email_log").delete().in("invoice_id", invoiceIds);
+          // Delete the invoices themselves
+          await adminClient.from("invoices").delete().eq("client_id", syncedClient.id);
+        }
+
+        // 2. Recurring invoices
+        await adminClient.from("recurring_invoices").delete().eq("client_id", syncedClient.id);
+
+        // 3. Client contacts
+        await adminClient.from("client_contacts").delete().eq("client_id", syncedClient.id);
+
+        // 4. Finally delete the synced business_client
+        await adminClient.from("business_clients").delete().eq("id", syncedClient.id);
+      }
     }
 
     // Finally delete the account itself
