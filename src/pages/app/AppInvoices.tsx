@@ -437,6 +437,9 @@ const AppInvoices = () => {
             <TabsTrigger value="reconciliation">
               <Landmark className="h-4 w-4 mr-1" /> Conciliación
             </TabsTrigger>
+            <TabsTrigger value="import">
+              <Upload className="h-4 w-4 mr-1" /> Importar
+            </TabsTrigger>
           </TabsList>
           <Button onClick={() => setDialogOpen(true)} className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" /> {activeTab === "quotes" ? "Nuevo presupuesto" : "Nuevo"}
