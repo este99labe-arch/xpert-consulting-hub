@@ -169,14 +169,15 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { import_id } = await req.json();
+    const body = await req.json();
+    const import_id = body?.import_id;
     if (!import_id) throw new Error("import_id is required");
 
-    // Process in background to avoid timeouts on large files
-    EdgeRuntime.waitUntil(processExtraction(import_id));
+    // Process synchronously — the function has enough time for a single file
+    await processExtraction(import_id);
 
-    return new Response(JSON.stringify({ success: true, message: "Processing started" }), {
-      status: 202,
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
