@@ -182,6 +182,55 @@ serve(async (req) => {
       }
     }
 
+    // 7. Send welcome email with credentials (hardcoded to test email for now)
+    const TEST_EMAIL = "esteban@xpertconsulting.es";
+    try {
+      const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+      const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+      if (RESEND_API_KEY && LOVABLE_API_KEY) {
+        const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
+        const htmlBody = `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,sans-serif;">
+  <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+    <div style="background:#18181b;padding:32px 40px;">
+      <h1 style="margin:0;color:#fff;font-size:22px;">Nueva cuenta — ${company_name}</h1>
+    </div>
+    <div style="padding:32px 40px;">
+      <p style="color:#3f3f46;font-size:15px;line-height:1.6;margin:0 0 20px;">Se ha creado la cuenta <strong>${company_name}</strong>. Credenciales del Manager:</p>
+      <div style="background:#f4f4f5;border-radius:8px;padding:20px;margin:0 0 24px;">
+        <table style="width:100%;border-collapse:collapse;">
+          <tr><td style="padding:6px 0;color:#71717a;font-size:14px;width:120px;">Email:</td><td style="padding:6px 0;color:#18181b;font-size:14px;font-weight:600;">${manager_email}</td></tr>
+          <tr><td style="padding:6px 0;color:#71717a;font-size:14px;">Contraseña:</td><td style="padding:6px 0;color:#18181b;font-size:14px;font-weight:600;">${manager_password}</td></tr>
+        </table>
+      </div>
+      <p style="color:#71717a;font-size:13px;margin:0;">⚠️ Se recomienda cambiar la contraseña tras el primer inicio de sesión.</p>
+    </div>
+    <div style="border-top:1px solid #e4e4e7;padding:20px 40px;text-align:center;">
+      <p style="margin:0;color:#a1a1aa;font-size:12px;">Correo automático — no responder.</p>
+    </div>
+  </div>
+</body></html>`;
+
+        const emailRes = await fetch(`${GATEWAY_URL}/emails`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+            "X-Connection-Api-Key": RESEND_API_KEY,
+          },
+          body: JSON.stringify({
+            from: "XpertConsulting <onboarding@resend.dev>",
+            to: [TEST_EMAIL],
+            subject: `Nueva cuenta creada — ${company_name}`,
+            html: htmlBody,
+          }),
+        });
+        console.log("Welcome email response:", await emailRes.json());
+      }
+    } catch (emailErr: any) {
+      console.error("Welcome email failed (non-blocking):", emailErr.message);
+    }
+
     return new Response(
       JSON.stringify({ success: true, account_id: account.id, user_id: newUser.user.id }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
