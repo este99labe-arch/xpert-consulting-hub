@@ -231,7 +231,8 @@ const InvoiceImportTab = () => {
           irpf_amount: irpfAmount,
           amount_total: amountTotal,
           issue_date: editedData.issue_date || new Date().toISOString().split("T")[0],
-          status: "DRAFT",
+          status: type === "EXPENSE" ? "PAID" : "DRAFT",
+          paid_at: type === "EXPENSE" ? new Date().toISOString() : null,
           attachment_path: attachPath,
           attachment_name: attachName,
         })
@@ -263,7 +264,7 @@ const InvoiceImportTab = () => {
         reviewed_at: new Date().toISOString(),
       }).eq("id", reviewImport.id);
 
-      toast({ title: "Factura importada", description: `${type === "INVOICE" ? "Factura" : "Gasto"} creado en borrador con archivo adjunto` });
+      toast({ title: "Factura importada", description: `${type === "INVOICE" ? "Factura creada en borrador" : "Gasto importado como pagado"} con archivo adjunto` });
       setReviewImport(null);
       queryClient.invalidateQueries({ queryKey: ["invoice_imports"] });
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
