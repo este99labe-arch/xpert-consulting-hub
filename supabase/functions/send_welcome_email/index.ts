@@ -82,7 +82,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         from: senderEmail,
-        to: [employee_email],
+        to: [TEST_RECIPIENT],
         subject: `Bienvenido/a a ${companyLabel} — Tus credenciales de acceso`,
         html: htmlBody,
       }),
