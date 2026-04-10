@@ -821,6 +821,10 @@ const AppInvoices = () => {
         <TabsContent value="reconciliation">
           <BankReconciliationTab />
         </TabsContent>
+
+        <TabsContent value="import">
+          <InvoiceImportTab />
+        </TabsContent>
       </Tabs>
 
       <CreateInvoiceDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setCreateDefaultType(undefined); }} defaultType={createDefaultType || (activeTab === "quotes" ? "QUOTE" : undefined)} />
