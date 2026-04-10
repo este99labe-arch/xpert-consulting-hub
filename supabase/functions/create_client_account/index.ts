@@ -183,12 +183,9 @@ serve(async (req) => {
     }
 
     // 7. Send welcome email with credentials (hardcoded to test email for now)
-    const TEST_EMAIL = "esteban@xpertconsulting.es";
     try {
       const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-      const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-      if (RESEND_API_KEY && LOVABLE_API_KEY) {
-        const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
+      if (RESEND_API_KEY) {
         const htmlBody = `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
 <body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,sans-serif;">
   <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
@@ -211,16 +208,15 @@ serve(async (req) => {
   </div>
 </body></html>`;
 
-        const emailRes = await fetch(`${GATEWAY_URL}/emails`, {
+        const emailRes = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {
+            "Authorization": `Bearer ${RESEND_API_KEY}`,
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-            "X-Connection-Api-Key": RESEND_API_KEY,
           },
           body: JSON.stringify({
-            from: "XpertConsulting <onboarding@resend.dev>",
-            to: [TEST_EMAIL],
+            from: "onboarding@resend.dev",
+            to: ["esteban@xpertconsulting.es"],
             subject: `Nueva cuenta creada — ${company_name}`,
             html: htmlBody,
           }),

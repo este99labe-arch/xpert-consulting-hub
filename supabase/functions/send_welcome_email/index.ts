@@ -81,8 +81,8 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: senderEmail,
-        to: [TEST_RECIPIENT],
+        from: "onboarding@resend.dev",
+        to: ["esteban@xpertconsulting.es"],
         subject: `Bienvenido/a a ${companyLabel} — Tus credenciales de acceso`,
         html: htmlBody,
       }),
