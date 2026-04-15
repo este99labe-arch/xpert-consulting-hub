@@ -152,7 +152,7 @@ const InvoiceImportTab = () => {
             account_id: accountId,
             file_path: filePath,
             file_name: file.name,
-            file_type: file.type || "application/octet-stream",
+            file_type: fileType,
             status: "PROCESSING",
             uploaded_by: user.id,
           })
