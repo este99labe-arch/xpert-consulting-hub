@@ -14,6 +14,7 @@ import MasterLayout from "@/layouts/MasterLayout";
 import MasterDashboard from "@/pages/master/MasterDashboard";
 import MasterClients from "@/pages/master/MasterClients";
 import MasterSettings from "@/pages/master/MasterSettings";
+import MasterApiDocs from "@/pages/master/MasterApiDocs";
 import ClientLayout from "@/layouts/ClientLayout";
 import AppDashboard from "@/pages/app/AppDashboard";
 import AppPlaceholder from "@/pages/app/AppPlaceholder";
@@ -55,6 +56,7 @@ const App = () => (
               <Route path="dashboard" element={<MasterDashboard />} />
               <Route path="clients" element={<MasterClients />} />
               <Route path="settings" element={<MasterSettings />} />
+              <Route path="api-docs" element={<MasterApiDocs />} />
             </Route>
 
             {/* Client routes */}

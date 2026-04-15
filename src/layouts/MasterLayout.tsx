@@ -12,7 +12,7 @@ import {
   SidebarTrigger,
   SidebarInset,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Users, Settings, LogOut, ArrowRightLeft } from "lucide-react";
+import { LayoutDashboard, Users, Settings, LogOut, ArrowRightLeft, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
@@ -22,6 +22,7 @@ const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/master/dashboard" },
   { label: "Cuentas", icon: Users, path: "/master/clients" },
   { label: "Configuración", icon: Settings, path: "/master/settings" },
+  { label: "API Docs", icon: BookOpen, path: "/master/api-docs" },
 ];
 
 const MasterLayout = () => {
