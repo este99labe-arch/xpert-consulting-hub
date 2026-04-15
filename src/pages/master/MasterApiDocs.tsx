@@ -352,79 +352,275 @@ const MasterApiDocs = () => {
     toast.info("Generando PDF...");
     try {
       const { default: jsPDF } = await import("jspdf");
-      const { default: html2canvas } = await import("html2canvas");
 
       const doc = new jsPDF("p", "mm", "a4");
-      const pageWidth = 210;
-      const pageHeight = 297;
-      const margin = 15;
-      const contentWidth = pageWidth - margin * 2;
-
-      // Cover page
-      doc.setFillColor(15, 23, 42);
-      doc.rect(0, 0, pageWidth, pageHeight, "F");
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(40);
-      doc.text("XC", pageWidth / 2, 80, { align: "center" });
-      doc.setFontSize(22);
-      doc.text("XpertConsulting ERP", pageWidth / 2, 100, { align: "center" });
-      doc.setFontSize(16);
-      doc.text("API Reference", pageWidth / 2, 115, { align: "center" });
-      doc.setFontSize(12);
-      doc.setTextColor(148, 163, 184);
-      doc.text(`Versión ${API_VERSION}`, pageWidth / 2, 135, { align: "center" });
-      doc.text(new Date().toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" }), pageWidth / 2, 145, { align: "center" });
-      doc.text(baseUrl, pageWidth / 2, 165, { align: "center" });
-
-      // Table of contents
-      doc.addPage();
-      doc.setTextColor(15, 23, 42);
-      doc.setFontSize(20);
-      doc.text("Índice", margin, 30);
-      doc.setFontSize(11);
-      doc.setTextColor(71, 85, 105);
-      sections.forEach((s, i) => {
-        doc.text(`${i + 1}. ${s.title}`, margin, 50 + i * 8);
-      });
-      doc.text(`${sections.length + 1}. Códigos de Error`, margin, 50 + sections.length * 8);
-
-      // Render content
-      const el = contentRef.current;
-      if (!el) throw new Error("No content");
-      
-      // Expand all accordions temporarily
-      const accordionItems = el.querySelectorAll("[data-state='closed']");
-      accordionItems.forEach((item) => item.setAttribute("data-state", "open"));
-      
-      // Small delay for DOM update
-      await new Promise((r) => setTimeout(r, 300));
-
-      const canvas = await html2canvas(el, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-        windowWidth: 900,
-      });
-
-      const imgData = canvas.toDataURL("image/jpeg", 0.85);
-      const imgWidth = contentWidth;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const pw = 210;
+      const ph = 297;
+      const m = 15;
+      const cw = pw - m * 2;
       let y = 0;
 
-      while (y < imgHeight) {
-        doc.addPage();
-        doc.addImage(imgData, "JPEG", margin, margin - y, imgWidth, imgHeight);
-        // Footer
+      const colors = {
+        dark: [15, 23, 42] as [number, number, number],
+        slate: [71, 85, 105] as [number, number, number],
+        muted: [148, 163, 184] as [number, number, number],
+        white: [255, 255, 255] as [number, number, number],
+        green: [16, 185, 129] as [number, number, number],
+        blue: [59, 130, 246] as [number, number, number],
+        amber: [245, 158, 11] as [number, number, number],
+        red: [239, 68, 68] as [number, number, number],
+        bgCode: [241, 245, 249] as [number, number, number],
+      };
+      const methodColor: Record<string, [number, number, number]> = {
+        GET: colors.green, POST: colors.blue, PUT: colors.amber, DELETE: colors.red,
+      };
+
+      const addFooter = () => {
+        const pn = doc.getNumberOfPages();
         doc.setFontSize(8);
-        doc.setTextColor(148, 163, 184);
-        const pageNum = doc.getNumberOfPages();
-        doc.text(`Página ${pageNum}`, pageWidth / 2, pageHeight - 8, { align: "center" });
-        doc.text(baseUrl, pageWidth - margin, pageHeight - 8, { align: "right" });
-        y += pageHeight - margin * 2;
+        doc.setTextColor(...colors.muted);
+        doc.text(`Página ${pn}`, pw / 2, ph - 8, { align: "center" });
+        doc.text(baseUrl, pw - m, ph - 8, { align: "right" });
+      };
+
+      const checkPage = (need: number) => {
+        if (y + need > ph - m - 10) {
+          addFooter();
+          doc.addPage();
+          y = m;
+        }
+      };
+
+      const wrapText = (text: string, maxW: number, fontSize: number): string[] => {
+        doc.setFontSize(fontSize);
+        return doc.splitTextToSize(text, maxW);
+      };
+
+      // --- Cover ---
+      doc.setFillColor(...colors.dark);
+      doc.rect(0, 0, pw, ph, "F");
+      doc.setTextColor(...colors.white);
+      doc.setFontSize(48);
+      doc.text("XC", pw / 2, 85, { align: "center" });
+      doc.setFontSize(24);
+      doc.text("XpertConsulting ERP", pw / 2, 105, { align: "center" });
+      doc.setFontSize(18);
+      doc.text("API Reference", pw / 2, 120, { align: "center" });
+      doc.setFontSize(12);
+      doc.setTextColor(...colors.muted);
+      doc.text(`Versión ${API_VERSION}`, pw / 2, 145, { align: "center" });
+      doc.text(new Date().toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" }), pw / 2, 155, { align: "center" });
+      doc.setFontSize(10);
+      doc.text(baseUrl, pw / 2, 175, { align: "center" });
+
+      // --- TOC ---
+      doc.addPage();
+      y = m;
+      doc.setTextColor(...colors.dark);
+      doc.setFontSize(22);
+      doc.text("Índice", m, y + 10);
+      y += 22;
+      doc.setFontSize(11);
+      doc.setTextColor(...colors.slate);
+      sections.forEach((s, i) => {
+        doc.text(`${i + 1}. ${s.title}`, m + 4, y);
+        y += 7;
+      });
+      doc.text(`${sections.length + 1}. Códigos de Error`, m + 4, y);
+      addFooter();
+
+      // --- Sections ---
+      for (let si = 0; si < sections.length; si++) {
+        const section = sections[si];
+        doc.addPage();
+        y = m;
+
+        // Section header
+        doc.setFillColor(...colors.dark);
+        doc.roundedRect(m, y, cw, 14, 2, 2, "F");
+        doc.setTextColor(...colors.white);
+        doc.setFontSize(14);
+        doc.text(`${si + 1}. ${section.title}`, m + 5, y + 9);
+        y += 20;
+
+        // Section description
+        doc.setTextColor(...colors.slate);
+        doc.setFontSize(10);
+        const descLines = wrapText(section.description, cw, 10);
+        descLines.forEach((line) => {
+          checkPage(5);
+          doc.text(line, m, y);
+          y += 5;
+        });
+        y += 4;
+
+        // Endpoints
+        for (const ep of section.endpoints) {
+          checkPage(30);
+
+          // Method + path bar
+          const mc = methodColor[ep.method] || colors.slate;
+          doc.setFillColor(mc[0], mc[1], mc[2]);
+          doc.roundedRect(m, y, 16, 6, 1, 1, "F");
+          doc.setTextColor(...colors.white);
+          doc.setFontSize(8);
+          doc.text(ep.method, m + 8, y + 4.2, { align: "center" });
+
+          doc.setTextColor(...colors.dark);
+          doc.setFontSize(10);
+          doc.setFont("courier", "bold");
+          doc.text(ep.path, m + 19, y + 4.2);
+          doc.setFont("helvetica", "normal");
+          y += 9;
+
+          // Description
+          doc.setTextColor(...colors.slate);
+          doc.setFontSize(9);
+          const dl = wrapText(ep.description, cw - 4, 9);
+          dl.forEach((line) => {
+            checkPage(5);
+            doc.text(line, m + 2, y);
+            y += 4.5;
+          });
+
+          // Params
+          if (ep.params) {
+            checkPage(10);
+            doc.setTextColor(...colors.dark);
+            doc.setFontSize(8);
+            doc.text("Parámetros:", m + 2, y + 1);
+            doc.setFont("courier", "normal");
+            doc.setTextColor(...colors.slate);
+            doc.setFontSize(8);
+            const pl = wrapText(ep.params, cw - 22, 8);
+            pl.forEach((line) => {
+              doc.text(line, m + 22, y + 1);
+              y += 4;
+            });
+            y += 1;
+            doc.setFont("helvetica", "normal");
+          }
+
+          // Body
+          if (ep.body) {
+            checkPage(10);
+            doc.setTextColor(...colors.dark);
+            doc.setFontSize(8);
+            doc.text("Body:", m + 2, y + 1);
+            y += 5;
+
+            const bodyLines = ep.body.split("\n");
+            const blockH = bodyLines.length * 3.8 + 4;
+            checkPage(blockH);
+            doc.setFillColor(...colors.bgCode);
+            doc.roundedRect(m + 2, y - 2, cw - 4, blockH, 1.5, 1.5, "F");
+            doc.setFont("courier", "normal");
+            doc.setTextColor(...colors.slate);
+            doc.setFontSize(7);
+            bodyLines.forEach((line) => {
+              doc.text(line, m + 5, y + 2);
+              y += 3.8;
+            });
+            y += 4;
+            doc.setFont("helvetica", "normal");
+          }
+
+          // Response
+          if (ep.response) {
+            checkPage(10);
+            doc.setTextColor(...colors.dark);
+            doc.setFontSize(8);
+            doc.text("Respuesta:", m + 2, y + 1);
+            y += 5;
+
+            const respLines = ep.response.split("\n");
+            const blockH = respLines.length * 3.8 + 4;
+            checkPage(blockH);
+            doc.setFillColor(...colors.bgCode);
+            doc.roundedRect(m + 2, y - 2, cw - 4, blockH, 1.5, 1.5, "F");
+            doc.setFont("courier", "normal");
+            doc.setTextColor(...colors.slate);
+            doc.setFontSize(7);
+            respLines.forEach((line) => {
+              doc.text(line, m + 5, y + 2);
+              y += 3.8;
+            });
+            y += 4;
+            doc.setFont("helvetica", "normal");
+          }
+
+          // Separator line
+          y += 2;
+          checkPage(2);
+          doc.setDrawColor(226, 232, 240);
+          doc.line(m + 2, y, pw - m - 2, y);
+          y += 5;
+        }
+        addFooter();
       }
 
-      // Restore accordion states
-      accordionItems.forEach((item) => item.setAttribute("data-state", "closed"));
+      // --- Error codes table ---
+      doc.addPage();
+      y = m;
+      doc.setFillColor(...colors.dark);
+      doc.roundedRect(m, y, cw, 14, 2, 2, "F");
+      doc.setTextColor(...colors.white);
+      doc.setFontSize(14);
+      doc.text(`${sections.length + 1}. Códigos de Error`, m + 5, y + 9);
+      y += 22;
+
+      // Table header
+      doc.setFillColor(241, 245, 249);
+      doc.rect(m, y, cw, 8, "F");
+      doc.setTextColor(...colors.dark);
+      doc.setFontSize(9);
+      doc.text("Status", m + 3, y + 5.5);
+      doc.text("Código", m + 25, y + 5.5);
+      doc.text("Significado", m + 85, y + 5.5);
+      y += 10;
+
+      errorCodes.forEach((ec) => {
+        checkPage(8);
+        doc.setDrawColor(226, 232, 240);
+        doc.line(m, y + 6, pw - m, y + 6);
+        doc.setFont("courier", "bold");
+        doc.setTextColor(...colors.dark);
+        doc.setFontSize(9);
+        doc.text(ec.status, m + 3, y + 4);
+        doc.setFont("courier", "normal");
+        doc.setFontSize(8);
+        doc.text(ec.code, m + 25, y + 4);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(...colors.slate);
+        doc.setFontSize(9);
+        doc.text(ec.meaning, m + 85, y + 4);
+        y += 8;
+      });
+
+      // Error format
+      y += 6;
+      checkPage(30);
+      doc.setTextColor(...colors.dark);
+      doc.setFontSize(9);
+      doc.text("Formato de respuesta de error:", m, y);
+      y += 6;
+      const errBody = `{
+  "error": "Mensaje descriptivo",
+  "code": "ERROR_CODE",
+  "details": [{ "field": "name", "message": "required" }]
+}`;
+      const errLines = errBody.split("\n");
+      const errH = errLines.length * 3.8 + 4;
+      doc.setFillColor(...colors.bgCode);
+      doc.roundedRect(m, y - 2, cw, errH, 1.5, 1.5, "F");
+      doc.setFont("courier", "normal");
+      doc.setTextColor(...colors.slate);
+      doc.setFontSize(7);
+      errLines.forEach((line) => {
+        doc.text(line, m + 3, y + 2);
+        y += 3.8;
+      });
+      addFooter();
 
       doc.save("xpert-api-reference-v1.pdf");
       toast.success("PDF descargado correctamente");
