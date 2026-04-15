@@ -1,4 +1,5 @@
 import React from "react";
+import { Sentry } from "@/lib/sentry";
 import { logger } from "@/lib/logger";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
@@ -19,6 +20,7 @@ export class ErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
+    Sentry.captureException(error, { extra: { componentStack: info.componentStack } });
     logger.error(error.message, "ErrorBoundary", {
       stack: error.stack,
       componentStack: info.componentStack,
