@@ -85,10 +85,10 @@ const InvoiceImportTab = () => {
     const files = Array.from(e.target.files || []);
     if (!files.length || !accountId || !user) return;
 
-    const maxSize = 10 * 1024 * 1024;
+    const maxSize = 20 * 1024 * 1024; // 20MB raw limit before compression
     const validFiles = files.filter(f => {
       if (f.size > maxSize) {
-        toast({ title: "Archivo omitido", description: `${f.name} supera 10MB`, variant: "destructive" });
+        toast({ title: "Archivo omitido", description: `${f.name} supera 20MB`, variant: "destructive" });
         return false;
       }
       return true;
@@ -98,8 +98,44 @@ const InvoiceImportTab = () => {
     setUploading(true);
 
     try {
-      for (const file of validFiles) {
-        const ext = file.name.split(".").pop() || "bin";
+      for (let file of validFiles) {
+        let fileName = file.name;
+        let fileType = file.type || "application/octet-stream";
+        const lowerName = fileName.toLowerCase();
+
+        // Convert HEIC/HEIF to JPEG
+        if (lowerName.endsWith(".heic") || lowerName.endsWith(".heif") || fileType === "image/heic" || fileType === "image/heif") {
+          try {
+            const heic2any = (await import("heic2any")).default;
+            const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.85 });
+            const resultBlob = Array.isArray(converted) ? converted[0] : converted;
+            fileName = fileName.replace(/\.heic$/i, ".jpg").replace(/\.heif$/i, ".jpg");
+            fileType = "image/jpeg";
+            file = new File([resultBlob], fileName, { type: fileType });
+          } catch (convErr) {
+            console.error("HEIC conversion error:", convErr);
+            toast({ title: "Error", description: `No se pudo convertir ${fileName} de HEIC a JPEG`, variant: "destructive" });
+            continue;
+          }
+        }
+
+        // Compress images (JPEG, PNG, WebP) to max 2MB / 1920px
+        if (fileType.startsWith("image/") && file.size > 500 * 1024) {
+          try {
+            const imageCompression = (await import("browser-image-compression")).default;
+            file = await imageCompression(file, {
+              maxSizeMB: 2,
+              maxWidthOrHeight: 1920,
+              useWebWorker: true,
+              fileType: fileType as string,
+            });
+            fileName = file.name;
+          } catch (compErr) {
+            console.warn("Image compression failed, uploading original:", compErr);
+          }
+        }
+
+        const ext = fileName.split(".").pop() || "bin";
         const filePath = `${accountId}/${crypto.randomUUID()}.${ext}`;
 
         const { error: uploadErr } = await supabase.storage
@@ -116,7 +152,7 @@ const InvoiceImportTab = () => {
             account_id: accountId,
             file_path: filePath,
             file_name: file.name,
-            file_type: file.type || "application/octet-stream",
+            file_type: fileType,
             status: "PROCESSING",
             uploaded_by: user.id,
           })
@@ -317,7 +353,7 @@ const InvoiceImportTab = () => {
             type="file"
             className="hidden"
             multiple
-            accept=".pdf,.jpg,.jpeg,.png,.webp"
+            accept=".pdf,.jpg,.jpeg,.png,.webp,.heic,.heif"
             onChange={handleUpload}
           />
           <Button onClick={() => fileRef.current?.click()} disabled={uploading}>
