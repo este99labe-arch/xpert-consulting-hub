@@ -102,25 +102,15 @@ const InvoiceImportTab = () => {
         let fileName = file.name;
         let fileType = file.type || "application/octet-stream";
         const lowerName = fileName.toLowerCase();
+        const isHeic = lowerName.endsWith(".heic") || lowerName.endsWith(".heif") || fileType === "image/heic" || fileType === "image/heif";
 
-        // Convert HEIC/HEIF to JPEG
-        if (lowerName.endsWith(".heic") || lowerName.endsWith(".heif") || fileType === "image/heic" || fileType === "image/heif") {
-          try {
-            const heic2any = (await import("heic2any")).default;
-            const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.85 });
-            const resultBlob = Array.isArray(converted) ? converted[0] : converted;
-            fileName = fileName.replace(/\.heic$/i, ".jpg").replace(/\.heif$/i, ".jpg");
-            fileType = "image/jpeg";
-            file = new File([resultBlob], fileName, { type: fileType });
-          } catch (convErr) {
-            console.error("HEIC conversion error:", convErr);
-            toast({ title: "Error", description: `No se pudo convertir ${fileName} de HEIC a JPEG`, variant: "destructive" });
-            continue;
-          }
+        // For HEIC/HEIF: fix mime type if browser doesn't set it, upload as-is (Gemini supports HEIC natively)
+        if (isHeic) {
+          fileType = "image/heic";
         }
 
-        // Compress images (JPEG, PNG, WebP) to max 2MB / 1920px
-        if (fileType.startsWith("image/") && file.size > 500 * 1024) {
+        // Compress non-HEIC images (JPEG, PNG, WebP) to max 2MB / 1920px
+        if (!isHeic && fileType.startsWith("image/") && file.size > 500 * 1024) {
           try {
             const imageCompression = (await import("browser-image-compression")).default;
             file = await imageCompression(file, {
