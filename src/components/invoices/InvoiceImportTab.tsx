@@ -353,7 +353,7 @@ const InvoiceImportTab = () => {
             type="file"
             className="hidden"
             multiple
-            accept=".pdf,.jpg,.jpeg,.png,.webp"
+            accept=".pdf,.jpg,.jpeg,.png,.webp,.heic,.heif"
             onChange={handleUpload}
           />
           <Button onClick={() => fileRef.current?.click()} disabled={uploading}>
