@@ -51,6 +51,8 @@ async function processExtraction(import_id: string) {
 
     const isImage = mimeType.startsWith("image/");
     const isPdf = mimeType === "application/pdf";
+    // For HEIC, use image/jpeg as the data URI type since Gemini handles it better
+    const dataUriMime = (mimeType === "image/heic" || mimeType === "image/heif") ? "image/jpeg" : mimeType;
 
     if (!isImage && !isPdf) {
       await supabase.from("invoice_imports").update({
