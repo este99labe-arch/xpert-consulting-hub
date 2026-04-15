@@ -87,7 +87,7 @@ Responde con un JSON válido.`;
     const userContent = [
       {
         type: "image_url",
-        image_url: { url: `data:${mimeType};base64,${base64}` },
+        image_url: { url: `data:${dataUriMime};base64,${base64}` },
       },
       {
         type: "text",
