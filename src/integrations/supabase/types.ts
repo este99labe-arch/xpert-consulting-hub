@@ -1955,6 +1955,214 @@ export type Database = {
           },
         ]
       }
+      xred_interactions: {
+        Row: {
+          account_id_from: string
+          account_id_to: string
+          created_at: string
+          id: string
+          is_match: boolean
+          type: string
+        }
+        Insert: {
+          account_id_from: string
+          account_id_to: string
+          created_at?: string
+          id?: string
+          is_match?: boolean
+          type?: string
+        }
+        Update: {
+          account_id_from?: string
+          account_id_to?: string
+          created_at?: string
+          id?: string
+          is_match?: boolean
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "xred_interactions_account_id_from_fkey"
+            columns: ["account_id_from"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "xred_interactions_account_id_to_fkey"
+            columns: ["account_id_to"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      xred_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          interaction_id: string
+          is_read: boolean
+          sender_account_id: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          id?: string
+          interaction_id: string
+          is_read?: boolean
+          sender_account_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          interaction_id?: string
+          is_read?: boolean
+          sender_account_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "xred_messages_interaction_id_fkey"
+            columns: ["interaction_id"]
+            isOneToOne: false
+            referencedRelation: "xred_interactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "xred_messages_sender_account_id_fkey"
+            columns: ["sender_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      xred_profiles: {
+        Row: {
+          account_id: string
+          cnae_code: string | null
+          created_at: string
+          description: string | null
+          employee_count: number | null
+          is_visible: boolean
+          province: string | null
+          reputation_score: number | null
+          services_needed: string[] | null
+          services_offered: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          cnae_code?: string | null
+          created_at?: string
+          description?: string | null
+          employee_count?: number | null
+          is_visible?: boolean
+          province?: string | null
+          reputation_score?: number | null
+          services_needed?: string[] | null
+          services_offered?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          cnae_code?: string | null
+          created_at?: string
+          description?: string | null
+          employee_count?: number | null
+          is_visible?: boolean
+          province?: string | null
+          reputation_score?: number | null
+          services_needed?: string[] | null
+          services_offered?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "xred_profiles_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: true
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      xred_reviews: {
+        Row: {
+          comment: string | null
+          communication: number
+          created_at: string
+          fair_price: number
+          id: string
+          interaction_id: string
+          invoice_id: string | null
+          is_flagged: boolean
+          punctuality: number
+          quality: number
+          reviewed_account_id: string
+          reviewer_account_id: string
+        }
+        Insert: {
+          comment?: string | null
+          communication: number
+          created_at?: string
+          fair_price: number
+          id?: string
+          interaction_id: string
+          invoice_id?: string | null
+          is_flagged?: boolean
+          punctuality: number
+          quality: number
+          reviewed_account_id: string
+          reviewer_account_id: string
+        }
+        Update: {
+          comment?: string | null
+          communication?: number
+          created_at?: string
+          fair_price?: number
+          id?: string
+          interaction_id?: string
+          invoice_id?: string | null
+          is_flagged?: boolean
+          punctuality?: number
+          quality?: number
+          reviewed_account_id?: string
+          reviewer_account_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "xred_reviews_interaction_id_fkey"
+            columns: ["interaction_id"]
+            isOneToOne: false
+            referencedRelation: "xred_interactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "xred_reviews_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "xred_reviews_reviewed_account_id_fkey"
+            columns: ["reviewed_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "xred_reviews_reviewer_account_id_fkey"
+            columns: ["reviewer_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1967,6 +2175,10 @@ export type Database = {
       get_user_account_id: { Args: { _user_id: string }; Returns: string }
       has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
       invoice_kpis: { Args: { _account_id: string }; Returns: Json }
+      xred_is_match_participant: {
+        Args: { _interaction_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
