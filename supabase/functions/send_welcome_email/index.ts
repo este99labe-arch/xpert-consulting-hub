@@ -17,7 +17,7 @@ serve(async (req) => {
       throw new Error("RESEND_API_KEY is not configured");
     }
 
-    const { employee_email, employee_name, password, company_name, from_email } = await req.json();
+    const { employee_email, employee_name, password, company_name, from_email, reset_url } = await req.json();
 
     if (!employee_email || !password) {
       return new Response(JSON.stringify({ error: "Missing employee_email or password" }), {
@@ -28,47 +28,70 @@ serve(async (req) => {
 
     const displayName = employee_name || employee_email.split("@")[0];
     const companyLabel = company_name || "la empresa";
-    // TEST MODE: hardcoded sender and recipient for testing
     const TEST_RECIPIENT = "esteban@xpertconsulting.es";
-    const senderEmail = "XpertConsulting <noreply@xpertconsulting.es>";
+    const passwordResetUrl = reset_url || "#";
 
-    const htmlBody = `
-<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"></head>
-<body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,sans-serif;">
-  <div style="max-width:560px;margin:40px auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
-    <div style="background:#18181b;padding:32px 40px;">
-      <h1 style="margin:0;color:#ffffff;font-size:22px;">¡Bienvenido/a a ${companyLabel}!</h1>
+    const htmlBody = `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f0f4f8;font-family:'Inter',Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+  <div style="max-width:600px;margin:40px auto;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+    
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg,#1a6de3 0%,#1557b0 100%);padding:40px 48px;text-align:center;">
+      <h1 style="margin:0 0 8px;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:-0.5px;">¡Bienvenido/a a ${companyLabel}!</h1>
+      <p style="margin:0;color:rgba(255,255,255,0.85);font-size:15px;font-weight:400;">Tu cuenta ha sido creada correctamente</p>
     </div>
-    <div style="padding:32px 40px;">
-      <p style="color:#3f3f46;font-size:15px;line-height:1.6;margin:0 0 20px;">
-        Hola <strong>${displayName}</strong>,
+
+    <!-- Body -->
+    <div style="padding:40px 48px;">
+      
+      <p style="color:#1c2a3a;font-size:15px;line-height:1.7;margin:0 0 24px;">
+        Hola <strong>${displayName}</strong>,<br><br>
+        Se ha creado tu cuenta en el sistema de gestión de <strong>${companyLabel}</strong>. 
+        A continuación encontrarás tus credenciales de acceso temporales.
       </p>
-      <p style="color:#3f3f46;font-size:15px;line-height:1.6;margin:0 0 20px;">
-        Se ha creado tu cuenta en el sistema. A continuación encontrarás tus credenciales de acceso:
-      </p>
-      <div style="background:#f4f4f5;border-radius:8px;padding:20px;margin:0 0 24px;">
+
+      <!-- Credentials box -->
+      <div style="background:#f0f4f8;border:1px solid #e2e8f0;border-radius:12px;padding:24px;margin:0 0 28px;">
+        <p style="margin:0 0 16px;color:#64748b;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Credenciales de acceso</p>
         <table style="width:100%;border-collapse:collapse;">
           <tr>
-            <td style="padding:6px 0;color:#71717a;font-size:14px;width:100px;">Email:</td>
-            <td style="padding:6px 0;color:#18181b;font-size:14px;font-weight:600;">${employee_email}</td>
+            <td style="padding:8px 0;color:#64748b;font-size:14px;width:110px;vertical-align:top;">Email:</td>
+            <td style="padding:8px 0;color:#1c2a3a;font-size:14px;font-weight:600;word-break:break-all;">${employee_email}</td>
           </tr>
           <tr>
-            <td style="padding:6px 0;color:#71717a;font-size:14px;">Contraseña:</td>
-            <td style="padding:6px 0;color:#18181b;font-size:14px;font-weight:600;">${password}</td>
+            <td style="padding:8px 0;color:#64748b;font-size:14px;vertical-align:top;">Contraseña:</td>
+            <td style="padding:8px 0;color:#1c2a3a;font-size:14px;font-weight:600;font-family:'JetBrains Mono',monospace;letter-spacing:1px;">${password}</td>
           </tr>
         </table>
       </div>
-      <p style="color:#71717a;font-size:13px;line-height:1.5;margin:0 0 8px;">
-        ⚠️ Te recomendamos cambiar tu contraseña después del primer inicio de sesión.
-      </p>
-      <p style="color:#71717a;font-size:13px;line-height:1.5;margin:0;">
+
+      <!-- Security notice -->
+      <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:20px 24px;margin:0 0 28px;">
+        <p style="margin:0 0 4px;color:#92400e;font-size:14px;font-weight:600;">⚠️ Contraseña temporal</p>
+        <p style="margin:0;color:#78350f;font-size:13px;line-height:1.6;">
+          Por seguridad, te recomendamos cambiar tu contraseña de inmediato tras el primer inicio de sesión.
+        </p>
+      </div>
+
+      ${passwordResetUrl !== "#" ? `
+      <!-- CTA Button -->
+      <div style="text-align:center;margin:0 0 32px;">
+        <a href="${passwordResetUrl}" target="_blank" style="display:inline-block;background:linear-gradient(135deg,#1a6de3 0%,#1557b0 100%);color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;padding:14px 36px;border-radius:10px;box-shadow:0 4px 12px rgba(26,109,227,0.3);">
+          Cambiar mi contraseña
+        </a>
+      </div>` : ""}
+
+      <p style="color:#64748b;font-size:13px;line-height:1.5;margin:0;">
         Si tienes alguna duda, contacta con tu responsable.
       </p>
     </div>
-    <div style="border-top:1px solid #e4e4e7;padding:20px 40px;text-align:center;">
-      <p style="margin:0;color:#a1a1aa;font-size:12px;">Este es un correo automático. Por favor, no respondas a este mensaje.</p>
+
+    <!-- Footer -->
+    <div style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:24px 48px;text-align:center;">
+      <p style="margin:0 0 4px;color:#94a3b8;font-size:12px;">Este es un correo automático de <strong>XpertConsulting</strong>.</p>
+      <p style="margin:0;color:#94a3b8;font-size:12px;">Por favor, no respondas a este mensaje.</p>
     </div>
   </div>
 </body>
