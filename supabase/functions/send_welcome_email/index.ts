@@ -30,7 +30,7 @@ serve(async (req) => {
     const companyLabel = company_name || "la empresa";
     // TEST MODE: hardcoded sender and recipient for testing
     const TEST_RECIPIENT = "esteban@xpertconsulting.es";
-    const senderEmail = "XpertConsulting <onboarding@resend.dev>";
+    const senderEmail = "XpertConsulting <noreply@xpertconsulting.es>";
 
     const htmlBody = `
 <!DOCTYPE html>
@@ -81,8 +81,8 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "onboarding@resend.dev",
-        to: ["esteban@xpertconsulting.es"],
+        from: "XpertConsulting <noreply@xpertconsulting.es>",
+        to: [TEST_RECIPIENT],
         subject: `Bienvenido/a a ${companyLabel} — Tus credenciales de acceso`,
         html: htmlBody,
       }),

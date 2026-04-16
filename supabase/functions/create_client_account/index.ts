@@ -215,7 +215,7 @@ serve(async (req) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: "onboarding@resend.dev",
+            from: "XpertConsulting <noreply@xpertconsulting.es>",
             to: ["esteban@xpertconsulting.es"],
             subject: `Nueva cuenta creada — ${company_name}`,
             html: htmlBody,
