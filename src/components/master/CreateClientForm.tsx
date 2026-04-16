@@ -20,7 +20,6 @@ const CreateClientForm: React.FC<Props> = ({ onSuccess }) => {
 
   // Account credentials
   const [managerEmail, setManagerEmail] = useState("");
-  const [managerPassword, setManagerPassword] = useState("");
   const [selectedModules, setSelectedModules] = useState<string[]>([]);
 
   // Client info (mirrors business_clients fields)
@@ -89,7 +88,6 @@ const CreateClientForm: React.FC<Props> = ({ onSuccess }) => {
         body: {
           company_name: form.company_name,
           manager_email: managerEmail,
-          manager_password: managerPassword,
           module_ids: selectedModules,
           // Extended client info
           client_info: {
@@ -145,13 +143,10 @@ const CreateClientForm: React.FC<Props> = ({ onSuccess }) => {
             <Label>Nombre de empresa *</Label>
             <Input value={form.company_name} onChange={(e) => updateForm("company_name", e.target.value)} required />
           </div>
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 sm:col-span-2">
             <Label>Email del manager *</Label>
             <Input type="email" value={managerEmail} onChange={(e) => setManagerEmail(e.target.value)} required />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Contraseña del manager *</Label>
-            <Input type="password" value={managerPassword} onChange={(e) => setManagerPassword(e.target.value)} required minLength={6} />
+            <p className="text-xs text-muted-foreground">Se generará una contraseña temporal automáticamente y se enviará por email.</p>
           </div>
         </CardContent>
       </Card>
