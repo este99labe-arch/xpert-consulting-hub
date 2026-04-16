@@ -19,6 +19,8 @@ interface Match {
   created_at: string;
   other_account_id: string;
   other_name: string;
+  other_email?: string | null;
+  other_phone?: string | null;
 }
 
 interface PendingRequest {
@@ -60,13 +62,18 @@ const MatchesTab = () => {
 
       const ids = unique.map((m) => m.other_account_id);
       if (ids.length === 0) return [];
-      const { data: accounts } = await supabase.from("accounts").select("id, name").in("id", ids);
-      const nameMap = Object.fromEntries((accounts || []).map((a) => [a.id, a.name]));
+      const { data: accounts } = await (supabase.rpc as any)("xred_resolve_names", { _ids: ids });
+      const infoMap = Object.fromEntries(((accounts as any[]) || []).map((a) => [a.id, a]));
 
-      return unique.map((m) => ({
-        ...m,
-        other_name: nameMap[m.other_account_id] || "Empresa",
-      })) as Match[];
+      return unique.map((m) => {
+        const info = infoMap[m.other_account_id];
+        return {
+          ...m,
+          other_name: info?.name || "Empresa",
+          other_email: info?.email || null,
+          other_phone: info?.phone || null,
+        };
+      }) as Match[];
     },
     enabled: !!accountId,
   });
@@ -99,8 +106,8 @@ const MatchesTab = () => {
       if (pending.length === 0) return [];
 
       const ids = pending.map((p) => p.account_id_from);
-      const { data: accounts } = await supabase.from("accounts").select("id, name").in("id", ids);
-      const nameMap = Object.fromEntries((accounts || []).map((a) => [a.id, a.name]));
+      const { data: accounts } = await (supabase.rpc as any)("xred_resolve_names", { _ids: ids });
+      const nameMap = Object.fromEntries(((accounts as any[]) || []).map((a) => [a.id, a.name]));
 
       return pending.map((p) => ({
         ...p,
@@ -124,8 +131,8 @@ const MatchesTab = () => {
       if (!data || data.length === 0) return [];
 
       const ids = data.map((d) => d.account_id_to);
-      const { data: accounts } = await supabase.from("accounts").select("id, name").in("id", ids);
-      const nameMap = Object.fromEntries((accounts || []).map((a) => [a.id, a.name]));
+      const { data: accounts } = await (supabase.rpc as any)("xred_resolve_names", { _ids: ids });
+      const nameMap = Object.fromEntries(((accounts as any[]) || []).map((a) => [a.id, a.name]));
 
       return data.map((d) => ({
         ...d,
@@ -293,11 +300,22 @@ const MatchesTab = () => {
               <Card className="md:col-span-2 flex flex-col overflow-hidden">
                 {selectedMatch ? (
                   <>
-                    <div className="p-3 border-b flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
-                        {selectedMatch.other_name.charAt(0)}
+                    <div className="p-3 border-b">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                          {selectedMatch.other_name.charAt(0)}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="font-medium text-sm truncate">{selectedMatch.other_name}</div>
+                          {(selectedMatch.other_email || selectedMatch.other_phone) && (
+                            <div className="text-[11px] text-muted-foreground truncate">
+                              {selectedMatch.other_email}
+                              {selectedMatch.other_email && selectedMatch.other_phone && " · "}
+                              {selectedMatch.other_phone}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <span className="font-medium text-sm">{selectedMatch.other_name}</span>
                     </div>
                     <ScrollArea className="flex-1 p-4">
                       <div className="space-y-3">

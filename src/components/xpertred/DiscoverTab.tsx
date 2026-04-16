@@ -37,33 +37,46 @@ const DiscoverTab = () => {
     enabled: !!accountId,
   });
 
-  const { data: interacted = [] } = useQuery({
-    queryKey: ["xred-interacted", accountId],
+  // Cuentas con las que ya tengo MATCH (las solicitudes pendientes se mantienen visibles)
+  const { data: matchedIds = [] } = useQuery({
+    queryKey: ["xred-matched-ids", accountId],
     queryFn: async () => {
       const { data } = await supabase
         .from("xred_interactions")
-        .select("account_id_to")
-        .eq("account_id_from", accountId!);
-      return (data || []).map((d: any) => d.account_id_to);
+        .select("account_id_from, account_id_to")
+        .eq("is_match", true)
+        .or(`account_id_from.eq.${accountId},account_id_to.eq.${accountId}`);
+      const ids = new Set<string>();
+      (data || []).forEach((r: any) => {
+        ids.add(r.account_id_from === accountId ? r.account_id_to : r.account_id_from);
+      });
+      return Array.from(ids);
     },
     enabled: !!accountId,
   });
 
   const { data: profiles = [], isLoading } = useQuery({
-    queryKey: ["xred-discover", accountId, interacted],
+    queryKey: ["xred-discover", accountId, matchedIds],
     queryFn: async () => {
       let q = supabase
-        .from("xred_profiles")
-        .select("*, accounts!inner(name)")
-        .eq("is_visible", true)
+        .from("xred_directory")
+        .select("*")
         .neq("account_id", accountId!);
 
-      if (interacted.length > 0) {
-        q = q.not("account_id", "in", `(${interacted.join(",")})`);
+      if (matchedIds.length > 0) {
+        q = q.not("account_id", "in", `(${matchedIds.join(",")})`);
       }
 
-      const { data } = await q.limit(50);
-      return (data || []) as XredProfile[];
+      const { data, error } = await q.limit(50);
+      if (error) {
+        console.error("xred_directory query error:", error);
+        return [];
+      }
+      // Adapt to XredProfile shape (accounts.name expected)
+      return (data || []).map((d: any) => ({
+        ...d,
+        accounts: { name: d.account_name },
+      })) as XredProfile[];
     },
     enabled: !!accountId,
   });
@@ -96,25 +109,18 @@ const DiscoverTab = () => {
         type,
       });
       if (error) throw error;
-
-      if (type === "like") {
-        const { data } = await supabase
-          .from("xred_interactions")
-          .select("is_match")
-          .eq("account_id_from", accountId!)
-          .eq("account_id_to", targetId)
-          .single();
-        return data?.is_match || false;
-      }
-      return false;
     },
-    onSuccess: (isMatch) => {
-      if (isMatch) {
-        toast.success("🎉 ¡Match! Ya puedes chatear con esta empresa");
+    onSuccess: (_data, vars) => {
+      if (vars.type === "like") {
+        toast.success("Solicitud de conexión enviada");
       }
-      queryClient.invalidateQueries({ queryKey: ["xred-interacted"] });
+      queryClient.invalidateQueries({ queryKey: ["xred-matched-ids"] });
       queryClient.invalidateQueries({ queryKey: ["xred-discover"] });
       queryClient.invalidateQueries({ queryKey: ["xred-matches"] });
+      queryClient.invalidateQueries({ queryKey: ["xred-sent-requests"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "No se pudo enviar la solicitud");
     },
   });
 
