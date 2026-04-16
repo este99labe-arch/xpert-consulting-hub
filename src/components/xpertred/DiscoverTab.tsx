@@ -55,7 +55,8 @@ const DiscoverTab = () => {
       let q = supabase
         .from("xred_profiles")
         .select("*, accounts!inner(name)")
-        .eq("is_visible", true);
+        .eq("is_visible", true)
+        .neq("account_id", accountId!);
 
       if (interacted.length > 0) {
         q = q.not("account_id", "in", `(${interacted.join(",")})`);
