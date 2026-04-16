@@ -55,8 +55,7 @@ const DiscoverTab = () => {
       let q = supabase
         .from("xred_profiles")
         .select("*, accounts!inner(name)")
-        .eq("is_visible", true)
-        .neq("account_id", accountId!);
+        .eq("is_visible", true);
 
       if (interacted.length > 0) {
         q = q.not("account_id", "in", `(${interacted.join(",")})`);
@@ -266,6 +265,7 @@ const DiscoverTab = () => {
                 score={score}
                 direction={direction}
                 isManager={isManager}
+                isSelf={current.account_id === accountId}
                 isPending={interactMutation.isPending}
                 onAction={handleAction}
               />
