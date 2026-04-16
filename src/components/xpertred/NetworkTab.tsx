@@ -32,13 +32,20 @@ const NetworkTab = () => {
         ),
       ];
 
-      // Get profiles with account names
+      // Get profiles
       const { data: profiles } = await supabase
         .from("xred_profiles")
-        .select("*, accounts!inner(name)")
+        .select("*")
         .in("account_id", otherIds);
 
-      return profiles || [];
+      // Resolve names via RPC (RLS-safe)
+      const { data: names } = await (supabase.rpc as any)("xred_resolve_names", { _ids: otherIds });
+      const nameMap = Object.fromEntries(((names as any[]) || []).map((n) => [n.id, n]));
+
+      return (profiles || []).map((p: any) => ({
+        ...p,
+        accounts: { name: nameMap[p.account_id]?.name || "Empresa" },
+      }));
     },
     enabled: !!accountId,
   });
