@@ -19,6 +19,8 @@ interface Match {
   created_at: string;
   other_account_id: string;
   other_name: string;
+  other_email?: string | null;
+  other_phone?: string | null;
 }
 
 interface PendingRequest {
