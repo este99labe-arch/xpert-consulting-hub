@@ -2165,7 +2165,30 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      xred_directory: {
+        Row: {
+          account_id: string | null
+          account_name: string | null
+          cnae_code: string | null
+          created_at: string | null
+          description: string | null
+          is_visible: boolean | null
+          province: string | null
+          reputation_score: number | null
+          services_needed: string[] | null
+          services_offered: string[] | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "xred_profiles_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: true
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       ensure_default_folders: {
@@ -2178,6 +2201,15 @@ export type Database = {
       xred_is_match_participant: {
         Args: { _interaction_id: string; _user_id: string }
         Returns: boolean
+      }
+      xred_resolve_names: {
+        Args: { _ids: string[] }
+        Returns: {
+          email: string
+          id: string
+          name: string
+          phone: string
+        }[]
       }
     }
     Enums: {
