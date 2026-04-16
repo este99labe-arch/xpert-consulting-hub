@@ -109,26 +109,18 @@ const DiscoverTab = () => {
         type,
       });
       if (error) throw error;
-
-      if (type === "like") {
-        const { data } = await supabase
-          .from("xred_interactions")
-          .select("is_match")
-          .eq("account_id_from", accountId!)
-          .eq("account_id_to", targetId)
-          .single();
-        return data?.is_match || false;
-      }
-      return false;
     },
-    onSuccess: (isMatch) => {
-      if (isMatch) {
-        toast.success("🎉 ¡Match! Ya puedes chatear con esta empresa");
+    onSuccess: (_data, vars) => {
+      if (vars.type === "like") {
+        toast.success("Solicitud de conexión enviada");
       }
       queryClient.invalidateQueries({ queryKey: ["xred-matched-ids"] });
       queryClient.invalidateQueries({ queryKey: ["xred-discover"] });
       queryClient.invalidateQueries({ queryKey: ["xred-matches"] });
       queryClient.invalidateQueries({ queryKey: ["xred-sent-requests"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "No se pudo enviar la solicitud");
     },
   });
 
