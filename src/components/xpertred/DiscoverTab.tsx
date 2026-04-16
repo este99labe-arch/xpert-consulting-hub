@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { X, Heart, Building2, MapPin, Users, Loader2 } from "lucide-react";
+import { X, Heart, Building2, MapPin, Users, Loader2, Compass } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import EmptyState from "@/components/shared/EmptyState";
 
@@ -35,9 +35,9 @@ function computeScore(myProfile: any, other: XredProfile): number {
   }
 
   // Services match (25%) — my needs vs their offers
-  const myNeeds = new Set(myProfile.services_needed || []);
-  const theirOffers = new Set(other.services_offered || []);
-  const overlap = [...myNeeds].filter((s) => theirOffers.has(s)).length;
+  const myNeeds = new Set<string>(myProfile.services_needed || []);
+  const theirOffers = new Set<string>(other.services_offered || []);
+  const overlap = [...myNeeds].filter((s: string) => theirOffers.has(s)).length;
   if (myNeeds.size > 0) score += Math.min(25, (overlap / myNeeds.size) * 25);
 
   // Province (15%)
