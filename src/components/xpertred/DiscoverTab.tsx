@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -6,64 +6,24 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { X, Heart, Building2, MapPin, Users, Loader2, Compass } from "lucide-react";
+import { X, Heart, Building2, MapPin, Users, Loader2, Compass, Search, Filter, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import EmptyState from "@/components/shared/EmptyState";
-
-interface XredProfile {
-  account_id: string;
-  description: string;
-  services_offered: string[];
-  services_needed: string[];
-  cnae_code: string;
-  province: string;
-  employee_count: number;
-  reputation_score: number;
-  accounts: { name: string };
-}
-
-function computeScore(myProfile: any, other: XredProfile): number {
-  if (!myProfile) return 50;
-  let score = 0;
-
-  // CNAE match (30%)
-  if (myProfile.cnae_code && other.cnae_code) {
-    const prefix = myProfile.cnae_code.substring(0, 2);
-    if (other.cnae_code.startsWith(prefix)) score += 20;
-    if (other.cnae_code === myProfile.cnae_code) score += 10;
-  }
-
-  // Services match (25%) — my needs vs their offers
-  const myNeeds = new Set<string>(myProfile.services_needed || []);
-  const theirOffers = new Set<string>(other.services_offered || []);
-  const overlap = [...myNeeds].filter((s: string) => theirOffers.has(s)).length;
-  if (myNeeds.size > 0) score += Math.min(25, (overlap / myNeeds.size) * 25);
-
-  // Province (15%)
-  if (myProfile.province && other.province && myProfile.province === other.province) score += 15;
-
-  // Reputation (15%)
-  score += Math.min(15, (Number(other.reputation_score) / 5) * 15);
-
-  // Size (10%)
-  score += Math.min(10, other.employee_count > 0 ? 10 : 5);
-
-  // Base (5%)
-  score += 5;
-
-  return Math.round(Math.min(100, score));
-}
+import DiscoverCard from "./discover/DiscoverCard";
+import { computeScore, type XredProfile } from "./discover/utils";
 
 const DiscoverTab = () => {
   const { accountId, role } = useAuth();
   const queryClient = useQueryClient();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState<"left" | "right" | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({ name: "", sector: "", cnae: "", province: "" });
 
   const isManager = role === "MANAGER" || role === "MASTER_ADMIN";
 
-  // My profile
   const { data: myProfile } = useQuery({
     queryKey: ["xred-my-profile", accountId],
     queryFn: async () => {
@@ -77,7 +37,6 @@ const DiscoverTab = () => {
     enabled: !!accountId,
   });
 
-  // Already interacted
   const { data: interacted = [] } = useQuery({
     queryKey: ["xred-interacted", accountId],
     queryFn: async () => {
@@ -90,7 +49,6 @@ const DiscoverTab = () => {
     enabled: !!accountId,
   });
 
-  // Discover profiles
   const { data: profiles = [], isLoading } = useQuery({
     queryKey: ["xred-discover", accountId, interacted],
     queryFn: async () => {
@@ -104,11 +62,31 @@ const DiscoverTab = () => {
         q = q.not("account_id", "in", `(${interacted.join(",")})`);
       }
 
-      const { data } = await q.limit(20);
+      const { data } = await q.limit(50);
       return (data || []) as XredProfile[];
     },
     enabled: !!accountId,
   });
+
+  // Client-side filtering
+  const filteredProfiles = useMemo(() => {
+    return profiles.filter((p) => {
+      const name = ((p.accounts as any)?.name || "").toLowerCase();
+      const hasActiveFilter = filters.name || filters.sector || filters.cnae || filters.province;
+
+      if (filters.name && !name.includes(filters.name.toLowerCase())) return false;
+      if (filters.cnae && !(p.cnae_code || "").toLowerCase().includes(filters.cnae.toLowerCase())) return false;
+      if (filters.province && !(p.province || "").toLowerCase().includes(filters.province.toLowerCase())) return false;
+      if (filters.sector) {
+        const sectorLower = filters.sector.toLowerCase();
+        const matchServices = (p.services_offered || []).some((s) => s.toLowerCase().includes(sectorLower));
+        const matchDesc = (p.description || "").toLowerCase().includes(sectorLower);
+        if (!matchServices && !matchDesc) return false;
+      }
+
+      return true;
+    });
+  }, [profiles, filters]);
 
   const interactMutation = useMutation({
     mutationFn: async ({ targetId, type }: { targetId: string; type: string }) => {
@@ -119,7 +97,6 @@ const DiscoverTab = () => {
       });
       if (error) throw error;
 
-      // Check if it's a match
       if (type === "like") {
         const { data } = await supabase
           .from("xred_interactions")
@@ -131,7 +108,7 @@ const DiscoverTab = () => {
       }
       return false;
     },
-    onSuccess: (isMatch, { type }) => {
+    onSuccess: (isMatch) => {
       if (isMatch) {
         toast.success("🎉 ¡Match! Ya puedes chatear con esta empresa");
       }
@@ -143,7 +120,7 @@ const DiscoverTab = () => {
 
   const handleAction = useCallback(
     (type: "like" | "skip") => {
-      const current = profiles[currentIndex];
+      const current = filteredProfiles[currentIndex];
       if (!current) return;
       setDirection(type === "like" ? "right" : "left");
       setTimeout(() => {
@@ -152,10 +129,19 @@ const DiscoverTab = () => {
         setDirection(null);
       }, 300);
     },
-    [profiles, currentIndex, interactMutation]
+    [filteredProfiles, currentIndex, interactMutation]
   );
 
-  const current = profiles[currentIndex];
+  // Reset index when filters change
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    setCurrentIndex(0);
+    setDirection(null);
+  };
+
+  const hasActiveFilters = Object.values(filters).some((v) => v.trim() !== "");
+
+  const current = filteredProfiles[currentIndex];
   const score = current ? computeScore(myProfile, current) : 0;
 
   if (!myProfile) {
@@ -176,129 +162,121 @@ const DiscoverTab = () => {
     );
   }
 
-  if (!current) {
-    return (
-      <EmptyState
-        icon={Compass}
-        title="No hay más empresas por descubrir"
-        description="Has visto todas las empresas disponibles. Vuelve más tarde para nuevas sugerencias."
-      />
-    );
-  }
-
   return (
     <div className="flex justify-center py-6">
-      <div className="w-full max-w-md">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={current.account_id}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{
-              opacity: 1,
-              scale: 1,
-              x: direction === "left" ? -300 : direction === "right" ? 300 : 0,
-              rotate: direction === "left" ? -10 : direction === "right" ? 10 : 0,
-            }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+      <div className="w-full max-w-md space-y-4">
+        {/* Search & Filters */}
+        <div className="space-y-3">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full justify-between"
+            onClick={() => setShowFilters(!showFilters)}
           >
-            <Card className="overflow-hidden">
-              <div className="bg-gradient-to-br from-primary/10 to-primary/5 p-6">
-                <div className="flex items-start gap-4">
-                  <div className="h-16 w-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-2xl font-bold text-primary">
-                    {(current.accounts as any)?.name?.charAt(0) || "?"}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-semibold truncate">
-                      {(current.accounts as any)?.name}
-                    </h3>
-                    <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
-                      {current.province && (
-                        <span className="flex items-center gap-1">
-                          <MapPin className="h-3.5 w-3.5" />
-                          {current.province}
-                        </span>
-                      )}
-                      {current.cnae_code && <span>CNAE {current.cnae_code}</span>}
-                      {current.employee_count > 0 && (
-                        <span className="flex items-center gap-1">
-                          <Users className="h-3.5 w-3.5" />
-                          {current.employee_count}
-                        </span>
-                      )}
-                    </div>
+            <span className="flex items-center gap-2">
+              <Filter className="h-4 w-4" />
+              Filtros de búsqueda
+              {hasActiveFilters && (
+                <Badge variant="secondary" className="text-xs ml-1">Activos</Badge>
+              )}
+            </span>
+            {showFilters ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </Button>
+
+          {showFilters && (
+            <Card>
+              <CardContent className="p-4 grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted-foreground">Empresa</label>
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                    <Input
+                      placeholder="Nombre..."
+                      value={filters.name}
+                      onChange={(e) => handleFilterChange("name", e.target.value)}
+                      className="pl-8 h-9 text-sm"
+                    />
                   </div>
                 </div>
-              </div>
-
-              <CardContent className="p-6 space-y-4">
-                {current.services_offered.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5">
-                    {current.services_offered.map((s) => (
-                      <Badge key={s} variant="secondary" className="text-xs">
-                        {s}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground font-medium">Compatibilidad</span>
-                    <span className="font-bold text-primary">{score}%</span>
-                  </div>
-                  <Progress value={score} className="h-2" />
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted-foreground">Sector / Servicio</label>
+                  <Input
+                    placeholder="Ej: Ferretería..."
+                    value={filters.sector}
+                    onChange={(e) => handleFilterChange("sector", e.target.value)}
+                    className="h-9 text-sm"
+                  />
                 </div>
-
-                {current.description && (
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {current.description}
-                  </p>
-                )}
-
-                {current.reputation_score > 0 && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-yellow-500">
-                      {"★".repeat(Math.round(Number(current.reputation_score)))}
-                      {"☆".repeat(5 - Math.round(Number(current.reputation_score)))}
-                    </span>
-                    <span className="text-muted-foreground">
-                      {Number(current.reputation_score).toFixed(1)}
-                    </span>
-                  </div>
-                )}
-
-                {isManager && (
-                  <div className="flex gap-3 pt-2">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted-foreground">CNAE</label>
+                  <Input
+                    placeholder="Ej: 4752..."
+                    value={filters.cnae}
+                    onChange={(e) => handleFilterChange("cnae", e.target.value)}
+                    className="h-9 text-sm"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted-foreground">Ubicación</label>
+                  <Input
+                    placeholder="Ej: Madrid..."
+                    value={filters.province}
+                    onChange={(e) => handleFilterChange("province", e.target.value)}
+                    className="h-9 text-sm"
+                  />
+                </div>
+                {hasActiveFilters && (
+                  <div className="col-span-2">
                     <Button
-                      variant="outline"
-                      size="lg"
-                      className="flex-1"
-                      onClick={() => handleAction("skip")}
-                      disabled={interactMutation.isPending}
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs w-full"
+                      onClick={() => {
+                        setFilters({ name: "", sector: "", cnae: "", province: "" });
+                        setCurrentIndex(0);
+                      }}
                     >
-                      <X className="h-5 w-5 mr-1.5" />
-                      Pasar
-                    </Button>
-                    <Button
-                      size="lg"
-                      className="flex-[2] bg-gradient-to-r from-primary to-primary/80"
-                      onClick={() => handleAction("like")}
-                      disabled={interactMutation.isPending}
-                    >
-                      <Heart className="h-5 w-5 mr-1.5" />
-                      Conectar
+                      <X className="h-3.5 w-3.5 mr-1" />
+                      Limpiar filtros
                     </Button>
                   </div>
                 )}
               </CardContent>
             </Card>
-          </motion.div>
-        </AnimatePresence>
+          )}
+        </div>
 
-        <p className="text-center text-xs text-muted-foreground mt-4">
-          {currentIndex + 1} de {profiles.length} sugerencias
-        </p>
+        {/* Card or Empty */}
+        {!current ? (
+          <EmptyState
+            icon={Compass}
+            title={hasActiveFilters ? "Sin resultados" : "No hay más empresas por descubrir"}
+            description={
+              hasActiveFilters
+                ? "Prueba con otros filtros de búsqueda."
+                : "Has visto todas las empresas disponibles. Vuelve más tarde para nuevas sugerencias."
+            }
+          />
+        ) : (
+          <>
+            <AnimatePresence mode="wait">
+              <DiscoverCard
+                key={current.account_id}
+                profile={current}
+                score={score}
+                direction={direction}
+                isManager={isManager}
+                isPending={interactMutation.isPending}
+                onAction={handleAction}
+              />
+            </AnimatePresence>
+
+            <p className="text-center text-xs text-muted-foreground">
+              {currentIndex + 1} de {filteredProfiles.length} sugerencias
+              {hasActiveFilters && ` (filtrado de ${profiles.length})`}
+            </p>
+          </>
+        )}
       </div>
     </div>
   );
