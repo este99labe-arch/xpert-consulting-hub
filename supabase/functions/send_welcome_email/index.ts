@@ -30,7 +30,7 @@ serve(async (req) => {
     const companyLabel = company_name || "la empresa";
     // TEST MODE: hardcoded sender and recipient for testing
     const TEST_RECIPIENT = "esteban@xpertconsulting.es";
-    const senderEmail = "XpertConsulting <onboarding@resend.dev>";
+    const senderEmail = "XpertConsulting <noreply@xpertconsulting.es>";
 
     const htmlBody = `
 <!DOCTYPE html>
