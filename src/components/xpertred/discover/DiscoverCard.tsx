@@ -92,7 +92,7 @@ const DiscoverCard = ({ profile, score, direction, isManager, isSelf, isPending,
             </div>
           )}
 
-          {isManager && (
+          {isManager && !isSelf && (
             <div className="flex gap-3 pt-2">
               <Button variant="outline" size="lg" className="flex-1" onClick={() => onAction("skip")} disabled={isPending}>
                 <X className="h-5 w-5 mr-1.5" />
@@ -103,6 +103,9 @@ const DiscoverCard = ({ profile, score, direction, isManager, isSelf, isPending,
                 Conectar
               </Button>
             </div>
+          )}
+          {isSelf && (
+            <p className="text-center text-xs text-muted-foreground pt-2">Tu empresa</p>
           )}
         </CardContent>
       </Card>
