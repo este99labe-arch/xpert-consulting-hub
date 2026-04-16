@@ -1,54 +1,77 @@
 
-# Plan de Desarrollo — XpertConsulting ERP
 
-## Estado Actual (Resumen)
+## Problema
 
-ERP multi-tenant con 8 módulos funcionales: Dashboard, Clientes, Facturación, Contabilidad, RRHH, Asistencia, Inventario y Configuración. Sistema de roles (MASTER_ADMIN, MANAGER, EMPLOYEE), RLS en todas las tablas, activación modular por cuenta.
+Dos bloqueos en cadena impiden que XpertRed funcione, sin importar lo que se toque en el frontend:
 
----
+1. **Descubrir devuelve siempre vacío** porque la consulta hace un `inner join` a la tabla `accounts` para traer el nombre de la empresa, pero las políticas de seguridad de `accounts` solo permiten ver tu propia cuenta. Resultado: el join elimina todas las filas y no aparece ninguna empresa (los logs de red lo confirman: respuesta `[]`).
+2. **Aceptar solicitudes nunca guarda nada** porque la tabla `xred_interactions` solo permite los tipos `like`, `skip`, `block`. El frontend intenta insertar `type='accept'`, la BD lo rechaza silenciosamente y el match nunca se marca. Por eso Volarte nunca veía la solicitud y XpertConsulting nunca veía la conexión.
 
-## Próxima funcionalidad: XpertRed
+A esto se suma que las pestañas “Solicitudes”, “Enviadas”, “Conexiones” y “Mi Red” también dependían de leer nombres desde `accounts`, así que aunque hubiera datos no se mostrarían correctamente.
 
-### Descripción
-Red empresarial interna B2B con matching tipo Tinder, chat post-match, sistema de reputación verificada y panel de administración. Módulo activable por cuenta.
+## Solución
 
-### 1. Base de datos
+Una corrección integral en dos frentes (BD + frontend) para que el flujo Descubrir → Solicitud → Aceptación → Conexión + Chat funcione de extremo a extremo.
 
-#### Nuevas tablas:
-- **`xred_profiles`** — Perfil de empresa en la red: `account_id` (FK→accounts, PK), `description`, `services_offered` (text[]), `services_needed` (text[]), `cnae_code`, `province`, `employee_count`, `is_visible` (bool), `reputation_score` (decimal), `created_at`, `updated_at`
-- **`xred_interactions`** — Interacciones like/skip/block: `id`, `account_id_from` (FK), `account_id_to` (FK), `type` (like/skip/block), `is_match` (bool), `created_at`. UNIQUE (from, to).
-- **`xred_messages`** — Chat post-match: `id`, `interaction_id` (FK→xred_interactions donde is_match=true), `sender_account_id`, `content`, `created_at`, `is_read`
-- **`xred_reviews`** — Valoraciones: `id`, `interaction_id` (FK), `reviewer_account_id`, `reviewed_account_id`, `invoice_id` (FK→invoices, opcional), `punctuality` (1-5), `quality` (1-5), `communication` (1-5), `fair_price` (1-5), `comment`, `is_flagged`, `created_at`
+### 1. Backend (migración SQL)
 
-#### Módulo:
-- INSERT en `service_modules` con code='XPERTRED'
-
-#### Realtime:
-- Habilitar realtime en `xred_messages`
+- **Vista pública `xred_directory`** (security_invoker off) que une `xred_profiles` visibles con el nombre de la cuenta. Permite a cualquier usuario autenticado ver `account_id` + `name` + datos del perfil sin tocar la RLS de `accounts`. Política: `SELECT` para `authenticated`.
+- **Ampliar el CHECK** de `xred_interactions.type` para aceptar también `accept` y `reject`.
+- **Trigger `xred_check_match` definitivo**:
+  - `like` → crea solicitud pendiente (`is_match=false`).
+  - `accept` → marca `is_match=true` en la fila nueva y en el `like` recíproco.
+  - `reject` / `skip` / `block` → `is_match=false`.
+- **Función RPC `xred_resolve_names(_ids uuid[])`** (security definer) que devuelve `id, name, email, phone` desde `accounts` solo si el usuario participa en una interacción con esa cuenta. Se usa en Matches y Mi Red sin exponer el directorio entero.
+- **Limpieza de la interacción rota** XpertConsulting → Volarte para poder probar el flujo limpio.
 
 ### 2. Frontend
 
-#### Página `/app/xpertred` con pestañas:
-1. **Descubrir** — Deck tipo Tinder con tarjetas + score compatibilidad + like/skip
-2. **Matches / Chat** — Lista de matches con chat en tiempo real (Supabase Realtime)
-3. **Mi Red** — Grid de conexiones con filtros sector/zona
-4. **Mi Perfil** — Edición perfil + panel reputación con barras
-5. **Admin** (MASTER_ADMIN) — KPIs, moderación valoraciones
+**`DiscoverTab.tsx`**
+- Reemplazar la consulta a `xred_profiles + accounts!inner` por una consulta a la nueva vista `xred_directory`.
+- Excluir la cuenta actual y las cuentas con las que ya hay un match (no las que tienen solicitud pendiente — esas se mantienen, según tu preferencia).
+- Mantener los filtros (nombre, sector, CNAE, ubicación) y el score.
 
-#### Sidebar:
-- Nuevo ítem "XpertRed" condicionado al módulo activado
+**`MatchesTab.tsx`**
+- Sustituir todos los `from("accounts").select("id,name")` por la RPC `xred_resolve_names`.
+- Tres sub-pestañas con datos reales:
+  - **Conexiones**: lista de matches + panel de chat. Cabecera del chat con email y teléfono de contacto de la otra empresa.
+  - **Solicitudes recibidas**: likes que apuntan a mí sin respuesta. Botones Aceptar (`type='accept'`) / Rechazar (`type='reject'`).
+  - **Solicitudes enviadas**: mis likes pendientes con badge “Pendiente”.
+- Realtime ya configurado, se mantiene.
 
-### 3. Matching
-- Score: CNAE 30%, servicios 25%, zona 15%, reputación 15%, tamaño 10%, historial 5%
-- Match mutuo: función DB → is_match = true cuando like bidireccional
-- Excluir propia cuenta y cuentas ya interactuadas
+**`NetworkTab.tsx`**
+- Misma sustitución de nombres vía RPC, para que las conexiones se vean.
 
-### 4. Acceso
-- Solo MANAGER gestiona perfil y hace swipes
-- Solo cuentas activas con módulo XPERTRED habilitado
+### 3. Flujo final esperado
 
-### 5. Orden de ejecución
-1. Migración DB (tablas + RLS + realtime + módulo)
-2. Componentes UI (5 pestañas)
-3. Integración en rutas y sidebar
-4. Chat realtime + matching
+```text
+[XpertConsulting]                    [Volarte]
+   Descubrir
+  (ve Volarte) ─── Conectar ──▶ xred_interactions (like, pendiente)
+                                       │
+                                       ▼
+                              Matches > Solicitudes
+                              [Aceptar] / [Rechazar]
+                                       │
+                                       ▼
+                              accept → is_match=true (ambos lados)
+                                       │
+                ┌──────────────────────┴──────────────────────┐
+                ▼                                             ▼
+   Matches > Conexiones                         Matches > Conexiones
+   (ve Volarte + email/tel + chat)              (ve XpertConsulting + email/tel + chat)
+```
+
+## Archivos afectados
+
+- `supabase/migrations/<nuevo>.sql` — vista `xred_directory`, CHECK ampliado, trigger actualizado, RPC `xred_resolve_names`, limpieza de la interacción de prueba.
+- `src/components/xpertred/DiscoverTab.tsx` — consulta sobre la vista, exclusión de matches.
+- `src/components/xpertred/MatchesTab.tsx` — RPC de nombres + email/teléfono en cabecera del chat.
+- `src/components/xpertred/NetworkTab.tsx` — RPC de nombres.
+
+## Cómo probarlo
+
+1. **XpertConsulting**: Descubrir → debes ver Volarte → “Conectar”. La tarjeta sigue ahí (según tu preferencia) y aparece en Matches > Enviadas.
+2. **Volarte**: Matches > Solicitudes → ves XpertConsulting → “Aceptar”.
+3. **Ambos**: Matches > Conexiones → la otra empresa aparece con email + teléfono y chat funcional en tiempo real.
+
