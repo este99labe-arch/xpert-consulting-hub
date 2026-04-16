@@ -265,6 +265,7 @@ const DiscoverTab = () => {
                 score={score}
                 direction={direction}
                 isManager={isManager}
+                isSelf={current.account_id === accountId}
                 isPending={interactMutation.isPending}
                 onAction={handleAction}
               />

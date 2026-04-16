@@ -11,11 +11,12 @@ interface DiscoverCardProps {
   score: number;
   direction: "left" | "right" | null;
   isManager: boolean;
+  isSelf: boolean;
   isPending: boolean;
   onAction: (type: "like" | "skip") => void;
 }
 
-const DiscoverCard = ({ profile, score, direction, isManager, isPending, onAction }: DiscoverCardProps) => {
+const DiscoverCard = ({ profile, score, direction, isManager, isSelf, isPending, onAction }: DiscoverCardProps) => {
   const name = (profile.accounts as any)?.name || "?";
 
   return (
