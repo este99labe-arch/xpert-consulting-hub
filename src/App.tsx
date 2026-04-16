@@ -28,6 +28,7 @@ import AppSettings from "@/pages/app/AppSettings";
 import AppInventory from "@/pages/app/AppInventory";
 import AppReports from "@/pages/app/AppReports";
 import AppTasks from "@/pages/app/AppTasks";
+import AppXpertRed from "@/pages/app/AppXpertRed";
 
 const queryClient = new QueryClient();
 
@@ -78,6 +79,7 @@ const App = () => (
               <Route path="inventory" element={<AppInventory />} />
               <Route path="reports" element={<AppReports />} />
               <Route path="tasks" element={<AppTasks />} />
+              <Route path="xpertred" element={<AppXpertRed />} />
               <Route path="settings" element={<AppSettings />} />
             </Route>
 
