@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import {
   TrendingUp, TrendingDown, BarChart3, DollarSign, FileText, Users,
-  ArrowUpRight, ArrowDownRight,
+  ArrowUpRight, ArrowDownRight, UserCheck, Bell,
 } from "lucide-react";
 
 interface KpiCardsProps {
@@ -16,6 +16,8 @@ interface KpiCardsProps {
   prevPendingCount: number;
   prevOverdueCount: number;
   prevActiveClients: number;
+  teamPresent?: { present: number; total: number };
+  pendingApprovals?: number;
   onKpiClick?: (kpiKey: string) => void;
 }
 
@@ -40,65 +42,61 @@ const ChangeIndicator = ({ current, previous }: { current: number; previous: num
 };
 
 const KpiCards = (props: KpiCardsProps) => {
-  const kpis = [
+  const baseKpis = [
     {
-      key: "income",
-      label: "Ingresos",
-      value: EUR(props.income),
-      icon: TrendingUp,
-      color: "text-[hsl(var(--success))]",
-      bg: "bg-[hsl(var(--success))]/10",
+      key: "income", label: "Ingresos", value: EUR(props.income), icon: TrendingUp,
+      color: "text-[hsl(var(--success))]", bg: "bg-[hsl(var(--success))]/10",
       change: <ChangeIndicator current={props.income} previous={props.prevIncome} />,
     },
     {
-      key: "expense",
-      label: "Gastos",
-      value: EUR(props.expense),
-      icon: TrendingDown,
-      color: "text-destructive",
-      bg: "bg-destructive/10",
+      key: "expense", label: "Gastos", value: EUR(props.expense), icon: TrendingDown,
+      color: "text-destructive", bg: "bg-destructive/10",
       change: <ChangeIndicator current={props.expense} previous={props.prevExpense} />,
     },
     {
-      key: "balance",
-      label: "Balance",
-      value: EUR(props.balance),
-      icon: BarChart3,
+      key: "balance", label: "Balance", value: EUR(props.balance), icon: BarChart3,
       color: props.balance >= 0 ? "text-[hsl(var(--success))]" : "text-destructive",
-      bg: "bg-primary/10",
-      change: null,
+      bg: "bg-primary/10", change: null,
     },
     {
-      key: "pending",
-      label: "Pendientes",
-      value: String(props.pendingCount),
-      icon: FileText,
-      color: "text-[hsl(var(--warning))]",
-      bg: "bg-[hsl(var(--warning))]/10",
+      key: "pending", label: "Pendientes", value: String(props.pendingCount), icon: FileText,
+      color: "text-[hsl(var(--warning))]", bg: "bg-[hsl(var(--warning))]/10",
       change: <ChangeIndicator current={props.pendingCount} previous={props.prevPendingCount} />,
     },
     {
-      key: "overdue",
-      label: "Vencidas",
-      value: String(props.overdueCount),
-      icon: DollarSign,
-      color: "text-destructive",
-      bg: "bg-destructive/10",
+      key: "overdue", label: "Vencidas", value: String(props.overdueCount), icon: DollarSign,
+      color: "text-destructive", bg: "bg-destructive/10",
       change: <ChangeIndicator current={props.overdueCount} previous={props.prevOverdueCount} />,
     },
     {
-      key: "clients",
-      label: "Clientes Activos",
-      value: String(props.activeClients),
-      icon: Users,
-      color: "text-primary",
-      bg: "bg-primary/10",
+      key: "clients", label: "Clientes Activos", value: String(props.activeClients), icon: Users,
+      color: "text-primary", bg: "bg-primary/10",
       change: <ChangeIndicator current={props.activeClients} previous={props.prevActiveClients} />,
     },
   ];
 
+  const extraKpis: any[] = [];
+  if (props.teamPresent) {
+    extraKpis.push({
+      key: "team", label: "Equipo presente", value: `${props.teamPresent.present}/${props.teamPresent.total}`,
+      icon: UserCheck, color: "text-primary", bg: "bg-primary/10", change: null,
+    });
+  }
+  if (props.pendingApprovals !== undefined) {
+    extraKpis.push({
+      key: "approvals", label: "Solicitudes pend.", value: String(props.pendingApprovals),
+      icon: Bell,
+      color: props.pendingApprovals > 0 ? "text-[hsl(var(--warning))]" : "text-muted-foreground",
+      bg: props.pendingApprovals > 0 ? "bg-[hsl(var(--warning))]/10" : "bg-muted",
+      change: null,
+    });
+  }
+
+  const kpis = [...baseKpis, ...extraKpis];
+  const cols = kpis.length === 8 ? "lg:grid-cols-8" : kpis.length === 7 ? "lg:grid-cols-7" : "lg:grid-cols-6";
+
   return (
-    <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+    <div className={`grid gap-4 grid-cols-2 md:grid-cols-3 ${cols}`}>
       {kpis.map((kpi) => (
         <Card key={kpi.label} className="border-0 shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="p-4">
