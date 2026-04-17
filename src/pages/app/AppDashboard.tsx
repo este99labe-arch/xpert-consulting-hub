@@ -16,18 +16,19 @@ import RecentActivity from "@/components/dashboard/RecentActivity";
 import QuickActions from "@/components/dashboard/QuickActions";
 import TodayAttendanceWidget from "@/components/dashboard/TodayAttendanceWidget";
 import RemindersWidget from "@/components/dashboard/RemindersWidget";
+import UpcomingDuesWidget from "@/components/dashboard/UpcomingDuesWidget";
+import CashflowMiniWidget from "@/components/dashboard/CashflowMiniWidget";
+import EmployeeDashboard from "@/components/dashboard/EmployeeDashboard";
 
 type Period = "7d" | "30d" | "90d" | "year";
-
 const periodDays: Record<Period, number> = { "7d": 7, "30d": 30, "90d": 90, year: 365 };
 
-const AppDashboard = () => {
+const ManagerDashboard = () => {
   const { accountId } = useAuth();
   const navigate = useNavigate();
   const [period, setPeriod] = useState<Period>("30d");
   const [chartPeriod, setChartPeriod] = useState("30d");
 
-  // Fetch invoices
   const { data: invoices = [] } = useQuery({
     queryKey: ["dashboard-invoices", accountId],
     queryFn: async () => {
@@ -42,7 +43,6 @@ const AppDashboard = () => {
     enabled: !!accountId,
   });
 
-  // Fetch low stock products
   const { data: lowStockProducts = [] } = useQuery({
     queryKey: ["dashboard-low-stock", accountId],
     queryFn: async () => {
@@ -57,7 +57,37 @@ const AppDashboard = () => {
     enabled: !!accountId,
   });
 
-  // Period filtering
+  // Team presence today
+  const todayStr = format(new Date(), "yyyy-MM-dd");
+  const { data: presence } = useQuery({
+    queryKey: ["dashboard-presence", accountId, todayStr],
+    queryFn: async () => {
+      const [recsRes, usersRes] = await Promise.all([
+        supabase.from("attendance_records").select("user_id").eq("account_id", accountId!).eq("work_date", todayStr),
+        supabase.from("user_accounts").select("user_id").eq("account_id", accountId!).eq("is_active", true),
+      ]);
+      const present = new Set((recsRes.data || []).map((r: any) => r.user_id)).size;
+      const total = (usersRes.data || []).length;
+      return { present, total };
+    },
+    enabled: !!accountId,
+  });
+
+  // Pending approvals (leave + delete + profile changes)
+  const { data: pendingApprovals = 0 } = useQuery({
+    queryKey: ["dashboard-pending-approvals", accountId],
+    queryFn: async () => {
+      const [a, b, c, d] = await Promise.all([
+        supabase.from("leave_requests").select("id", { head: true, count: "exact" }).eq("account_id", accountId!).eq("status", "PENDING"),
+        supabase.from("invoice_delete_requests").select("id", { head: true, count: "exact" }).eq("account_id", accountId!).eq("status", "PENDING"),
+        supabase.from("profile_change_requests").select("id", { head: true, count: "exact" }).eq("account_id", accountId!).eq("status", "PENDING"),
+        supabase.from("attendance_delete_requests").select("id", { head: true, count: "exact" }).eq("account_id", accountId!).eq("status", "PENDING"),
+      ]);
+      return (a.count || 0) + (b.count || 0) + (c.count || 0) + (d.count || 0);
+    },
+    enabled: !!accountId,
+  });
+
   const now = new Date();
   const days = periodDays[period];
   const periodStart = startOfDay(subDays(now, days));
@@ -75,7 +105,6 @@ const AppDashboard = () => {
     [invoices, prevPeriodStart, periodStart]
   );
 
-  // KPI calculations
   const calc = (list: any[]) => {
     const income = list.filter((i: any) => i.type === "INVOICE").reduce((s: number, i: any) => s + Number(i.amount_total), 0);
     const expense = list.filter((i: any) => i.type === "EXPENSE").reduce((s: number, i: any) => s + Number(i.amount_total), 0);
@@ -88,7 +117,6 @@ const AppDashboard = () => {
   const curr = calc(currentInvoices);
   const prev = calc(prevInvoices);
 
-  // Chart data
   const chartData = useMemo(() => {
     if (chartPeriod === "7d") {
       return Array.from({ length: 7 }, (_, i) => {
@@ -108,7 +136,6 @@ const AppDashboard = () => {
         return { label: format(day, "dd", { locale: es }), income: inc, expense: exp };
       });
     }
-    // 12m
     return Array.from({ length: 12 }, (_, i) => {
       const month = startOfMonth(subMonths(now, 11 - i));
       const monthStr = format(month, "yyyy-MM");
@@ -118,7 +145,6 @@ const AppDashboard = () => {
     });
   }, [invoices, chartPeriod]);
 
-  // Status donut
   const statusData = useMemo(() => {
     const statuses = [
       { key: "DRAFT", name: "Borrador", color: "hsl(var(--muted-foreground))" },
@@ -131,11 +157,10 @@ const AppDashboard = () => {
     }).filter((s) => s.count > 0);
   }, [currentInvoices]);
 
-  // Top clients
   const topClients = useMemo(() => {
     const map = new Map<string, { name: string; total: number }>();
     currentInvoices
-      .filter((i: any) => i.type === "INCOME")
+      .filter((i: any) => i.type === "INVOICE")
       .forEach((i: any) => {
         const name = (i as any).business_clients?.name || "—";
         const existing = map.get(i.client_id) || { name, total: 0 };
@@ -145,16 +170,14 @@ const AppDashboard = () => {
     return Array.from(map.values()).sort((a, b) => b.total - a.total).slice(0, 5);
   }, [currentInvoices]);
 
-  // Recent
   const recent = invoices.slice(0, 8);
 
   return (
     <div className="space-y-5">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Resumen de tu negocio</p>
+          <h1 className="text-2xl font-bold tracking-tight">Tu empresa hoy</h1>
+          <p className="text-sm text-muted-foreground">Centro de mando y resumen ejecutivo</p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <QuickActions />
@@ -167,19 +190,13 @@ const AppDashboard = () => {
         </div>
       </div>
 
-      {/* KPIs */}
       <KpiCards
-        income={curr.income}
-        expense={curr.expense}
-        balance={curr.income - curr.expense}
-        pendingCount={curr.pending}
-        overdueCount={curr.overdue}
-        activeClients={curr.clients}
-        prevIncome={prev.income}
-        prevExpense={prev.expense}
-        prevPendingCount={prev.pending}
-        prevOverdueCount={prev.overdue}
-        prevActiveClients={prev.clients}
+        income={curr.income} expense={curr.expense} balance={curr.income - curr.expense}
+        pendingCount={curr.pending} overdueCount={curr.overdue} activeClients={curr.clients}
+        prevIncome={prev.income} prevExpense={prev.expense}
+        prevPendingCount={prev.pending} prevOverdueCount={prev.overdue} prevActiveClients={prev.clients}
+        teamPresent={presence}
+        pendingApprovals={pendingApprovals as number}
         onKpiClick={(key) => {
           switch (key) {
             case "income": navigate("/app/invoices?type=INVOICE"); break;
@@ -188,36 +205,39 @@ const AppDashboard = () => {
             case "pending": navigate("/app/invoices?status=SENT"); break;
             case "overdue": navigate("/app/invoices?status=OVERDUE"); break;
             case "clients": navigate("/app/clients"); break;
+            case "team": navigate("/app/attendance"); break;
+            case "approvals": navigate("/app/settings"); break;
           }
         }}
       />
 
-      {/* Row 1: Revenue chart + Reminders */}
       <div className="grid gap-5 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <RevenueChart data={chartData} period={chartPeriod} onPeriodChange={setChartPeriod} />
-        </div>
-        <div className="lg:col-span-1">
-          <RemindersWidget />
-        </div>
+        <div className="lg:col-span-2"><RevenueChart data={chartData} period={chartPeriod} onPeriodChange={setChartPeriod} /></div>
+        <div className="lg:col-span-1"><RemindersWidget /></div>
       </div>
 
-      {/* Row 2: Invoice status + Top clients + Attendance */}
       <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-        <InvoiceStatusChart data={statusData} />
-        <TopClients clients={topClients} />
+        <CashflowMiniWidget />
+        <UpcomingDuesWidget />
         <TodayAttendanceWidget />
       </div>
 
-      {/* Row 3: Low stock + Recent activity */}
-      <div className="grid gap-5 lg:grid-cols-3">
+      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        <InvoiceStatusChart data={statusData} />
+        <TopClients clients={topClients} />
         <LowStockAlerts products={lowStockProducts} />
-        <div className="lg:col-span-2">
-          <RecentActivity invoices={recent} />
-        </div>
       </div>
+
+      <RecentActivity invoices={recent} />
     </div>
   );
+};
+
+const AppDashboard = () => {
+  const { role, loading } = useAuth();
+  if (loading) return null;
+  if (role === "EMPLOYEE") return <EmployeeDashboard />;
+  return <ManagerDashboard />;
 };
 
 export default AppDashboard;

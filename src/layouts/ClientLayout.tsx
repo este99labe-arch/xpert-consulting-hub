@@ -84,8 +84,10 @@ const SidebarInner = () => {
   const companyName = accountInfo?.name || "Mi Empresa";
   const companyInitials = companyName.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase();
 
+  const CORE_CODES = ["DASHBOARD", "ATTENDANCE", "TASKS", "SETTINGS"];
+
   const { data: modules = [] } = useQuery({
-    queryKey: ["account_modules", accountId, role],
+    queryKey: ["account_modules", accountId, role, user?.id],
     queryFn: async () => {
       if (!accountId) return [];
       if (role === "MASTER_ADMIN") {
@@ -99,7 +101,19 @@ const SidebarInner = () => {
         .eq("account_id", accountId)
         .eq("is_enabled", true);
       if (error) throw error;
-      return (data || []).map((m: any) => ({ code: m.service_modules.code, name: m.service_modules.name }));
+      const accountList = (data || []).map((m: any) => ({ code: m.service_modules.code, name: m.service_modules.name }));
+
+      // EMPLOYEE: keep only modules explicitly assigned via user_modules (core always visible)
+      if (role === "EMPLOYEE" && user?.id) {
+        const { data: um } = await supabase
+          .from("user_modules")
+          .select("is_enabled, service_modules(code)")
+          .eq("user_id", user.id)
+          .eq("is_enabled", true);
+        const allowedCodes = new Set((um || []).map((x: any) => x.service_modules?.code).filter(Boolean));
+        return accountList.filter((m) => CORE_CODES.includes(m.code) || allowedCodes.has(m.code));
+      }
+      return accountList;
     },
     enabled: !!accountId,
   });
