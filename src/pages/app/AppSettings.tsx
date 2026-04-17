@@ -31,6 +31,7 @@ import WebhooksTab from "@/components/settings/WebhooksTab";
 import WhatsAppConfigTab from "@/components/settings/WhatsAppConfigTab";
 import InvoiceTemplateTab from "@/components/settings/InvoiceTemplateTab";
 import CreateEmployeeDialog from "@/components/hr/CreateEmployeeDialog";
+import EmployeeModulesTab from "@/components/settings/EmployeeModulesTab";
 
 const WEEKDAYS = [
   { code: "MON", label: "Lunes" },
@@ -967,6 +968,11 @@ const AppSettings = () => {
               <FileText className="h-4 w-4" /> <span className="hidden lg:inline">Facturas</span>
             </TabsTrigger>
           )}
+          {isManager && (
+            <TabsTrigger value="permissions" className="gap-1">
+              <ShieldCheck className="h-4 w-4" /> <span className="hidden lg:inline">Permisos</span>
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="company">
@@ -1013,6 +1019,11 @@ const AppSettings = () => {
         {isManager && (
           <TabsContent value="invoicetemplate">
             <InvoiceTemplateTab accountId={accountId} isManager={isManager} />
+          </TabsContent>
+        )}
+        {isManager && (
+          <TabsContent value="permissions">
+            <EmployeeModulesTab accountId={accountId} />
           </TabsContent>
         )}
       </Tabs>
