@@ -57,8 +57,11 @@ serve(async (req) => {
         });
       }
 
-      // Verify current password by attempting sign-in
-      const { error: signInError } = await adminClient.auth.signInWithPassword({
+      // Verify current password using an isolated anon client (do not touch admin/user sessions)
+      const verifyClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+      const { error: signInError } = await verifyClient.auth.signInWithPassword({
         email: user.email!,
         password: current_password,
       });
