@@ -168,7 +168,8 @@ const SidebarInner = () => {
                 className="h-10 rounded-lg"
               >
                 <CalendarClock className="h-4 w-4" />
-                <span>Tareas</span>
+                <span className="flex-1">Tareas</span>
+                <MyTasksBadge />
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
