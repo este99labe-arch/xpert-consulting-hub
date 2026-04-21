@@ -123,7 +123,7 @@ serve(async (req) => {
         }
       }
 
-      const { error: resetError } = await adminClient.auth.admin.updateUser(target_user_id, { password: new_password });
+      const { error: resetError } = await adminClient.auth.admin.updateUserById(target_user_id, { password: new_password });
       if (resetError) throw resetError;
 
       // Get target user email & account info for email
@@ -192,7 +192,7 @@ serve(async (req) => {
         }
       }
 
-      const { error: resetError } = await adminClient.auth.admin.updateUser(target_user_id, { password: new_password });
+      const { error: resetError } = await adminClient.auth.admin.updateUserById(target_user_id, { password: new_password });
       if (resetError) throw resetError;
 
       return new Response(JSON.stringify({ success: true }), {
