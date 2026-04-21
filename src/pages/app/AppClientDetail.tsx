@@ -12,6 +12,7 @@ import ClientInfoTab from "@/components/clients/ClientInfoTab";
 import ClientContactsTab from "@/components/clients/ClientContactsTab";
 import ClientBillingConfigTab from "@/components/clients/ClientBillingConfigTab";
 import ClientPlanTab from "@/components/clients/ClientPlanTab";
+import ClientTasksTab from "@/components/clients/ClientTasksTab";
 
 const AppClientDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -93,10 +94,11 @@ const AppClientDetail = () => {
       </div>
 
       <Tabs defaultValue="info" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className={`grid w-full ${isAdmin ? "grid-cols-5" : "grid-cols-4"}`}>
           <TabsTrigger value="info">Información</TabsTrigger>
           <TabsTrigger value="contacts">Contactos</TabsTrigger>
           <TabsTrigger value="billing">Facturación</TabsTrigger>
+          <TabsTrigger value="tasks">Tareas</TabsTrigger>
           {isAdmin && <TabsTrigger value="plan">Plan</TabsTrigger>}
         </TabsList>
 
@@ -111,6 +113,10 @@ const AppClientDetail = () => {
 
         <TabsContent value="contacts" className="mt-6">
           <ClientContactsTab clientId={id!} accountId={accountId!} isAdmin={isAdmin} />
+        </TabsContent>
+
+        <TabsContent value="tasks" className="mt-6">
+          <ClientTasksTab clientId={id!} />
         </TabsContent>
 
         <TabsContent value="billing" className="mt-6">

@@ -32,6 +32,7 @@ import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import OnboardingTour from "@/components/shared/OnboardingTour";
 import HealthCheck from "@/components/shared/HealthCheck";
+import MyTasksBadge from "@/components/tasks/MyTasksBadge";
 
 const moduleIcons: Record<string, any> = {
   DASHBOARD: LayoutDashboard,
