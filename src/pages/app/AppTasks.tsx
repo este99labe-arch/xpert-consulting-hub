@@ -343,48 +343,50 @@ const AppTasks = () => {
 
       {/* Views */}
       {view === "kanban" ? (
-        <div
-          className="grid gap-3"
-          style={{ gridTemplateColumns: `repeat(${Math.max(1, Math.min(columns.length, 4))}, minmax(0, 1fr))` }}
-        >
-          {columns.map((col) => (
-            <div
-              key={col.id}
-              className={`flex flex-col rounded-lg transition-colors p-2 ${
-                dragOverColumn === col.id ? "bg-accent/40 ring-2 ring-primary/30" : "bg-muted/30"
-              }`}
-              onDragOver={(e) => handleDragOver(e, col.id)}
-              onDragLeave={() => setDragOverColumn(null)}
-              onDrop={(e) => handleDrop(e, col.id)}
-            >
-              <div className="flex items-center gap-2 mb-2 px-1">
-                <div className="h-2.5 w-2.5 rounded-full" style={{ background: col.color }} />
-                <h3 className="text-sm font-semibold">{col.name}</h3>
-                <Badge variant="secondary" className="text-[10px] px-1.5 h-4 ml-auto">
-                  {columnData[col.id]?.length || 0}
-                </Badge>
-              </div>
-              <ScrollArea className="flex-1">
-                <div className="space-y-2 min-h-[200px]">
-                  {(columnData[col.id] || []).map((t) => (
-                    <TaskCard
-                      key={t.id}
-                      task={t}
-                      members={members}
-                      clients={clients}
-                      onClick={() => setSelectedTask(t)}
-                      onDragStart={(e) => handleDragStart(e, t.id)}
-                    />
-                  ))}
-                  {(columnData[col.id] || []).length === 0 && (
-                    <div className="rounded-lg border border-dashed p-6 text-center text-xs text-muted-foreground">
-                      Sin tareas
-                    </div>
-                  )}
+        <div className="overflow-x-auto -mx-2 sm:mx-0 pb-2">
+          <div
+            className="flex gap-3 px-2 sm:px-0"
+            style={{ minWidth: columns.length > 0 ? `${columns.length * 280}px` : undefined }}
+          >
+            {columns.map((col) => (
+              <div
+                key={col.id}
+                className={`flex flex-col rounded-lg transition-colors p-2 shrink-0 w-[280px] ${
+                  dragOverColumn === col.id ? "bg-accent/40 ring-2 ring-primary/30" : "bg-muted/30"
+                }`}
+                onDragOver={(e) => handleDragOver(e, col.id)}
+                onDragLeave={() => setDragOverColumn(null)}
+                onDrop={(e) => handleDrop(e, col.id)}
+              >
+                <div className="flex items-center gap-2 mb-2 px-1">
+                  <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: col.color }} />
+                  <h3 className="text-sm font-semibold truncate">{col.name}</h3>
+                  <Badge variant="secondary" className="text-[10px] px-1.5 h-4 ml-auto shrink-0">
+                    {columnData[col.id]?.length || 0}
+                  </Badge>
                 </div>
-              </ScrollArea>
-            </div>
-          ))}
+                <ScrollArea className="flex-1">
+                  <div className="space-y-2 min-h-[200px]">
+                    {(columnData[col.id] || []).map((t) => (
+                      <TaskCard
+                        key={t.id}
+                        task={t}
+                        members={members}
+                        clients={clients}
+                        onClick={() => setSelectedTask(t)}
+                        onDragStart={(e) => handleDragStart(e, t.id)}
+                      />
+                    ))}
+                    {(columnData[col.id] || []).length === 0 && (
+                      <div className="rounded-lg border border-dashed p-6 text-center text-xs text-muted-foreground">
+                        Sin tareas
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
+              </div>
+            ))}
+          </div>
         </div>
       ) : (
         <Card>
