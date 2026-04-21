@@ -28,7 +28,6 @@ serve(async (req) => {
 
     const displayName = employee_name || employee_email.split("@")[0];
     const companyLabel = company_name || "la empresa";
-    const TEST_RECIPIENT = "esteban@xpertconsulting.es";
     const passwordResetUrl = reset_url || "#";
 
     const htmlBody = `<!DOCTYPE html>
@@ -105,7 +104,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         from: "XpertConsulting <noreply@xpertconsulting.es>",
-        to: [TEST_RECIPIENT],
+        to: [employee_email],
         subject: `Bienvenido/a a ${companyLabel} — Tus credenciales de acceso`,
         html: htmlBody,
       }),
