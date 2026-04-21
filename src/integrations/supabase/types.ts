@@ -2240,6 +2240,15 @@ export type Database = {
       get_user_account_id: { Args: { _user_id: string }; Returns: string }
       has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
       invoice_kpis: { Args: { _account_id: string }; Returns: Json }
+      log_audit_event: {
+        Args: {
+          _action: string
+          _details?: Json
+          _entity_id: string
+          _entity_type: string
+        }
+        Returns: undefined
+      }
       xred_is_match_participant: {
         Args: { _interaction_id: string; _user_id: string }
         Returns: boolean
