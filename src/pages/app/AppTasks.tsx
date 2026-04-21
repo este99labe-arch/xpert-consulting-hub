@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
-  Plus, Search, LayoutGrid, List, Settings2, X, Filter, BarChart3, ChevronDown,
+  Plus, Search, LayoutGrid, List, Settings2, X, Filter, BarChart3, ChevronDown, Archive, ArchiveRestore,
 } from "lucide-react";
 import { format, isPast } from "date-fns";
 import { es } from "date-fns/locale";
@@ -28,10 +28,11 @@ import ColumnsConfigDialog from "@/components/tasks/ColumnsConfigDialog";
 const AppTasks = () => {
   const { user } = useAuth();
   const { data: columns = [] } = useTaskColumns();
-  const { data: tasks = [] } = useTasks();
+  const [showArchived, setShowArchived] = useState(false);
+  const { data: tasks = [] } = useTasks({ archived: showArchived });
   const { data: members = [] } = useTeamMembers();
   const { data: clients = [] } = useClientsLite();
-  const { update } = useTaskMutations();
+  const { update, unarchive } = useTaskMutations();
 
   const [view, setView] = useState<"kanban" | "list">("kanban");
   const [search, setSearch] = useState("");
@@ -148,10 +149,12 @@ const AppTasks = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Tareas</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Tareas {showArchived && <span className="text-muted-foreground font-normal text-lg">· Archivadas</span>}
+          </h1>
           <p className="text-sm text-muted-foreground">
-            {metrics.total} tareas · {metrics.overdue > 0 && (
-              <span className="text-destructive font-medium">{metrics.overdue} vencidas</span>
+            {metrics.total} tareas{!showArchived && metrics.overdue > 0 && (
+              <> · <span className="text-destructive font-medium">{metrics.overdue} vencidas</span></>
             )}
           </p>
         </div>
@@ -164,11 +167,20 @@ const AppTasks = () => {
               <List className="h-3.5 w-3.5" />
             </Button>
           </div>
+          <Button
+            size="sm"
+            variant={showArchived ? "default" : "outline"}
+            onClick={() => setShowArchived((v) => !v)}
+            className="gap-1.5"
+          >
+            <Archive className="h-4 w-4" />
+            <span className="hidden sm:inline">{showArchived ? "Ver activas" : "Ver archivadas"}</span>
+          </Button>
           <Button size="sm" variant="outline" onClick={() => setShowConfig(true)} className="gap-1.5">
             <Settings2 className="h-4 w-4" />
             <span className="hidden sm:inline">Configurar tablero</span>
           </Button>
-          <Button size="sm" className="gap-1.5" onClick={() => setShowCreate(true)}>
+          <Button size="sm" className="gap-1.5" onClick={() => setShowCreate(true)} disabled={showArchived}>
             <Plus className="h-4 w-4" />
             Nueva
           </Button>

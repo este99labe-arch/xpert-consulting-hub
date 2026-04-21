@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Archive, Trash2, X, Send } from "lucide-react";
+import { Archive, ArchiveRestore, Trash2, X, Send } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTaskMutations, useTaskComments, useTaskActivity } from "./hooks";
@@ -37,7 +37,7 @@ const ENTITY_OPTIONS: { value: string; label: string }[] = [
 
 const TaskDetailSheet = ({ task, columns, members, clients, onClose }: Props) => {
   const { user } = useAuth();
-  const { update, archive, remove } = useTaskMutations();
+  const { update, archive, unarchive, remove } = useTaskMutations();
   const { list: commentsQ, add: addComment, remove: removeComment } = useTaskComments(task?.id);
   const { data: activity = [] } = useTaskActivity(task?.id);
   const [title, setTitle] = useState("");
@@ -109,13 +109,31 @@ const TaskDetailSheet = ({ task, columns, members, clients, onClose }: Props) =>
       <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
         <SheetHeader className="space-y-3">
           <div className="flex items-center justify-between gap-2">
-            <Badge variant="outline" className={prio.textClass}>
-              <PrioIcon className={`h-3 w-3 mr-1 ${prio.color}`} /> {prio.label}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className={prio.textClass}>
+                <PrioIcon className={`h-3 w-3 mr-1 ${prio.color}`} /> {prio.label}
+              </Badge>
+              {task.archived_at && (
+                <Badge variant="secondary" className="gap-1">
+                  <Archive className="h-3 w-3" /> Archivada
+                </Badge>
+              )}
+            </div>
             <div className="flex gap-1">
-              <Button variant="ghost" size="sm" onClick={() => archive.mutate(task.id, { onSuccess: onClose })}>
-                <Archive className="h-4 w-4" />
-              </Button>
+              {task.archived_at ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => unarchive.mutate(task.id, { onSuccess: onClose })}
+                >
+                  <ArchiveRestore className="h-4 w-4" /> Desarchivar
+                </Button>
+              ) : (
+                <Button variant="ghost" size="sm" onClick={() => archive.mutate(task.id, { onSuccess: onClose })}>
+                  <Archive className="h-4 w-4" />
+                </Button>
+              )}
               <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(true)}>
                 <Trash2 className="h-4 w-4 text-destructive" />
               </Button>

@@ -21,16 +21,16 @@ export const useTaskColumns = () => {
   });
 };
 
-export const useTasks = (filter?: { clientId?: string }) => {
+export const useTasks = (filter?: { clientId?: string; archived?: boolean }) => {
   const { accountId } = useAuth();
   return useQuery({
-    queryKey: ["tasks", accountId, filter?.clientId],
+    queryKey: ["tasks", accountId, filter?.clientId, filter?.archived ? "archived" : "active"],
     queryFn: async () => {
       let q = supabase
         .from("reminders")
         .select("*")
-        .is("archived_at", null)
         .order("created_at", { ascending: false });
+      q = filter?.archived ? q.not("archived_at", "is", null) : q.is("archived_at", null);
       if (filter?.clientId) q = q.eq("client_id", filter.clientId);
       const { data, error } = await q;
       if (error) throw error;
@@ -123,6 +123,20 @@ export const useTaskMutations = () => {
     },
   });
 
+  const unarchive = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("reminders")
+        .update({ archived_at: null } as any)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tasks", accountId] });
+      toast({ title: "Tarea desarchivada" });
+    },
+  });
+
   const remove = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("reminders").delete().eq("id", id);
@@ -166,7 +180,7 @@ export const useTaskMutations = () => {
     onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
   });
 
-  return { update, archive, remove, create };
+  return { update, archive, unarchive, remove, create };
 };
 
 export const useTaskComments = (taskId?: string) => {
