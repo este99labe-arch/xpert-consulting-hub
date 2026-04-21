@@ -261,7 +261,6 @@ serve(async (req) => {
           resetUrl = resetData.properties.action_link;
         }
 
-        const TEST_RECIPIENT = "esteban@xpertconsulting.es";
         const htmlBody = buildWelcomeEmailHtml(company_name, manager_email, manager_password, resetUrl);
 
         const emailRes = await fetch("https://api.resend.com/emails", {
@@ -272,7 +271,7 @@ serve(async (req) => {
           },
           body: JSON.stringify({
             from: "XpertConsulting <noreply@xpertconsulting.es>",
-            to: [TEST_RECIPIENT],
+            to: [manager_email],
             subject: `Bienvenido/a a XpertConsulting — Acceso a ${company_name}`,
             html: htmlBody,
           }),
