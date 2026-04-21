@@ -16,7 +16,7 @@ import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTaskMutations, useTaskComments, useTaskActivity } from "./hooks";
 import { PRIORITIES, ENTITY_META, getPriorityMeta, initials, type Task, type TaskColumn } from "./types";
-import { DeleteConfirmDialog } from "@/components/shared/DeleteConfirmDialog";
+import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 
 interface Props {
   task: Task | null;
@@ -378,10 +378,13 @@ const TaskDetailSheet = ({ task, columns, members, clients, onClose }: Props) =>
 
         <DeleteConfirmDialog
           open={confirmDelete}
-          onOpenChange={setConfirmDelete}
+          onCancel={() => setConfirmDelete(false)}
           title="Eliminar tarea"
           description="¿Seguro que quieres eliminar esta tarea? Esta acción no se puede deshacer."
-          onConfirm={() => remove.mutate(task.id, { onSuccess: onClose })}
+          onConfirm={() => {
+            setConfirmDelete(false);
+            remove.mutate(task.id, { onSuccess: onClose });
+          }}
         />
       </SheetContent>
     </Sheet>
