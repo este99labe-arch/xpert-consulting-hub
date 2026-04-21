@@ -306,7 +306,8 @@ serve(async (req) => {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error: any) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error("[admin_reset_password] Unhandled error:", error);
+    return new Response(JSON.stringify({ error: error?.message || String(error) }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
