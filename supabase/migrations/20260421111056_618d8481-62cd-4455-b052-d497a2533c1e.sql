@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Authenticated can view accounts with visible xred profile" ON public.accounts;
