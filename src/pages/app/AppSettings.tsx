@@ -560,14 +560,26 @@ const SecurityTab = ({ userId, accountId, isManager }: { userId: string; account
       const { data, error } = await supabase.functions.invoke("admin_reset_password", {
         body: { action: "change_own_password", current_password: currentPassword, new_password: newPassword },
       });
+      // supabase.functions.invoke returns an error for non-2xx; try to extract the server message
+      let serverMessage: string | undefined = (data as any)?.error;
+      if (!serverMessage && error) {
+        try {
+          const ctx: any = (error as any).context;
+          if (ctx?.body) {
+            const text = typeof ctx.body === "string" ? ctx.body : await new Response(ctx.body).text();
+            const parsed = JSON.parse(text);
+            serverMessage = parsed?.error;
+          }
+        } catch { /* ignore parse errors */ }
+      }
+      if (serverMessage) throw new Error(serverMessage);
       if (error) throw error;
-      if (data?.error) throw new Error(data.error);
       toast({ title: "Contraseña actualizada correctamente" });
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: "Error", description: err.message || "No se pudo cambiar la contraseña", variant: "destructive" });
     } finally {
       setChangingOwn(false);
     }
