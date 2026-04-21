@@ -32,14 +32,16 @@ export const logAudit = async ({
   details = {},
 }: LogAuditParams) => {
   try {
-    await supabase.from("audit_logs").insert({
-      account_id: accountId,
-      user_id: userId,
-      action,
-      entity_type: entityType,
-      entity_id: entityId,
-      details,
-    } as any);
+    // account_id and user_id are forced server-side by log_audit_event (SECURITY DEFINER)
+    // to prevent audit log forgery. The params kept here preserve the public API.
+    void accountId;
+    void userId;
+    await (supabase.rpc as any)("log_audit_event", {
+      _action: action,
+      _entity_type: entityType,
+      _entity_id: entityId,
+      _details: details,
+    });
   } catch (err) {
     // Fire-and-forget: don't break the main flow
     console.error("Audit log error:", err);
