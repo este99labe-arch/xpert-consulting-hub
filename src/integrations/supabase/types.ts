@@ -1641,6 +1641,10 @@ export type Database = {
       reminders: {
         Row: {
           account_id: string
+          archived_at: string | null
+          assigned_to: string | null
+          client_id: string | null
+          column_id: string | null
           completed_at: string | null
           created_at: string
           created_by: string
@@ -1651,12 +1655,17 @@ export type Database = {
           id: string
           is_completed: boolean
           labels: string[]
+          priority: string
           remind_at: string
           status: string
           title: string
         }
         Insert: {
           account_id: string
+          archived_at?: string | null
+          assigned_to?: string | null
+          client_id?: string | null
+          column_id?: string | null
           completed_at?: string | null
           created_at?: string
           created_by: string
@@ -1667,12 +1676,17 @@ export type Database = {
           id?: string
           is_completed?: boolean
           labels?: string[]
+          priority?: string
           remind_at: string
           status?: string
           title: string
         }
         Update: {
           account_id?: string
+          archived_at?: string | null
+          assigned_to?: string | null
+          client_id?: string | null
+          column_id?: string | null
           completed_at?: string | null
           created_at?: string
           created_by?: string
@@ -1683,6 +1697,7 @@ export type Database = {
           id?: string
           is_completed?: boolean
           labels?: string[]
+          priority?: string
           remind_at?: string
           status?: string
           title?: string
@@ -1693,6 +1708,20 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reminders_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "business_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reminders_column_id_fkey"
+            columns: ["column_id"]
+            isOneToOne: false
+            referencedRelation: "task_columns"
             referencedColumns: ["id"]
           },
         ]
@@ -1780,6 +1809,140 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_activity: {
+        Row: {
+          account_id: string
+          created_at: string
+          field_name: string
+          id: string
+          new_value: string | null
+          old_value: string | null
+          task_id: string
+          user_id: string | null
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          field_name: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          task_id: string
+          user_id?: string | null
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          field_name?: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          task_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_activity_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_activity_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "reminders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_columns: {
+        Row: {
+          account_id: string
+          color: string
+          created_at: string
+          id: string
+          is_archived: boolean
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          color?: string
+          created_at?: string
+          id?: string
+          is_archived?: boolean
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          color?: string
+          created_at?: string
+          id?: string
+          is_archived?: boolean
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_columns_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_comments: {
+        Row: {
+          account_id: string
+          author_id: string
+          content: string
+          created_at: string
+          id: string
+          task_id: string
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          author_id: string
+          content: string
+          created_at?: string
+          id?: string
+          task_id: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          author_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          task_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_comments_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_comments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "reminders"
             referencedColumns: ["id"]
           },
         ]
