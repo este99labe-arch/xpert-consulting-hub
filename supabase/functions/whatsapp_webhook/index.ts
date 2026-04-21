@@ -90,7 +90,43 @@ Deno.serve(async (req) => {
 
   // ─── POST: Incoming WhatsApp messages ───
   if (req.method === "POST") {
-    const body = await req.json();
+    // Verify Meta's HMAC-SHA256 signature to ensure the payload is genuine
+    const rawBody = await req.text();
+    const appSecret = Deno.env.get("WHATSAPP_APP_SECRET");
+    if (!appSecret) {
+      console.error("WHATSAPP_APP_SECRET not configured — rejecting webhook for security");
+      return new Response("Server misconfigured", { status: 500, headers: corsHeaders });
+    }
+    const sigHeader = req.headers.get("X-Hub-Signature-256") || req.headers.get("x-hub-signature-256") || "";
+    try {
+      const key = await crypto.subtle.importKey(
+        "raw",
+        new TextEncoder().encode(appSecret),
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["sign"],
+      );
+      const sigBytes = new Uint8Array(
+        await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(rawBody)),
+      );
+      const expected = "sha256=" + Array.from(sigBytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+      // Constant-time compare
+      if (sigHeader.length !== expected.length) {
+        return new Response("Forbidden", { status: 403, headers: corsHeaders });
+      }
+      let diff = 0;
+      for (let i = 0; i < expected.length; i++) {
+        diff |= expected.charCodeAt(i) ^ sigHeader.charCodeAt(i);
+      }
+      if (diff !== 0) {
+        return new Response("Forbidden", { status: 403, headers: corsHeaders });
+      }
+    } catch (e) {
+      console.error("Signature verification failed:", e);
+      return new Response("Forbidden", { status: 403, headers: corsHeaders });
+    }
+
+    const body = JSON.parse(rawBody);
 
     // Meta sends webhook payloads with this structure
     const entry = body?.entry?.[0];

@@ -61,6 +61,17 @@ export interface InvoiceData {
 
 const fmtMoney = (n: number) => Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 
+// HTML-escape any user-provided string before injecting into template HTML to prevent stored XSS
+const esc = (s: unknown): string => {
+  if (s === null || s === undefined) return "";
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+};
+
 const statusColors: Record<string, { bg: string; color: string }> = {
   DRAFT: { bg: "#f1f5f9", color: "#475569" },
   SENT: { bg: "#dbeafe", color: "#1e40af" },
@@ -88,14 +99,14 @@ interface Theme {
 function renderPartyBlock(title: string, party: InvoiceData["company"] | InvoiceData["client"]) {
   return `
     <div class="party">
-      <div class="party-label">${title}</div>
-      <div class="party-name">${party.name || "—"}</div>
+      <div class="party-label">${esc(title)}</div>
+      <div class="party-name">${party.name ? esc(party.name) : "—"}</div>
       <div class="party-info">
-        ${party.taxId ? `NIF/CIF: ${party.taxId}<br>` : ""}
-        ${party.address ? `${party.address}<br>` : ""}
-        ${party.postalCode || party.city ? `${party.postalCode || ""} ${party.city || ""}<br>` : ""}
-        ${party.email ? `${party.email}<br>` : ""}
-        ${party.phone ? `Tel: ${party.phone}` : ""}
+        ${party.taxId ? `NIF/CIF: ${esc(party.taxId)}<br>` : ""}
+        ${party.address ? `${esc(party.address)}<br>` : ""}
+        ${party.postalCode || party.city ? `${esc(party.postalCode || "")} ${esc(party.city || "")}<br>` : ""}
+        ${party.email ? `${esc(party.email)}<br>` : ""}
+        ${party.phone ? `Tel: ${esc(party.phone)}` : ""}
       </div>
     </div>
   `;
@@ -107,8 +118,8 @@ function renderLinesTable(d: InvoiceData) {
         .map(
           (l) => `
       <tr>
-        <td style="font-weight:600">${l.description || "—"}</td>
-        <td class="r">${l.quantity}</td>
+        <td style="font-weight:600">${l.description ? esc(l.description) : "—"}</td>
+        <td class="r">${Number(l.quantity)}</td>
         <td class="r">€${fmtMoney(l.unitPrice)}</td>
         <td class="r b">€${fmtMoney(l.amount)}</td>
       </tr>
@@ -117,12 +128,12 @@ function renderLinesTable(d: InvoiceData) {
         .join("")
     : `
       <tr>
-        <td style="font-weight:600">${d.concept || "—"}</td>
+        <td style="font-weight:600">${d.concept ? esc(d.concept) : "—"}</td>
         <td class="r">1</td>
         <td class="r">€${fmtMoney(d.amountNet)}</td>
         <td class="r b">€${fmtMoney(d.amountNet)}</td>
       </tr>
-      ${d.description ? `<tr><td colspan="4" class="desc-row">${d.description}</td></tr>` : ""}
+      ${d.description ? `<tr><td colspan="4" class="desc-row">${esc(d.description)}</td></tr>` : ""}
     `;
 
   return `
@@ -168,7 +179,7 @@ function renderPayments(d: InvoiceData) {
         .map(
           (p) => `
         <div class="pay-row">
-          <span>${p.date} — ${p.method}</span>
+          <span>${esc(p.date)} — ${esc(p.method)}</span>
           <span style="font-weight:600">€${fmtMoney(p.amount)}</span>
         </div>
       `,
@@ -182,7 +193,7 @@ function renderSpecialMentions(d: InvoiceData) {
   if (!d.specialMentions) return "";
   return `
     <div class="special-mentions">
-      <strong>Mención especial:</strong> ${d.specialMentions}
+      <strong>Mención especial:</strong> ${esc(d.specialMentions)}
     </div>
   `;
 }
@@ -194,7 +205,7 @@ function renderTemplate(d: InvoiceData, t: Theme): string {
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <title>${d.typeLabel} ${d.invoiceNumber}</title>
+  <title>${esc(d.typeLabel)} ${esc(d.invoiceNumber)}</title>
   <style>
     @page { size: A4; margin: 0; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -429,17 +440,17 @@ function renderTemplate(d: InvoiceData, t: Theme): string {
   <div class="page">
     <div class="header">
       <div>
-        <div class="brand">${d.company.name}</div>
+        <div class="brand">${esc(d.company.name)}</div>
         <div class="brand-details">
-          ${d.company.taxId ? `NIF/CIF: ${d.company.taxId}<br>` : ""}
-          ${d.company.address ? `${d.company.address}${d.company.postalCode ? `, ${d.company.postalCode}` : ""}${d.company.city ? ` ${d.company.city}` : ""}<br>` : ""}
-          ${d.company.phone || d.company.email ? `${d.company.phone || ""}${d.company.phone && d.company.email ? " · " : ""}${d.company.email || ""}` : ""}
+          ${d.company.taxId ? `NIF/CIF: ${esc(d.company.taxId)}<br>` : ""}
+          ${d.company.address ? `${esc(d.company.address)}${d.company.postalCode ? `, ${esc(d.company.postalCode)}` : ""}${d.company.city ? ` ${esc(d.company.city)}` : ""}<br>` : ""}
+          ${d.company.phone || d.company.email ? `${esc(d.company.phone || "")}${d.company.phone && d.company.email ? " · " : ""}${esc(d.company.email || "")}` : ""}
         </div>
       </div>
       <div class="doc-meta">
-        <div class="doc-type">${d.typeLabel}</div>
-        <div class="doc-number">${d.invoiceNumber}</div>
-        <div class="status">${d.statusLabel}</div>
+        <div class="doc-type">${esc(d.typeLabel)}</div>
+        <div class="doc-number">${esc(d.invoiceNumber)}</div>
+        <div class="status">${esc(d.statusLabel)}</div>
       </div>
     </div>
 
@@ -449,9 +460,9 @@ function renderTemplate(d: InvoiceData, t: Theme): string {
     </div>
 
     <div class="meta-row">
-      <div class="meta-box"><div class="meta-label">Nº Documento</div><div class="meta-value">${d.invoiceNumber}</div></div>
-      <div class="meta-box"><div class="meta-label">Fecha emisión</div><div class="meta-value">${d.issueDate}</div></div>
-      <div class="meta-box"><div class="meta-label">Fecha operación</div><div class="meta-value">${d.operationDate || "—"}</div></div>
+      <div class="meta-box"><div class="meta-label">Nº Documento</div><div class="meta-value">${esc(d.invoiceNumber)}</div></div>
+      <div class="meta-box"><div class="meta-label">Fecha emisión</div><div class="meta-value">${esc(d.issueDate)}</div></div>
+      <div class="meta-box"><div class="meta-label">Fecha operación</div><div class="meta-value">${d.operationDate ? esc(d.operationDate) : "—"}</div></div>
     </div>
 
     ${renderLinesTable(d)}
@@ -460,7 +471,7 @@ function renderTemplate(d: InvoiceData, t: Theme): string {
     ${renderTotals(d, t)}
 
     <div class="footer">
-      ${d.company.name}${d.company.taxId ? ` · NIF/CIF: ${d.company.taxId}` : ""}<br>
+      ${esc(d.company.name)}${d.company.taxId ? ` · NIF/CIF: ${esc(d.company.taxId)}` : ""}<br>
       Documento generado automáticamente
     </div>
   </div>
