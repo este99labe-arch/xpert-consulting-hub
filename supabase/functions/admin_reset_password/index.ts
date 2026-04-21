@@ -79,7 +79,7 @@ serve(async (req) => {
         });
       }
 
-      const { error: updateError } = await adminClient.auth.admin.updateUser(user.id, { password: new_password });
+      const { error: updateError } = await adminClient.auth.admin.updateUserById(user.id, { password: new_password });
       if (updateError) {
         console.error("[change_own_password] updateUser error:", updateError);
         return new Response(JSON.stringify({ error: updateError.message || "No se pudo actualizar la contraseña" }), {
