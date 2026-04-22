@@ -15,8 +15,9 @@ import { Archive, ArchiveRestore, Trash2, X, Send } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTaskMutations, useTaskComments, useTaskActivity } from "./hooks";
-import { PRIORITIES, ENTITY_META, getPriorityMeta, initials, type Task, type TaskColumn } from "./types";
+import { PRIORITIES, getPriorityMeta, initials, type Task, type TaskColumn } from "./types";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
+import TaskLinksManager from "./TaskLinksManager";
 
 interface Props {
   task: Task | null;
@@ -25,15 +26,6 @@ interface Props {
   clients: { id: string; name: string }[];
   onClose: () => void;
 }
-
-const ENTITY_OPTIONS: { value: string; label: string }[] = [
-  { value: "NONE", label: "Ninguna" },
-  { value: "CLIENT", label: "Cliente" },
-  { value: "INVOICE", label: "Factura" },
-  { value: "EXPENSE", label: "Gasto" },
-  { value: "JOURNAL_ENTRY", label: "Asiento" },
-  { value: "QUOTE", label: "Presupuesto" },
-];
 
 const TaskDetailSheet = ({ task, columns, members, clients, onClose }: Props) => {
   const { user } = useAuth();
