@@ -1,5 +1,27 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { PDFDocument, StandardFonts, rgb, PDFFont, PDFPage } from "npm:pdf-lib@1.17.1";
+import QRCode from "npm:qrcode@1.5.3";
+
+// ─── VERI*FACTU — construcción URL del QR tributario ──────
+type VerifactuEnv = "sandbox" | "prod";
+const VERIFACTU_ENV: VerifactuEnv = "sandbox"; // TODO: cambiar a "prod" cuando se active la integración real
+const VERIFACTU_BASE_URLS: Record<VerifactuEnv, string> = {
+  sandbox: "https://prepro7.aeat.es/wlpl/TIKE-CONT/ValidarQR",
+  prod: "https://www2.agenciatributaria.gob.es/wlpl/TIKE-CONT/ValidarQR",
+};
+function buildVerifactuQRUrl(p: { nif: string; numserie: string; fecha: string; importe: number }): string | null {
+  if (!p.nif || !p.numserie || !p.fecha || p.importe == null) return null;
+  // fecha esperada en dd-mm-yyyy
+  let f = p.fecha;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(f)) { const [y, m, d] = f.split("-"); f = `${d}-${m}-${y}`; }
+  const qs = new URLSearchParams();
+  qs.set("nif", p.nif.trim().toUpperCase());
+  qs.set("numserie", String(p.numserie).trim().slice(0, 60));
+  qs.set("fecha", f);
+  qs.set("importe", Number(p.importe).toFixed(2));
+  return `${VERIFACTU_BASE_URLS[VERIFACTU_ENV]}?${qs.toString()}`;
+}
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -338,6 +360,43 @@ async function generatePdf(d: InvoiceData): Promise<Uint8Array> {
     ty -= 16;
     txt("Saldo pendiente", totX + 12, ty, helB, 9, C.red);
     rightText(page, `${fmtMoney(balance)} EUR`, ty, helB, 9, C.red, PAGE_W - M - 12);
+  }
+
+  // ─── QR TRIBUTARIO VERI*FACTU (40×40 mm con margen 6 mm) ─
+  // Sólo aplicable a facturas emitidas con NIF del emisor disponible.
+  const qrUrl = buildVerifactuQRUrl({
+    nif: d.company.taxId || "",
+    numserie: d.invoiceNumber,
+    fecha: (d as any)._issueDateRaw || d.issueDate,
+    importe: d.amountTotal,
+  });
+  if (qrUrl && d.typeLabel === "FACTURA") {
+    try {
+      const MM = 2.83465; // 1 mm = 2.83465 pt
+      const QR_SIZE = 40 * MM;   // 40 mm
+      const QR_MARGIN = 6 * MM;  // 6 mm de margen interior blanco
+      const BOX = QR_SIZE + QR_MARGIN * 2;
+      const qrX = PAGE_W - M - BOX;
+      const qrY = M + 30; // por encima del footer
+      ensureSpace(BOX + 30);
+      // Caja blanca con borde
+      page.drawRectangle({ x: qrX, y: qrY, width: BOX, height: BOX, color: C.white, borderColor: C.border, borderWidth: 0.5 });
+      // Etiquetas
+      txt("QR tributario:", qrX, qrY + BOX + 4, helB, 7, C.light);
+      const qrPngDataUrl = await QRCode.toDataURL(qrUrl, { errorCorrectionLevel: "M", margin: 0, width: 512 });
+      const qrBytes = Uint8Array.from(atob(qrPngDataUrl.split(",")[1]), (c) => c.charCodeAt(0));
+      const qrImg = await doc.embedPng(qrBytes);
+      page.drawImage(qrImg, { x: qrX + QR_MARGIN, y: qrY + QR_MARGIN, width: QR_SIZE, height: QR_SIZE });
+      // Texto al pie
+      const caption = "Factura verificable en la sede";
+      const caption2 = "electronica de la AEAT";
+      const cw1 = hel.widthOfTextAtSize(caption, 6.5);
+      const cw2 = hel.widthOfTextAtSize(caption2, 6.5);
+      txt(caption, qrX + (BOX - cw1) / 2, qrY - 8, hel, 6.5, C.mid);
+      txt(caption2, qrX + (BOX - cw2) / 2, qrY - 16, hel, 6.5, C.mid);
+    } catch (err) {
+      console.error("[VERI*FACTU] Error generando QR:", err);
+    }
   }
 
   // ─── FOOTER ─────────────────────────────────────

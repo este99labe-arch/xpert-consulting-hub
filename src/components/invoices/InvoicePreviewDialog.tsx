@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import InvoiceAttachment from "@/components/invoices/InvoiceAttachment";
 import { renderInvoiceHtml, INVOICE_TEMPLATES, type InvoiceTemplateId, type InvoiceData } from "./invoiceTemplates";
+import QRTributario from "./QRTributario";
 
 const statusLabels: Record<string, string> = {
   DRAFT: "Borrador", SENT: "Enviada", PAID: "Pagada", PARTIALLY_PAID: "Pago parcial", OVERDUE: "Vencida",
@@ -229,6 +230,18 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEma
                 } catch (_) {}
               }}
             />
+            {/* QR tributario VERI*FACTU — sólo aplicable a facturas emitidas */}
+            {invoice.type === "INVOICE" && (account as any)?.tax_id && (
+              <div className="flex justify-end px-10 pb-8 pt-2 bg-white">
+                <QRTributario
+                  nif={(account as any).tax_id}
+                  numserie={invoiceNumber}
+                  fecha={invoice.issue_date}
+                  importe={invoice.amount_total}
+                  size={120}
+                />
+              </div>
+            )}
           </div>
         </div>
 
