@@ -94,6 +94,7 @@ export type Database = {
       accounts: {
         Row: {
           address: string | null
+          address_enc: string | null
           city: string | null
           created_at: string
           created_by: string | null
@@ -102,12 +103,16 @@ export type Database = {
           is_active: boolean
           name: string
           phone: string | null
+          phone_enc: string | null
           postal_code: string | null
           tax_id: string | null
+          tax_id_enc: string | null
+          tax_id_hash: string | null
           type: string
         }
         Insert: {
           address?: string | null
+          address_enc?: string | null
           city?: string | null
           created_at?: string
           created_by?: string | null
@@ -116,12 +121,16 @@ export type Database = {
           is_active?: boolean
           name: string
           phone?: string | null
+          phone_enc?: string | null
           postal_code?: string | null
           tax_id?: string | null
+          tax_id_enc?: string | null
+          tax_id_hash?: string | null
           type: string
         }
         Update: {
           address?: string | null
+          address_enc?: string | null
           city?: string | null
           created_at?: string
           created_by?: string | null
@@ -130,8 +139,11 @@ export type Database = {
           is_active?: boolean
           name?: string
           phone?: string | null
+          phone_enc?: string | null
           postal_code?: string | null
           tax_id?: string | null
+          tax_id_enc?: string | null
+          tax_id_hash?: string | null
           type?: string
         }
         Relationships: []
@@ -379,8 +391,10 @@ export type Database = {
         Row: {
           account_id: string
           address: string | null
+          address_enc: string | null
           auto_journal_entry: boolean | null
           billing_address: string | null
+          billing_address_enc: string | null
           billing_city: string | null
           billing_country: string | null
           billing_postal_code: string | null
@@ -389,21 +403,28 @@ export type Database = {
           created_at: string
           default_vat_percentage: number | null
           email: string | null
+          email_enc: string | null
+          email_hash: string | null
           id: string
           name: string
           notes: string | null
           phone: string | null
+          phone_enc: string | null
           plan_id: string | null
           postal_code: string | null
           status: string
           tax_id: string
+          tax_id_enc: string | null
+          tax_id_hash: string | null
           website: string | null
         }
         Insert: {
           account_id: string
           address?: string | null
+          address_enc?: string | null
           auto_journal_entry?: boolean | null
           billing_address?: string | null
+          billing_address_enc?: string | null
           billing_city?: string | null
           billing_country?: string | null
           billing_postal_code?: string | null
@@ -412,21 +433,28 @@ export type Database = {
           created_at?: string
           default_vat_percentage?: number | null
           email?: string | null
+          email_enc?: string | null
+          email_hash?: string | null
           id?: string
           name: string
           notes?: string | null
           phone?: string | null
+          phone_enc?: string | null
           plan_id?: string | null
           postal_code?: string | null
           status?: string
           tax_id: string
+          tax_id_enc?: string | null
+          tax_id_hash?: string | null
           website?: string | null
         }
         Update: {
           account_id?: string
           address?: string | null
+          address_enc?: string | null
           auto_journal_entry?: boolean | null
           billing_address?: string | null
+          billing_address_enc?: string | null
           billing_city?: string | null
           billing_country?: string | null
           billing_postal_code?: string | null
@@ -435,14 +463,19 @@ export type Database = {
           created_at?: string
           default_vat_percentage?: number | null
           email?: string | null
+          email_enc?: string | null
+          email_hash?: string | null
           id?: string
           name?: string
           notes?: string | null
           phone?: string | null
+          phone_enc?: string | null
           plan_id?: string | null
           postal_code?: string | null
           status?: string
           tax_id?: string
+          tax_id_enc?: string | null
+          tax_id_hash?: string | null
           website?: string | null
         }
         Relationships: [
@@ -516,10 +549,12 @@ export type Database = {
           client_id: string
           created_at: string
           email: string | null
+          email_enc: string | null
           id: string
           is_primary: boolean | null
           name: string
           phone: string | null
+          phone_enc: string | null
           position: string | null
         }
         Insert: {
@@ -527,10 +562,12 @@ export type Database = {
           client_id: string
           created_at?: string
           email?: string | null
+          email_enc?: string | null
           id?: string
           is_primary?: boolean | null
           name: string
           phone?: string | null
+          phone_enc?: string | null
           position?: string | null
         }
         Update: {
@@ -538,10 +575,12 @@ export type Database = {
           client_id?: string
           created_at?: string
           email?: string | null
+          email_enc?: string | null
           id?: string
           is_primary?: boolean | null
           name?: string
           phone?: string | null
+          phone_enc?: string | null
           position?: string | null
         }
         Relationships: [
@@ -749,18 +788,24 @@ export type Database = {
         Row: {
           account_id: string
           address: string | null
+          address_enc: string | null
           city: string | null
           created_at: string
           date_of_birth: string | null
+          date_of_birth_enc: string | null
           department: string | null
           dni: string | null
+          dni_enc: string | null
+          dni_hash: string | null
           first_name: string
           id: string
           last_name: string
           phone: string | null
+          phone_enc: string | null
           position: string | null
           postal_code: string | null
           social_security_number: string | null
+          ssn_enc: string | null
           start_date: string | null
           updated_at: string
           user_id: string
@@ -768,18 +813,24 @@ export type Database = {
         Insert: {
           account_id: string
           address?: string | null
+          address_enc?: string | null
           city?: string | null
           created_at?: string
           date_of_birth?: string | null
+          date_of_birth_enc?: string | null
           department?: string | null
           dni?: string | null
+          dni_enc?: string | null
+          dni_hash?: string | null
           first_name: string
           id?: string
           last_name: string
           phone?: string | null
+          phone_enc?: string | null
           position?: string | null
           postal_code?: string | null
           social_security_number?: string | null
+          ssn_enc?: string | null
           start_date?: string | null
           updated_at?: string
           user_id: string
@@ -787,18 +838,24 @@ export type Database = {
         Update: {
           account_id?: string
           address?: string | null
+          address_enc?: string | null
           city?: string | null
           created_at?: string
           date_of_birth?: string | null
+          date_of_birth_enc?: string | null
           department?: string | null
           dni?: string | null
+          dni_enc?: string | null
+          dni_hash?: string | null
           first_name?: string
           id?: string
           last_name?: string
           phone?: string | null
+          phone_enc?: string | null
           position?: string | null
           postal_code?: string | null
           social_security_number?: string | null
+          ssn_enc?: string | null
           start_date?: string | null
           updated_at?: string
           user_id?: string
@@ -2437,13 +2494,143 @@ export type Database = {
       }
     }
     Functions: {
+      _decrypt_text: { Args: { _cipher: string }; Returns: string }
+      _encrypt_text: { Args: { _plain: string }; Returns: string }
+      _get_encryption_key: { Args: never; Returns: string }
+      _hash_search: { Args: { _value: string }; Returns: string }
       ensure_default_folders: {
         Args: { _account_id: string; _created_by: string; _user_id: string }
         Returns: undefined
       }
+      get_decrypted_account: {
+        Args: { _id: string }
+        Returns: {
+          address: string
+          city: string
+          created_at: string
+          email: string
+          id: string
+          is_active: boolean
+          name: string
+          phone: string
+          postal_code: string
+          tax_id: string
+          type: string
+        }[]
+      }
+      get_decrypted_business_client: {
+        Args: { _id: string }
+        Returns: {
+          account_id: string
+          address: string
+          auto_journal_entry: boolean
+          billing_address: string
+          billing_city: string
+          billing_country: string
+          billing_postal_code: string
+          city: string
+          country: string
+          created_at: string
+          default_vat_percentage: number
+          email: string
+          id: string
+          name: string
+          notes: string
+          phone: string
+          plan_id: string
+          postal_code: string
+          status: string
+          tax_id: string
+          website: string
+        }[]
+      }
+      get_decrypted_employee_profile: {
+        Args: { _user_id: string }
+        Returns: {
+          account_id: string
+          address: string
+          city: string
+          created_at: string
+          date_of_birth: string
+          department: string
+          dni: string
+          first_name: string
+          id: string
+          job_position: string
+          last_name: string
+          phone: string
+          postal_code: string
+          social_security_number: string
+          start_date: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
       get_user_account_id: { Args: { _user_id: string }; Returns: string }
       has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
       invoice_kpis: { Args: { _account_id: string }; Returns: Json }
+      list_business_clients_decrypted: {
+        Args: { _account_id: string }
+        Returns: {
+          account_id: string
+          address: string
+          auto_journal_entry: boolean
+          billing_address: string
+          billing_city: string
+          billing_country: string
+          billing_postal_code: string
+          city: string
+          country: string
+          created_at: string
+          default_vat_percentage: number
+          email: string
+          id: string
+          name: string
+          notes: string
+          phone: string
+          plan_id: string
+          postal_code: string
+          status: string
+          tax_id: string
+          website: string
+        }[]
+      }
+      list_client_contacts_decrypted: {
+        Args: { _client_id: string }
+        Returns: {
+          account_id: string
+          client_id: string
+          created_at: string
+          email: string
+          id: string
+          is_primary: boolean
+          job_position: string
+          name: string
+          phone: string
+        }[]
+      }
+      list_employee_profiles_decrypted: {
+        Args: { _account_id: string }
+        Returns: {
+          account_id: string
+          address: string
+          city: string
+          created_at: string
+          date_of_birth: string
+          department: string
+          dni: string
+          first_name: string
+          id: string
+          job_position: string
+          last_name: string
+          phone: string
+          postal_code: string
+          social_security_number: string
+          start_date: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
       log_audit_event: {
         Args: {
           _action: string
