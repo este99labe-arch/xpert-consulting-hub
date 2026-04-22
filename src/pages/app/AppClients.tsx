@@ -59,27 +59,32 @@ const AppClients = () => {
 
   const pagination = useServerPagination();
 
-  // Server-side paginated + filtered query
+  // Lectura vía RPC con datos descifrados (GDPR Fase 1).
+  // La paginación y el filtrado se hacen en cliente sobre el resultado descifrado.
   const { data: clientResult, isLoading } = useQuery({
-    queryKey: ["business-clients", accountId, pagination.currentPage, pagination.pageSize, debouncedSearch, statusFilter],
+    queryKey: ["business-clients-decrypted", accountId, pagination.currentPage, pagination.pageSize, debouncedSearch, statusFilter],
     queryFn: async () => {
       if (!accountId) return { data: [], count: 0 };
-      let query = supabase
-        .from("business_clients")
-        .select("*", { count: "exact" })
-        .eq("account_id", accountId)
-        .order("created_at", { ascending: false });
-
-      if (debouncedSearch) {
-        query = query.or(`name.ilike.%${debouncedSearch}%,tax_id.ilike.%${debouncedSearch}%`);
-      }
-      if (statusFilter !== "ALL") query = query.eq("status", statusFilter);
-
-      query = query.range(pagination.rangeFrom, pagination.rangeTo);
-
-      const { data, error, count } = await query;
+      const { data, error } = await supabase.rpc("list_business_clients_decrypted", {
+        _account_id: accountId,
+      });
       if (error) throw error;
-      return { data: data || [], count: count || 0 };
+      let rows = (data as any[]) || [];
+
+      // Filtrado en cliente (datos sensibles ya descifrados)
+      if (debouncedSearch) {
+        const q = debouncedSearch.toLowerCase();
+        rows = rows.filter(
+          (r) =>
+            (r.name || "").toLowerCase().includes(q) ||
+            (r.tax_id || "").toLowerCase().includes(q)
+        );
+      }
+      if (statusFilter !== "ALL") rows = rows.filter((r) => r.status === statusFilter);
+
+      const total = rows.length;
+      const paged = rows.slice(pagination.rangeFrom, pagination.rangeTo + 1);
+      return { data: paged, count: total };
     },
     enabled: !!accountId,
   });

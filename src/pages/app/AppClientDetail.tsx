@@ -22,16 +22,16 @@ const AppClientDetail = () => {
   const isAdmin = role === "MASTER_ADMIN" || role === "MANAGER";
   const [showReminder, setShowReminder] = useState(false);
 
+  // Lectura vía RPC con datos descifrados (GDPR Fase 1)
   const { data: client, isLoading } = useQuery({
-    queryKey: ["business-client", id],
+    queryKey: ["business-client-decrypted", id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("business_clients")
-        .select("*")
-        .eq("id", id!)
-        .single();
+      const { data, error } = await supabase.rpc("get_decrypted_business_client", {
+        _id: id!,
+      });
       if (error) throw error;
-      return data;
+      const rows = (data as any[]) || [];
+      return rows[0] || null;
     },
     enabled: !!id,
   });
