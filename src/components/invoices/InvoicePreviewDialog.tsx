@@ -90,6 +90,37 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEma
     enabled: !!invoice?.id && open,
   });
 
+  // Generar dataURL del QR VERI*FACTU sólo cuando la factura está PAGADA y la cuenta tiene NIF
+  const shouldRenderQr =
+    !!invoice &&
+    invoice.type === "INVOICE" &&
+    invoice.status === "PAID" &&
+    !!(account as any)?.tax_id;
+
+  useEffect(() => {
+    let cancelled = false;
+    setQrError(null);
+    if (!shouldRenderQr || !invoice) {
+      setQrDataUrl(undefined);
+      return;
+    }
+    const { url, error } = tryBuildVerifactuQRUrl({
+      nif: (account as any).tax_id,
+      numserie: invoice.invoice_number || invoice.id.slice(0, 8).toUpperCase(),
+      fecha: invoice.issue_date,
+      importe: invoice.amount_total,
+    });
+    if (error || !url) {
+      setQrError(error?.message || "No se pudo generar el QR.");
+      setQrDataUrl(undefined);
+      return;
+    }
+    QRCode.toDataURL(url, { errorCorrectionLevel: "M", margin: 0, width: 512 })
+      .then((dataUrl) => { if (!cancelled) setQrDataUrl(dataUrl); })
+      .catch((e) => { if (!cancelled) { setQrError(e?.message || "Error generando QR"); setQrDataUrl(undefined); } });
+    return () => { cancelled = true; };
+  }, [shouldRenderQr, (account as any)?.tax_id, invoice?.invoice_number, invoice?.id, invoice?.issue_date, invoice?.amount_total]);
+
   if (!invoice) return null;
 
   const client = invoice.business_clients;
