@@ -31,6 +31,8 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEma
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const { accountId } = useAuth();
   const [templateOverride, setTemplateOverride] = useState<InvoiceTemplateId | null>(null);
+  const [qrDataUrl, setQrDataUrl] = useState<string | undefined>(undefined);
+  const [qrError, setQrError] = useState<string | null>(null);
 
   const { data: account } = useQuery({
     queryKey: ["my-account", accountId],
