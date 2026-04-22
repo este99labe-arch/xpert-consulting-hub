@@ -401,43 +401,6 @@ async function generatePdf(d: InvoiceData): Promise<Uint8Array> {
     rightText(page, `${fmtMoney(balance)} EUR`, ty, helB, 9, C.red, PAGE_W - M - 12);
   }
 
-  // ─── QR TRIBUTARIO VERI*FACTU (40×40 mm con margen 6 mm) ─
-  // Sólo aplicable a facturas emitidas con NIF del emisor disponible.
-  const qrUrl = buildVerifactuQRUrl({
-    nif: d.company.taxId || "",
-    numserie: d.invoiceNumber,
-    fecha: (d as any)._issueDateRaw || d.issueDate,
-    importe: d.amountTotal,
-  });
-  if (qrUrl && d.typeLabel === "FACTURA") {
-    try {
-      const MM = 2.83465; // 1 mm = 2.83465 pt
-      const QR_SIZE = 40 * MM;   // 40 mm
-      const QR_MARGIN = 6 * MM;  // 6 mm de margen interior blanco
-      const BOX = QR_SIZE + QR_MARGIN * 2;
-      const qrX = PAGE_W - M - BOX;
-      const qrY = M + 30; // por encima del footer
-      ensureSpace(BOX + 30);
-      // Caja blanca con borde
-      page.drawRectangle({ x: qrX, y: qrY, width: BOX, height: BOX, color: C.white, borderColor: C.border, borderWidth: 0.5 });
-      // Etiquetas
-      txt("QR tributario:", qrX, qrY + BOX + 4, helB, 7, C.light);
-      const qrPngDataUrl = await QRCode.toDataURL(qrUrl, { errorCorrectionLevel: "M", margin: 0, width: 512 });
-      const qrBytes = Uint8Array.from(atob(qrPngDataUrl.split(",")[1]), (c) => c.charCodeAt(0));
-      const qrImg = await doc.embedPng(qrBytes);
-      page.drawImage(qrImg, { x: qrX + QR_MARGIN, y: qrY + QR_MARGIN, width: QR_SIZE, height: QR_SIZE });
-      // Texto al pie
-      const caption = "Factura verificable en la sede";
-      const caption2 = "electronica de la AEAT";
-      const cw1 = hel.widthOfTextAtSize(caption, 6.5);
-      const cw2 = hel.widthOfTextAtSize(caption2, 6.5);
-      txt(caption, qrX + (BOX - cw1) / 2, qrY - 8, hel, 6.5, C.mid);
-      txt(caption2, qrX + (BOX - cw2) / 2, qrY - 16, hel, 6.5, C.mid);
-    } catch (err) {
-      console.error("[VERI*FACTU] Error generando QR:", err);
-    }
-  }
-
   // ─── FOOTER ─────────────────────────────────────
   const footerY = M + 10;
   line(M, footerY + 12, PAGE_W - M, footerY + 12, 0.5, C.border);
