@@ -1,5 +1,27 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { PDFDocument, StandardFonts, rgb, PDFFont, PDFPage } from "npm:pdf-lib@1.17.1";
+import QRCode from "npm:qrcode@1.5.3";
+
+// ─── VERI*FACTU — construcción URL del QR tributario ──────
+type VerifactuEnv = "sandbox" | "prod";
+const VERIFACTU_ENV: VerifactuEnv = "sandbox"; // TODO: cambiar a "prod" cuando se active la integración real
+const VERIFACTU_BASE_URLS: Record<VerifactuEnv, string> = {
+  sandbox: "https://prepro7.aeat.es/wlpl/TIKE-CONT/ValidarQR",
+  prod: "https://www2.agenciatributaria.gob.es/wlpl/TIKE-CONT/ValidarQR",
+};
+function buildVerifactuQRUrl(p: { nif: string; numserie: string; fecha: string; importe: number }): string | null {
+  if (!p.nif || !p.numserie || !p.fecha || p.importe == null) return null;
+  // fecha esperada en dd-mm-yyyy
+  let f = p.fecha;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(f)) { const [y, m, d] = f.split("-"); f = `${d}-${m}-${y}`; }
+  const qs = new URLSearchParams();
+  qs.set("nif", p.nif.trim().toUpperCase());
+  qs.set("numserie", String(p.numserie).trim().slice(0, 60));
+  qs.set("fecha", f);
+  qs.set("importe", Number(p.importe).toFixed(2));
+  return `${VERIFACTU_BASE_URLS[VERIFACTU_ENV]}?${qs.toString()}`;
+}
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
