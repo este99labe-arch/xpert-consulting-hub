@@ -230,6 +230,18 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEma
                 } catch (_) {}
               }}
             />
+            {/* QR tributario VERI*FACTU — sólo aplicable a facturas emitidas */}
+            {invoice.type === "INVOICE" && (account as any)?.tax_id && (
+              <div className="flex justify-end px-10 pb-8 pt-2 bg-white">
+                <QRTributario
+                  nif={(account as any).tax_id}
+                  numserie={invoiceNumber}
+                  fecha={invoice.issue_date}
+                  importe={invoice.amount_total}
+                  size={120}
+                />
+              </div>
+            )}
           </div>
         </div>
 
