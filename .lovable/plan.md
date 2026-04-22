@@ -1,88 +1,126 @@
 
 
-El usuario confirma el plan pero matiza la parte del sidebar: el filtrado por rol no debe ser una whitelist hardcodeada. Debe respetar dos niveles de activación:
+# Plan: Cumplimiento RGPD/GDPR para XpertConsulting
 
-1. **ADMIN → Cuenta cliente**: ya existe vía `account_modules` (tabla con `account_id` + `module_id` + `is_enabled`). Lo gestiona el `ModuleManager` desde MasterClients. Esto sigue igual.
-2. **MANAGER → Empleados de su cuenta**: NO existe hoy. Hay que añadirlo. El MANAGER decide qué módulos (de los activados por ADMIN para su cuenta) puede ver cada empleado.
+Vamos a abordar el cumplimiento RGPD en **dos capas**: (1) cifrado de datos sensibles a nivel de columna en la base de datos usando **pgsodium / pgcrypto AES-256**, y (2) los componentes legales/operativos imprescindibles que actualmente faltan (consentimiento de cookies, política de privacidad, derecho al acceso/portabilidad/olvido, registro de consentimientos y DPA).
 
-Esto implica una nueva tabla `user_modules` (asignación por usuario) y una pestaña nueva en Configuración para que el MANAGER gestione los permisos de módulo de cada empleado.
+---
 
-## Ajuste al plan original
+## 1. Cifrado AES-256 de datos sensibles (núcleo de tu petición)
 
-Sustituyo la sección **"4. Sidebar adaptativo por rol"** por esta versión jerárquica de 3 niveles:
+### Enfoque técnico
 
-### 4. Sidebar adaptativo en cascada (3 niveles)
+PostgreSQL en Supabase incluye la extensión **`pgcrypto`** (AES-256 nativo). Vamos a usar el patrón estándar de Supabase: **columnas cifradas + vista descifrada + función `SECURITY DEFINER`** que aplica RLS antes de descifrar. Así:
 
-La visibilidad de cada módulo se calcula como:
+- En la tabla, los datos sensibles se almacenan en columnas `bytea` cifradas (`pgp_sym_encrypt(...)` con AES-256).
+- Una **clave maestra** se guarda como secret de Supabase (`ENCRYPTION_KEY`) y se inyecta vía configuración de DB (`app.encryption_key`), nunca en código cliente.
+- Triggers `BEFORE INSERT/UPDATE` cifran automáticamente cuando llega texto plano desde el cliente.
+- Una función `decrypt_field(account_id, field_name, ciphertext)` valida que el usuario tenga acceso al `account_id` antes de devolver el valor en claro.
+- En cliente, en lugar de leer la columna directamente, se llama a un RPC `get_decrypted_client(id)` que devuelve el registro con campos sensibles ya descifrados (solo si RLS lo permite).
+
+### Campos a cifrar (clasificación)
+
+| Tabla | Campos cifrados |
+|---|---|
+| `business_clients` | `tax_id`, `email`, `phone`, `address`, `billing_address` |
+| `client_contacts` | `email`, `phone` |
+| `employee_profiles` | `dni`, `social_security_number`, `phone`, `address`, `date_of_birth` |
+| `accounts` | `tax_id`, `phone`, `address` |
+
+(Los nombres comerciales, ciudades genéricas y datos no-PII permanecen en claro para que la búsqueda y los índices sigan funcionando.)
+
+### Migración por pasos (sin romper datos existentes)
+
+1. Crear extensión `pgcrypto` y guardar `ENCRYPTION_KEY` como secret.
+2. Añadir columnas `<campo>_enc bytea` junto a las actuales.
+3. Migración one-shot que cifra los valores existentes y los copia a las nuevas columnas.
+4. Crear triggers de cifrado/descifrado y RPCs `get_decrypted_*`.
+5. Adaptar el frontend (ver sección 4) para leer vía RPC y escribir texto plano (el trigger cifra).
+6. Una vez verificado, **dropear** las columnas en claro.
+
+### Búsqueda sobre campos cifrados
+
+Para mantener búsqueda por NIF/email sin descifrar todo, añadimos columnas **hash determinista** (`tax_id_hash text` con `digest(lower(value), 'sha256')`) indexadas. La búsqueda se hace por hash exacto; las búsquedas parciales (`ilike`) sobre campos cifrados se desactivan y se reemplazan por búsqueda por nombre (no sensible) o NIF exacto.
+
+---
+
+## 2. Cookies y consentimiento
+
+- Banner de cookies (componente `CookieConsent`) con opciones: **Aceptar todas / Rechazar / Personalizar** (técnicas, analíticas, marketing).
+- Tabla `user_consents` (user_id, tipo, granted, version_politica, ip_hash, timestamp) para registrar prueba de consentimiento conforme al art. 7 RGPD.
+- Página `/legal/cookies` con detalle de cada cookie usada.
+
+---
+
+## 3. Páginas legales y derechos del usuario
+
+- `/legal/privacy` — Política de Privacidad (plantilla RGPD adaptada a XpertConsulting con tu rol de Encargado de Tratamiento).
+- `/legal/terms` — Términos de uso.
+- `/legal/dpa` — Acuerdo de Encargado de Tratamiento descargable PDF.
+- En `/app/settings` nueva pestaña **"Privacidad y Datos"** con:
+  - **Exportar mis datos** (derecho de portabilidad, art. 20) — descarga ZIP con JSON de todas las tablas asociadas al usuario, vía edge function `export_user_data`.
+  - **Solicitar eliminación de cuenta** (derecho al olvido, art. 17) — crea registro en nueva tabla `data_deletion_requests`, notifica a MASTER_ADMIN, ejecuta tras 30 días.
+  - **Ver consentimientos otorgados** y revocarlos.
+  - **Historial de accesos a mis datos** (lee `audit_logs` filtrado por el `user_id`).
+
+---
+
+## 4. Cambios en frontend (impacto en el código existente)
+
+- `ClientInfoTab.tsx`, `CreateBusinessClientDialog.tsx`, `AppClients.tsx`: lectura via RPC `get_decrypted_business_client(id)` / `list_business_clients_decrypted()`. Escritura sin cambios (el trigger cifra).
+- `EmployeesTab.tsx`, `CreateEmployeeDialog.tsx`, `AppSettings → ProfileTab`: idem con `employee_profiles`.
+- `client_contacts` en `ClientContactsTab.tsx`: idem.
+- Búsqueda por NIF: cambia de `.ilike("tax_id", ...)` a `.eq("tax_id_hash", sha256(input))`.
+- El patrón de **field locking** (NIF/DNI bloqueados por defecto) ya existente se mantiene como capa UX adicional.
+
+---
+
+## 5. Estructura de archivos nuevos
 
 ```text
-módulo visible para usuario =
-  está habilitado en account_modules (decisión ADMIN)
-  AND
-  (rol = MANAGER/MASTER_ADMIN  →  visible siempre)
-  OR
-  (rol = EMPLOYEE  →  asignado en user_modules para ese usuario)
+src/
+├── components/
+│   ├── legal/
+│   │   ├── CookieConsent.tsx
+│   │   └── PrivacySettingsTab.tsx
+├── pages/legal/
+│   ├── PrivacyPolicy.tsx
+│   ├── CookiePolicy.tsx
+│   ├── TermsOfService.tsx
+│   └── DPA.tsx
+├── lib/
+│   ├── encryption.ts        (helpers para hash de búsqueda en cliente)
+│   └── consent.ts           (gestión del banner)
+supabase/
+├── functions/
+│   ├── export_user_data/    (descarga ZIP de datos)
+│   └── process_deletion_request/
+└── migrations/
+    ├── XXXX_enable_pgcrypto_and_key.sql
+    ├── XXXX_encrypt_business_clients.sql
+    ├── XXXX_encrypt_employee_profiles.sql
+    ├── XXXX_encrypt_client_contacts.sql
+    ├── XXXX_user_consents_table.sql
+    └── XXXX_data_deletion_requests.sql
 ```
 
-Es decir:
-- **ADMIN** decide qué módulos tiene la cuenta cliente (ya existe, no se toca).
-- **MANAGER** ve siempre todos los módulos activos de su cuenta (no necesita asignación individual).
-- **EMPLOYEE** solo ve los módulos que su MANAGER le haya asignado explícitamente desde Configuración.
+---
 
-### Cambios técnicos añadidos
+## 6. Notas de seguridad importantes
 
-**Backend (migración SQL)**:
-- Nueva tabla `user_modules`:
-  - `id uuid PK`, `account_id uuid`, `user_id uuid`, `module_id uuid`, `is_enabled boolean default true`, `created_at timestamptz`
-  - Unique `(user_id, module_id)`
-  - RLS:
-    - MANAGER/MASTER_ADMIN de la cuenta: `ALL` sobre filas de su `account_id`.
-    - Usuario: `SELECT` sobre `user_id = auth.uid()`.
-- Módulos siempre visibles para EMPLOYEE sin asignación (Dashboard, Asistencia, Tareas, Configuración) → no se filtran por `user_modules`; se consideran "core".
-- Trigger opcional: al crear un nuevo empleado, copiar automáticamente los módulos por defecto que el MANAGER haya marcado (fase 2; no bloqueante).
+- La `ENCRYPTION_KEY` se almacenará como **secret de Supabase** y se cargará vía `ALTER DATABASE SET app.encryption_key`. **Una vez fijada, no debe cambiarse sin un script de re-cifrado** (lo dejamos documentado).
+- El cifrado a nivel de columna **no sustituye RLS**; trabajan en capas. Si un atacante consigue acceso de solo-lectura a la DB sin la clave, los campos sensibles aparecen como bytes ilegibles.
+- Los **PDFs de facturas y los CSV exportados** seguirán mostrando el NIF en claro (necesario funcionalmente). Esto es compatible con RGPD si el acceso al PDF está autenticado (ya lo está).
+- Backups de Supabase: están cifrados en reposo por defecto a nivel de plataforma.
 
-**Frontend**:
-- `src/layouts/ClientLayout.tsx` → la query de módulos activos se cruza con `user_modules` cuando `role === "EMPLOYEE"`. MANAGER y MASTER_ADMIN siguen viendo todos los módulos activos de la cuenta.
-- `src/pages/app/AppSettings.tsx` → nueva pestaña **"Permisos de empleados"** (solo MANAGER) que lista los empleados de la cuenta y, por cada uno, muestra los módulos activos de la cuenta con un Switch para activar/desactivar acceso. Reutiliza el patrón de `ModuleManager`.
-- `src/components/ProtectedRoute.tsx` → añadir guard que para EMPLOYEE comprueba si la ruta destino corresponde a un módulo asignado; si no, redirige a `/app/dashboard`. Las rutas core (dashboard, asistencia, tareas, settings) siempre permitidas.
+---
 
-### Resumen del flujo completo
+## 7. Plan de ejecución (orden de fases)
 
-```text
-[ADMIN]  Master > Clientes > [Empresa] > Módulos
-   │  activa: Facturación, RRHH, Inventario, ...
-   ▼
-account_modules (account_id, module_id, is_enabled=true)
-   │
-[MANAGER de esa empresa]  App > Configuración > Permisos
-   │  para Juan (EMPLOYEE): ✓ Asistencia, ✓ Tareas, ✗ Facturación
-   ▼
-user_modules (user_id=Juan, module_id, is_enabled=true)
-   │
-[Juan EMPLOYEE]  ve en sidebar:
-   - Dashboard (core)
-   - Asistencia (core)
-   - Tareas (core)
-   - Configuración (core)
-   - (NO ve Facturación porque su manager no se la asignó)
-```
+1. **Fase 1 — Cifrado**: extensión + clave + columnas cifradas + triggers + RPCs en `business_clients`, `client_contacts`, `employee_profiles`, `accounts`. Migración de datos existentes. Adaptación de los componentes que los leen.
+2. **Fase 2 — Consentimiento**: banner de cookies + tabla `user_consents` + página de política de cookies.
+3. **Fase 3 — Páginas legales**: privacy, terms, DPA, cookies (texto plantilla que tú podrás editar).
+4. **Fase 4 — Derechos del usuario**: pestaña "Privacidad y Datos" + edge functions de exportación y eliminación.
 
-## Archivos afectados (actualizado)
-
-Se mantienen todos los del plan original, más:
-
-- `supabase/migrations/<nuevo>.sql` — tabla `user_modules` + RLS.
-- `src/pages/app/AppSettings.tsx` — nueva pestaña "Permisos de empleados" (solo MANAGER).
-- `src/components/settings/EmployeeModulesTab.tsx` — **nuevo**, gestor de módulos por empleado.
-- `src/layouts/ClientLayout.tsx` — cruce con `user_modules` para EMPLOYEE.
-- `src/components/ProtectedRoute.tsx` — guard de ruta basado en módulos asignados.
-
-El resto del plan (dashboards diferenciados por rol Admin/Manager/Employee con sus widgets) queda igual.
-
-## Cómo probarlo (actualizado)
-
-1. **ADMIN**: en Master > Clientes activa Facturación + RRHH + Inventario para la cuenta de prueba.
-2. **MANAGER** de esa cuenta: en App > Configuración > Permisos crea un empleado y le asigna solo Asistencia y Tareas.
-3. **EMPLOYEE** (ese usuario): el sidebar muestra solo Dashboard + Asistencia + Tareas + Configuración. Acceder a `/app/invoices` redirige al dashboard. Su Dashboard es la versión personal (jornada, vacaciones, tareas).
-4. El MANAGER, en cambio, sigue viendo los 3 módulos activos de la cuenta sin necesidad de auto-asignación.
+¿Quieres que ejecutemos las **4 fases completas** o prefieres empezar solo por la **Fase 1 (cifrado AES-256)** que es lo que has pedido explícitamente, y luego decidimos sobre las demás?
 
