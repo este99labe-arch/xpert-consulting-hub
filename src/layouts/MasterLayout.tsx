@@ -13,6 +13,7 @@ import {
   SidebarInset,
 } from "@/components/ui/sidebar";
 import { LayoutDashboard, Users, Settings, LogOut, ArrowRightLeft, BookOpen } from "lucide-react";
+import xpertLogo from "@/assets/xpertconsulting-logo.png";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
@@ -36,8 +37,8 @@ const MasterLayout = () => {
         <Sidebar collapsible="icon" className="border-r-0">
           <SidebarHeader className="p-5 border-b border-sidebar-border">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground text-sm font-bold shadow-md">
-                XC
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-md p-1">
+                <img src={xpertLogo} alt="XpertConsulting" className="h-full w-full object-contain" />
               </div>
               <div>
                 <p className="text-sm font-semibold text-sidebar-foreground">XpertConsulting</p>

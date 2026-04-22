@@ -33,6 +33,7 @@ import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import OnboardingTour from "@/components/shared/OnboardingTour";
 import HealthCheck from "@/components/shared/HealthCheck";
 import MyTasksBadge from "@/components/tasks/MyTasksBadge";
+import xpertLogo from "@/assets/xpertconsulting-logo.png";
 
 const moduleIcons: Record<string, any> = {
   DASHBOARD: LayoutDashboard,
@@ -73,7 +74,7 @@ const SidebarInner = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("accounts")
-        .select("name")
+        .select("name, type")
         .eq("id", accountId!)
         .single();
       if (error) throw error;
@@ -84,6 +85,7 @@ const SidebarInner = () => {
 
   const companyName = accountInfo?.name || "Mi Empresa";
   const companyInitials = companyName.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase();
+  const isXpertAccount = accountInfo?.type === "MASTER";
 
   const CORE_CODES = ["DASHBOARD", "ATTENDANCE", "TASKS", "SETTINGS"];
 
@@ -130,9 +132,15 @@ const SidebarInner = () => {
                 className="h-auto py-2 hover:bg-transparent cursor-default"
                 tooltip={companyName}
               >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground text-xs font-bold">
-                  {companyInitials}
-                </div>
+                {isXpertAccount ? (
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white p-0.5">
+                    <img src={xpertLogo} alt="XpertConsulting" className="h-full w-full object-contain" />
+                  </div>
+                ) : (
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground text-xs font-bold">
+                    {companyInitials}
+                  </div>
+                )}
                 <div className="flex flex-col gap-0.5 leading-none overflow-hidden">
                   <span className="text-sm font-semibold truncate">{companyName}</span>
                   <span className="text-[10px] text-sidebar-foreground/50">Panel Cliente</span>
