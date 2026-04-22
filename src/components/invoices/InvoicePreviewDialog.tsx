@@ -230,8 +230,8 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEma
                 } catch (_) {}
               }}
             />
-            {/* QR tributario VERI*FACTU — sólo aplicable a facturas emitidas */}
-            {invoice.type === "INVOICE" && (account as any)?.tax_id && (
+            {/* QR tributario VERI*FACTU — sólo se genera cuando la factura está PAGADA (estado final) */}
+            {invoice.type === "INVOICE" && invoice.status === "PAID" && (account as any)?.tax_id && (
               <div className="flex justify-end px-10 pb-8 pt-2 bg-white">
                 <QRTributario
                   nif={(account as any).tax_id}
@@ -240,6 +240,20 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEma
                   importe={invoice.amount_total}
                   size={120}
                 />
+              </div>
+            )}
+            {invoice.type === "INVOICE" && invoice.status !== "PAID" && (
+              <div className="flex justify-end px-10 pb-8 pt-2 bg-white">
+                <p className="text-xs text-muted-foreground italic">
+                  El QR tributario VERI*FACTU se generará cuando la factura pase a estado <strong>Pagada</strong>.
+                </p>
+              </div>
+            )}
+            {invoice.type === "INVOICE" && invoice.status === "PAID" && !(account as any)?.tax_id && (
+              <div className="flex justify-end px-10 pb-8 pt-2 bg-white">
+                <p className="text-xs text-destructive italic">
+                  Configura el NIF/CIF de tu empresa en Ajustes para generar el QR tributario.
+                </p>
               </div>
             )}
           </div>
