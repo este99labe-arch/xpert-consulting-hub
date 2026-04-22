@@ -2640,6 +2640,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      reencrypt_all_with_key: {
+        Args: { _new_key: string; _old_key: string }
+        Returns: Json
+      }
       xred_is_match_participant: {
         Args: { _interaction_id: string; _user_id: string }
         Returns: boolean
