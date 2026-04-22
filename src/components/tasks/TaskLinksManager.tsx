@@ -6,8 +6,21 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, X, Building2, FileText, Receipt, BookOpen, Package, FileBarChart } from "lucide-react";
+import { Plus, X, Building2, FileText, Receipt, BookOpen, Package, FileBarChart, ExternalLink } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
+
+const linkHref = (entityType: string, entityId: string): string | null => {
+  switch (entityType) {
+    case "CLIENT": return `/app/clients/${entityId}`;
+    case "INVOICE":
+    case "EXPENSE":
+    case "QUOTE": return `/app/invoices`;
+    case "JOURNAL_ENTRY": return `/app/accounting`;
+    case "PRODUCT": return `/app/inventory`;
+    default: return null;
+  }
+};
 
 export type LinkEntityType = "CLIENT" | "INVOICE" | "EXPENSE" | "QUOTE" | "JOURNAL_ENTRY" | "PRODUCT";
 
