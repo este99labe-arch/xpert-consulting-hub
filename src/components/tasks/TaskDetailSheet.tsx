@@ -210,55 +210,10 @@ const TaskDetailSheet = ({ task, columns, members, clients, onClose }: Props) =>
               }}
             />
           </div>
-          <div>
-            <Label className="text-xs">Tipo entidad</Label>
-            <Select
-              value={task.entity_type || "NONE"}
-              onValueChange={(v) =>
-                update.mutate({
-                  id: task.id,
-                  updates: {
-                    entity_type: v === "NONE" ? null : (v as any),
-                    entity_id: v === "NONE" ? null : task.entity_id,
-                    client_id: v === "CLIENT" ? task.client_id : null,
-                  },
-                })
-              }
-            >
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {ENTITY_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          {task.entity_type === "CLIENT" && (
-            <div>
-              <Label className="text-xs">Cliente</Label>
-              <Select
-                value={task.client_id || "NONE"}
-                onValueChange={(v) =>
-                  update.mutate({
-                    id: task.id,
-                    updates: {
-                      client_id: v === "NONE" ? null : v,
-                      entity_id: v === "NONE" ? null : v,
-                      entity_label: v === "NONE" ? null : clients.find((c) => c.id === v)?.name || null,
-                    },
-                  })
-                }
-              >
-                <SelectTrigger><SelectValue placeholder="Selecciona" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="NONE">Ninguno</SelectItem>
-                  {clients.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+        </div>
+
+        <div className="mt-4">
+          <TaskLinksManager taskId={task.id} />
         </div>
 
         <div className="mt-4">
