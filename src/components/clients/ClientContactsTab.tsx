@@ -31,15 +31,14 @@ const ClientContactsTab = ({ clientId, accountId, isAdmin }: Props) => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const { data: contacts = [], isLoading } = useQuery({
-    queryKey: ["client-contacts", clientId],
+    queryKey: ["client-contacts-decrypted", clientId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("client_contacts")
-        .select("*")
-        .eq("client_id", clientId)
-        .order("is_primary", { ascending: false });
+      const { data, error } = await supabase.rpc("list_client_contacts_decrypted", {
+        _client_id: clientId,
+      });
       if (error) throw error;
-      return data || [];
+      // La RPC devuelve "job_position"; lo mapeamos a "position" para no tocar el resto del componente
+      return (data as any[] || []).map((c) => ({ ...c, position: c.job_position }));
     },
   });
 

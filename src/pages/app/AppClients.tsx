@@ -228,7 +228,7 @@ const AppClients = () => {
         accountId={accountId!}
         onSuccess={() => {
           setShowCreate(false);
-          queryClient.invalidateQueries({ queryKey: ["business-clients"] });
+          queryClient.invalidateQueries({ queryKey: ["business-clients-decrypted"] });
         }}
       />
 
@@ -236,7 +236,7 @@ const AppClients = () => {
         open={!!deletingClientId}
         clientId={deletingClientId}
         onClose={() => setDeletingClientId(null)}
-        onSuccess={() => queryClient.invalidateQueries({ queryKey: ["business-clients"] })}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ["business-clients-decrypted"] })}
       />
     </div>
   );
