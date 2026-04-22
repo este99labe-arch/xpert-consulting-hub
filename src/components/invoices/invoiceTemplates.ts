@@ -57,6 +57,8 @@ export interface InvoiceData {
     phone?: string;
   };
   payments?: { amount: number; date: string; method: string }[];
+  /** Data URL (PNG) del QR tributario VERI*FACTU. Si está presente se renderiza al inicio de la factura. */
+  qrDataUrl?: string;
 }
 
 const fmtMoney = (n: number) => Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
@@ -430,6 +432,40 @@ function renderTemplate(d: InvoiceData, t: Theme): string {
       color: ${t.muted};
       font-size: 10px;
     }
+    /* ─── QR tributario VERI*FACTU ─── */
+    .verifactu-qr {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 18px auto;
+      padding: 6mm;
+      background: #ffffff;
+      border: 1px solid ${t.softBorder};
+      border-radius: 6px;
+      width: fit-content;
+    }
+    .verifactu-qr-label {
+      font-size: 8.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: ${t.muted};
+      margin-bottom: 4px;
+    }
+    .verifactu-qr img {
+      width: 40mm;
+      height: 40mm;
+      display: block;
+    }
+    .verifactu-qr-caption {
+      margin-top: 4px;
+      font-size: 8.5px;
+      color: ${t.muted};
+      text-align: center;
+      max-width: 40mm;
+      line-height: 1.3;
+    }
     @media print {
       html, body { width: 210mm; max-width: 210mm; margin: 0; }
       .page { min-height: 297mm; }
@@ -438,6 +474,12 @@ function renderTemplate(d: InvoiceData, t: Theme): string {
 </head>
 <body>
   <div class="page">
+    ${d.qrDataUrl ? `
+    <div class="verifactu-qr">
+      <div class="verifactu-qr-label">QR tributario:</div>
+      <img src="${d.qrDataUrl}" alt="QR tributario VERI*FACTU" />
+      <div class="verifactu-qr-caption">Factura verificable en la sede electrónica de la AEAT</div>
+    </div>` : ""}
     <div class="header">
       <div>
         <div class="brand">${esc(d.company.name)}</div>

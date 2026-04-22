@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import InvoiceAttachment from "@/components/invoices/InvoiceAttachment";
 import { renderInvoiceHtml, INVOICE_TEMPLATES, type InvoiceTemplateId, type InvoiceData } from "./invoiceTemplates";
-import QRTributario from "./QRTributario";
+import { tryBuildVerifactuQRUrl } from "@/lib/verifactu";
+import QRCode from "qrcode";
 
 const statusLabels: Record<string, string> = {
   DRAFT: "Borrador", SENT: "Enviada", PAID: "Pagada", PARTIALLY_PAID: "Pago parcial", OVERDUE: "Vencida",
@@ -30,6 +31,8 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEma
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const { accountId } = useAuth();
   const [templateOverride, setTemplateOverride] = useState<InvoiceTemplateId | null>(null);
+  const [qrDataUrl, setQrDataUrl] = useState<string | undefined>(undefined);
+  const [qrError, setQrError] = useState<string | null>(null);
 
   const { data: account } = useQuery({
     queryKey: ["my-account", accountId],
@@ -86,6 +89,37 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEma
     },
     enabled: !!invoice?.id && open,
   });
+
+  // Generar dataURL del QR VERI*FACTU sólo cuando la factura está PAGADA y la cuenta tiene NIF
+  const shouldRenderQr =
+    !!invoice &&
+    invoice.type === "INVOICE" &&
+    invoice.status === "PAID" &&
+    !!(account as any)?.tax_id;
+
+  useEffect(() => {
+    let cancelled = false;
+    setQrError(null);
+    if (!shouldRenderQr || !invoice) {
+      setQrDataUrl(undefined);
+      return;
+    }
+    const { url, error } = tryBuildVerifactuQRUrl({
+      nif: (account as any).tax_id,
+      numserie: invoice.invoice_number || invoice.id.slice(0, 8).toUpperCase(),
+      fecha: invoice.issue_date,
+      importe: invoice.amount_total,
+    });
+    if (error || !url) {
+      setQrError(error?.message || "No se pudo generar el QR.");
+      setQrDataUrl(undefined);
+      return;
+    }
+    QRCode.toDataURL(url, { errorCorrectionLevel: "M", margin: 0, width: 512 })
+      .then((dataUrl) => { if (!cancelled) setQrDataUrl(dataUrl); })
+      .catch((e) => { if (!cancelled) { setQrError(e?.message || "Error generando QR"); setQrDataUrl(undefined); } });
+    return () => { cancelled = true; };
+  }, [shouldRenderQr, (account as any)?.tax_id, invoice?.invoice_number, invoice?.id, invoice?.issue_date, invoice?.amount_total]);
 
   if (!invoice) return null;
 
@@ -147,6 +181,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEma
     })),
   };
 
+  invoiceData.qrDataUrl = qrDataUrl;
   const html = renderInvoiceHtml(template, invoiceData);
 
   const handlePrint = () => {
@@ -230,34 +265,24 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEma
                 } catch (_) {}
               }}
             />
-            {/* QR tributario VERI*FACTU — sólo se genera cuando la factura está PAGADA (estado final) */}
-            {invoice.type === "INVOICE" && invoice.status === "PAID" && (account as any)?.tax_id && (
-              <div className="flex justify-end px-10 pb-8 pt-2 bg-white">
-                <QRTributario
-                  nif={(account as any).tax_id}
-                  numserie={invoiceNumber}
-                  fecha={invoice.issue_date}
-                  importe={invoice.amount_total}
-                  size={120}
-                />
-              </div>
-            )}
-            {invoice.type === "INVOICE" && invoice.status !== "PAID" && (
-              <div className="flex justify-end px-10 pb-8 pt-2 bg-white">
-                <p className="text-xs text-muted-foreground italic">
-                  El QR tributario VERI*FACTU se generará cuando la factura pase a estado <strong>Pagada</strong>.
-                </p>
-              </div>
-            )}
-            {invoice.type === "INVOICE" && invoice.status === "PAID" && !(account as any)?.tax_id && (
-              <div className="flex justify-end px-10 pb-8 pt-2 bg-white">
-                <p className="text-xs text-destructive italic max-w-[320px] text-right">
-                  Para generar el QR tributario VERI*FACTU es obligatorio el <strong>NIF/CIF del emisor</strong> (tu empresa).
-                  Configúralo en <a href="/app/settings" className="underline font-medium">Ajustes → Mi Empresa</a>.
-                </p>
-              </div>
-            )}
           </div>
+          {/* Notas informativas (fuera del documento) */}
+          {invoice.type === "INVOICE" && invoice.status !== "PAID" && (
+            <p className="mt-3 text-xs text-muted-foreground italic text-center max-w-[860px] mx-auto">
+              El QR tributario VERI*FACTU se generará automáticamente cuando la factura pase a estado <strong>Pagada</strong>.
+            </p>
+          )}
+          {invoice.type === "INVOICE" && invoice.status === "PAID" && !(account as any)?.tax_id && (
+            <p className="mt-3 text-xs text-destructive italic text-center max-w-[860px] mx-auto">
+              Para generar el QR tributario VERI*FACTU es obligatorio el <strong>NIF/CIF del emisor</strong>.
+              Configúralo en <a href="/app/settings" className="underline font-medium">Ajustes → Mi Empresa</a>.
+            </p>
+          )}
+          {qrError && shouldRenderQr && (
+            <p className="mt-3 text-xs text-destructive italic text-center max-w-[860px] mx-auto">
+              QR tributario: {qrError}
+            </p>
+          )}
         </div>
 
         {/* Email history */}
