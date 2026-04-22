@@ -161,6 +161,9 @@ const MasterSettings = () => {
           <TabsTrigger value="account" className="gap-2">
             <Building2 className="h-4 w-4" /> Cuenta
           </TabsTrigger>
+          <TabsTrigger value="encryption" className="gap-2">
+            <Lock className="h-4 w-4" /> Cifrado RGPD
+          </TabsTrigger>
         </TabsList>
 
         {/* USERS TAB */}
@@ -288,6 +291,60 @@ const MasterSettings = () => {
                   <p className="text-sm font-medium">{users.length}</p>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ENCRYPTION TAB */}
+        <TabsContent value="encryption">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Lock className="h-5 w-5 text-primary" />
+                Cifrado AES-256 de datos personales (RGPD)
+              </CardTitle>
+              <CardDescription>
+                Inicializa el cifrado de los datos PII (NIF, DNI, email, teléfono, dirección, etc.) con tu clave maestra <code className="text-xs bg-muted px-1 py-0.5 rounded">ENCRYPTION_KEY</code>.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="rounded-md border bg-muted/30 p-4 space-y-2 text-sm">
+                <p className="font-medium">¿Qué hace este botón?</p>
+                <ul className="list-disc list-inside space-y-1 text-muted-foreground text-xs">
+                  <li>Re-cifra todos los datos PII existentes con tu clave maestra real.</li>
+                  <li>Sustituye la clave temporal por defecto del sistema.</li>
+                  <li>A partir de ahora, cualquier escritura se cifrará con tu clave.</li>
+                </ul>
+                <p className="text-amber-600 dark:text-amber-400 text-xs pt-2">
+                  ⚠ Solo debe ejecutarse una vez. Una vez activada la clave, NO debe cambiarse sin un script de re-cifrado.
+                </p>
+              </div>
+
+              <Button onClick={handleSetupEncryption} disabled={encryptionLoading}>
+                {encryptionLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                {!encryptionLoading && <Lock className="h-4 w-4 mr-2" />}
+                Inicializar cifrado con mi clave maestra
+              </Button>
+
+              {encryptionResult?.success && (
+                <div className="rounded-md border border-green-500/30 bg-green-500/10 p-4 space-y-2">
+                  <div className="flex items-center gap-2 text-green-700 dark:text-green-400 font-medium">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Cifrado inicializado correctamente
+                  </div>
+                  {encryptionResult.reencrypted && (
+                    <div className="text-xs text-muted-foreground space-y-0.5">
+                      <p>Registros re-cifrados:</p>
+                      <ul className="list-disc list-inside ml-2">
+                        <li>Clientes comerciales: {encryptionResult.reencrypted.business_clients}</li>
+                        <li>Contactos de cliente: {encryptionResult.reencrypted.client_contacts}</li>
+                        <li>Empleados: {encryptionResult.reencrypted.employee_profiles}</li>
+                        <li>Cuentas: {encryptionResult.reencrypted.accounts}</li>
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
