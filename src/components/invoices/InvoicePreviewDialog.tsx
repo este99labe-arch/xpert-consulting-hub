@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import InvoiceAttachment from "@/components/invoices/InvoiceAttachment";
 import { renderInvoiceHtml, INVOICE_TEMPLATES, type InvoiceTemplateId, type InvoiceData } from "./invoiceTemplates";
+import QRTributario from "./QRTributario";
 
 const statusLabels: Record<string, string> = {
   DRAFT: "Borrador", SENT: "Enviada", PAID: "Pagada", PARTIALLY_PAID: "Pago parcial", OVERDUE: "Vencida",
