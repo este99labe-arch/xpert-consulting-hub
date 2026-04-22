@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useColumnMutations, useTaskColumns } from "./hooks";
 import { COLUMN_COLOR_PRESETS } from "./types";
+import ColumnRow from "./ColumnRow";
 
 interface Props {
   open: boolean;
@@ -59,32 +60,22 @@ const ColumnsConfigDialog = ({ open, onOpenChange }: Props) => {
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Configurar tablero</DialogTitle>
+          <DialogDescription>Edita, reordena, añade o elimina columnas del tablero.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-2">
           {columns.map((col, i) => (
-            <div key={col.id} className="flex items-center gap-2 p-2 rounded border">
-              <input
-                type="color"
-                value={col.color}
-                onChange={(e) => update.mutate({ id: col.id, updates: { color: e.target.value } })}
-                className="h-7 w-7 rounded cursor-pointer border-0 p-0"
-              />
-              <Input
-                value={col.name}
-                onChange={(e) => update.mutate({ id: col.id, updates: { name: e.target.value } })}
-                className="h-8 flex-1"
-              />
-              <Button variant="ghost" size="sm" onClick={() => move(col.id, -1)} disabled={i === 0}>
-                <ArrowUp className="h-3.5 w-3.5" />
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => move(col.id, 1)} disabled={i === columns.length - 1}>
-                <ArrowDown className="h-3.5 w-3.5" />
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => del(col.id)}>
-                <Trash2 className="h-3.5 w-3.5 text-destructive" />
-              </Button>
-            </div>
+            <ColumnRow
+              key={col.id}
+              id={col.id}
+              name={col.name}
+              color={col.color}
+              isFirst={i === 0}
+              isLast={i === columns.length - 1}
+              onUpdate={(updates) => update.mutate({ id: col.id, updates })}
+              onMove={(dir) => move(col.id, dir)}
+              onDelete={() => del(col.id)}
+            />
           ))}
         </div>
 
