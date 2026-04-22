@@ -206,11 +206,23 @@ const TaskLinksManager = ({ taskId, draftLinks, onDraftChange }: Props) => {
       <div className="flex flex-wrap gap-1.5">
         {linksToShow.map((l, idx) => {
           const Icon = getIcon(l.entity_type);
+          const href = linkHref(l.entity_type, l.entity_id);
           return (
             <Badge key={isDraft ? idx : (l as TaskLink).id} variant="secondary" className="gap-1 max-w-full">
               <Icon className="h-3 w-3 shrink-0" />
               <span className="text-[10px] uppercase opacity-70">{getTypeLabel(l.entity_type)}:</span>
-              <span className="truncate max-w-[200px]">{l.entity_label || l.entity_id.slice(0, 8)}</span>
+              {href && !isDraft ? (
+                <Link
+                  to={href}
+                  className="truncate max-w-[200px] hover:text-primary hover:underline inline-flex items-center gap-1"
+                  title={`Ir a ${getTypeLabel(l.entity_type)}`}
+                >
+                  {l.entity_label || l.entity_id.slice(0, 8)}
+                  <ExternalLink className="h-2.5 w-2.5 opacity-60" />
+                </Link>
+              ) : (
+                <span className="truncate max-w-[200px]">{l.entity_label || l.entity_id.slice(0, 8)}</span>
+              )}
               <button
                 onClick={() => handleRemove(isDraft ? idx : (l as TaskLink).id)}
                 className="ml-0.5 hover:text-destructive"
