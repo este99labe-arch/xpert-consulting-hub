@@ -48,7 +48,7 @@ const ClientContactsTab = ({ clientId, accountId, isAdmin }: Props) => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["client-contacts", clientId] });
+      queryClient.invalidateQueries({ queryKey: ["client-contacts-decrypted", clientId] });
       toast({ title: "Contacto eliminado" });
       setDeletingId(null);
     },
@@ -129,7 +129,7 @@ const ClientContactsTab = ({ clientId, accountId, isAdmin }: Props) => {
         onSuccess={() => {
           setShowForm(false);
           setEditing(null);
-          queryClient.invalidateQueries({ queryKey: ["client-contacts", clientId] });
+          queryClient.invalidateQueries({ queryKey: ["client-contacts-decrypted", clientId] });
         }}
       />
 
