@@ -2498,6 +2498,7 @@ export type Database = {
       _encrypt_text: { Args: { _plain: string }; Returns: string }
       _get_encryption_key: { Args: never; Returns: string }
       _hash_search: { Args: { _value: string }; Returns: string }
+      _install_encryption_key: { Args: { _key: string }; Returns: undefined }
       ensure_default_folders: {
         Args: { _account_id: string; _created_by: string; _user_id: string }
         Returns: undefined
@@ -2639,6 +2640,10 @@ export type Database = {
           _entity_type: string
         }
         Returns: undefined
+      }
+      reencrypt_all_with_key: {
+        Args: { _new_key: string; _old_key: string }
+        Returns: Json
       }
       xred_is_match_participant: {
         Args: { _interaction_id: string; _user_id: string }
