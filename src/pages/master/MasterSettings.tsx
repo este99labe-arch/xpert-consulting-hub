@@ -315,7 +315,7 @@ const MasterSettings = () => {
                   <li>Sustituye la clave temporal por defecto del sistema.</li>
                   <li>A partir de ahora, cualquier escritura se cifrará con tu clave.</li>
                 </ul>
-                <p className="text-amber-600 dark:text-amber-400 text-xs pt-2">
+                <p className="text-destructive text-xs pt-2">
                   ⚠ Solo debe ejecutarse una vez. Una vez activada la clave, NO debe cambiarse sin un script de re-cifrado.
                 </p>
               </div>
@@ -327,8 +327,8 @@ const MasterSettings = () => {
               </Button>
 
               {encryptionResult?.success && (
-                <div className="rounded-md border border-green-500/30 bg-green-500/10 p-4 space-y-2">
-                  <div className="flex items-center gap-2 text-green-700 dark:text-green-400 font-medium">
+                <div className="rounded-md border border-primary/30 bg-primary/10 p-4 space-y-2">
+                  <div className="flex items-center gap-2 text-primary font-medium">
                     <CheckCircle2 className="h-4 w-4" />
                     Cifrado inicializado correctamente
                   </div>
