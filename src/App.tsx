@@ -29,6 +29,8 @@ import AppInventory from "@/pages/app/AppInventory";
 import AppReports from "@/pages/app/AppReports";
 import AppTasks from "@/pages/app/AppTasks";
 import AppXpertRed from "@/pages/app/AppXpertRed";
+import CookiePolicy from "@/pages/legal/CookiePolicy";
+import CookieConsent from "@/components/legal/CookieConsent";
 
 const queryClient = new QueryClient();
 
@@ -39,11 +41,13 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <CookieConsent />
           <Routes>
             <Route path="/" element={<AuthRedirect />} />
             <Route path="/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/legal/cookies" element={<CookiePolicy />} />
 
             {/* Master Admin routes */}
             <Route
