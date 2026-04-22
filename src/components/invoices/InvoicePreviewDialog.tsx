@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import InvoiceAttachment from "@/components/invoices/InvoiceAttachment";
 import { renderInvoiceHtml, INVOICE_TEMPLATES, type InvoiceTemplateId, type InvoiceData } from "./invoiceTemplates";
-import QRTributario from "./QRTributario";
+import { tryBuildVerifactuQRUrl } from "@/lib/verifactu";
+import QRCode from "qrcode";
 
 const statusLabels: Record<string, string> = {
   DRAFT: "Borrador", SENT: "Enviada", PAID: "Pagada", PARTIALLY_PAID: "Pago parcial", OVERDUE: "Vencida",
