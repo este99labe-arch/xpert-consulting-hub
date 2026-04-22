@@ -45,8 +45,8 @@ const AppClientDetail = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["business-client", id] });
-      queryClient.invalidateQueries({ queryKey: ["business-clients"] });
+      queryClient.invalidateQueries({ queryKey: ["business-client-decrypted", id] });
+      queryClient.invalidateQueries({ queryKey: ["business-clients-decrypted"] });
       toast({ title: "Cliente actualizado" });
     },
     onError: (err: any) => {
