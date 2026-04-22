@@ -1947,6 +1947,47 @@ export type Database = {
           },
         ]
       }
+      task_links: {
+        Row: {
+          account_id: string
+          created_at: string
+          created_by: string
+          entity_id: string
+          entity_label: string | null
+          entity_type: string
+          id: string
+          task_id: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          created_by: string
+          entity_id: string
+          entity_label?: string | null
+          entity_type: string
+          id?: string
+          task_id: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          created_by?: string
+          entity_id?: string
+          entity_label?: string | null
+          entity_type?: string
+          id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_links_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "reminders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_accounts: {
         Row: {
           account_id: string

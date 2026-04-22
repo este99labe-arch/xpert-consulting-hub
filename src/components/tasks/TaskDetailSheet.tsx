@@ -15,8 +15,9 @@ import { Archive, ArchiveRestore, Trash2, X, Send } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTaskMutations, useTaskComments, useTaskActivity } from "./hooks";
-import { PRIORITIES, ENTITY_META, getPriorityMeta, initials, type Task, type TaskColumn } from "./types";
+import { PRIORITIES, getPriorityMeta, initials, type Task, type TaskColumn } from "./types";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
+import TaskLinksManager from "./TaskLinksManager";
 
 interface Props {
   task: Task | null;
@@ -25,15 +26,6 @@ interface Props {
   clients: { id: string; name: string }[];
   onClose: () => void;
 }
-
-const ENTITY_OPTIONS: { value: string; label: string }[] = [
-  { value: "NONE", label: "Ninguna" },
-  { value: "CLIENT", label: "Cliente" },
-  { value: "INVOICE", label: "Factura" },
-  { value: "EXPENSE", label: "Gasto" },
-  { value: "JOURNAL_ENTRY", label: "Asiento" },
-  { value: "QUOTE", label: "Presupuesto" },
-];
 
 const TaskDetailSheet = ({ task, columns, members, clients, onClose }: Props) => {
   const { user } = useAuth();
@@ -218,55 +210,10 @@ const TaskDetailSheet = ({ task, columns, members, clients, onClose }: Props) =>
               }}
             />
           </div>
-          <div>
-            <Label className="text-xs">Tipo entidad</Label>
-            <Select
-              value={task.entity_type || "NONE"}
-              onValueChange={(v) =>
-                update.mutate({
-                  id: task.id,
-                  updates: {
-                    entity_type: v === "NONE" ? null : (v as any),
-                    entity_id: v === "NONE" ? null : task.entity_id,
-                    client_id: v === "CLIENT" ? task.client_id : null,
-                  },
-                })
-              }
-            >
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {ENTITY_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          {task.entity_type === "CLIENT" && (
-            <div>
-              <Label className="text-xs">Cliente</Label>
-              <Select
-                value={task.client_id || "NONE"}
-                onValueChange={(v) =>
-                  update.mutate({
-                    id: task.id,
-                    updates: {
-                      client_id: v === "NONE" ? null : v,
-                      entity_id: v === "NONE" ? null : v,
-                      entity_label: v === "NONE" ? null : clients.find((c) => c.id === v)?.name || null,
-                    },
-                  })
-                }
-              >
-                <SelectTrigger><SelectValue placeholder="Selecciona" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="NONE">Ninguno</SelectItem>
-                  {clients.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+        </div>
+
+        <div className="mt-4">
+          <TaskLinksManager taskId={task.id} />
         </div>
 
         <div className="mt-4">
