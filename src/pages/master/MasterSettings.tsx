@@ -17,7 +17,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Loader2, KeyRound, UserPlus, AlertCircle, Users, Building2, ShieldCheck } from "lucide-react";
+import { Loader2, KeyRound, UserPlus, AlertCircle, Users, Building2, ShieldCheck, Lock, CheckCircle2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 const MasterSettings = () => {
@@ -36,6 +36,27 @@ const MasterSettings = () => {
   const [newUserAccount, setNewUserAccount] = useState("");
   const [createLoading, setCreateLoading] = useState(false);
   const [createError, setCreateError] = useState("");
+
+  // GDPR encryption setup
+  const [encryptionLoading, setEncryptionLoading] = useState(false);
+  const [encryptionResult, setEncryptionResult] = useState<any>(null);
+
+  const handleSetupEncryption = async () => {
+    if (!confirm("Esto inicializará el cifrado AES-256 de los datos PII con tu clave maestra ENCRYPTION_KEY. Solo debe ejecutarse una vez. ¿Continuar?")) return;
+    setEncryptionLoading(true);
+    setEncryptionResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("gdpr_setup_encryption", { body: {} });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setEncryptionResult(data);
+      toast({ title: "Cifrado inicializado", description: "Los datos PII están protegidos con tu clave maestra." });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setEncryptionLoading(false);
+    }
+  };
 
   const { data: users = [], isLoading: usersLoading } = useQuery({
     queryKey: ["admin-users"],
