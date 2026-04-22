@@ -251,8 +251,9 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEma
             )}
             {invoice.type === "INVOICE" && invoice.status === "PAID" && !(account as any)?.tax_id && (
               <div className="flex justify-end px-10 pb-8 pt-2 bg-white">
-                <p className="text-xs text-destructive italic">
-                  Configura el NIF/CIF de tu empresa en Ajustes para generar el QR tributario.
+                <p className="text-xs text-destructive italic max-w-[320px] text-right">
+                  Para generar el QR tributario VERI*FACTU es obligatorio el <strong>NIF/CIF del emisor</strong> (tu empresa).
+                  Configúralo en <a href="/app/settings" className="underline font-medium">Ajustes → Mi Empresa</a>.
                 </p>
               </div>
             )}
