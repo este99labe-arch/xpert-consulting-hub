@@ -5,8 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { useTaskMutations, useTeamMembers, useClientsLite, useTaskColumns } from "./hooks";
 import { PRIORITIES } from "./types";
+import TaskLinksManager, { type LinkEntityType } from "./TaskLinksManager";
+import { toast } from "@/hooks/use-toast";
 
 interface Props {
   open: boolean;
@@ -14,7 +18,10 @@ interface Props {
   defaultClientId?: string;
 }
 
+type DraftLink = { entity_type: LinkEntityType; entity_id: string; entity_label: string | null };
+
 const CreateTaskDialog = ({ open, onOpenChange, defaultClientId }: Props) => {
+  const { user, accountId } = useAuth();
   const { data: members = [] } = useTeamMembers();
   const { data: clients = [] } = useClientsLite();
   const { data: columns = [] } = useTaskColumns();
@@ -25,7 +32,7 @@ const CreateTaskDialog = ({ open, onOpenChange, defaultClientId }: Props) => {
   const [priority, setPriority] = useState("MEDIUM");
   const [assignedTo, setAssignedTo] = useState<string>("NONE");
   const [columnId, setColumnId] = useState<string>("");
-  const [clientId, setClientId] = useState<string>(defaultClientId || "NONE");
+  const [draftLinks, setDraftLinks] = useState<DraftLink[]>([]);
   const [remindAt, setRemindAt] = useState(() => {
     const d = new Date();
     d.setDate(d.getDate() + 3);
@@ -37,39 +44,65 @@ const CreateTaskDialog = ({ open, onOpenChange, defaultClientId }: Props) => {
   }, [open, columns, columnId]);
 
   useEffect(() => {
-    if (defaultClientId) setClientId(defaultClientId);
-  }, [defaultClientId]);
+    if (open && defaultClientId && draftLinks.length === 0) {
+      const c = clients.find((x) => x.id === defaultClientId);
+      setDraftLinks([{ entity_type: "CLIENT", entity_id: defaultClientId, entity_label: c?.name || null }]);
+    }
+  }, [open, defaultClientId, clients]);
 
-  const submit = () => {
-    if (!title.trim()) return;
+  const reset = () => {
+    setTitle("");
+    setDescription("");
+    setPriority("MEDIUM");
+    setAssignedTo("NONE");
+    setDraftLinks([]);
+  };
+
+  const submit = async () => {
+    if (!title.trim() || !user || !accountId) return;
+    // Keep legacy single-link fields synced from the first CLIENT link (for backwards-compat queries)
+    const firstClient = draftLinks.find((l) => l.entity_type === "CLIENT");
+    const firstAny = draftLinks[0];
+
     create.mutate(
       {
         title: title.trim(),
         description,
         priority: priority as any,
         assigned_to: assignedTo === "NONE" ? null : assignedTo,
-        client_id: clientId === "NONE" ? null : clientId,
+        client_id: firstClient?.entity_id || null,
         column_id: columnId || null,
         remind_at: new Date(remindAt).toISOString(),
-        entity_type: clientId !== "NONE" ? "CLIENT" : null,
-        entity_id: clientId !== "NONE" ? clientId : null,
-        entity_label: clientId !== "NONE" ? clients.find((c) => c.id === clientId)?.name || null : null,
+        entity_type: (firstAny?.entity_type as any) || null,
+        entity_id: firstAny?.entity_id || null,
+        entity_label: firstAny?.entity_label || null,
       },
       {
-        onSuccess: () => {
+        onSuccess: async (created: any) => {
+          // Persist all links into task_links
+          if (created?.id && draftLinks.length > 0) {
+            const rows = draftLinks.map((l) => ({
+              account_id: accountId,
+              task_id: created.id,
+              created_by: user.id,
+              entity_type: l.entity_type,
+              entity_id: l.entity_id,
+              entity_label: l.entity_label,
+            }));
+            const { error } = await supabase.from("task_links").insert(rows as any);
+            if (error) {
+              toast({ title: "Tarea creada, pero falló alguna vinculación", description: error.message, variant: "destructive" });
+            }
+          }
           onOpenChange(false);
-          setTitle("");
-          setDescription("");
-          setPriority("MEDIUM");
-          setAssignedTo("NONE");
-          setClientId(defaultClientId || "NONE");
+          reset();
         },
       }
     );
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) reset(); }}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Nueva tarea</DialogTitle>
@@ -123,17 +156,12 @@ const CreateTaskDialog = ({ open, onOpenChange, defaultClientId }: Props) => {
               <Input type="datetime-local" value={remindAt} onChange={(e) => setRemindAt(e.target.value)} />
             </div>
           </div>
-          <div>
-            <Label>Cliente vinculado</Label>
-            <Select value={clientId} onValueChange={setClientId}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="NONE">Ninguno</SelectItem>
-                {clients.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+
+          <div className="border-t pt-3">
+            <TaskLinksManager
+              draftLinks={draftLinks}
+              onDraftChange={setDraftLinks}
+            />
           </div>
         </div>
         <DialogFooter>
