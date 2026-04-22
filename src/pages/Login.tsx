@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LogIn, Loader2, AlertCircle } from "lucide-react";
+import xpertLogo from "@/assets/xpertconsulting-logo.png";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -47,8 +48,8 @@ const Login = () => {
 
       <Card className="relative w-full max-w-md shadow-xl border-border/50 backdrop-blur-sm">
         <CardHeader className="text-center space-y-3 pb-2">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground font-bold text-2xl shadow-lg shadow-primary/25">
-            XC
+          <div className="mx-auto flex h-20 w-20 items-center justify-center">
+            <img src={xpertLogo} alt="XpertConsulting" className="h-20 w-20 object-contain" />
           </div>
           <div className="space-y-1">
             <CardTitle className="text-2xl font-bold tracking-tight">XpertConsulting</CardTitle>
