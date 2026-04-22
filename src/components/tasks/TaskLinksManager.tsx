@@ -6,8 +6,21 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, X, Building2, FileText, Receipt, BookOpen, Package, FileBarChart } from "lucide-react";
+import { Plus, X, Building2, FileText, Receipt, BookOpen, Package, FileBarChart, ExternalLink } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
+
+const linkHref = (entityType: string, entityId: string): string | null => {
+  switch (entityType) {
+    case "CLIENT": return `/app/clients/${entityId}`;
+    case "INVOICE":
+    case "EXPENSE":
+    case "QUOTE": return `/app/invoices`;
+    case "JOURNAL_ENTRY": return `/app/accounting`;
+    case "PRODUCT": return `/app/inventory`;
+    default: return null;
+  }
+};
 
 export type LinkEntityType = "CLIENT" | "INVOICE" | "EXPENSE" | "QUOTE" | "JOURNAL_ENTRY" | "PRODUCT";
 
@@ -193,11 +206,23 @@ const TaskLinksManager = ({ taskId, draftLinks, onDraftChange }: Props) => {
       <div className="flex flex-wrap gap-1.5">
         {linksToShow.map((l, idx) => {
           const Icon = getIcon(l.entity_type);
+          const href = linkHref(l.entity_type, l.entity_id);
           return (
             <Badge key={isDraft ? idx : (l as TaskLink).id} variant="secondary" className="gap-1 max-w-full">
               <Icon className="h-3 w-3 shrink-0" />
               <span className="text-[10px] uppercase opacity-70">{getTypeLabel(l.entity_type)}:</span>
-              <span className="truncate max-w-[200px]">{l.entity_label || l.entity_id.slice(0, 8)}</span>
+              {href && !isDraft ? (
+                <Link
+                  to={href}
+                  className="truncate max-w-[200px] hover:text-primary hover:underline inline-flex items-center gap-1"
+                  title={`Ir a ${getTypeLabel(l.entity_type)}`}
+                >
+                  {l.entity_label || l.entity_id.slice(0, 8)}
+                  <ExternalLink className="h-2.5 w-2.5 opacity-60" />
+                </Link>
+              ) : (
+                <span className="truncate max-w-[200px]">{l.entity_label || l.entity_id.slice(0, 8)}</span>
+              )}
               <button
                 onClick={() => handleRemove(isDraft ? idx : (l as TaskLink).id)}
                 className="ml-0.5 hover:text-destructive"
