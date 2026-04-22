@@ -16,10 +16,10 @@ import {
 import { Plus, Search, Loader2, Trash2, Users, Eye } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import EmptyState from "@/components/shared/EmptyState";
-import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { useServerPagination } from "@/hooks/use-server-pagination";
 import CreateBusinessClientDialog from "@/components/clients/CreateBusinessClientDialog";
+import DeleteClientDialog from "@/components/clients/DeleteClientDialog";
 
 const AppClients = () => {
   const { accountId } = useAuth();
@@ -95,21 +95,6 @@ const AppClients = () => {
     if (!account) return true;
     const isSelf = c.name === account.name && (c.tax_id === account.tax_id || c.tax_id === "PROPIA");
     return !isSelf;
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("business_clients").delete().eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["business-clients"] });
-      toast({ title: "Cliente eliminado" });
-      setDeletingClientId(null);
-    },
-    onError: (err: any) => {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    },
   });
 
   if (isLoading) {
@@ -242,13 +227,11 @@ const AppClients = () => {
         }}
       />
 
-      <DeleteConfirmDialog
+      <DeleteClientDialog
         open={!!deletingClientId}
-        onConfirm={() => deletingClientId && deleteMutation.mutate(deletingClientId)}
-        onCancel={() => setDeletingClientId(null)}
-        title="¿Eliminar este cliente?"
-        description="Se eliminará el cliente permanentemente. Esta acción no se puede deshacer."
-        loading={deleteMutation.isPending}
+        clientId={deletingClientId}
+        onClose={() => setDeletingClientId(null)}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ["business-clients"] })}
       />
     </div>
   );
