@@ -28,7 +28,7 @@ const FIELDS: MappingField[] = [
   { key: "sale_price", label: "Precio Venta (€)", group: "Precios", aliases: ["precio_venta", "sale_price", "venta", "price", "pvp"] },
 ];
 
-const ImportProductsDialog = ({ open, onOpenChange, accountId, onImported }: ImportProductsDialogProps) => {
+const ImportProductsDialog = ({ open, onOpenChange, accountId, userId, onImported }: ImportProductsDialogProps) => {
   const { toast } = useToast();
   const [file, setFile] = useState<File | null>(null);
   const [parsing, setParsing] = useState(false);
