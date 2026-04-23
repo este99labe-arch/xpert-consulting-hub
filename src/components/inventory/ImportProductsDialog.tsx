@@ -12,6 +12,7 @@ interface ImportProductsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   accountId: string;
+  userId: string;
   onImported: () => void;
 }
 
