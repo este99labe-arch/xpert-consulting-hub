@@ -4,10 +4,11 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Plus, Download } from "lucide-react";
+import { Search, Plus, Download, Upload } from "lucide-react";
 import { Product } from "./types";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { usePagination } from "@/hooks/use-pagination";
+import { format } from "date-fns";
 
 interface ProductsTabProps {
   products: Product[];
@@ -15,9 +16,10 @@ interface ProductsTabProps {
   onNewProduct: () => void;
   onEditProduct: (p: Product) => void;
   onToggleActive: (p: Product) => void;
+  onImportCSV?: () => void;
 }
 
-const ProductsTab = ({ products, isManager, onNewProduct, onEditProduct, onToggleActive }: ProductsTabProps) => {
+const ProductsTab = ({ products, isManager, onNewProduct, onEditProduct, onToggleActive, onImportCSV }: ProductsTabProps) => {
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("ALL");
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -35,11 +37,13 @@ const ProductsTab = ({ products, isManager, onNewProduct, onEditProduct, onToggl
   const pagination = usePagination(filtered);
 
   const exportCSV = () => {
-    const header = "Nombre,SKU,Categoría,Unidad,Stock Actual,Stock Mínimo,Precio Coste,Precio Venta,Activo\n";
-    const rows = products.map(p => `"${p.name}","${p.sku}","${p.category}","${p.unit}",${p.current_stock},${p.min_stock},${p.cost_price},${p.sale_price},${p.is_active ? "Sí" : "No"}`).join("\n");
+    const header = "Nombre,SKU,Categoría,Unidad,Stock Actual,Stock Mínimo,Precio Coste,Precio Venta,Activo,Fecha Alta,Fecha Modificación\n";
+    const rows = products.map(p => `"${p.name}","${p.sku}","${p.category}","${p.unit}",${p.current_stock},${p.min_stock},${p.cost_price},${p.sale_price},${p.is_active ? "Sí" : "No"},${p.created_at},${p.updated_at}`).join("\n");
     const blob = new Blob([header + rows], { type: "text/csv" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "productos.csv"; a.click();
   };
+
+  const fmtDate = (iso: string) => { try { return format(new Date(iso), "dd/MM/yyyy"); } catch { return "—"; } };
 
   return (
     <div className="space-y-4">
@@ -66,7 +70,10 @@ const ProductsTab = ({ products, isManager, onNewProduct, onEditProduct, onToggl
         {isManager && (
           <>
             <Button size="sm" onClick={onNewProduct}><Plus className="h-4 w-4 mr-1" />Nuevo Producto</Button>
-            <Button size="sm" variant="outline" onClick={exportCSV}><Download className="h-4 w-4 mr-1" />CSV</Button>
+            {onImportCSV && (
+              <Button size="sm" variant="outline" onClick={onImportCSV}><Upload className="h-4 w-4 mr-1" />Importar CSV</Button>
+            )}
+            <Button size="sm" variant="outline" onClick={exportCSV}><Download className="h-4 w-4 mr-1" />Exportar CSV</Button>
           </>
         )}
       </div>
@@ -77,12 +84,15 @@ const ProductsTab = ({ products, isManager, onNewProduct, onEditProduct, onToggl
               <TableHead>Nombre</TableHead><TableHead>SKU</TableHead><TableHead>Categoría</TableHead>
               <TableHead className="text-right">Stock</TableHead><TableHead className="text-right">Mín.</TableHead>
               <TableHead className="text-right">Coste</TableHead><TableHead className="text-right">Venta</TableHead>
-              <TableHead>Estado</TableHead>{isManager && <TableHead />}
+              <TableHead>Estado</TableHead>
+              <TableHead className="whitespace-nowrap">Fecha Alta</TableHead>
+              <TableHead className="whitespace-nowrap">Fecha Modificación</TableHead>
+              {isManager && <TableHead />}
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 && (
-              <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">No se encontraron productos</TableCell></TableRow>
+              <TableRow><TableCell colSpan={isManager ? 11 : 10} className="text-center text-muted-foreground py-8">No se encontraron productos</TableCell></TableRow>
             )}
             {pagination.paginatedItems.map(p => {
               const isLow = p.is_active && p.current_stock <= p.min_stock;
@@ -99,6 +109,8 @@ const ProductsTab = ({ products, isManager, onNewProduct, onEditProduct, onToggl
                   <TableCell className="text-right">{p.cost_price.toFixed(2)} €</TableCell>
                   <TableCell className="text-right">{p.sale_price.toFixed(2)} €</TableCell>
                   <TableCell><Badge variant={p.is_active ? "default" : "secondary"}>{p.is_active ? "Activo" : "Inactivo"}</Badge></TableCell>
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{fmtDate(p.created_at)}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{fmtDate(p.updated_at)}</TableCell>
                   {isManager && (
                     <TableCell className="text-right space-x-1">
                       <Button variant="ghost" size="sm" onClick={() => onEditProduct(p)}>Editar</Button>

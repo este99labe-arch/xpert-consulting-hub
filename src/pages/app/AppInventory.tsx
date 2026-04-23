@@ -18,6 +18,7 @@ import PurchaseOrdersTab from "@/components/inventory/PurchaseOrdersTab";
 import ProductDialog from "@/components/inventory/ProductDialog";
 import MovementDialog from "@/components/inventory/MovementDialog";
 import OrderDialog from "@/components/inventory/OrderDialog";
+import ImportProductsDialog from "@/components/inventory/ImportProductsDialog";
 import { Product, StockMovement, PurchaseOrder } from "@/components/inventory/types";
 
 const AppInventory = () => {
@@ -135,6 +136,9 @@ const AppInventory = () => {
     setOrderDialog(true);
   };
 
+  // ---- Import CSV Dialog ----
+  const [importDialog, setImportDialog] = useState(false);
+
   // ---- Render ----
   if (isMaster && !selectedAccountId) {
     return <MasterAccountSelector title="Inventario" onSelect={setSelectedAccountId} />;
@@ -164,7 +168,7 @@ const AppInventory = () => {
         </TabsList>
 
         <TabsContent value="products">
-          <ProductsTab products={products} isManager={isManager} onNewProduct={openNewProduct} onEditProduct={openEditProduct} onToggleActive={(p) => toggleProductActive.mutate(p)} />
+          <ProductsTab products={products} isManager={isManager} onNewProduct={openNewProduct} onEditProduct={openEditProduct} onToggleActive={(p) => toggleProductActive.mutate(p)} onImportCSV={() => setImportDialog(true)} />
         </TabsContent>
         <TabsContent value="movements">
           <MovementsTab accountId={activeAccountId!} products={products} isManager={isManager} onNewMovement={() => { setMovForm({ product_id: "", type: "IN", quantity: "", reason: "manual", notes: "" }); setMovDialog(true); }} />
@@ -180,6 +184,7 @@ const AppInventory = () => {
       <ProductDialog open={productDialog} onOpenChange={setProductDialog} form={pForm} setForm={setPForm} editing={!!editingProduct} onSave={() => saveProduct.mutate()} />
       <MovementDialog open={movDialog} onOpenChange={setMovDialog} form={movForm} setForm={setMovForm} products={products} onSave={() => saveMovement.mutate()} />
       <OrderDialog open={orderDialog} onOpenChange={setOrderDialog} form={orderForm} setForm={setOrderForm} products={products} onSave={() => saveOrder.mutate()} />
+      <ImportProductsDialog open={importDialog} onOpenChange={setImportDialog} accountId={activeAccountId!} onImported={() => qc.invalidateQueries({ queryKey: ["products", activeAccountId] })} />
     </div>
   );
 };
