@@ -210,7 +210,7 @@ const AppInventory = () => {
       <ProductDialog open={productDialog} onOpenChange={setProductDialog} form={pForm} setForm={setPForm} editing={!!editingProduct} onSave={() => saveProduct.mutate()} />
       <MovementDialog open={movDialog} onOpenChange={setMovDialog} form={movForm} setForm={setMovForm} products={products} onSave={() => saveMovement.mutate()} />
       <OrderDialog open={orderDialog} onOpenChange={setOrderDialog} form={orderForm} setForm={setOrderForm} products={products} onSave={() => saveOrder.mutate()} />
-      <ImportProductsDialog open={importDialog} onOpenChange={setImportDialog} accountId={activeAccountId!} onImported={() => qc.invalidateQueries({ queryKey: ["products", activeAccountId] })} />
+      <ImportProductsDialog open={importDialog} onOpenChange={setImportDialog} accountId={activeAccountId!} userId={user!.id} onImported={() => { qc.invalidateQueries({ queryKey: ["products", activeAccountId] }); qc.invalidateQueries({ queryKey: ["stock-movements", activeAccountId] }); qc.invalidateQueries({ queryKey: ["stock-movements-count", activeAccountId] }); }} />
     </div>
   );
 };
