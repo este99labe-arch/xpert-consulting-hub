@@ -64,7 +64,13 @@ const ImportProductsDialog = ({ open, onOpenChange, accountId, userId, onImporte
       };
       const str = (v: any) => (v === null || v === undefined ? "" : String(v).trim());
 
-      const payload = csvRows
+      type Row = {
+        account_id: string; name: string; sku: string; description: string | null;
+        category: string; unit: string; min_stock: number;
+        cost_price: number; sale_price: number; current_stock: number;
+      };
+
+      const payload: Row[] = csvRows
         .map((row) => {
           const get = (key: string) => (mapping[key] ? row[mapping[key]!] : undefined);
           const name = str(get("name"));
@@ -83,7 +89,7 @@ const ImportProductsDialog = ({ open, onOpenChange, accountId, userId, onImporte
             sale_price: num(get("sale_price")),
           };
         })
-        .filter(Boolean) as any[];
+        .filter(Boolean) as Row[];
 
       if (!payload.length) {
         toast({ title: "Sin filas válidas", description: "No se encontraron filas con nombre y SKU.", variant: "destructive" });
@@ -91,14 +97,69 @@ const ImportProductsDialog = ({ open, onOpenChange, accountId, userId, onImporte
         return;
       }
 
-      const { error } = await supabase.from("products").upsert(payload, { onConflict: "account_id,sku" });
-      if (error) {
-        // Fallback: insert ignoring duplicates one by one if onConflict not configured
-        const { error: insErr } = await supabase.from("products").insert(payload);
+      // Determine which SKUs already exist for this account
+      const skus = Array.from(new Set(payload.map((p) => p.sku)));
+      const { data: existing, error: exErr } = await supabase
+        .from("products")
+        .select("id, sku")
+        .eq("account_id", accountId)
+        .in("sku", skus);
+      if (exErr) throw exErr;
+      const existingMap = new Map<string, string>((existing || []).map((p: any) => [p.sku, p.id]));
+
+      // Split into rows to insert (new) and rows to update (existing)
+      const toInsert = payload.filter((p) => !existingMap.has(p.sku));
+      const toUpdate = payload.filter((p) => existingMap.has(p.sku));
+
+      // Insert new products with current_stock = 0; the trigger will sum the IN movement
+      const insertedIds = new Map<string, string>(); // sku -> id
+      if (toInsert.length) {
+        const insertPayload = toInsert.map(({ current_stock, ...rest }) => ({ ...rest, current_stock: 0 }));
+        const { data: inserted, error: insErr } = await supabase
+          .from("products")
+          .insert(insertPayload)
+          .select("id, sku");
         if (insErr) throw insErr;
+        (inserted || []).forEach((p: any) => insertedIds.set(p.sku, p.id));
       }
 
-      toast({ title: "Importación completada", description: `${payload.length} producto(s) importado(s).` });
+      // Update existing products (do NOT touch current_stock here; movement will adjust it)
+      for (const p of toUpdate) {
+        const { current_stock, account_id, sku, ...rest } = p;
+        const id = existingMap.get(sku)!;
+        const { error: upErr } = await supabase.from("products").update(rest).eq("id", id);
+        if (upErr) throw upErr;
+      }
+
+      // Create stock movements for each row with quantity > 0
+      const movements = payload
+        .map((p) => {
+          const qty = Number(p.current_stock) || 0;
+          if (qty <= 0) return null;
+          const isNew = !existingMap.has(p.sku);
+          const productId = isNew ? insertedIds.get(p.sku) : existingMap.get(p.sku);
+          if (!productId) return null;
+          return {
+            account_id: accountId,
+            product_id: productId,
+            type: "IN",
+            quantity: qty,
+            reason: isNew ? "introduccion de producto nuevo" : "nueva compra de stock",
+            notes: "Importación automática mediante CSV",
+            created_by: userId,
+          };
+        })
+        .filter(Boolean) as any[];
+
+      if (movements.length) {
+        const { error: movErr } = await supabase.from("stock_movements").insert(movements);
+        if (movErr) throw movErr;
+      }
+
+      toast({
+        title: "Importación completada",
+        description: `${toInsert.length} nuevo(s), ${toUpdate.length} actualizado(s), ${movements.length} movimiento(s) registrado(s).`,
+      });
       setMappingOpen(false);
       setFile(null);
       setCsvColumns([]);
