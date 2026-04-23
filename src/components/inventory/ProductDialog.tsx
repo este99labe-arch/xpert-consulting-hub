@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 
-type ProductForm = { name: string; sku: string; description: string; category: string; unit: string; min_stock: string; cost_price: string; sale_price: string };
+type ProductForm = { name: string; sku: string; description: string; category: string; unit: string; min_stock: string; cost_price: string; sale_price: string; initial_stock?: string };
 
 interface ProductDialogProps {
   open: boolean;
@@ -33,6 +33,13 @@ const ProductDialog = ({ open, onOpenChange, form, setForm, editing, onSave }: P
           <div><Label>Unidad</Label><Input value={form.unit} onChange={e => setForm(f => ({ ...f, unit: e.target.value }))} placeholder="uds, kg, litros..." /></div>
           <div><Label>Stock Mínimo</Label><Input type="number" value={form.min_stock} onChange={e => setForm(f => ({ ...f, min_stock: e.target.value }))} /></div>
         </div>
+        {!editing && (
+          <div>
+            <Label>Stock Inicial</Label>
+            <Input type="number" value={form.initial_stock ?? "0"} onChange={e => setForm(f => ({ ...f, initial_stock: e.target.value }))} placeholder="0" />
+            <p className="text-xs text-muted-foreground mt-1">Se registrará automáticamente como un movimiento de entrada.</p>
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-3">
           <div><Label>Precio Coste (€)</Label><Input type="number" step="0.01" value={form.cost_price} onChange={e => setForm(f => ({ ...f, cost_price: e.target.value }))} /></div>
           <div><Label>Precio Venta (€)</Label><Input type="number" step="0.01" value={form.sale_price} onChange={e => setForm(f => ({ ...f, sale_price: e.target.value }))} /></div>
