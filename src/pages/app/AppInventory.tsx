@@ -72,18 +72,44 @@ const AppInventory = () => {
   // ---- Product Dialog ----
   const [productDialog, setProductDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [pForm, setPForm] = useState({ name: "", sku: "", description: "", category: "General", unit: "uds", min_stock: "0", cost_price: "0", sale_price: "0" });
+  const [pForm, setPForm] = useState({ name: "", sku: "", description: "", category: "General", unit: "uds", min_stock: "0", cost_price: "0", sale_price: "0", initial_stock: "0" });
 
-  const openNewProduct = () => { setEditingProduct(null); setPForm({ name: "", sku: "", description: "", category: "General", unit: "uds", min_stock: "0", cost_price: "0", sale_price: "0" }); setProductDialog(true); };
-  const openEditProduct = (p: Product) => { setEditingProduct(p); setPForm({ name: p.name, sku: p.sku, description: p.description || "", category: p.category, unit: p.unit, min_stock: String(p.min_stock), cost_price: String(p.cost_price), sale_price: String(p.sale_price) }); setProductDialog(true); };
+  const openNewProduct = () => { setEditingProduct(null); setPForm({ name: "", sku: "", description: "", category: "General", unit: "uds", min_stock: "0", cost_price: "0", sale_price: "0", initial_stock: "0" }); setProductDialog(true); };
+  const openEditProduct = (p: Product) => { setEditingProduct(p); setPForm({ name: p.name, sku: p.sku, description: p.description || "", category: p.category, unit: p.unit, min_stock: String(p.min_stock), cost_price: String(p.cost_price), sale_price: String(p.sale_price), initial_stock: "0" }); setProductDialog(true); };
 
   const saveProduct = useMutation({
     mutationFn: async () => {
       const payload = { account_id: activeAccountId!, name: pForm.name, sku: pForm.sku, description: pForm.description || null, category: pForm.category, unit: pForm.unit, min_stock: Number(pForm.min_stock), cost_price: Number(pForm.cost_price), sale_price: Number(pForm.sale_price) };
-      if (editingProduct) { const { error } = await supabase.from("products").update(payload).eq("id", editingProduct.id); if (error) throw error; }
-      else { const { error } = await supabase.from("products").insert(payload); if (error) throw error; }
+      if (editingProduct) {
+        const { error } = await supabase.from("products").update(payload).eq("id", editingProduct.id);
+        if (error) throw error;
+        return { created: false };
+      }
+      // Insert with current_stock = 0; the stock movement (if any) will set it via trigger
+      const { data: inserted, error } = await supabase.from("products").insert({ ...payload, current_stock: 0 }).select("id").single();
+      if (error) throw error;
+      const initial = Number(pForm.initial_stock || "0");
+      if (initial > 0 && inserted?.id) {
+        const { error: movErr } = await supabase.from("stock_movements").insert({
+          account_id: activeAccountId!,
+          product_id: inserted.id,
+          type: "IN",
+          quantity: initial,
+          reason: "introduccion de producto nuevo",
+          notes: "Creado manualmente desde Productos",
+          created_by: user!.id,
+        });
+        if (movErr) throw movErr;
+      }
+      return { created: true };
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["products", activeAccountId] }); setProductDialog(false); toast({ title: editingProduct ? "Producto actualizado" : "Producto creado" }); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["products", activeAccountId] });
+      qc.invalidateQueries({ queryKey: ["stock-movements", activeAccountId] });
+      qc.invalidateQueries({ queryKey: ["stock-movements-count", activeAccountId] });
+      setProductDialog(false);
+      toast({ title: editingProduct ? "Producto actualizado" : "Producto creado" });
+    },
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
