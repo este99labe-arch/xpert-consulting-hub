@@ -46,13 +46,19 @@ const ManagerDashboard = () => {
   const { data: activeClientsCount = 0 } = useQuery({
     queryKey: ["dashboard-active-clients", accountId],
     queryFn: async () => {
-      const { count, error } = await supabase
-        .from("business_clients")
-        .select("id", { count: "exact", head: true })
-        .eq("account_id", accountId!)
-        .eq("status", "ACTIVE");
-      if (error) throw error;
-      return count || 0;
+      const [acctRes, clientsRes] = await Promise.all([
+        supabase.from("accounts").select("name, tax_id").eq("id", accountId!).single(),
+        supabase.from("business_clients").select("name, tax_id").eq("account_id", accountId!).eq("status", "ACTIVE"),
+      ]);
+      if (clientsRes.error) throw clientsRes.error;
+      const acct = acctRes.data;
+      const rows = clientsRes.data || [];
+      const external = rows.filter((c: any) => {
+        if (!acct) return true;
+        const isSelf = c.name === acct.name && (c.tax_id === acct.tax_id || c.tax_id === "PROPIA");
+        return !isSelf;
+      });
+      return external.length;
     },
     enabled: !!accountId,
   });
