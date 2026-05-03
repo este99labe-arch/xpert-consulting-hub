@@ -206,7 +206,7 @@ const ManagerDashboard = () => {
 
       <KpiCards
         income={curr.income} expense={curr.expense} balance={curr.income - curr.expense}
-        pendingCount={curr.pending} overdueCount={curr.overdue} activeClients={curr.clients}
+        pendingCount={curr.pending} overdueCount={curr.overdue} activeClients={activeClientsCount}
         prevIncome={prev.income} prevExpense={prev.expense}
         prevPendingCount={prev.pending} prevOverdueCount={prev.overdue} prevActiveClients={prev.clients}
         teamPresent={presence}
