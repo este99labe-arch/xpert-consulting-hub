@@ -43,6 +43,20 @@ const ManagerDashboard = () => {
     enabled: !!accountId,
   });
 
+  const { data: activeClientsCount = 0 } = useQuery({
+    queryKey: ["dashboard-active-clients", accountId],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("business_clients")
+        .select("id", { count: "exact", head: true })
+        .eq("account_id", accountId!)
+        .eq("status", "ACTIVE");
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!accountId,
+  });
+
   const { data: lowStockProducts = [] } = useQuery({
     queryKey: ["dashboard-low-stock", accountId],
     queryFn: async () => {
@@ -192,7 +206,7 @@ const ManagerDashboard = () => {
 
       <KpiCards
         income={curr.income} expense={curr.expense} balance={curr.income - curr.expense}
-        pendingCount={curr.pending} overdueCount={curr.overdue} activeClients={curr.clients}
+        pendingCount={curr.pending} overdueCount={curr.overdue} activeClients={activeClientsCount}
         prevIncome={prev.income} prevExpense={prev.expense}
         prevPendingCount={prev.pending} prevOverdueCount={prev.overdue} prevActiveClients={prev.clients}
         teamPresent={presence}
