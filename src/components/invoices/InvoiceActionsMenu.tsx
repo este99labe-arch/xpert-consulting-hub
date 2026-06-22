@@ -1,4 +1,4 @@
-import { MoreHorizontal, Eye, Download, Pencil, Trash2, Mail, CalendarClock } from "lucide-react";
+import { MoreHorizontal, Eye, Download, Pencil, Trash2, Mail, CalendarClock, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -11,9 +11,12 @@ interface Props {
   onDelete: () => void;
   onSendEmail?: () => void;
   onReminder?: () => void;
+  onRegisterVerifactu?: () => void;
+  verifactuStatus?: string;
 }
 
-const InvoiceActionsMenu = ({ onPreview, onExport, onEdit, onDelete, onSendEmail, onReminder }: Props) => {
+const InvoiceActionsMenu = ({ onPreview, onExport, onEdit, onDelete, onSendEmail, onReminder, onRegisterVerifactu, verifactuStatus }: Props) => {
+  const isRegistered = verifactuStatus === "SENT";
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -40,6 +43,12 @@ const InvoiceActionsMenu = ({ onPreview, onExport, onEdit, onDelete, onSendEmail
           <Pencil className="h-4 w-4 mr-2" />
           Editar
         </DropdownMenuItem>
+        {onRegisterVerifactu && (
+          <DropdownMenuItem onClick={onRegisterVerifactu} disabled={isRegistered}>
+            <ShieldCheck className={`h-4 w-4 mr-2 ${isRegistered ? "text-[hsl(var(--success))]" : ""}`} />
+            {isRegistered ? "Registrada en AEAT" : "Registrar en AEAT"}
+          </DropdownMenuItem>
+        )}
         {onReminder && (
           <>
             <DropdownMenuSeparator />

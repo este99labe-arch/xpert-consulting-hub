@@ -1,82 +1,55 @@
 /**
- * VERI*FACTU — Servicio de envío de registros de facturación a la AEAT
+ * VERI*FACTU — Cliente de envío de registros de facturación a la AEAT
  *
- * ⚠️ MÓDULO PREPARADO PERO NO ACTIVO ⚠️
+ * La lógica real (firma/huella encadenada, construcción del XML y envío SOAP
+ * con TLS mutuo) vive en la edge function `verifactu_submit`, porque requiere
+ * el certificado de cliente y NUNCA debe ejecutarse en el navegador.
  *
- * Este archivo contiene los puntos de integración para cuando se complete
- * la implementación real con los sistemas de la AEAT (firma electrónica +
- * envío del registro de facturación + cadena de huellas).
- *
- * Estado actual: SOLO QR TRIBUTARIO (visual). El envío del registro a la AEAT
- * está deshabilitado y debe activarse cuando se cumplan los requisitos legales
- * y técnicos (certificado electrónico, endpoint productivo, etc.).
+ * Este módulo es un simple cliente que invoca dicha función.
  */
 
-import { VERIFACTU_ENV, type VerifactuEnv } from "./verifactu";
+import { supabase } from "@/integrations/supabase/client";
 
-// ─── Endpoints AEAT ────────────────────────────────────────
-// TODO: confirmar endpoints definitivos cuando la AEAT publique la URL
-// estable del servicio SOAP/REST de alta de registros de facturación.
-const VERIFACTU_REGISTRO_ENDPOINTS: Record<VerifactuEnv, string> = {
-  sandbox: "https://prewww1.aeat.es/wlpl/TIKE-CONT/ws/SistemaFacturacion/VerifactuSOAP",
-  prod: "https://www1.agenciatributaria.gob.es/wlpl/TIKE-CONT/ws/SistemaFacturacion/VerifactuSOAP",
-};
+export type VerifactuStatus = "NONE" | "PREPARED" | "SENT" | "ERROR";
 
-export interface VerifactuRegistroAlta {
-  nif: string;
-  numserie: string;        // TODO: incluir huella/hash de la cadena
-  fecha: string;           // dd-mm-yyyy
-  importe: string;         // 0.00
-  tipoFactura: string;     // F1, F2, R1...
-  descripcion: string;
-  destinatario?: { nif: string; nombre: string };
-  // TODO: añadir todos los campos del registro de facturación AEAT
-  huellaAnterior?: string; // huella/hash del registro anterior (encadenamiento)
-  huella?: string;         // huella/hash de este registro
+export interface VerifactuSubmitResult {
+  status: VerifactuStatus;
+  csv?: string;
+  huella?: string;
+  message?: string;
+  error?: string;
+  code?: string;
 }
 
 /**
- * Envía un registro de alta de facturación a la AEAT.
+ * Registra (alta) una factura en la AEAT vía VERI*FACTU.
  *
- * 🚫 NO IMPLEMENTADO: requiere certificado electrónico válido, firma XAdES
- *    y construcción del payload SOAP/JSON conforme al esquema oficial.
+ * Devuelve:
+ *   - status "SENT"     → registrada (incluye `csv`)
+ *   - status "PREPARED" → XML y huella generados pero sin certificado configurado
+ *   - status "ERROR"    → rechazada o error de conexión (incluye `error`)
  */
-export async function enviarRegistroAlta(
-  _registro: VerifactuRegistroAlta,
-  _env: VerifactuEnv = VERIFACTU_ENV
-): Promise<{ ok: boolean; codigoRespuesta?: string; mensaje?: string }> {
-  // TODO: 1. Cargar certificado electrónico del emisor (almacén seguro)
-  // TODO: 2. Construir XML del registro de facturación según esquema AEAT
-  // TODO: 3. Firmar con XAdES-BES utilizando el certificado
-  // TODO: 4. Calcular huella SHA-256 y encadenar con huellaAnterior
-  // TODO: 5. POST al endpoint VERIFACTU_REGISTRO_ENDPOINTS[env]
-  // TODO: 6. Parsear respuesta y mapear códigos de error AEAT
-  // TODO: 7. Persistir huella resultante para encadenar la siguiente factura
+export async function registrarFacturaVerifactu(invoiceId: string): Promise<VerifactuSubmitResult> {
+  const { data, error } = await supabase.functions.invoke("verifactu_submit", {
+    body: { invoice_id: invoiceId },
+  });
 
-  console.warn(
-    "[VERI*FACTU] enviarRegistroAlta() no está implementado. " +
-      `Endpoint que se utilizará: ${VERIFACTU_REGISTRO_ENDPOINTS[_env]}`
-  );
+  // supabase.functions.invoke devuelve error en respuestas no 2xx; intentamos
+  // extraer el mensaje del cuerpo de la respuesta.
+  if (error) {
+    let serverMessage: string | undefined = (data as any)?.error;
+    try {
+      const ctx: any = (error as any).context;
+      if (ctx?.body) {
+        const text = typeof ctx.body === "string" ? ctx.body : await new Response(ctx.body).text();
+        const parsed = JSON.parse(text);
+        serverMessage = parsed?.error || serverMessage;
+      }
+    } catch {
+      /* ignore */
+    }
+    return { status: "ERROR", error: serverMessage || error.message || "Error al registrar en la AEAT" };
+  }
 
-  return {
-    ok: false,
-    codigoRespuesta: "NOT_IMPLEMENTED",
-    mensaje: "Integración con AEAT pendiente de activación.",
-  };
-}
-
-/**
- * Calcula la huella (hash SHA-256) de un registro de facturación, requerida
- * para construir la cadena VERI*FACTU. La huella anterior debe pasarse
- * concatenada al payload antes de hashear.
- *
- * TODO: implementar según el esquema oficial cuando se active la integración.
- */
-export async function calcularHuellaRegistro(
-  _registro: VerifactuRegistroAlta,
-  _huellaAnterior?: string
-): Promise<string> {
-  // TODO: serializar campos en el orden exacto definido por la AEAT,
-  //       concatenar con huellaAnterior y aplicar SHA-256.
-  return "";
+  return data as VerifactuSubmitResult;
 }

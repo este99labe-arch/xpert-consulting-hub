@@ -22,7 +22,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { FileText, TrendingUp, TrendingDown, DollarSign, Plus, Search, Trash2, Check, X, RefreshCw, ClipboardList, CalendarIcon, List, LayoutGrid, Landmark, Upload } from "lucide-react";
+import { FileText, TrendingUp, TrendingDown, DollarSign, Plus, Search, Trash2, Check, X, RefreshCw, ClipboardList, CalendarIcon, List, LayoutGrid, Landmark, Upload, ShieldCheck } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import CreateReminderDialog from "@/components/reminders/CreateReminderDialog";
 import { format } from "date-fns";
@@ -37,6 +37,7 @@ import PaginationControls from "@/components/shared/PaginationControls";
 import { useServerPagination } from "@/hooks/use-server-pagination";
 import { usePagination } from "@/hooks/use-pagination";
 import { dispatchWebhook } from "@/lib/webhooks";
+import { registrarFacturaVerifactu } from "@/lib/verifactu.service";
 import InvoiceKanbanView from "@/components/invoices/InvoiceKanbanView";
 import BankReconciliationTab from "@/components/invoices/BankReconciliationTab";
 import InvoiceImportTab from "@/components/invoices/InvoiceImportTab";
@@ -334,6 +335,25 @@ const AppInvoices = () => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     }
   }
+
+  const handleRegisterVerifactu = async (inv: any) => {
+    toast({ title: "Registrando en la AEAT…", description: `Factura ${inv.invoice_number || ""}` });
+    try {
+      const res = await registrarFacturaVerifactu(inv.id);
+      if (res.status === "SENT") {
+        toast({ title: "Factura registrada", description: res.csv ? `CSV: ${res.csv}` : "Registrada en VERI*FACTU" });
+        if (accountId) dispatchWebhook(accountId, "invoice.verifactu_registered", { invoice_id: inv.id, csv: res.csv });
+      } else if (res.status === "PREPARED") {
+        toast({ title: "Registro preparado", description: res.message || "Pendiente de configurar el certificado para enviarlo a la AEAT." });
+      } else {
+        toast({ title: "Error al registrar", description: res.error || "La AEAT rechazó el registro", variant: "destructive" });
+      }
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["invoices-kanban"] });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  };
 
   const handleDeleteClick = (inv: any) => {
     setDeleteInvoice(inv);
@@ -645,6 +665,8 @@ const AppInvoices = () => {
                         onDelete={() => handleDeleteClick(inv)}
                         onSendEmail={inv.business_clients?.email ? () => handleSendEmail(inv.id) : undefined}
                         onReminder={() => setReminderInvoice(inv)}
+                        onRegisterVerifactu={inv.type === "INVOICE" ? () => handleRegisterVerifactu(inv) : undefined}
+                        verifactuStatus={inv.verifactu_status}
                       />
                     </div>
                   </Card>
@@ -697,7 +719,19 @@ const AppInvoices = () => {
                             €{Number(inv.amount_total).toLocaleString("es-ES", { minimumFractionDigits: 2 })}
                           </TableCell>
                           <TableCell>
-                            <StatusBadge status={inv.status} />
+                            <div className="flex items-center gap-1.5">
+                              <StatusBadge status={inv.status} />
+                              {inv.verifactu_status === "SENT" && (
+                                <span title="Registrada en la AEAT (VERI*FACTU)">
+                                  <ShieldCheck className="h-3.5 w-3.5 text-[hsl(var(--success))]" />
+                                </span>
+                              )}
+                              {inv.verifactu_status === "PREPARED" && (
+                                <span title="Preparada para VERI*FACTU (pendiente de envío)">
+                                  <ShieldCheck className="h-3.5 w-3.5 text-[hsl(var(--warning))]" />
+                                </span>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                             <InvoiceActionsMenu
@@ -707,6 +741,8 @@ const AppInvoices = () => {
                               onDelete={() => handleDeleteClick(inv)}
                               onSendEmail={inv.business_clients?.email ? () => handleSendEmail(inv.id) : undefined}
                               onReminder={() => setReminderInvoice(inv)}
+                              onRegisterVerifactu={inv.type === "INVOICE" ? () => handleRegisterVerifactu(inv) : undefined}
+                              verifactuStatus={inv.verifactu_status}
                             />
                           </TableCell>
                         </TableRow>
@@ -852,6 +888,7 @@ const AppInvoices = () => {
         onExport={previewInvoice ? () => handleExportPdf(previewInvoice.id) : undefined}
         onSendEmail={previewInvoice?.business_clients?.email ? () => handleSendEmail(previewInvoice.id) : undefined}
         onEdit={previewInvoice ? () => { setPreviewInvoice(null); setEditInvoice(previewInvoice); } : undefined}
+        onRegisterVerifactu={previewInvoice?.type === "INVOICE" ? () => handleRegisterVerifactu(previewInvoice) : undefined}
       />
       <EditInvoiceDialog
         open={!!editInvoice}

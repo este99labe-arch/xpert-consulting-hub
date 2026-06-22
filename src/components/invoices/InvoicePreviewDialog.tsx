@@ -3,7 +3,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Printer, Download, Mail, Clock, Palette, Pencil } from "lucide-react";
+import { Printer, Download, Mail, Clock, Palette, Pencil, ShieldCheck } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
@@ -25,9 +25,10 @@ interface Props {
   onExport?: () => void;
   onSendEmail?: () => void;
   onEdit?: () => void;
+  onRegisterVerifactu?: () => void;
 }
 
-const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEmail, onEdit }: Props) => {
+const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEmail, onEdit, onRegisterVerifactu }: Props) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const { accountId } = useAuth();
   const [templateOverride, setTemplateOverride] = useState<InvoiceTemplateId | null>(null);
@@ -201,6 +202,16 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEma
           <div className="flex items-center gap-3">
             <span className="font-semibold text-foreground text-sm md:text-base">{typeLabel} {invoiceNumber}</span>
             <Badge variant="outline">{statusLabels[invoice.status] || invoice.status}</Badge>
+            {invoice.verifactu_status === "SENT" && (
+              <Badge className="bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] border-transparent gap-1">
+                <ShieldCheck className="h-3 w-3" /> AEAT
+              </Badge>
+            )}
+            {invoice.verifactu_status === "PREPARED" && (
+              <Badge className="bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))] border-transparent gap-1">
+                <ShieldCheck className="h-3 w-3" /> Preparada
+              </Badge>
+            )}
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <div className="flex items-center gap-1.5">
@@ -217,6 +228,11 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEma
             {onEdit && (
               <Button variant="outline" size="sm" onClick={onEdit}>
                 <Pencil className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Editar</span>
+              </Button>
+            )}
+            {onRegisterVerifactu && invoice.type === "INVOICE" && invoice.verifactu_status !== "SENT" && (
+              <Button variant="outline" size="sm" onClick={onRegisterVerifactu}>
+                <ShieldCheck className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Registrar AEAT</span>
               </Button>
             )}
             {onSendEmail && client?.email && (
