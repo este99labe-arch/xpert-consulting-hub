@@ -30,6 +30,7 @@ import ApiKeysTab from "@/components/settings/ApiKeysTab";
 import WebhooksTab from "@/components/settings/WebhooksTab";
 import WhatsAppConfigTab from "@/components/settings/WhatsAppConfigTab";
 import InvoiceTemplateTab from "@/components/settings/InvoiceTemplateTab";
+import VerifactuSettingsTab from "@/components/settings/VerifactuSettingsTab";
 import CreateEmployeeDialog from "@/components/hr/CreateEmployeeDialog";
 import EmployeeModulesTab from "@/components/settings/EmployeeModulesTab";
 
@@ -981,6 +982,11 @@ const AppSettings = () => {
             </TabsTrigger>
           )}
           {isManager && (
+            <TabsTrigger value="verifactu" className="gap-1">
+              <ShieldCheck className="h-4 w-4" /> <span className="hidden lg:inline">VERI*FACTU</span>
+            </TabsTrigger>
+          )}
+          {isManager && (
             <TabsTrigger value="permissions" className="gap-1">
               <ShieldCheck className="h-4 w-4" /> <span className="hidden lg:inline">Permisos</span>
             </TabsTrigger>
@@ -1031,6 +1037,11 @@ const AppSettings = () => {
         {isManager && (
           <TabsContent value="invoicetemplate">
             <InvoiceTemplateTab accountId={accountId} isManager={isManager} />
+          </TabsContent>
+        )}
+        {isManager && (
+          <TabsContent value="verifactu">
+            <VerifactuSettingsTab accountId={accountId} isManager={isManager} />
           </TabsContent>
         )}
         {isManager && (
