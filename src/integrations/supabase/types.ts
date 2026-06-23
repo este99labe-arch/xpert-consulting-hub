@@ -10,32 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
-  }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+    PostgrestVersion: "14.1"
   }
   public: {
     Tables: {
@@ -82,9 +57,6 @@ export type Database = {
           invoice_template: string
           updated_at: string
           vacation_days_per_year: number
-          verifactu_enabled: boolean
-          verifactu_env: string
-          verifactu_nif: string | null
           work_days: string[]
           work_end_time: string
           work_start_time: string
@@ -95,9 +67,6 @@ export type Database = {
           invoice_template?: string
           updated_at?: string
           vacation_days_per_year?: number
-          verifactu_enabled?: boolean
-          verifactu_env?: string
-          verifactu_nif?: string | null
           work_days?: string[]
           work_end_time?: string
           work_start_time?: string
@@ -108,9 +77,6 @@ export type Database = {
           invoice_template?: string
           updated_at?: string
           vacation_days_per_year?: number
-          verifactu_enabled?: boolean
-          verifactu_env?: string
-          verifactu_nif?: string | null
           work_days?: string[]
           work_end_time?: string
           work_start_time?: string
@@ -1141,13 +1107,6 @@ export type Database = {
           type: string
           vat_included: boolean
           vat_percentage: number
-          verifactu_csv: string | null
-          verifactu_huella: string | null
-          verifactu_huella_anterior: string | null
-          verifactu_qr_url: string | null
-          verifactu_registered_at: string | null
-          verifactu_status: string
-          verifactu_xml: string | null
         }
         Insert: {
           account_id: string
@@ -1172,13 +1131,6 @@ export type Database = {
           type: string
           vat_included?: boolean
           vat_percentage: number
-          verifactu_csv?: string | null
-          verifactu_huella?: string | null
-          verifactu_huella_anterior?: string | null
-          verifactu_qr_url?: string | null
-          verifactu_registered_at?: string | null
-          verifactu_status?: string
-          verifactu_xml?: string | null
         }
         Update: {
           account_id?: string
@@ -1203,13 +1155,6 @@ export type Database = {
           type?: string
           vat_included?: boolean
           vat_percentage?: number
-          verifactu_csv?: string | null
-          verifactu_huella?: string | null
-          verifactu_huella_anterior?: string | null
-          verifactu_qr_url?: string | null
-          verifactu_registered_at?: string | null
-          verifactu_status?: string
-          verifactu_xml?: string | null
         }
         Relationships: [
           {
@@ -2220,69 +2165,6 @@ export type Database = {
           },
         ]
       }
-      verifactu_events: {
-        Row: {
-          account_id: string
-          action: string
-          created_at: string
-          csv: string | null
-          env: string
-          error_code: string | null
-          error_message: string | null
-          huella: string | null
-          id: string
-          invoice_id: string | null
-          request_xml: string | null
-          response_xml: string | null
-          status: string
-        }
-        Insert: {
-          account_id: string
-          action?: string
-          created_at?: string
-          csv?: string | null
-          env?: string
-          error_code?: string | null
-          error_message?: string | null
-          huella?: string | null
-          id?: string
-          invoice_id?: string | null
-          request_xml?: string | null
-          response_xml?: string | null
-          status: string
-        }
-        Update: {
-          account_id?: string
-          action?: string
-          created_at?: string
-          csv?: string | null
-          env?: string
-          error_code?: string | null
-          error_message?: string | null
-          huella?: string | null
-          id?: string
-          invoice_id?: string | null
-          request_xml?: string | null
-          response_xml?: string | null
-          status?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "verifactu_events_account_id_fkey"
-            columns: ["account_id"]
-            isOneToOne: false
-            referencedRelation: "accounts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "verifactu_events_invoice_id_fkey"
-            columns: ["invoice_id"]
-            isOneToOne: false
-            referencedRelation: "invoices"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       webhook_logs: {
         Row: {
           created_at: string
@@ -2940,9 +2822,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },
