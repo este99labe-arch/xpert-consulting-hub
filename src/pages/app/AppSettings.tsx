@@ -25,6 +25,7 @@ import {
   Clock, ShieldCheck, Save, User, Lock, Unlock, Check, X, Mail, Activity, Key, Webhook, MessageSquare, ShieldAlert, FileText,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { roleLabel } from "@/lib/roles";
 import AuditActivityTab from "@/components/settings/AuditActivityTab";
 import ApiKeysTab from "@/components/settings/ApiKeysTab";
 import WebhooksTab from "@/components/settings/WebhooksTab";
@@ -659,7 +660,7 @@ const SecurityTab = ({ userId, accountId, isManager }: { userId: string; account
                   <TableRow key={u.user_id}>
                     <TableCell className="font-medium">{u.email}</TableCell>
                     <TableCell>
-                      <Badge variant="secondary">{u.role === "MANAGER" ? "Manager" : "Empleado"}</Badge>
+                      <Badge variant="secondary">{roleLabel(u.role)}</Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <Button variant="outline" size="sm" onClick={() => { setForceTarget(u); setForcePassword(""); }}>
@@ -861,9 +862,9 @@ const UsersTab = ({ userId, accountId }: { userId: string; accountId: string }) 
                   <TableRow key={u.user_id}>
                     <TableCell className="font-medium">{u.email}</TableCell>
                     <TableCell>
-                      <Badge variant={u.role === "MANAGER" ? "default" : "secondary"}>
+                      <Badge variant={(u.role === "MANAGER" || u.role === "MASTER_ADMIN") ? "default" : "secondary"}>
                         <ShieldCheck className="h-3 w-3 mr-1" />
-                        {u.role === "MANAGER" ? "Manager" : "Empleado"}
+                        {roleLabel(u.role)}
                       </Badge>
                     </TableCell>
                     <TableCell>

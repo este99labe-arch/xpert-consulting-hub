@@ -11,6 +11,7 @@ import {
 import { Search, Loader2, UserCheck, UserX } from "lucide-react";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { usePagination } from "@/hooks/use-pagination";
+import { roleLabel } from "@/lib/roles";
 
 const EmployeesTab = () => {
   const { accountId, role, user } = useAuth();
@@ -79,7 +80,7 @@ const EmployeesTab = () => {
             <Card key={emp.id} className="p-4 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="font-medium text-sm truncate">{emailMap.get(emp.user_id) || emp.user_id}</span>
-                <Badge variant="outline">{(emp as any).roles?.code || "—"}</Badge>
+                <Badge variant="outline">{roleLabel((emp as any).roles?.code)}</Badge>
               </div>
               <div className="flex items-center justify-between text-sm">
                 {emp.is_active ? (
@@ -123,7 +124,7 @@ const EmployeesTab = () => {
                   <TableRow key={emp.id}>
                     <TableCell className="font-medium">{emailMap.get(emp.user_id) || emp.user_id}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">{(emp as any).roles?.code || "—"}</Badge>
+                      <Badge variant="outline">{roleLabel((emp as any).roles?.code)}</Badge>
                     </TableCell>
                     <TableCell>
                       {emp.is_active ? (
