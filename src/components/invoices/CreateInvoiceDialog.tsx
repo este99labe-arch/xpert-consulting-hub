@@ -12,7 +12,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Trash2 } from "lucide-react";
+import {
+  Plus, Trash2, FileText, Receipt, FileSignature, Users, CalendarDays,
+  Percent, StickyNote, Paperclip, Copy, Loader2,
+} from "lucide-react";
 import InvoiceAttachment from "@/components/invoices/InvoiceAttachment";
 import { dispatchWebhook } from "@/lib/webhooks";
 
@@ -27,6 +30,26 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   defaultType?: "QUOTE" | "INVOICE" | "EXPENSE";
 }
+
+const Section = ({
+  icon: Icon, title, desc, action, children,
+}: {
+  icon: any; title: string; desc?: string; action?: React.ReactNode; children: React.ReactNode;
+}) => (
+  <section className="rounded-xl border border-border bg-card shadow-2xs">
+    <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <Icon className="h-4 w-4" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <h3 className="text-sm font-semibold leading-tight">{title}</h3>
+        {desc && <p className="mt-0.5 text-xs text-muted-foreground">{desc}</p>}
+      </div>
+      {action}
+    </div>
+    <div className="space-y-4 p-4">{children}</div>
+  </section>
+);
 
 const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
   const { accountId } = useAuth();
@@ -130,7 +153,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
     setLines(updated);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (keepOpen = false) => {
     if (!clientId || !accountId) {
       toast({ title: "Error", description: "Selecciona un cliente/proveedor", variant: "destructive" });
       return;
@@ -187,8 +210,16 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
       });
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
       queryClient.invalidateQueries({ queryKey: ["business_clients"] });
-      onOpenChange(false);
-      resetForm();
+      if (keepOpen) {
+        // Mantén cliente, tipo, fechas e impuestos para alta rápida; limpia el resto
+        setLines([{ description: "", quantity: "1", unitPrice: "" }]);
+        setSpecialMentions("");
+        setAttachmentPath(null);
+        setAttachmentName(null);
+      } else {
+        onOpenChange(false);
+        resetForm();
+      }
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
@@ -209,109 +240,129 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
     setAttachmentName(null);
   };
 
-  const dialogTitle = isQuoteMode ? "Nuevo Presupuesto" : "Nueva Factura / Gasto";
+  const meta = isQuoteMode
+    ? { title: "Nuevo presupuesto", subtitle: "Crea un presupuesto para enviar a un cliente", icon: FileSignature }
+    : type === "EXPENSE"
+      ? { title: "Nuevo gasto", subtitle: "Registra una factura de proveedor o un gasto", icon: Receipt }
+      : { title: "Nueva factura", subtitle: "Emite una factura a uno de tus clientes", icon: FileText };
+
+  const recipientLabel = type === "EXPENSE" ? "Proveedor / Empresa" : "Cliente";
+  const validLineCount = lines.filter(l => l.description.trim() && (parseFloat(l.unitPrice) || 0) > 0).length;
+  const canSubmit = !!clientId && validLineCount > 0 && !submitting;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
-        <DialogHeader className="flex-shrink-0">
-          <DialogTitle>{dialogTitle}</DialogTitle>
+      <DialogContent className="sm:max-w-3xl max-h-[92vh] flex flex-col gap-0 p-0 overflow-hidden">
+        {/* Header */}
+        <DialogHeader className="flex-shrink-0 space-y-0 border-b border-border px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <meta.icon className="h-5 w-5" />
+            </div>
+            <div>
+              <DialogTitle className="text-lg">{meta.title}</DialogTitle>
+              <p className="text-sm text-muted-foreground">{meta.subtitle}</p>
+            </div>
+          </div>
         </DialogHeader>
-        <div className="space-y-4 overflow-y-auto flex-1 pr-1">
-          {/* Type & Client */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Tipo</Label>
-              {isQuoteMode ? (
-                <Input value="Presupuesto" disabled className="bg-muted" />
-              ) : (
-                <Select value={type} onValueChange={setType}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+
+        {/* Body */}
+        <div className="flex-1 space-y-4 overflow-y-auto bg-muted/30 px-6 py-5">
+          {/* Datos generales */}
+          <Section icon={Users} title="Datos generales" desc="Tipo de documento, destinatario y fechas">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label>Tipo</Label>
+                {isQuoteMode ? (
+                  <Input value="Presupuesto" disabled className="bg-muted" />
+                ) : (
+                  <Select value={type} onValueChange={setType}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="INVOICE">Factura</SelectItem>
+                      <SelectItem value="EXPENSE">Gasto</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <Label>{recipientLabel} <span className="text-destructive">*</span></Label>
+                <Select value={clientId} onValueChange={setClientId}>
+                  <SelectTrigger className={!clientId ? "text-muted-foreground" : ""}>
+                    <SelectValue placeholder="Selecciona destinatario" />
+                  </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="INVOICE">Factura</SelectItem>
-                    <SelectItem value="EXPENSE">Gasto</SelectItem>
+                    {account && (
+                      <SelectItem value={`__self__${account.id}`}>
+                        🏢 {account.name} (Mi empresa)
+                      </SelectItem>
+                    )}
+                    {clients.map((c: any) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
-              )}
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>{type === "EXPENSE" ? "Proveedor / Empresa" : "Cliente"} *</Label>
-              <Select value={clientId} onValueChange={setClientId}>
-                <SelectTrigger><SelectValue placeholder="Selecciona destinatario" /></SelectTrigger>
-                <SelectContent>
-                  {account && (
-                    <SelectItem value={`__self__${account.id}`}>
-                      🏢 {account.name} (Mi empresa)
-                    </SelectItem>
-                  )}
-                  {clients.map((c: any) => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label className="flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />Fecha de emisión <span className="text-destructive">*</span></Label>
+                <Input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Fecha de operación <span className="text-xs text-muted-foreground">(si difiere)</span></Label>
+                <Input type="date" value={operationDate} onChange={(e) => setOperationDate(e.target.value)} />
+              </div>
             </div>
-          </div>
+          </Section>
 
-          {/* Dates */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Fecha de emisión *</Label>
-              <Input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label>Fecha de operación <span className="text-muted-foreground text-xs">(si difiere)</span></Label>
-              <Input type="date" value={operationDate} onChange={(e) => setOperationDate(e.target.value)} />
-            </div>
-          </div>
-
-          {/* Line Items */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm font-semibold">Servicios / Conceptos *</Label>
+          {/* Conceptos */}
+          <Section
+            icon={FileText}
+            title="Conceptos"
+            desc="Servicios o productos incluidos"
+            action={
               <Button type="button" variant="outline" size="sm" onClick={addLine}>
-                <Plus className="h-3.5 w-3.5 mr-1" /> Añadir línea
+                <Plus className="mr-1 h-3.5 w-3.5" /> Añadir línea
               </Button>
+            }
+          >
+            {/* Column headers (desktop) */}
+            <div className="hidden grid-cols-[1fr_5rem_7rem_6rem_2.25rem] gap-2 px-1 sm:grid">
+              <span className="text-xs font-medium text-muted-foreground">Descripción</span>
+              <span className="text-xs font-medium text-muted-foreground">Cant.</span>
+              <span className="text-xs font-medium text-muted-foreground">Precio €</span>
+              <span className="text-right text-xs font-medium text-muted-foreground">Importe</span>
+              <span />
             </div>
             <div className="space-y-2">
               {lines.map((line, i) => (
-                <div key={i} className="flex gap-2 items-start">
-                  <div className="flex-1 min-w-0">
-                    <Input
-                      value={line.description}
-                      onChange={(e) => updateLine(i, "description", e.target.value)}
-                      placeholder="Descripción del servicio..."
-                      className="text-sm"
-                    />
-                  </div>
-                  <div className="w-20">
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={line.quantity}
-                      onChange={(e) => updateLine(i, "quantity", e.target.value)}
-                      placeholder="Cant."
-                      className="text-sm"
-                    />
-                  </div>
-                  <div className="w-28">
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={line.unitPrice}
-                      onChange={(e) => updateLine(i, "unitPrice", e.target.value)}
-                      placeholder="Precio €"
-                      className="text-sm"
-                    />
-                  </div>
-                  <div className="w-24 text-right pt-2 text-sm font-mono text-muted-foreground">
+                <div key={i} className="grid grid-cols-[1fr_3.5rem_4.5rem_2.25rem] items-center gap-2 sm:grid-cols-[1fr_5rem_7rem_6rem_2.25rem]">
+                  <Input
+                    value={line.description}
+                    onChange={(e) => updateLine(i, "description", e.target.value)}
+                    placeholder="Descripción del servicio..."
+                    className="text-sm"
+                  />
+                  <Input
+                    type="number" min="0" step="0.01"
+                    value={line.quantity}
+                    onChange={(e) => updateLine(i, "quantity", e.target.value)}
+                    placeholder="Cant."
+                    className="text-sm"
+                  />
+                  <Input
+                    type="number" min="0" step="0.01"
+                    value={line.unitPrice}
+                    onChange={(e) => updateLine(i, "unitPrice", e.target.value)}
+                    placeholder="Precio €"
+                    className="text-sm"
+                  />
+                  <div className="hidden text-right font-mono text-sm text-muted-foreground sm:block">
                     €{lineAmounts[i]?.toLocaleString("es-ES", { minimumFractionDigits: 2 }) || "0,00"}
                   </div>
                   <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
+                    type="button" variant="ghost" size="icon"
                     className="h-9 w-9 shrink-0"
                     onClick={() => removeLine(i)}
                     disabled={lines.length <= 1}
@@ -321,92 +372,107 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
                 </div>
               ))}
             </div>
-          </div>
+          </Section>
 
-          {/* Tax config */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label>IVA (%)</Label>
-              <Select value={vatPercentage} onValueChange={setVatPercentage}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="0">0%</SelectItem>
-                  <SelectItem value="4">4%</SelectItem>
-                  <SelectItem value="10">10%</SelectItem>
-                  <SelectItem value="21">21%</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>IRPF (%)</Label>
-              <Select value={irpfPercentage} onValueChange={setIrpfPercentage}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="0">Sin IRPF</SelectItem>
-                  <SelectItem value="7">7%</SelectItem>
-                  <SelectItem value="15">15%</SelectItem>
-                  <SelectItem value="19">19%</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-end pb-1">
-              <div className="flex items-center gap-2">
-                <Switch checked={vatIncluded} onCheckedChange={setVatIncluded} />
-                <Label className="text-sm">IVA incluido</Label>
+          {/* Impuestos */}
+          <Section icon={Percent} title="Impuestos" desc="IVA, IRPF y desglose del importe">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+              <div className="space-y-1.5">
+                <Label>IVA (%)</Label>
+                <Select value={vatPercentage} onValueChange={setVatPercentage}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">0%</SelectItem>
+                    <SelectItem value="4">4%</SelectItem>
+                    <SelectItem value="10">10%</SelectItem>
+                    <SelectItem value="21">21%</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>IRPF (%)</Label>
+                <Select value={irpfPercentage} onValueChange={setIrpfPercentage}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">Sin IRPF</SelectItem>
+                    <SelectItem value="7">7%</SelectItem>
+                    <SelectItem value="15">15%</SelectItem>
+                    <SelectItem value="19">19%</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-end pb-1">
+                <div className="flex items-center gap-2">
+                  <Switch checked={vatIncluded} onCheckedChange={setVatIncluded} />
+                  <Label className="text-sm">IVA incluido</Label>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Special mentions */}
-          <div className="space-y-2">
-            <Label>Menciones especiales <span className="text-muted-foreground text-xs">(exención IVA, inversión sujeto pasivo...)</span></Label>
-            <Textarea
-              value={specialMentions}
-              onChange={(e) => setSpecialMentions(e.target.value)}
-              placeholder="Ej: Operación exenta de IVA según Art. 20.1 LIVA"
-              rows={2}
-            />
-          </div>
-
-          {/* Attachment */}
-          <div className="space-y-2">
-            <Label>Archivo adjunto</Label>
-            <InvoiceAttachment
-              accountId={accountId || ""}
-              attachmentPath={attachmentPath}
-              attachmentName={attachmentName}
-              onUploaded={(path, name) => { setAttachmentPath(path); setAttachmentName(name); }}
-              onRemoved={() => { setAttachmentPath(null); setAttachmentName(null); }}
-            />
-          </div>
-
-          {/* Totals summary */}
-          <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-1">
-            <div className="flex justify-between text-sm text-muted-foreground">
-              <span>Base imponible</span>
-              <span className="font-mono">€{amountNet.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
-            </div>
-            <div className="flex justify-between text-sm text-muted-foreground">
-              <span>IVA ({vatPercentage}%)</span>
-              <span className="font-mono">€{amountVat.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
-            </div>
-            {irpfNum > 0 && (
+            <div className="space-y-1 rounded-lg border border-border bg-muted/40 p-3">
               <div className="flex justify-between text-sm text-muted-foreground">
-                <span>IRPF (−{irpfPercentage}%)</span>
-                <span className="font-mono">−€{irpfAmount.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
+                <span>Base imponible</span>
+                <span className="font-mono">€{amountNet.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
               </div>
-            )}
-            <div className="flex justify-between text-base font-semibold text-foreground pt-1 border-t border-border">
-              <span>Total</span>
-              <span className="font-mono">€{amountTotal.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
+              <div className="flex justify-between text-sm text-muted-foreground">
+                <span>IVA ({vatPercentage}%)</span>
+                <span className="font-mono">€{amountVat.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
+              </div>
+              {irpfNum > 0 && (
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>IRPF (−{irpfPercentage}%)</span>
+                  <span className="font-mono">−€{irpfAmount.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
+                </div>
+              )}
+              <div className="flex justify-between border-t border-border pt-1 text-base font-semibold text-foreground">
+                <span>Total</span>
+                <span className="font-mono">€{amountTotal.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
+              </div>
             </div>
-          </div>
+          </Section>
+
+          {/* Detalles adicionales */}
+          <Section icon={StickyNote} title="Detalles adicionales" desc="Menciones legales y documentación de soporte">
+            <div className="space-y-1.5">
+              <Label>Menciones especiales <span className="text-xs text-muted-foreground">(exención IVA, inversión sujeto pasivo...)</span></Label>
+              <Textarea
+                value={specialMentions}
+                onChange={(e) => setSpecialMentions(e.target.value)}
+                placeholder="Ej: Operación exenta de IVA según Art. 20.1 LIVA"
+                rows={2}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="flex items-center gap-1.5"><Paperclip className="h-3.5 w-3.5 text-muted-foreground" />Archivo adjunto</Label>
+              <InvoiceAttachment
+                accountId={accountId || ""}
+                attachmentPath={attachmentPath}
+                attachmentName={attachmentName}
+                onUploaded={(path, name) => { setAttachmentPath(path); setAttachmentName(name); }}
+                onRemoved={() => { setAttachmentPath(null); setAttachmentName(null); }}
+              />
+            </div>
+          </Section>
         </div>
-        <DialogFooter className="flex-shrink-0">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSubmit} disabled={submitting}>
-            {submitting ? "Guardando..." : "Crear"}
-          </Button>
+
+        {/* Sticky footer with live total + actions */}
+        <DialogFooter className="flex-shrink-0 flex-row items-center justify-between gap-3 border-t border-border bg-background px-6 py-3 sm:justify-between">
+          <div className="flex flex-col">
+            <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Total</span>
+            <span className="font-mono text-lg font-bold tracking-tight">
+              €{amountTotal.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={submitting}>Cancelar</Button>
+            <Button variant="outline" onClick={() => handleSubmit(true)} disabled={!canSubmit} className="hidden sm:inline-flex">
+              <Copy className="mr-1.5 h-4 w-4" /> Guardar y crear otro
+            </Button>
+            <Button onClick={() => handleSubmit(false)} disabled={!canSubmit}>
+              {submitting ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : null}
+              {submitting ? "Guardando..." : "Crear"}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
