@@ -33,7 +33,7 @@ import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import OnboardingTour from "@/components/shared/OnboardingTour";
 import HealthCheck from "@/components/shared/HealthCheck";
 import MyTasksBadge from "@/components/tasks/MyTasksBadge";
-import xpertLogo from "@/assets/xpertconsulting-logo.png";
+import xpertLogo from "@/assets/brand/iso-blue.png";
 
 const moduleIcons: Record<string, any> = {
   DASHBOARD: LayoutDashboard,

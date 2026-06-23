@@ -13,7 +13,7 @@ import {
   SidebarInset,
 } from "@/components/ui/sidebar";
 import { LayoutDashboard, Users, Settings, LogOut, ArrowRightLeft, BookOpen } from "lucide-react";
-import xpertLogo from "@/assets/xpertconsulting-logo.png";
+import xpertLogo from "@/assets/brand/iso-blue.png";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
