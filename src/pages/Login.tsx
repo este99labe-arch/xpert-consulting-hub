@@ -28,11 +28,7 @@ const Login = () => {
 
   useEffect(() => {
     if (user && role) {
-      if (role === "MASTER_ADMIN") {
-        navigate("/master/dashboard", { replace: true });
-      } else {
-        navigate("/app/dashboard", { replace: true });
-      }
+      navigate("/app/dashboard", { replace: true });
     }
   }, [user, role, navigate]);
 
@@ -51,7 +47,7 @@ const Login = () => {
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
       {/* ───── Brand panel (desktop) ───── */}
-      <div className="relative hidden lg:flex flex-col justify-between overflow-hidden bg-sidebar p-12 text-sidebar-foreground">
+      <div className="relative hidden lg:flex flex-col justify-between overflow-hidden bg-gradient-to-br from-primary via-[hsl(217_55%_22%)] to-sidebar p-12 text-sidebar-foreground">
         {/* Decorative gradients */}
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute -top-32 -left-24 h-96 w-96 rounded-full bg-primary/25 blur-3xl" />
