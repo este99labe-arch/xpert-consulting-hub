@@ -1,9 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, CalendarCheck, Palmtree, Bell } from "lucide-react";
 import { startOfWeek, startOfMonth, endOfMonth, format, differenceInMinutes, parseISO, differenceInDays } from "date-fns";
+import { es } from "date-fns/locale";
 import TodayAttendanceWidget from "@/components/dashboard/TodayAttendanceWidget";
 import RemindersWidget from "@/components/dashboard/RemindersWidget";
 import MyVacationsWidget from "@/components/dashboard/MyVacationsWidget";
@@ -142,14 +144,25 @@ const EmployeeDashboard = () => {
   ];
 
   const userName = user?.email?.split("@")[0] || "";
+  const displayName = userName ? userName.charAt(0).toUpperCase() + userName.slice(1) : "";
+  const greeting = now.getHours() < 12 ? "Buenos días" : now.getHours() < 20 ? "Buenas tardes" : "Buenas noches";
+  const todayLabel = format(now, "EEEE, d 'de' MMMM", { locale: es });
 
   return (
     <div className="space-y-5">
       {/* Hero header */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Hola{userName ? `, ${userName}` : ""} 👋</h1>
-        <p className="text-sm text-muted-foreground">Aquí tienes tu jornada de hoy y lo importante de la semana.</p>
-      </div>
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25 }}
+      >
+        <h1 className="text-2xl font-bold tracking-tight">
+          {greeting}{displayName ? `, ${displayName}` : ""} 👋
+        </h1>
+        <p className="text-sm text-muted-foreground first-letter:uppercase">
+          {todayLabel} · Tu jornada y lo importante de la semana
+        </p>
+      </motion.div>
 
       {/* Personal KPIs */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
