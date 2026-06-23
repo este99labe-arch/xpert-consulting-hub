@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { SUPABASE_PROJECT_ID } from "@/integrations/supabase/config";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -345,7 +346,7 @@ function EndpointCard({ ep }: { ep: Endpoint }) {
 const MasterApiDocs = () => {
   const contentRef = useRef<HTMLDivElement>(null);
   const [generating, setGenerating] = useState(false);
-  const baseUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/public_api`;
+  const baseUrl = `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/public_api`;
 
   const handleDownloadPdf = async () => {
     setGenerating(true);
