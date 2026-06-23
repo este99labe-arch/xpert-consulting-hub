@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { SUPABASE_PROJECT_ID } from "@/integrations/supabase/config";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,7 +55,7 @@ const ApiKeysTab = ({ accountId, isManager }: ApiKeysTabProps) => {
     const { data: sessionData } = await supabase.auth.getSession();
     const token = sessionData.session?.access_token;
     if (!token) throw new Error("No autenticado");
-    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+    const projectId = SUPABASE_PROJECT_ID;
     const res = await fetch(`https://${projectId}.supabase.co/functions/v1/manage_api_keys`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -117,7 +118,7 @@ const ApiKeysTab = ({ accountId, isManager }: ApiKeysTabProps) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+  const projectId = SUPABASE_PROJECT_ID;
   const apiBaseUrl = `https://${projectId}.supabase.co/functions/v1/public_api`;
 
   return (

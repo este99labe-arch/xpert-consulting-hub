@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { SUPABASE_PROJECT_ID } from "@/integrations/supabase/config";
 
 /**
  * Fire-and-forget webhook dispatch.
@@ -14,7 +15,7 @@ export async function dispatchWebhook(
     const token = sessionData.session?.access_token;
     if (!token) return;
 
-    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+    const projectId = SUPABASE_PROJECT_ID;
     // Fire and forget — don't await or block the UI
     fetch(`https://${projectId}.supabase.co/functions/v1/dispatch_webhooks`, {
       method: "POST",
