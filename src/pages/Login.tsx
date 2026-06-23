@@ -28,11 +28,7 @@ const Login = () => {
 
   useEffect(() => {
     if (user && role) {
-      if (role === "MASTER_ADMIN") {
-        navigate("/master/dashboard", { replace: true });
-      } else {
-        navigate("/app/dashboard", { replace: true });
-      }
+      navigate("/app/dashboard", { replace: true });
     }
   }, [user, role, navigate]);
 
