@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,8 +24,11 @@ import EmployeeDashboard from "@/components/dashboard/EmployeeDashboard";
 type Period = "7d" | "30d" | "90d" | "year";
 const periodDays: Record<Period, number> = { "7d": 7, "30d": 30, "90d": 90, year: 365 };
 
+const greetingForHour = (h: number) =>
+  h < 12 ? "Buenos días" : h < 20 ? "Buenas tardes" : "Buenas noches";
+
 const ManagerDashboard = () => {
-  const { accountId } = useAuth();
+  const { accountId, user } = useAuth();
   const navigate = useNavigate();
   const [period, setPeriod] = useState<Period>("30d");
   const [chartPeriod, setChartPeriod] = useState("30d");
@@ -192,12 +196,26 @@ const ManagerDashboard = () => {
 
   const recent = invoices.slice(0, 8);
 
+  const userName = user?.email?.split("@")[0] || "";
+  const displayName = userName ? userName.charAt(0).toUpperCase() + userName.slice(1) : "";
+  const greeting = greetingForHour(now.getHours());
+  const todayLabel = format(now, "EEEE, d 'de' MMMM", { locale: es });
+
   return (
     <div className="space-y-5">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25 }}
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+      >
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Tu empresa hoy</h1>
-          <p className="text-sm text-muted-foreground">Centro de mando y resumen ejecutivo</p>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {greeting}{displayName ? `, ${displayName}` : ""} 👋
+          </h1>
+          <p className="text-sm text-muted-foreground first-letter:uppercase">
+            {todayLabel} · Resumen ejecutivo
+          </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <QuickActions />
@@ -208,7 +226,7 @@ const ManagerDashboard = () => {
             <ToggleGroupItem value="year" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:shadow-sm">Año</ToggleGroupItem>
           </ToggleGroup>
         </div>
-      </div>
+      </motion.div>
 
       <KpiCards
         income={curr.income} expense={curr.expense} balance={curr.income - curr.expense}
