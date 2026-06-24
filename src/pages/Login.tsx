@@ -54,13 +54,6 @@ const Login = () => {
     <div className="relative min-h-screen overflow-hidden" style={{ background: PAGE_GRADIENT }}>
       {/* ───── Decoración global sobre el azul ───── */}
       <div className="pointer-events-none absolute inset-0">
-        {/* Isotipo gigante de marca de agua */}
-        <img
-          src={isoWhite}
-          alt=""
-          aria-hidden
-          className="absolute -left-24 top-1/3 w-[36rem] opacity-[0.05] select-none"
-        />
         {/* Orbes difuminados */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
