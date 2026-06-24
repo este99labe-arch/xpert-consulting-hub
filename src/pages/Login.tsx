@@ -19,9 +19,9 @@ const FEATURES = [
   { icon: Users, title: "Equipo y clientes", desc: "RRHH, control horario y cartera, en un sitio." },
 ];
 
-// Degradado vertical: mayoritariamente azul, descendiendo a blanco al final.
+// Degradado horizontal: azul a la izquierda (texto legible) -> blanco a la derecha (bajo el formulario).
 const PAGE_GRADIENT =
-  "linear-gradient(to bottom, hsl(var(--brand-deep)) 0%, hsl(var(--brand-dark)) 26%, hsl(var(--brand)) 54%, hsl(var(--brand-light)) 80%, hsl(210 30% 97%) 100%)";
+  "linear-gradient(to right, hsl(var(--brand-deep)) 0%, hsl(var(--brand-dark)) 30%, hsl(var(--brand)) 56%, hsl(var(--brand-light)) 82%, hsl(210 30% 97%) 100%)";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -81,8 +81,8 @@ const Login = () => {
             backgroundImage:
               "linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)",
             backgroundSize: "48px 48px",
-            maskImage: "linear-gradient(to bottom, black 0%, transparent 70%)",
-            WebkitMaskImage: "linear-gradient(to bottom, black 0%, transparent 70%)",
+            maskImage: "linear-gradient(to right, black 0%, transparent 70%)",
+            WebkitMaskImage: "linear-gradient(to right, black 0%, transparent 70%)",
           }}
         />
       </div>
