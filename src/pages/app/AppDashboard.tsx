@@ -19,7 +19,12 @@ import TodayAttendanceWidget from "@/components/dashboard/TodayAttendanceWidget"
 import RemindersWidget from "@/components/dashboard/RemindersWidget";
 import UpcomingDuesWidget from "@/components/dashboard/UpcomingDuesWidget";
 import CashflowMiniWidget from "@/components/dashboard/CashflowMiniWidget";
+import AttentionWidget from "@/components/dashboard/AttentionWidget";
 import EmployeeDashboard from "@/components/dashboard/EmployeeDashboard";
+
+const SectionLabel = ({ children }: { children: React.ReactNode }) => (
+  <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">{children}</h2>
+);
 
 type Period = "7d" | "30d" | "90d" | "year";
 const periodDays: Record<Period, number> = { "7d": 7, "30d": 30, "90d": 90, year: 365 };
@@ -196,6 +201,15 @@ const ManagerDashboard = () => {
 
   const recent = invoices.slice(0, 8);
 
+  // Global overdue (all periods) for the "needs attention" widget
+  const overdueInvoices = useMemo(() =>
+    invoices.filter((i: any) =>
+      i.type === "INVOICE" && i.status === "SENT" && differenceInDays(now, parseISO(i.issue_date)) > 30
+    ),
+    [invoices]
+  );
+  const overdueAmountAll = overdueInvoices.reduce((s: number, i: any) => s + Number(i.amount_total), 0);
+
   const userName = user?.email?.split("@")[0] || "";
   const displayName = userName ? userName.charAt(0).toUpperCase() + userName.slice(1) : "";
   const greeting = greetingForHour(now.getHours());
@@ -249,24 +263,45 @@ const ManagerDashboard = () => {
         }}
       />
 
-      <div className="grid gap-5 lg:grid-cols-3">
-        <div className="lg:col-span-2"><RevenueChart data={chartData} period={chartPeriod} onPeriodChange={setChartPeriod} /></div>
-        <div className="lg:col-span-1"><RemindersWidget /></div>
+      {/* ── Finanzas ── */}
+      <div className="space-y-3">
+        <SectionLabel>Finanzas</SectionLabel>
+        <div className="grid gap-5 lg:grid-cols-3">
+          <div className="lg:col-span-2"><RevenueChart data={chartData} period={chartPeriod} onPeriodChange={setChartPeriod} /></div>
+          <div className="lg:col-span-1">
+            <AttentionWidget
+              overdueCount={overdueInvoices.length}
+              overdueAmount={overdueAmountAll}
+              lowStockCount={lowStockProducts.length}
+              pendingApprovals={pendingApprovals as number}
+            />
+          </div>
+        </div>
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          <InvoiceStatusChart data={statusData} />
+          <CashflowMiniWidget />
+          <UpcomingDuesWidget />
+        </div>
       </div>
 
-      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-        <CashflowMiniWidget />
-        <UpcomingDuesWidget />
-        <TodayAttendanceWidget />
+      {/* ── Clientes y equipo ── */}
+      <div className="space-y-3">
+        <SectionLabel>Clientes y equipo</SectionLabel>
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          <TopClients clients={topClients} />
+          <TodayAttendanceWidget />
+          <RemindersWidget />
+        </div>
       </div>
 
-      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-        <InvoiceStatusChart data={statusData} />
-        <TopClients clients={topClients} />
-        <LowStockAlerts products={lowStockProducts} />
+      {/* ── Operativa ── */}
+      <div className="space-y-3">
+        <SectionLabel>Operativa</SectionLabel>
+        <div className="grid gap-5 lg:grid-cols-3">
+          <div className="lg:col-span-2"><RecentActivity invoices={recent} /></div>
+          <div className="lg:col-span-1"><LowStockAlerts products={lowStockProducts} /></div>
+        </div>
       </div>
-
-      <RecentActivity invoices={recent} />
     </div>
   );
 };

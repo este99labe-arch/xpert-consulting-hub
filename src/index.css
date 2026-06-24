@@ -20,6 +20,13 @@
     --primary: 217 91% 50%;
     --primary-foreground: 0 0% 100%;
 
+    /* Corporate brand (XpertConsulting) — from logo #3860AA */
+    --brand: 219 50% 44%;
+    --brand-foreground: 0 0% 100%;
+    --brand-light: 219 55% 56%;
+    --brand-dark: 219 52% 24%;
+    --brand-deep: 220 55% 14%;
+
     --secondary: 214 32% 91%;
     --secondary-foreground: 215 25% 20%;
 
