@@ -32,21 +32,21 @@ const TONE: Record<string, { iconBg: string; icon: string; ring: string }> = {
 const AttentionWidget = ({ overdueCount, overdueAmount, lowStockCount, pendingApprovals }: AttentionWidgetProps) => {
   const navigate = useNavigate();
 
-  const items: Item[] = [
+  const items = [
     {
-      key: "overdue", show: overdueCount > 0, icon: FileWarning, tone: "danger",
+      key: "overdue", show: overdueCount > 0, icon: FileWarning, tone: "danger" as const,
       title: `${overdueCount} ${overdueCount === 1 ? "factura vencida" : "facturas vencidas"}`,
       desc: `${EUR(overdueAmount)} pendientes de cobro`,
       to: "/app/invoices?status=OVERDUE",
     },
     {
-      key: "approvals", show: pendingApprovals > 0, icon: ClipboardCheck, tone: "warning",
+      key: "approvals", show: pendingApprovals > 0, icon: ClipboardCheck, tone: "warning" as const,
       title: `${pendingApprovals} ${pendingApprovals === 1 ? "solicitud pendiente" : "solicitudes pendientes"}`,
       desc: "Ausencias, perfiles y eliminaciones por aprobar",
       to: "/app/settings",
     },
     {
-      key: "stock", show: lowStockCount > 0, icon: PackageX, tone: "warning",
+      key: "stock", show: lowStockCount > 0, icon: PackageX, tone: "warning" as const,
       title: `${lowStockCount} ${lowStockCount === 1 ? "producto bajo mínimos" : "productos bajo mínimos"}`,
       desc: "Revisa el stock y reabastece",
       to: "/app/inventory",
