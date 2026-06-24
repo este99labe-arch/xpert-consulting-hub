@@ -11,12 +11,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Loader2, ArrowRight, Plus, Trash2 } from "lucide-react";
+import {
+  Loader2, ArrowRight, Plus, Trash2, FileText, Receipt, FileSignature,
+  RefreshCw, Users, Percent, StickyNote, Paperclip, CreditCard, CalendarDays,
+} from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import InvoiceAttachment from "@/components/invoices/InvoiceAttachment";
 import InvoicePaymentsPanel from "@/components/invoices/InvoicePaymentsPanel";
+import FormSection from "@/components/shared/FormSection";
 
 const statusLabels: Record<string, string> = {
   DRAFT: "Borrador", SENT: "Enviada", PAID: "Pagada", PARTIALLY_PAID: "Pago parcial", OVERDUE: "Vencida",
@@ -255,27 +258,35 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
   if (!invoice) return null;
 
   const invoiceNumber = invoice.invoice_number || invoice.id.slice(0, 8).toUpperCase();
+  const HeaderIcon = isQuote ? FileSignature : invoice?.type === "EXPENSE" ? Receipt : FileText;
+  const subtitle = isDraft
+    ? `Puedes modificar todos los campos mientras ${isQuote ? "el presupuesto" : "la factura"} está en borrador.`
+    : isQuote && invoice?.status === "ACCEPTED"
+      ? "Puedes convertir este presupuesto en factura."
+      : `Solo puedes cambiar el estado de ${isQuote ? "este presupuesto" : "esta factura"}.`;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle>Editar {invoiceNumber}</DialogTitle>
-          <DialogDescription>
-            {isDraft
-              ? `Puedes modificar todos los campos mientras ${isQuote ? "el presupuesto" : "la factura"} está en borrador.`
-              : isQuote && invoice?.status === "ACCEPTED"
-                ? "Puedes convertir este presupuesto en factura."
-                : `Solo puedes cambiar el estado de ${isQuote ? "este presupuesto" : "esta factura"}.`}
-          </DialogDescription>
+      <DialogContent className="flex max-h-[92vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+        {/* Header */}
+        <DialogHeader className="flex-shrink-0 space-y-0 border-b border-border px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <HeaderIcon className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <DialogTitle className="text-lg">Editar {invoiceNumber}</DialogTitle>
+              <DialogDescription className="text-sm">{subtitle}</DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="space-y-4 overflow-y-auto flex-1 pr-1">
-          {/* Status */}
-          <div className="space-y-3">
-            <Label className="text-xs text-muted-foreground uppercase tracking-wide">Estado</Label>
-            <div className="flex items-center gap-3 flex-wrap">
-              <Badge variant="outline" className="text-sm py-1 px-3">{statusLabels[invoice.status]}</Badge>
+        {/* Body */}
+        <div className="flex-1 space-y-4 overflow-y-auto bg-muted/30 px-6 py-5">
+          {/* Estado */}
+          <FormSection icon={RefreshCw} title="Estado" desc="Situación actual y transición disponible">
+            <div className="flex flex-wrap items-center gap-3">
+              <Badge variant="outline" className="px-3 py-1 text-sm">{statusLabels[invoice.status]}</Badge>
               {nextStatuses.length > 0 && (
                 <>
                   <ArrowRight className="h-4 w-4 text-muted-foreground" />
@@ -287,182 +298,188 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
                 </>
               )}
             </div>
-          </div>
-
-          <Separator />
+          </FormSection>
 
           {isDraft && (
             <>
-              {/* Client & Dates */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>{invoice?.type === "EXPENSE" ? "Proveedor" : "Cliente"}</Label>
-                  <Select value={clientId} onValueChange={setClientId}>
-                    <SelectTrigger><SelectValue placeholder="Selecciona destinatario" /></SelectTrigger>
-                    <SelectContent>
-                      {account && (
-                        <SelectItem value={`__self__${account.id}`}>🏢 {account.name} (Mi empresa)</SelectItem>
-                      )}
-                      {clients.map((c: any) => (
-                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              {/* Datos generales */}
+              <FormSection icon={Users} title="Datos generales" desc="Destinatario y fechas">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label>{invoice?.type === "EXPENSE" ? "Proveedor" : "Cliente"}</Label>
+                    <Select value={clientId} onValueChange={setClientId}>
+                      <SelectTrigger><SelectValue placeholder="Selecciona destinatario" /></SelectTrigger>
+                      <SelectContent>
+                        {account && (
+                          <SelectItem value={`__self__${account.id}`}>🏢 {account.name} (Mi empresa)</SelectItem>
+                        )}
+                        {clients.map((c: any) => (
+                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />Fecha de emisión</Label>
+                    <Input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Fecha de emisión</Label>
-                  <Input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} />
+                <div className="space-y-1.5">
+                  <Label>Fecha de operación <span className="text-xs text-muted-foreground">(si difiere)</span></Label>
+                  <Input type="date" value={operationDate} onChange={(e) => setOperationDate(e.target.value)} />
                 </div>
-              </div>
+              </FormSection>
 
-              <div className="space-y-2">
-                <Label>Fecha de operación <span className="text-muted-foreground text-xs">(si difiere)</span></Label>
-                <Input type="date" value={operationDate} onChange={(e) => setOperationDate(e.target.value)} />
-              </div>
-
-              {/* Line items */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-semibold">Servicios / Conceptos</Label>
+              {/* Conceptos */}
+              <FormSection
+                icon={FileText}
+                title="Conceptos"
+                desc="Servicios o productos incluidos"
+                action={
                   <Button type="button" variant="outline" size="sm" onClick={addLine}>
-                    <Plus className="h-3.5 w-3.5 mr-1" /> Línea
+                    <Plus className="mr-1 h-3.5 w-3.5" /> Añadir línea
                   </Button>
+                }
+              >
+                <div className="hidden grid-cols-[1fr_5rem_7rem_6rem_2.25rem] gap-2 px-1 sm:grid">
+                  <span className="text-xs font-medium text-muted-foreground">Descripción</span>
+                  <span className="text-xs font-medium text-muted-foreground">Cant.</span>
+                  <span className="text-xs font-medium text-muted-foreground">Precio €</span>
+                  <span className="text-right text-xs font-medium text-muted-foreground">Importe</span>
+                  <span />
                 </div>
-                {lines.map((line, i) => (
-                  <div key={i} className="flex gap-2 items-start">
-                    <div className="flex-1 min-w-0">
+                <div className="space-y-2">
+                  {lines.map((line, i) => (
+                    <div key={i} className="grid grid-cols-[1fr_3.5rem_4.5rem_2.25rem] items-center gap-2 sm:grid-cols-[1fr_5rem_7rem_6rem_2.25rem]">
                       <Input value={line.description} onChange={(e) => updateLine(i, "description", e.target.value)}
                         placeholder="Descripción..." className="text-sm" />
-                    </div>
-                    <div className="w-20">
                       <Input type="number" min="0" step="0.01" value={line.quantity}
                         onChange={(e) => updateLine(i, "quantity", e.target.value)} placeholder="Cant." className="text-sm" />
-                    </div>
-                    <div className="w-28">
                       <Input type="number" min="0" step="0.01" value={line.unitPrice}
                         onChange={(e) => updateLine(i, "unitPrice", e.target.value)} placeholder="Precio €" className="text-sm" />
+                      <div className="hidden text-right font-mono text-sm text-muted-foreground sm:block">
+                        €{lineAmounts[i]?.toLocaleString("es-ES", { minimumFractionDigits: 2 }) || "0,00"}
+                      </div>
+                      <Button type="button" variant="ghost" size="icon" className="h-9 w-9 shrink-0"
+                        onClick={() => removeLine(i)} disabled={lines.length <= 1}>
+                        <Trash2 className="h-4 w-4 text-muted-foreground" />
+                      </Button>
                     </div>
-                    <div className="w-24 text-right pt-2 text-sm font-mono text-muted-foreground">
-                      €{lineAmounts[i]?.toLocaleString("es-ES", { minimumFractionDigits: 2 }) || "0,00"}
+                  ))}
+                </div>
+              </FormSection>
+
+              {/* Impuestos */}
+              <FormSection icon={Percent} title="Impuestos" desc="IVA, IRPF y desglose del importe">
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                  <div className="space-y-1.5">
+                    <Label>IVA (%)</Label>
+                    <Select value={vatPercentage} onValueChange={setVatPercentage}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">0%</SelectItem>
+                        <SelectItem value="4">4%</SelectItem>
+                        <SelectItem value="10">10%</SelectItem>
+                        <SelectItem value="21">21%</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>IRPF (%)</Label>
+                    <Select value={irpfPercentage} onValueChange={setIrpfPercentage}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">Sin IRPF</SelectItem>
+                        <SelectItem value="7">7%</SelectItem>
+                        <SelectItem value="15">15%</SelectItem>
+                        <SelectItem value="19">19%</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-end pb-1">
+                    <div className="flex items-center gap-2">
+                      <Switch checked={vatIncluded} onCheckedChange={setVatIncluded} />
+                      <Label className="text-sm">IVA incluido</Label>
                     </div>
-                    <Button type="button" variant="ghost" size="icon" className="h-9 w-9 shrink-0"
-                      onClick={() => removeLine(i)} disabled={lines.length <= 1}>
-                      <Trash2 className="h-4 w-4 text-muted-foreground" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-
-              {/* Tax config */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>IVA (%)</Label>
-                  <Select value={vatPercentage} onValueChange={setVatPercentage}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">0%</SelectItem>
-                      <SelectItem value="4">4%</SelectItem>
-                      <SelectItem value="10">10%</SelectItem>
-                      <SelectItem value="21">21%</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>IRPF (%)</Label>
-                  <Select value={irpfPercentage} onValueChange={setIrpfPercentage}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">Sin IRPF</SelectItem>
-                      <SelectItem value="7">7%</SelectItem>
-                      <SelectItem value="15">15%</SelectItem>
-                      <SelectItem value="19">19%</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-end pb-1">
-                  <div className="flex items-center gap-2">
-                    <Switch checked={vatIncluded} onCheckedChange={setVatIncluded} />
-                    <Label className="text-sm">IVA incluido</Label>
                   </div>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label>Menciones especiales</Label>
+                <div className="space-y-1 rounded-lg border border-border bg-muted/40 p-3">
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>Base imponible</span>
+                    <span className="font-mono">€{amountNet.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>IVA ({vatPercentage}%)</span>
+                    <span className="font-mono">€{amountVat.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  {irpfNum > 0 && (
+                    <div className="flex justify-between text-sm text-muted-foreground">
+                      <span>IRPF (−{irpfPercentage}%)</span>
+                      <span className="font-mono">−€{irpfAmount.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between border-t border-border pt-1 text-base font-semibold text-foreground">
+                    <span>Total</span>
+                    <span className="font-mono">€{amountTotal.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
+                  </div>
+                </div>
+              </FormSection>
+
+              {/* Menciones */}
+              <FormSection icon={StickyNote} title="Menciones especiales">
                 <Textarea value={specialMentions} onChange={(e) => setSpecialMentions(e.target.value)}
                   placeholder="Exención de IVA, inversión del sujeto pasivo..." rows={2} />
-              </div>
-
-              {/* Totals */}
-              <div className="rounded-lg border bg-muted/30 p-3 space-y-1">
-                <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>Base imponible</span>
-                  <span className="font-mono">€{amountNet.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
-                </div>
-                <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>IVA ({vatPercentage}%)</span>
-                  <span className="font-mono">€{amountVat.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
-                </div>
-                {irpfNum > 0 && (
-                  <div className="flex justify-between text-sm text-muted-foreground">
-                    <span>IRPF (−{irpfPercentage}%)</span>
-                    <span className="font-mono">−€{irpfAmount.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
-                  </div>
-                )}
-                <div className="flex justify-between text-base font-semibold text-foreground pt-1 border-t">
-                  <span>Total</span>
-                  <span className="font-mono">€{amountTotal.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
-                </div>
-              </div>
+              </FormSection>
             </>
           )}
 
           {/* Summary for non-draft */}
           {!isDraft && (
-            <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Concepto</span>
-                <span className="font-medium">{invoice.concept || "—"}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Cliente</span>
-                <span className="font-medium">{invoice.business_clients?.name || "—"}</span>
-              </div>
-              <Separator />
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Base imponible</span>
-                <span className="font-mono">€{Number(invoice.amount_net).toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">IVA ({invoice.vat_percentage}%)</span>
-                <span className="font-mono">€{Number(invoice.amount_vat).toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
-              </div>
-              {(invoice.irpf_percentage || 0) > 0 && (
+            <FormSection icon={Receipt} title="Resumen">
+              <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">IRPF (−{invoice.irpf_percentage}%)</span>
-                  <span className="font-mono">−€{Number(invoice.irpf_amount || 0).toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
+                  <span className="text-muted-foreground">Concepto</span>
+                  <span className="font-medium">{invoice.concept || "—"}</span>
                 </div>
-              )}
-              <div className="flex justify-between text-base font-bold pt-1 border-t">
-                <span>Total</span>
-                <span className="font-mono">€{Number(invoice.amount_total).toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Cliente</span>
+                  <span className="font-medium">{invoice.business_clients?.name || "—"}</span>
+                </div>
+                <div className="my-1 border-t border-border" />
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Base imponible</span>
+                  <span className="font-mono">€{Number(invoice.amount_net).toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">IVA ({invoice.vat_percentage}%)</span>
+                  <span className="font-mono">€{Number(invoice.amount_vat).toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
+                </div>
+                {(invoice.irpf_percentage || 0) > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">IRPF (−{invoice.irpf_percentage}%)</span>
+                    <span className="font-mono">−€{Number(invoice.irpf_amount || 0).toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
+                  </div>
+                )}
+                <div className="flex justify-between border-t border-border pt-1 text-base font-bold">
+                  <span>Total</span>
+                  <span className="font-mono">€{Number(invoice.amount_total).toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
+                </div>
               </div>
-            </div>
+            </FormSection>
           )}
 
           {/* Partial payments */}
           {invoice?.type !== "QUOTE" && invoice?.status !== "DRAFT" && (
-            <>
-              <Separator />
+            <FormSection icon={CreditCard} title="Cobros y pagos">
               <InvoicePaymentsPanel invoice={invoice} onStatusChanged={() => {
                 queryClient.invalidateQueries({ queryKey: ["invoices"] });
               }} />
-            </>
+            </FormSection>
           )}
 
           {/* Attachment */}
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground uppercase tracking-wide">Archivo adjunto</Label>
+          <FormSection icon={Paperclip} title="Archivo adjunto">
             <InvoiceAttachment
               accountId={accountId || ""}
               invoiceId={invoice?.id}
@@ -471,15 +488,24 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
               onUploaded={(path, name) => { setAttachmentPath(path); setAttachmentName(name); }}
               onRemoved={() => { setAttachmentPath(null); setAttachmentName(null); }}
             />
-          </div>
+          </FormSection>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSubmit} disabled={submitting || (status === invoice?.status && !isDraft && attachmentPath === (invoice?.attachment_path || null))}>
-            {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-            {isQuote && status === "INVOICED" ? "Convertir en factura" : "Guardar"}
-          </Button>
+        {/* Sticky footer */}
+        <DialogFooter className="flex-shrink-0 flex-row items-center justify-between gap-3 border-t border-border bg-background px-6 py-3">
+          <div className="flex flex-col">
+            <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Total</span>
+            <span className="font-mono text-lg font-bold tracking-tight">
+              €{(isDraft ? amountTotal : Number(invoice.amount_total)).toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={submitting}>Cancelar</Button>
+            <Button onClick={handleSubmit} disabled={submitting || (status === invoice?.status && !isDraft && attachmentPath === (invoice?.attachment_path || null))}>
+              {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isQuote && status === "INVOICED" ? "Convertir en factura" : "Guardar"}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
