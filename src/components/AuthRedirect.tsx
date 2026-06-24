@@ -2,7 +2,7 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
 export const AuthRedirect: React.FC = () => {
-  const { user, role, loading } = useAuth();
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
@@ -14,6 +14,7 @@ export const AuthRedirect: React.FC = () => {
 
   if (!user) return <Navigate to="/login" replace />;
 
-  if (role === "MASTER_ADMIN") return <Navigate to="/master/dashboard" replace />;
+  // Todos los roles entran al panel de aplicación; el panel Master sigue
+  // accesible desde el enlace lateral para MASTER_ADMIN.
   return <Navigate to="/app/dashboard" replace />;
 };

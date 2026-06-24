@@ -1,17 +1,17 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
+import FormSection from "@/components/shared/FormSection";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, AlertCircle } from "lucide-react";
+  Loader2, AlertCircle, Building2, UserRound, MapPin, Receipt, StickyNote, Copy,
+} from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface Props {
@@ -22,8 +22,10 @@ interface Props {
 }
 
 const CreateBusinessClientDialog = ({ open, onOpenChange, accountId, onSuccess }: Props) => {
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const keepOpenRef = useRef(false);
 
   // Client info
   const [form, setForm] = useState({
@@ -121,154 +123,163 @@ const CreateBusinessClientDialog = ({ open, onOpenChange, accountId, onSuccess }
       if (contactError) throw contactError;
 
       toast({ title: "Cliente creado correctamente" });
-      resetForm();
-      onSuccess();
+      if (keepOpenRef.current) {
+        // Alta rápida: limpia el formulario y refresca la lista sin cerrar
+        resetForm();
+        queryClient.invalidateQueries({ queryKey: ["business_clients"] });
+      } else {
+        resetForm();
+        onSuccess();
+      }
     } catch (err: any) {
       setError(err.message || "Error al crear cliente");
     } finally {
       setLoading(false);
+      keepOpenRef.current = false;
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) resetForm(); onOpenChange(v); }}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Nuevo Cliente</DialogTitle>
-          <DialogDescription>Completa los datos del cliente y su contacto principal</DialogDescription>
+      <DialogContent className="flex max-h-[92vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl">
+        {/* Header */}
+        <DialogHeader className="flex-shrink-0 space-y-0 border-b border-border px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Building2 className="h-5 w-5" />
+            </div>
+            <div>
+              <DialogTitle className="text-lg">Nuevo cliente</DialogTitle>
+              <p className="text-sm text-muted-foreground">Completa los datos del cliente y su contacto principal</p>
+            </div>
+          </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="flex items-center gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              {error}
-            </div>
-          )}
+        <form onSubmit={handleSubmit} className="flex flex-1 flex-col overflow-hidden">
+          {/* Body */}
+          <div className="flex-1 space-y-4 overflow-y-auto bg-muted/30 px-6 py-5">
+            {error && (
+              <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                {error}
+              </div>
+            )}
 
-          {/* General Info */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Datos Generales</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label>Nombre / Razón Social *</Label>
-                <Input value={form.name} onChange={(e) => updateForm("name", e.target.value)} required />
+            <FormSection icon={Building2} title="Datos generales" desc="Identificación fiscal y datos de contacto">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label>Nombre / Razón social <span className="text-destructive">*</span></Label>
+                  <Input value={form.name} onChange={(e) => updateForm("name", e.target.value)} required />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>NIF / CIF <span className="text-destructive">*</span></Label>
+                  <Input value={form.tax_id} onChange={(e) => updateForm("tax_id", e.target.value)} required />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Email</Label>
+                  <Input type="email" value={form.email} onChange={(e) => updateForm("email", e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Teléfono</Label>
+                  <Input value={form.phone} onChange={(e) => updateForm("phone", e.target.value)} />
+                </div>
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label>Sitio web</Label>
+                  <Input value={form.website} onChange={(e) => updateForm("website", e.target.value)} placeholder="https://" />
+                </div>
               </div>
-              <div className="space-y-1.5">
-                <Label>NIF / CIF *</Label>
-                <Input value={form.tax_id} onChange={(e) => updateForm("tax_id", e.target.value)} required />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Email</Label>
-                <Input type="email" value={form.email} onChange={(e) => updateForm("email", e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Teléfono</Label>
-                <Input value={form.phone} onChange={(e) => updateForm("phone", e.target.value)} />
-              </div>
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label>Sitio Web</Label>
-                <Input value={form.website} onChange={(e) => updateForm("website", e.target.value)} placeholder="https://" />
-              </div>
-            </CardContent>
-          </Card>
+            </FormSection>
 
-          {/* Fiscal Address */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Dirección Fiscal</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label>Dirección</Label>
-                <Input value={form.address} onChange={(e) => updateForm("address", e.target.value)} />
+            <FormSection icon={UserRound} title="Contacto principal" desc="Persona de referencia del cliente (obligatorio)" highlight>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label>Nombre <span className="text-destructive">*</span></Label>
+                  <Input value={contact.name} onChange={(e) => updateContact("name", e.target.value)} required />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Cargo</Label>
+                  <Input value={contact.position} onChange={(e) => updateContact("position", e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Email</Label>
+                  <Input type="email" value={contact.email} onChange={(e) => updateContact("email", e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Teléfono</Label>
+                  <Input value={contact.phone} onChange={(e) => updateContact("phone", e.target.value)} />
+                </div>
               </div>
-              <div className="space-y-1.5">
-                <Label>Ciudad</Label>
-                <Input value={form.city} onChange={(e) => updateForm("city", e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Código Postal</Label>
-                <Input value={form.postal_code} onChange={(e) => updateForm("postal_code", e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>País</Label>
-                <Input value={form.country} onChange={(e) => updateForm("country", e.target.value)} />
-              </div>
-            </CardContent>
-          </Card>
+            </FormSection>
 
-          {/* Billing Address */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Dirección de Facturación</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label>Dirección</Label>
-                <Input value={form.billing_address} onChange={(e) => updateForm("billing_address", e.target.value)} placeholder="Si difiere de la dirección fiscal" />
+            <FormSection icon={MapPin} title="Dirección fiscal">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label>Dirección</Label>
+                  <Input value={form.address} onChange={(e) => updateForm("address", e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Ciudad</Label>
+                  <Input value={form.city} onChange={(e) => updateForm("city", e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Código postal</Label>
+                  <Input value={form.postal_code} onChange={(e) => updateForm("postal_code", e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>País</Label>
+                  <Input value={form.country} onChange={(e) => updateForm("country", e.target.value)} />
+                </div>
               </div>
-              <div className="space-y-1.5">
-                <Label>Ciudad</Label>
-                <Input value={form.billing_city} onChange={(e) => updateForm("billing_city", e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Código Postal</Label>
-                <Input value={form.billing_postal_code} onChange={(e) => updateForm("billing_postal_code", e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>País</Label>
-                <Input value={form.billing_country} onChange={(e) => updateForm("billing_country", e.target.value)} />
-              </div>
-            </CardContent>
-          </Card>
+            </FormSection>
 
-          {/* Notes */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Notas</CardTitle>
-            </CardHeader>
-            <CardContent>
+            <FormSection icon={Receipt} title="Dirección de facturación" desc="Solo si difiere de la dirección fiscal">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label>Dirección</Label>
+                  <Input value={form.billing_address} onChange={(e) => updateForm("billing_address", e.target.value)} placeholder="Si difiere de la dirección fiscal" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Ciudad</Label>
+                  <Input value={form.billing_city} onChange={(e) => updateForm("billing_city", e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Código postal</Label>
+                  <Input value={form.billing_postal_code} onChange={(e) => updateForm("billing_postal_code", e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>País</Label>
+                  <Input value={form.billing_country} onChange={(e) => updateForm("billing_country", e.target.value)} />
+                </div>
+              </div>
+            </FormSection>
+
+            <FormSection icon={StickyNote} title="Notas">
               <Textarea
                 value={form.notes}
                 onChange={(e) => updateForm("notes", e.target.value)}
                 placeholder="Observaciones sobre este cliente..."
                 rows={3}
               />
-            </CardContent>
-          </Card>
+            </FormSection>
+          </div>
 
-          {/* Primary Contact - MANDATORY */}
-          <Card className="border-primary/30">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Contacto Principal *</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label>Nombre *</Label>
-                <Input value={contact.name} onChange={(e) => updateContact("name", e.target.value)} required />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Cargo</Label>
-                <Input value={contact.position} onChange={(e) => updateContact("position", e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Email</Label>
-                <Input type="email" value={contact.email} onChange={(e) => updateContact("email", e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Teléfono</Label>
-                <Input value={contact.phone} onChange={(e) => updateContact("phone", e.target.value)} />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-            Crear Cliente
-          </Button>
+          {/* Sticky footer */}
+          <DialogFooter className="flex-shrink-0 flex-row items-center justify-end gap-2 border-t border-border bg-background px-6 py-3">
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={loading}>Cancelar</Button>
+            <Button
+              type="submit"
+              variant="outline"
+              onClick={() => { keepOpenRef.current = true; }}
+              disabled={loading}
+              className="hidden sm:inline-flex"
+            >
+              <Copy className="mr-1.5 h-4 w-4" /> Guardar y crear otro
+            </Button>
+            <Button type="submit" onClick={() => { keepOpenRef.current = false; }} disabled={loading}>
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Crear cliente
+            </Button>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

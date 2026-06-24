@@ -17,6 +17,7 @@ import {
   Percent, StickyNote, Paperclip, Copy, Loader2,
 } from "lucide-react";
 import InvoiceAttachment from "@/components/invoices/InvoiceAttachment";
+import FormSection from "@/components/shared/FormSection";
 import { dispatchWebhook } from "@/lib/webhooks";
 
 interface InvoiceLineInput {
@@ -30,26 +31,6 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   defaultType?: "QUOTE" | "INVOICE" | "EXPENSE";
 }
-
-const Section = ({
-  icon: Icon, title, desc, action, children,
-}: {
-  icon: any; title: string; desc?: string; action?: React.ReactNode; children: React.ReactNode;
-}) => (
-  <section className="rounded-xl border border-border bg-card shadow-2xs">
-    <div className="flex items-center gap-3 border-b border-border px-4 py-3">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-        <Icon className="h-4 w-4" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <h3 className="text-sm font-semibold leading-tight">{title}</h3>
-        {desc && <p className="mt-0.5 text-xs text-muted-foreground">{desc}</p>}
-      </div>
-      {action}
-    </div>
-    <div className="space-y-4 p-4">{children}</div>
-  </section>
-);
 
 const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
   const { accountId } = useAuth();
@@ -269,7 +250,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
         {/* Body */}
         <div className="flex-1 space-y-4 overflow-y-auto bg-muted/30 px-6 py-5">
           {/* Datos generales */}
-          <Section icon={Users} title="Datos generales" desc="Tipo de documento, destinatario y fechas">
+          <FormSection icon={Users} title="Datos generales" desc="Tipo de documento, destinatario y fechas">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label>Tipo</Label>
@@ -314,10 +295,10 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
                 <Input type="date" value={operationDate} onChange={(e) => setOperationDate(e.target.value)} />
               </div>
             </div>
-          </Section>
+          </FormSection>
 
           {/* Conceptos */}
-          <Section
+          <FormSection
             icon={FileText}
             title="Conceptos"
             desc="Servicios o productos incluidos"
@@ -372,10 +353,10 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
                 </div>
               ))}
             </div>
-          </Section>
+          </FormSection>
 
           {/* Impuestos */}
-          <Section icon={Percent} title="Impuestos" desc="IVA, IRPF y desglose del importe">
+          <FormSection icon={Percent} title="Impuestos" desc="IVA, IRPF y desglose del importe">
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
               <div className="space-y-1.5">
                 <Label>IVA (%)</Label>
@@ -429,10 +410,10 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
                 <span className="font-mono">€{amountTotal.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
               </div>
             </div>
-          </Section>
+          </FormSection>
 
           {/* Detalles adicionales */}
-          <Section icon={StickyNote} title="Detalles adicionales" desc="Menciones legales y documentación de soporte">
+          <FormSection icon={StickyNote} title="Detalles adicionales" desc="Menciones legales y documentación de soporte">
             <div className="space-y-1.5">
               <Label>Menciones especiales <span className="text-xs text-muted-foreground">(exención IVA, inversión sujeto pasivo...)</span></Label>
               <Textarea
@@ -452,7 +433,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
                 onRemoved={() => { setAttachmentPath(null); setAttachmentName(null); }}
               />
             </div>
-          </Section>
+          </FormSection>
         </div>
 
         {/* Sticky footer with live total + actions */}
