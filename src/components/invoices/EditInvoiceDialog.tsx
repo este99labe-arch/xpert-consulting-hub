@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import {
   Loader2, ArrowRight, Plus, Trash2, FileText, Receipt, FileSignature,
-  RefreshCw, Users, Percent, StickyNote, Paperclip, CreditCard, CalendarDays,
+  RefreshCw, Users, Percent, StickyNote, Paperclip, CreditCard, CalendarDays, Tags,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
@@ -42,6 +42,7 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
   const queryClient = useQueryClient();
 
   const [clientId, setClientId] = useState("");
+  const [categoryId, setCategoryId] = useState("");
   const [issueDate, setIssueDate] = useState("");
   const [operationDate, setOperationDate] = useState("");
   const [vatPercentage, setVatPercentage] = useState("21");
@@ -77,6 +78,7 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
   useEffect(() => {
     if (invoice && open) {
       setClientId(invoice.client_id || "");
+      setCategoryId(invoice.category_id || "");
       setIssueDate(invoice.issue_date || "");
       setOperationDate(invoice.operation_date || "");
       setVatPercentage(String(invoice.vat_percentage || "21"));
@@ -137,6 +139,22 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
       const { data, error } = await supabase
         .from("business_clients").select("id, name")
         .eq("account_id", accountId).eq("status", "ACTIVE");
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!accountId && open,
+  });
+
+  const categoryKind = invoice?.type === "EXPENSE" ? "EXPENSE" : "INCOME";
+  const { data: categories = [] } = useQuery({
+    queryKey: ["accounting_categories", accountId, categoryKind],
+    queryFn: async () => {
+      if (!accountId) return [] as any[];
+      const { data, error } = await (supabase as any)
+        .from("accounting_categories")
+        .select("id, name, kind, sort_order")
+        .eq("account_id", accountId).eq("kind", categoryKind)
+        .order("sort_order");
       if (error) throw error;
       return data || [];
     },
@@ -212,6 +230,7 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
         const resolvedClientId = await resolveClientId(clientId);
         const concept = validLines.map(l => l.description.trim()).join(", ");
         updatePayload.client_id = resolvedClientId;
+        updatePayload.category_id = categoryId || null;
         updatePayload.concept = concept;
         updatePayload.issue_date = issueDate;
         updatePayload.operation_date = operationDate || null;
@@ -323,6 +342,17 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
                     <Label className="flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />Fecha de emisión</Label>
                     <Input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} />
                   </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="flex items-center gap-1.5"><Tags className="h-3.5 w-3.5 text-muted-foreground" />Categoría contable</Label>
+                  <Select value={categoryId} onValueChange={setCategoryId}>
+                    <SelectTrigger><SelectValue placeholder="Selecciona categoría" /></SelectTrigger>
+                    <SelectContent>
+                      {categories.map((c: any) => (
+                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-1.5">
                   <Label>Fecha de operación <span className="text-xs text-muted-foreground">(si difiere)</span></Label>

@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   Loader2, KeyRound, UserPlus, AlertCircle, Settings, Users, CalendarDays,
-  Clock, ShieldCheck, Save, User, Lock, Unlock, Check, X, Mail, Activity, Key, Webhook, MessageSquare, ShieldAlert, FileText,
+  Clock, ShieldCheck, Save, User, Lock, Unlock, Check, X, Mail, Activity, Key, Webhook, MessageSquare, ShieldAlert, FileText, Calculator,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { roleLabel } from "@/lib/roles";
@@ -32,6 +32,7 @@ import WebhooksTab from "@/components/settings/WebhooksTab";
 import WhatsAppConfigTab from "@/components/settings/WhatsAppConfigTab";
 import InvoiceTemplateTab from "@/components/settings/InvoiceTemplateTab";
 import VerifactuSettingsTab from "@/components/settings/VerifactuSettingsTab";
+import AccountingSettingsTab from "@/components/settings/AccountingSettingsTab";
 import CreateEmployeeDialog from "@/components/hr/CreateEmployeeDialog";
 import EmployeeModulesTab from "@/components/settings/EmployeeModulesTab";
 
@@ -983,6 +984,11 @@ const AppSettings = () => {
             </TabsTrigger>
           )}
           {isManager && (
+            <TabsTrigger value="accounting" className="gap-1">
+              <Calculator className="h-4 w-4" /> <span className="hidden lg:inline">Contabilidad</span>
+            </TabsTrigger>
+          )}
+          {isManager && (
             <TabsTrigger value="verifactu" className="gap-1">
               <ShieldCheck className="h-4 w-4" /> <span className="hidden lg:inline">VERI*FACTU</span>
             </TabsTrigger>
@@ -1038,6 +1044,11 @@ const AppSettings = () => {
         {isManager && (
           <TabsContent value="invoicetemplate">
             <InvoiceTemplateTab accountId={accountId} isManager={isManager} />
+          </TabsContent>
+        )}
+        {isManager && (
+          <TabsContent value="accounting">
+            <AccountingSettingsTab accountId={accountId} />
           </TabsContent>
         )}
         {isManager && (

@@ -14,7 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import {
   Plus, Trash2, FileText, Receipt, FileSignature, Users, CalendarDays,
-  Percent, StickyNote, Paperclip, Copy, Loader2,
+  Percent, StickyNote, Paperclip, Copy, Loader2, Tags,
 } from "lucide-react";
 import InvoiceAttachment from "@/components/invoices/InvoiceAttachment";
 import FormSection from "@/components/shared/FormSection";
@@ -37,6 +37,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
   const queryClient = useQueryClient();
 
   const [clientId, setClientId] = useState("");
+  const [categoryId, setCategoryId] = useState("");
   const [type, setType] = useState("INVOICE");
   const [issueDate, setIssueDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [operationDate, setOperationDate] = useState("");
@@ -106,6 +107,30 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
     }
   }, [clientId, clients]);
 
+  // Categorías contables (mapean a la cuenta del PGC en el asiento automático)
+  const categoryKind = type === "EXPENSE" ? "EXPENSE" : "INCOME";
+  const { data: categories = [] } = useQuery({
+    queryKey: ["accounting_categories", accountId, categoryKind],
+    queryFn: async () => {
+      if (!accountId) return [] as any[];
+      const { data, error } = await (supabase as any)
+        .from("accounting_categories")
+        .select("id, name, kind, is_default, sort_order")
+        .eq("account_id", accountId).eq("kind", categoryKind)
+        .order("sort_order");
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!accountId && open,
+  });
+
+  useEffect(() => {
+    if (categories.length && !categories.find((c: any) => c.id === categoryId)) {
+      const def = categories.find((c: any) => c.is_default) || categories[0];
+      setCategoryId(def?.id || "");
+    }
+  }, [categories, categoryId]);
+
   const resolveClientId = async (selectedId: string): Promise<string> => {
     if (!selectedId.startsWith("__self__")) return selectedId;
     const { data: existing } = await supabase
@@ -165,6 +190,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
         amount_total: amountTotal,
         special_mentions: specialMentions.trim() || null,
         vat_included: vatIncluded,
+        category_id: categoryId || null,
         ...(attachmentPath ? { attachment_path: attachmentPath, attachment_name: attachmentName } : {}),
       } as any).select("id").single();
       if (error) throw error;
@@ -210,6 +236,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
 
   const resetForm = () => {
     setClientId("");
+    setCategoryId("");
     setType("INVOICE");
     setIssueDate(new Date().toISOString().slice(0, 10));
     setOperationDate("");
@@ -284,6 +311,18 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="flex items-center gap-1.5"><Tags className="h-3.5 w-3.5 text-muted-foreground" />Categoría contable</Label>
+              <Select value={categoryId} onValueChange={setCategoryId}>
+                <SelectTrigger><SelectValue placeholder="Selecciona categoría" /></SelectTrigger>
+                <SelectContent>
+                  {categories.map((c: any) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Determina la cuenta del PGC en el asiento automático.</p>
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
