@@ -23,6 +23,7 @@ import {
 import {
   Loader2, KeyRound, UserPlus, AlertCircle, Settings, Users, CalendarDays,
   Clock, ShieldCheck, Save, User, Lock, Unlock, Check, X, Mail, Activity, Key, Webhook, MessageSquare, ShieldAlert, FileText, Calculator,
+  ChevronRight, ChevronLeft, Building2,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { roleLabel } from "@/lib/roles";
@@ -909,6 +910,36 @@ const UsersTab = ({ userId, accountId }: { userId: string; accountId: string }) 
 };
 
 // ─── MAIN SETTINGS PAGE ──────────────────────────────────
+type SettingSection = {
+  key: string; group: string; title: string; desc: string; icon: any;
+  managerOnly?: boolean; badge?: boolean;
+};
+
+const GROUP_ORDER = [
+  "General",
+  "Tu cuenta",
+  "Equipo",
+  "Facturación y contabilidad",
+  "Integraciones y desarrolladores",
+  "Auditoría",
+];
+
+const SECTIONS: SettingSection[] = [
+  { key: "company",  group: "General", title: "Empresa", desc: "Datos fiscales y generales de tu empresa.", icon: Building2 },
+  { key: "schedule", group: "General", title: "Horario y vacaciones", desc: "Jornada laboral y días de vacaciones del equipo.", icon: Clock },
+  { key: "profile",  group: "Tu cuenta", title: "Mi perfil", desc: "Tus datos personales y de contacto.", icon: User },
+  { key: "security", group: "Tu cuenta", title: "Seguridad", desc: "Contraseña y acceso a tu cuenta.", icon: Lock },
+  { key: "users",       group: "Equipo", title: "Usuarios", desc: "Gestiona usuarios, roles y solicitudes.", icon: Users, managerOnly: true, badge: true },
+  { key: "permissions", group: "Equipo", title: "Permisos de módulos", desc: "Qué módulos puede ver cada empleado.", icon: ShieldCheck, managerOnly: true },
+  { key: "invoicetemplate", group: "Facturación y contabilidad", title: "Plantilla de facturas", desc: "Diseño y datos que aparecen en tus facturas.", icon: FileText, managerOnly: true },
+  { key: "accounting",      group: "Facturación y contabilidad", title: "Contabilidad", desc: "Método contable, categorías y cuentas.", icon: Calculator, managerOnly: true },
+  { key: "verifactu",       group: "Facturación y contabilidad", title: "VERI*FACTU", desc: "Registro de facturas ante la AEAT.", icon: ShieldCheck, managerOnly: true },
+  { key: "api",      group: "Integraciones y desarrolladores", title: "Claves API", desc: "Acceso programático a tu cuenta.", icon: Key, managerOnly: true },
+  { key: "webhooks", group: "Integraciones y desarrolladores", title: "Webhooks", desc: "Notifica eventos a sistemas externos.", icon: Webhook, managerOnly: true },
+  { key: "whatsapp", group: "Integraciones y desarrolladores", title: "WhatsApp", desc: "Conecta tu cuenta de WhatsApp Business.", icon: MessageSquare, managerOnly: true },
+  { key: "activity", group: "Auditoría", title: "Actividad", desc: "Registro de cambios y accesos.", icon: Activity, managerOnly: true },
+];
+
 const AppSettings = () => {
   const { user, accountId, role } = useAuth();
   const isManager = role === "MANAGER" || role === "MASTER_ADMIN";
@@ -928,77 +959,76 @@ const AppSettings = () => {
     enabled: !!accountId && isManager,
   });
 
+  const [section, setSection] = useState("");
+
   if (!user || !accountId) return null;
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Configuración</h1>
-
-      <Tabs defaultValue="company" className="space-y-4">
-        <TabsList className="w-full sm:w-auto">
-          <TabsTrigger value="company" className="gap-1">
-            <Settings className="h-4 w-4" /> <span className="hidden md:inline">Empresa</span>
-          </TabsTrigger>
-          <TabsTrigger value="profile" className="gap-1">
-            <User className="h-4 w-4" /> <span className="hidden md:inline">Perfil</span>
-          </TabsTrigger>
-          <TabsTrigger value="schedule" className="gap-1">
-            <Clock className="h-4 w-4" /> <span className="hidden md:inline">Horario</span>
-          </TabsTrigger>
-          <TabsTrigger value="security" className="gap-1">
-            <Lock className="h-4 w-4" /> <span className="hidden md:inline">Seguridad</span>
-          </TabsTrigger>
-          {isManager && (
-            <TabsTrigger value="users" className="gap-1">
-              <Users className="h-4 w-4" /> <span className="hidden md:inline">Usuarios</span>
-              {pendingCount > 0 && (
-                <Badge variant="destructive" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs rounded-full">
-                  {pendingCount}
-                </Badge>
-              )}
-            </TabsTrigger>
-          )}
-          {isManager && (
-            <TabsTrigger value="activity" className="gap-1">
-              <Activity className="h-4 w-4" /> <span className="hidden lg:inline">Actividad</span>
-            </TabsTrigger>
-          )}
-          {isManager && (
-            <TabsTrigger value="api" className="gap-1">
-              <Key className="h-4 w-4" /> <span className="hidden lg:inline">API</span>
-            </TabsTrigger>
-          )}
-          {isManager && (
-            <TabsTrigger value="webhooks" className="gap-1">
-              <Webhook className="h-4 w-4" /> <span className="hidden lg:inline">Webhooks</span>
-            </TabsTrigger>
-          )}
-          {isManager && (
-            <TabsTrigger value="whatsapp" className="gap-1">
-              <MessageSquare className="h-4 w-4" /> <span className="hidden lg:inline">WhatsApp</span>
-            </TabsTrigger>
-          )}
-          {isManager && (
-            <TabsTrigger value="invoicetemplate" className="gap-1">
-              <FileText className="h-4 w-4" /> <span className="hidden lg:inline">Facturas</span>
-            </TabsTrigger>
-          )}
-          {isManager && (
-            <TabsTrigger value="accounting" className="gap-1">
-              <Calculator className="h-4 w-4" /> <span className="hidden lg:inline">Contabilidad</span>
-            </TabsTrigger>
-          )}
-          {isManager && (
-            <TabsTrigger value="verifactu" className="gap-1">
-              <ShieldCheck className="h-4 w-4" /> <span className="hidden lg:inline">VERI*FACTU</span>
-            </TabsTrigger>
-          )}
-          {isManager && (
-            <TabsTrigger value="permissions" className="gap-1">
-              <ShieldCheck className="h-4 w-4" /> <span className="hidden lg:inline">Permisos</span>
-            </TabsTrigger>
-          )}
-        </TabsList>
+      <Tabs value={section} onValueChange={setSection} className="space-y-6">
+        {!section ? (
+          <div className="space-y-7">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">Configuración</h1>
+              <p className="text-sm text-muted-foreground">Gestiona tu empresa, tu cuenta personal y las integraciones.</p>
+            </div>
+            {GROUP_ORDER.map((group) => {
+              const items = SECTIONS.filter((s) => s.group === group && (!s.managerOnly || isManager));
+              if (items.length === 0) return null;
+              return (
+                <div key={group} className="space-y-3">
+                  <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">{group}</h2>
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    {items.map((s) => (
+                      <button
+                        key={s.key}
+                        type="button"
+                        onClick={() => setSection(s.key)}
+                        className="group flex items-start gap-3 rounded-xl border border-border bg-card p-4 text-left shadow-2xs transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                      >
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                          <s.icon className="h-5 w-5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium leading-tight">{s.title}</p>
+                            {s.badge && pendingCount > 0 && (
+                              <Badge variant="destructive" className="h-5 min-w-5 px-1 text-xs">{pendingCount}</Badge>
+                            )}
+                          </div>
+                          <p className="mt-0.5 text-sm text-muted-foreground">{s.desc}</p>
+                        </div>
+                        <ChevronRight className="mt-2 h-4 w-4 shrink-0 text-muted-foreground/50 transition-all group-hover:translate-x-0.5 group-hover:text-primary" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          (() => {
+            const current = SECTIONS.find((s) => s.key === section);
+            return (
+              <div className="flex items-center gap-3">
+                <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => setSection("")}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                {current && (
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <current.icon className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h1 className="text-xl font-bold leading-tight tracking-tight">{current.title}</h1>
+                      <p className="text-sm text-muted-foreground">{current.desc}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()
+        )}
 
         <TabsContent value="company">
           <CompanyTab accountId={accountId} isManager={isManager} />
