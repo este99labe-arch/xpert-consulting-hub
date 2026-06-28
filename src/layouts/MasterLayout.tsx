@@ -11,6 +11,7 @@ import {
   SidebarFooter,
   SidebarTrigger,
   SidebarInset,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { LayoutDashboard, Users, Settings, LogOut, ArrowRightLeft, BookOpen } from "lucide-react";
 import xpertLogo from "@/assets/brand/iso-blue.png";
@@ -26,15 +27,20 @@ const navItems = [
   { label: "API Docs", icon: BookOpen, path: "/master/api-docs" },
 ];
 
-const MasterLayout = () => {
+const MasterLayoutInner = () => {
   const { signOut, user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const { setOpen, isMobile } = useSidebar();
 
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-full">
-        <Sidebar collapsible="icon" className="border-r-0">
+    <>
+        <Sidebar
+          collapsible="icon"
+          className="border-r-0"
+          onMouseEnter={() => !isMobile && setOpen(true)}
+          onMouseLeave={() => !isMobile && setOpen(false)}
+        >
           <SidebarHeader className="p-5 border-b border-sidebar-border">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-md p-1">
@@ -102,9 +108,16 @@ const MasterLayout = () => {
             </div>
           </main>
         </SidebarInset>
-      </div>
-    </SidebarProvider>
+    </>
   );
 };
+
+const MasterLayout = () => (
+  <SidebarProvider defaultOpen={false}>
+    <div className="flex min-h-screen w-full">
+      <MasterLayoutInner />
+    </div>
+  </SidebarProvider>
+);
 
 export default MasterLayout;

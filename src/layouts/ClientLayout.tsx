@@ -67,6 +67,7 @@ const SidebarInner = () => {
   const { signOut, user, accountId, role } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const { setOpen, isMobile } = useSidebar();
   const [showTutorial, setShowTutorial] = useState(false);
 
   const { data: accountInfo } = useQuery({
@@ -123,7 +124,12 @@ const SidebarInner = () => {
 
   return (
     <>
-      <Sidebar collapsible="icon" className="border-r-0">
+      <Sidebar
+        collapsible="icon"
+        className="border-r-0"
+        onMouseEnter={() => !isMobile && setOpen(true)}
+        onMouseLeave={() => !isMobile && setOpen(false)}
+      >
         <SidebarHeader className="p-3 border-b border-sidebar-border">
           <SidebarMenu>
             <SidebarMenuItem>
@@ -296,7 +302,7 @@ const SidebarInner = () => {
 
 const ClientLayout = () => {
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <div className="flex min-h-screen w-full overflow-hidden">
         <SidebarInner />
       </div>
