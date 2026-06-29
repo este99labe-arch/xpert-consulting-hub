@@ -41,12 +41,12 @@ const MasterLayoutInner = () => {
           onMouseEnter={() => !isMobile && setOpen(true)}
           onMouseLeave={() => !isMobile && setOpen(false)}
         >
-          <SidebarHeader className="p-5 border-b border-sidebar-border">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-md p-1">
+          <SidebarHeader className="p-5 border-b border-sidebar-border group-data-[collapsible=icon]:p-2">
+            <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-md p-1 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8">
                 <img src={xpertLogo} alt="XpertConsulting" className="h-full w-full object-contain" />
               </div>
-              <div>
+              <div className="overflow-hidden group-data-[collapsible=icon]:hidden">
                 <p className="text-sm font-semibold text-sidebar-foreground">XpertConsulting</p>
                 <p className="text-xs text-sidebar-foreground/50">Panel Master</p>
               </div>
@@ -82,18 +82,20 @@ const MasterLayoutInner = () => {
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarContent>
-          <SidebarFooter className="p-4 border-t border-sidebar-border">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-accent text-sidebar-accent-foreground text-xs font-medium">
+          <SidebarFooter className="p-4 border-t border-sidebar-border group-data-[collapsible=icon]:p-2">
+            <div className="flex items-center gap-3 mb-3 group-data-[collapsible=icon]:mb-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-sidebar-accent-foreground text-xs font-medium">
                 {user?.email?.charAt(0).toUpperCase()}
               </div>
-              <p className="text-xs text-sidebar-foreground/70 truncate flex-1">{user?.email}</p>
+              <p className="text-xs text-sidebar-foreground/70 truncate flex-1 group-data-[collapsible=icon]:hidden">{user?.email}</p>
             </div>
-            <Button variant="ghost" size="sm" className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent" onClick={signOut}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Cerrar sesión
+            <Button variant="ghost" size="sm" className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0" onClick={signOut}>
+              <LogOut className="h-4 w-4 mr-2 group-data-[collapsible=icon]:mr-0" />
+              <span className="group-data-[collapsible=icon]:hidden">Cerrar sesión</span>
             </Button>
-            <HealthCheck />
+            <div className="group-data-[collapsible=icon]:hidden">
+              <HealthCheck />
+            </div>
           </SidebarFooter>
         </Sidebar>
         <SidebarInset>

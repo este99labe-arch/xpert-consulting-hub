@@ -175,12 +175,12 @@ const Login = () => {
         </div>
 
         {/* Lado del formulario: tarjeta flotante */}
-        <div className="flex min-h-screen items-center justify-center px-4 py-12 lg:px-12">
+        <div className="flex min-h-screen items-center justify-center px-4 py-10 lg:px-16">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45 }}
-            className="w-full max-w-md rounded-2xl border border-white/50 bg-background/95 p-8 shadow-2xl backdrop-blur-xl sm:p-10"
+            className="w-full max-w-lg rounded-3xl border border-white/50 bg-background/95 p-8 shadow-2xl backdrop-blur-xl sm:p-12"
           >
             {/* Logo (solo móvil) */}
             <div className="mb-8 flex flex-col items-center gap-3 lg:hidden">
@@ -188,14 +188,14 @@ const Login = () => {
               <span className="text-xl font-bold tracking-tight">XpertConsulting</span>
             </div>
 
-            <div className="mb-7 space-y-1.5">
-              <h2 className="text-2xl font-bold tracking-tight">Bienvenido de nuevo</h2>
-              <p className="text-sm text-muted-foreground">
+            <div className="mb-8 space-y-2">
+              <h2 className="text-3xl font-bold tracking-tight">Bienvenido de nuevo</h2>
+              <p className="text-[15px] text-muted-foreground">
                 Introduce tus credenciales para acceder al sistema.
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-5">
               {error && (
                 <motion.div
                   initial={{ opacity: 0, y: -6 }}
@@ -217,7 +217,7 @@ const Login = () => {
                   required
                   disabled={loading}
                   autoComplete="email"
-                  className="h-11"
+                  className="h-12 text-base"
                 />
               </div>
               <div className="space-y-2">
@@ -232,7 +232,7 @@ const Login = () => {
                     required
                     disabled={loading}
                     autoComplete="current-password"
-                    className="h-11 pr-10"
+                    className="h-12 pr-10 text-base"
                   />
                   <button
                     type="button"
@@ -255,7 +255,7 @@ const Login = () => {
               </div>
               <Button
                 type="submit"
-                className="h-11 w-full font-medium shadow-md shadow-primary/20"
+                className="mt-1 h-12 w-full text-base font-medium shadow-md shadow-primary/20"
                 disabled={loading}
               >
                 {loading ? (
