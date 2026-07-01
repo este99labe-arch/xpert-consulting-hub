@@ -30,6 +30,9 @@ verify_jwt = false
 [functions.whatsapp_webhook]
 verify_jwt = false
 
+[functions.whatsapp_send]
+verify_jwt = false
+
 [functions.extract_invoice_data]
 verify_jwt = false
 

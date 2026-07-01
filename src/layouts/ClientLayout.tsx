@@ -19,7 +19,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import {
-  LayoutDashboard, Users, FileText, Calculator, UserCog, Clock, Settings, LogOut, Package, ArrowRightLeft, ChevronDown, BarChart3, HelpCircle, CalendarClock, Globe,
+  LayoutDashboard, Users, FileText, Calculator, UserCog, Clock, Settings, LogOut, Package, ArrowRightLeft, ChevronDown, BarChart3, HelpCircle, CalendarClock, Globe, MessageCircle,
 } from "lucide-react";
 import ReminderNotifier from "@/components/reminders/ReminderNotifier";
 import { Button } from "@/components/ui/button";
@@ -46,6 +46,7 @@ const moduleIcons: Record<string, any> = {
   REPORTS: BarChart3,
   TASKS: CalendarClock,
   XPERTRED: Globe,
+  CHAT: MessageCircle,
   SETTINGS: Settings,
 };
 
@@ -60,6 +61,7 @@ const modulePaths: Record<string, string> = {
   REPORTS: "/app/reports",
   TASKS: "/app/tasks",
   XPERTRED: "/app/xpertred",
+  CHAT: "/app/chat",
   SETTINGS: "/app/settings",
 };
 

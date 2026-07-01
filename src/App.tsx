@@ -29,6 +29,7 @@ import AppInventory from "@/pages/app/AppInventory";
 import AppReports from "@/pages/app/AppReports";
 import AppTasks from "@/pages/app/AppTasks";
 import AppXpertRed from "@/pages/app/AppXpertRed";
+import AppChat from "@/pages/app/AppChat";
 import CookiePolicy from "@/pages/legal/CookiePolicy";
 import CookieConsent from "@/components/legal/CookieConsent";
 
@@ -84,6 +85,7 @@ const App = () => (
               <Route path="reports" element={<AppReports />} />
               <Route path="tasks" element={<AppTasks />} />
               <Route path="xpertred" element={<AppXpertRed />} />
+              <Route path="chat" element={<AppChat />} />
               <Route path="settings" element={<AppSettings />} />
             </Route>
 
