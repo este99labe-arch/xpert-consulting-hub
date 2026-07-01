@@ -91,10 +91,17 @@ Ese token que has copiado es tu **Access Token permanente**. Úsalo en XpertCons
 
 El *webhook* es simplemente la dirección a la que Meta envía los mensajes que te llegan.
 
-1. En **XpertConsulting**, ve a **Configuración → WhatsApp**. Verás un campo
-   **"URL del Webhook"** con un botón de copiar 📋 → **cópiala**.
+> ⚠️ **MUY IMPORTANTE (evita el error más común):** antes de verificar en Meta,
+> en **XpertConsulting → Configuración → WhatsApp** activa el interruptor
+> **"Integración activa"** y pulsa **"Guardar configuración"**. Si está desactivada,
+> Meta dará el error *"No se pudo validar la URL de devolución de llamada o el token"*.
+
+1. En **XpertConsulting → Configuración → WhatsApp**: activa **"Integración activa"**,
+   pega tu **Token de verificación** (ver paso 2) y **Guarda**. Copia también la
+   **"URL del Webhook"** 📋.
 2. **Inventa una contraseña** cualquiera (letras y números, sin espacios), por ejemplo
-   `xpert2026seguro`. La llamaremos **Token de verificación**. Apúntala.
+   `xpert2026seguro`. La llamaremos **Token de verificación**. Apúntala y ponla también
+   en XpertConsulting (paso 1) antes de continuar.
 3. Vuelve a Meta → tu app → **WhatsApp → Configuración** → apartado **Webhook** →
    pulsa **"Editar"**:
    - **URL de devolución de llamada (Callback URL):** pega la URL del webhook de XpertConsulting.
@@ -146,10 +153,11 @@ En la misma pantalla de **Configuración → WhatsApp** puedes personalizar:
 
 ## 🆘 Solución de problemas
 
-- **"La verificación del webhook falla (no sale en verde)":**
-  el *Token de verificación* de Meta y el de XpertConsulting **deben ser idénticos**
-  (mayúsculas/minúsculas incluidas) y la integración debe estar **activa y guardada**
-  en XpertConsulting antes de verificar en Meta.
+- **"No se pudo validar la URL de devolución de llamada o el token de verificación"**
+  (el error más habitual al pulsar *Verificar y guardar*): casi siempre es porque la
+  **"Integración activa" está apagada** en XpertConsulting. Actívala, **Guarda**, y
+  vuelve a verificar en Meta. Comprueba además que el *Token de verificación* es
+  **idéntico** en Meta y en XpertConsulting (mayúsculas/minúsculas incluidas).
 - **"No llegan los mensajes al Chat":** revisa que te has **suscrito al campo `messages`**
   (Parte 5, paso 4) y que el **Access Token** es el permanente (no el de 24h).
 - **"No puedo responder / da error al enviar":** casi siempre es el **Access Token caducado**;
