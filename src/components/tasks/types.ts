@@ -48,7 +48,7 @@ export interface Task {
   account_id: string;
   title: string;
   description: string | null;
-  remind_at: string;
+  remind_at: string | null;
   status: string;
   priority: Priority;
   is_completed: boolean;

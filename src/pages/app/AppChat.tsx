@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
 import {
-  MessageCircle, Send, Search, Bot, UserRound, Hand, Building2, Loader2, ShieldAlert, CheckCheck,
+  MessageCircle, Send, Search, Bot, UserRound, Hand, Building2, Loader2, ShieldAlert, CheckCheck, Bell, BellOff,
 } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import { es } from "date-fns/locale";
@@ -41,6 +41,35 @@ const AppChat = () => {
   const [search, setSearch] = useState("");
   const [draft, setDraft] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Notificaciones de mensajes nuevos (con sonido), configurable
+  const [soundEnabled, setSoundEnabled] = useState(() => {
+    try { return localStorage.getItem("chat-notify") !== "off"; } catch { return true; }
+  });
+  const soundRef = useRef(soundEnabled);
+  useEffect(() => {
+    soundRef.current = soundEnabled;
+    try { localStorage.setItem("chat-notify", soundEnabled ? "on" : "off"); } catch { /* ignore */ }
+  }, [soundEnabled]);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const playBeep = () => {
+    try {
+      const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!Ctx) return;
+      if (!audioCtxRef.current) audioCtxRef.current = new Ctx();
+      const ctx = audioCtxRef.current!;
+      if (ctx.state === "suspended") ctx.resume();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "sine";
+      o.frequency.value = 880;
+      g.gain.setValueAtTime(0.0001, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.22, ctx.currentTime + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.28);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime + 0.3);
+    } catch { /* ignore */ }
+  };
 
   // WhatsApp configurado?
   const { data: waConfig } = useQuery({
@@ -91,6 +120,11 @@ const AppChat = () => {
       .on("postgres_changes", { event: "*", schema: "public", table: "chat_messages", filter: `account_id=eq.${accountId}` }, (payload: any) => {
         qc.invalidateQueries({ queryKey: ["chat-conversations", accountId] });
         if (payload?.new?.conversation_id) qc.invalidateQueries({ queryKey: ["chat-messages", payload.new.conversation_id] });
+        // Notificar mensajes entrantes nuevos
+        if (payload?.eventType === "INSERT" && payload?.new?.direction === "IN") {
+          if (soundRef.current) playBeep();
+          toast({ title: "Nuevo mensaje de WhatsApp", description: (payload.new.body || "").slice(0, 80) });
+        }
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "chat_conversations", filter: `account_id=eq.${accountId}` }, () => {
         qc.invalidateQueries({ queryKey: ["chat-conversations", accountId] });
@@ -153,9 +187,18 @@ const AppChat = () => {
           <div className="mb-2 flex items-center gap-2">
             <MessageCircle className="h-5 w-5 text-primary" />
             <h1 className="text-base font-semibold">Chat</h1>
-            {waConfig?.display_phone && (
-              <span className="ml-auto text-xs text-muted-foreground">{waConfig.display_phone}</span>
-            )}
+            <div className="ml-auto flex items-center gap-1.5">
+              {waConfig?.display_phone && (
+                <span className="text-xs text-muted-foreground">{waConfig.display_phone}</span>
+              )}
+              <Button
+                variant="ghost" size="icon" className="h-7 w-7"
+                onClick={() => setSoundEnabled((s) => !s)}
+                title={soundEnabled ? "Silenciar avisos de mensajes" : "Activar avisos con sonido"}
+              >
+                {soundEnabled ? <Bell className="h-4 w-4 text-primary" /> : <BellOff className="h-4 w-4 text-muted-foreground" />}
+              </Button>
+            </div>
           </div>
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

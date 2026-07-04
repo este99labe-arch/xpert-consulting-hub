@@ -26,6 +26,7 @@ async function waSend(phoneNumberId: string, token: string, to: string, text: st
       body: JSON.stringify({ messaging_product: "whatsapp", to, type: "text", text: { body: text } }),
     });
     const data = await res.json().catch(() => ({}));
+    if (!res.ok) console.error("WA send REJECTED by Meta:", res.status, JSON.stringify(data));
     return { ok: res.ok, id: (data as any)?.messages?.[0]?.id ?? null };
   } catch (e) {
     console.error("waSend failed:", e);
@@ -107,7 +108,7 @@ async function handleChatMessage(admin: any, cfg: any, msg: any, senderPhone: st
     await admin.from("reminders").insert({
       account_id, created_by: creator, assigned_to: assignee,
       title: `WhatsApp: ${text.slice(0, 80)}`, description: text,
-      remind_at: new Date().toISOString(), priority: "MEDIUM",
+      priority: "MEDIUM",
       column_id: col?.id || null, origin: "CHAT", chat_conversation_id: conv.id,
       entity_type: "CHAT", entity_id: conv.id, entity_label: conv.contact_name || senderPhone,
       client_id: conv.client_id || null,
