@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 function normalizePhone(phone: string): string {
-  return phone.replace(/[\s\-\+\(\)]/g, "");
+  return (phone || "").split("").filter((c) => c >= "0" && c <= "9").join("");
 }
 
 const ENTRY_KEYWORDS = ["entrada", "entrar", "llegada", "inicio", "in", "check in"];
