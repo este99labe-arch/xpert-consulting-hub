@@ -35,9 +35,11 @@ const linkHref = (entityType: string, entityId: string): string | null => {
 };
 
 const TaskCard = ({ task, members, clients, onClick, onDragStart }: Props) => {
-  const due = new Date(task.remind_at);
-  const overdue = isPast(due) && !task.is_completed;
-  const soon = !overdue && differenceInDays(due, new Date()) <= 2;
+  const hasDue = !!task.remind_at;
+  const due = hasDue ? new Date(task.remind_at as string) : null;
+  const overdue = hasDue && isPast(due!) && !task.is_completed;
+  const soon = hasDue && !overdue && differenceInDays(due!, new Date()) <= 2;
+  const dateToShow = hasDue ? due! : new Date(task.created_at);
   const prio = getPriorityMeta(task.priority);
   const PrioIcon = prio.icon;
   const assignee = members.find((m) => m.user_id === task.assigned_to);
@@ -136,7 +138,7 @@ const TaskCard = ({ task, members, clients, onClick, onDragStart }: Props) => {
           overdue ? "text-destructive font-medium" : soon ? "text-orange-600 dark:text-orange-400" : "text-muted-foreground"
         )}>
           <CalendarClock className="h-3 w-3" />
-          {format(due, "dd MMM", { locale: es })}
+          {format(dateToShow, "dd MMM", { locale: es })}
         </div>
         {assignee ? (
           <Avatar className="h-6 w-6">
