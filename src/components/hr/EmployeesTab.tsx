@@ -8,15 +8,18 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Search, Loader2, UserCheck, UserX } from "lucide-react";
+import { Search, Loader2, UserCheck, UserX, CalendarClock } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { usePagination } from "@/hooks/use-pagination";
 import { roleLabel } from "@/lib/roles";
+import EmployeeScheduleDialog from "./EmployeeScheduleDialog";
 
 const EmployeesTab = () => {
   const { accountId, role, user } = useAuth();
   const isManager = role === "MANAGER" || role === "MASTER_ADMIN";
   const [search, setSearch] = useState("");
+  const [scheduleTarget, setScheduleTarget] = useState<{ userId: string; label: string } | null>(null);
 
   const { data: employees = [], isLoading } = useQuery({
     queryKey: ["hr-employees", accountId],
@@ -78,9 +81,20 @@ const EmployeesTab = () => {
         ) : (
           pagination.paginatedItems.map((emp: any) => (
             <Card key={emp.id} className="p-4 space-y-2">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <span className="font-medium text-sm truncate">{emailMap.get(emp.user_id) || emp.user_id}</span>
-                <Badge variant="outline">{roleLabel((emp as any).roles?.code)}</Badge>
+                <div className="flex shrink-0 items-center gap-1">
+                  <Badge variant="outline">{roleLabel((emp as any).roles?.code)}</Badge>
+                  {isManager && (
+                    <Button
+                      variant="ghost" size="icon" className="h-7 w-7"
+                      onClick={() => setScheduleTarget({ userId: emp.user_id, label: emailMap.get(emp.user_id) || emp.user_id })}
+                      aria-label="Horario del empleado"
+                    >
+                      <CalendarClock className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </div>
               </div>
               <div className="flex items-center justify-between text-sm">
                 {emp.is_active ? (
@@ -114,11 +128,12 @@ const EmployeesTab = () => {
                 <TableHead>Rol</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead>Alta</TableHead>
+                {isManager && <TableHead className="text-right">Acciones</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">No se encontraron empleados</TableCell></TableRow>
+                <TableRow><TableCell colSpan={isManager ? 5 : 4} className="text-center text-muted-foreground py-8">No se encontraron empleados</TableCell></TableRow>
               ) : (
                 pagination.paginatedItems.map((emp: any) => (
                   <TableRow key={emp.id}>
@@ -134,6 +149,16 @@ const EmployeesTab = () => {
                       )}
                     </TableCell>
                     <TableCell className="text-muted-foreground">{new Date(emp.created_at).toLocaleDateString("es-ES")}</TableCell>
+                    {isManager && (
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost" size="sm" className="h-8 gap-1.5 text-xs"
+                          onClick={() => setScheduleTarget({ userId: emp.user_id, label: emailMap.get(emp.user_id) || emp.user_id })}
+                        >
+                          <CalendarClock className="h-3.5 w-3.5" /> Horario
+                        </Button>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))
               )}
@@ -152,6 +177,16 @@ const EmployeesTab = () => {
           )}
         </CardContent>
       </Card>
+
+      {scheduleTarget && (
+        <EmployeeScheduleDialog
+          open={!!scheduleTarget}
+          onOpenChange={(v) => !v && setScheduleTarget(null)}
+          accountId={accountId!}
+          userId={scheduleTarget.userId}
+          label={scheduleTarget.label}
+        />
+      )}
     </div>
   );
 };

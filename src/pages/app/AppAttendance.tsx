@@ -3,8 +3,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Clock, ChevronLeft, ChevronRight, Users } from "lucide-react";
+import { Clock, ChevronLeft, ChevronRight, Users, FileDown } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { generateAttendanceReport } from "@/lib/attendance-report";
 import {
   startOfMonth, endOfMonth, format, eachDayOfInterval,
   differenceInMinutes, getISOWeek, startOfWeek,
@@ -279,6 +280,34 @@ const AppAttendance = () => {
     }));
   }, [teamRecords, teamEmailMap]);
 
+  // Registro diario de jornada (PDF firmable, art. 34.9 ET)
+  const handlePdfReport = async () => {
+    let companyName = "Empresa";
+    if (effectiveAccountId) {
+      const { data: acc } = await supabase.from("accounts").select("name").eq("id", effectiveAccountId).maybeSingle();
+      if (acc?.name) companyName = acc.name;
+    }
+    if (activeTab === "team" && isManager) {
+      const byUser = new Map<string, any[]>();
+      teamRecords.forEach((r: any) => byUser.set(r.user_id, [...(byUser.get(r.user_id) || []), r]));
+      const employees = [...byUser.entries()].map(([uid, recs]) => ({
+        label: teamEmailMap[uid] || uid,
+        records: recs,
+      }));
+      if (employees.length === 0) {
+        toast({ title: "No hay fichajes del equipo este mes" });
+        return;
+      }
+      generateAttendanceReport({ companyName, month: selectedMonth, employees });
+    } else {
+      generateAttendanceReport({
+        companyName,
+        month: selectedMonth,
+        employees: [{ label: user?.email || "Empleado", records: myMonthRecords as any[] }],
+      });
+    }
+  };
+
   const handleExport = () => {
     const rows = [["Email", "Fecha", "Entrada", "Salida", "Horas"]];
     teamRecords.forEach(r => {
@@ -309,6 +338,10 @@ const AppAttendance = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handlePdfReport} className="gap-1.5">
+            <FileDown className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Registro de jornada</span> PDF
+          </Button>
           {isManager && (
             <div className="flex rounded-lg border border-border bg-muted/50 p-0.5">
               <button

@@ -34,6 +34,8 @@ import WhatsAppConfigTab from "@/components/settings/WhatsAppConfigTab";
 import InvoiceTemplateTab from "@/components/settings/InvoiceTemplateTab";
 import VerifactuSettingsTab from "@/components/settings/VerifactuSettingsTab";
 import AccountingSettingsTab from "@/components/settings/AccountingSettingsTab";
+import ScheduleTemplatesCard from "@/components/settings/ScheduleTemplatesCard";
+import HolidaysCard from "@/components/settings/HolidaysCard";
 import CreateEmployeeDialog from "@/components/hr/CreateEmployeeDialog";
 import EmployeeModulesTab from "@/components/settings/EmployeeModulesTab";
 
@@ -547,6 +549,8 @@ const ScheduleTab = ({ accountId, isManager }: { accountId: string; isManager: b
           )}
         </CardContent>
       </Card>
+      <ScheduleTemplatesCard accountId={accountId} isManager={isManager} />
+      <HolidaysCard accountId={accountId} isManager={isManager} />
     </div>
   );
 };

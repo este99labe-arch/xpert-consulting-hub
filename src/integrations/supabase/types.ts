@@ -943,6 +943,38 @@ export type Database = {
           },
         ]
       }
+      company_holidays: {
+        Row: {
+          account_id: string
+          created_at: string
+          holiday_date: string
+          id: string
+          name: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          holiday_date: string
+          id?: string
+          name: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          holiday_date?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_holidays_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       departments: {
         Row: {
           account_id: string
@@ -1143,6 +1175,7 @@ export type Database = {
           position: string | null
           postal_code: string | null
           salary: number | null
+          schedule_template_id: string | null
           social_security_number: string | null
           ssn_enc: string | null
           start_date: string | null
@@ -1180,6 +1213,7 @@ export type Database = {
           position?: string | null
           postal_code?: string | null
           salary?: number | null
+          schedule_template_id?: string | null
           social_security_number?: string | null
           ssn_enc?: string | null
           start_date?: string | null
@@ -1217,6 +1251,7 @@ export type Database = {
           position?: string | null
           postal_code?: string | null
           salary?: number | null
+          schedule_template_id?: string | null
           social_security_number?: string | null
           ssn_enc?: string | null
           start_date?: string | null
@@ -1243,10 +1278,58 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "employee_profiles_schedule_template_id_fkey"
+            columns: ["schedule_template_id"]
+            isOneToOne: false
+            referencedRelation: "schedule_templates"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "employee_profiles_work_center_id_fkey"
             columns: ["work_center_id"]
             isOneToOne: false
             referencedRelation: "work_centers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_schedule_overrides: {
+        Row: {
+          account_id: string
+          created_at: string
+          day_off: boolean
+          end_time: string | null
+          id: string
+          start_time: string | null
+          user_id: string
+          weekday: number
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          day_off?: boolean
+          end_time?: string | null
+          id?: string
+          start_time?: string | null
+          user_id: string
+          weekday: number
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          day_off?: boolean
+          end_time?: string | null
+          id?: string
+          start_time?: string | null
+          user_id?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_schedule_overrides_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
         ]
@@ -2247,6 +2330,73 @@ export type Database = {
           id?: string
         }
         Relationships: []
+      }
+      schedule_template_slots: {
+        Row: {
+          end_time: string
+          id: string
+          start_time: string
+          template_id: string
+          weekday: number
+        }
+        Insert: {
+          end_time: string
+          id?: string
+          start_time: string
+          template_id: string
+          weekday: number
+        }
+        Update: {
+          end_time?: string
+          id?: string
+          start_time?: string
+          template_id?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_template_slots_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "schedule_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schedule_templates: {
+        Row: {
+          account_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          kind: string
+          name: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          kind?: string
+          name: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          kind?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_templates_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       service_modules: {
         Row: {
