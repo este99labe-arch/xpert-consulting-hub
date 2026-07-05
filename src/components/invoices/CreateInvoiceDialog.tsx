@@ -41,6 +41,8 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
   const [type, setType] = useState("INVOICE");
   const [issueDate, setIssueDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [operationDate, setOperationDate] = useState("");
+  const [dueDate, setDueDate] = useState(() => new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10));
+  const [paymentMethod, setPaymentMethod] = useState("TRANSFER");
   const [vatPercentage, setVatPercentage] = useState("21");
   const [irpfPercentage, setIrpfPercentage] = useState("0");
   const [specialMentions, setSpecialMentions] = useState("");
@@ -191,6 +193,8 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
         special_mentions: specialMentions.trim() || null,
         vat_included: vatIncluded,
         category_id: categoryId || null,
+        due_date: dueDate || null,
+        payment_method: paymentMethod || null,
         ...(attachmentPath ? { attachment_path: attachmentPath, attachment_name: attachmentName } : {}),
       } as any).select("id").single();
       if (error) throw error;
@@ -240,6 +244,8 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
     setType("INVOICE");
     setIssueDate(new Date().toISOString().slice(0, 10));
     setOperationDate("");
+    setDueDate(new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10));
+    setPaymentMethod("TRANSFER");
     setVatPercentage("21");
     setIrpfPercentage("0");
     setSpecialMentions("");
@@ -332,6 +338,26 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
               <div className="space-y-1.5">
                 <Label>Fecha de operación <span className="text-xs text-muted-foreground">(si difiere)</span></Label>
                 <Input type="date" value={operationDate} onChange={(e) => setOperationDate(e.target.value)} />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label>Fecha de vencimiento</Label>
+                <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+                <p className="text-xs text-muted-foreground">Fecha límite de {type === "EXPENSE" ? "pago" : "cobro"}. Por defecto, 30 días.</p>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Forma de pago</Label>
+                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="TRANSFER">Transferencia</SelectItem>
+                    <SelectItem value="DIRECT_DEBIT">Domiciliación</SelectItem>
+                    <SelectItem value="CARD">Tarjeta</SelectItem>
+                    <SelectItem value="CASH">Efectivo</SelectItem>
+                    <SelectItem value="OTHER">Otra</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </FormSection>

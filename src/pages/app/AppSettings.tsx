@@ -34,6 +34,8 @@ import WhatsAppConfigTab from "@/components/settings/WhatsAppConfigTab";
 import InvoiceTemplateTab from "@/components/settings/InvoiceTemplateTab";
 import VerifactuSettingsTab from "@/components/settings/VerifactuSettingsTab";
 import AccountingSettingsTab from "@/components/settings/AccountingSettingsTab";
+import ScheduleTemplatesCard from "@/components/settings/ScheduleTemplatesCard";
+import HolidaysCard from "@/components/settings/HolidaysCard";
 import CreateEmployeeDialog from "@/components/hr/CreateEmployeeDialog";
 import EmployeeModulesTab from "@/components/settings/EmployeeModulesTab";
 
@@ -72,7 +74,11 @@ const CompanyTab = ({ accountId, isManager }: { accountId: string; isManager: bo
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ tax_id: "", phone: "", email: "", address: "", city: "", postal_code: "" });
+  const [form, setForm] = useState({
+    legal_name: "", tax_id: "", phone: "", email: "", address: "", city: "",
+    postal_code: "", province: "", country: "", website: "",
+    billing_email: "", contact_name: "", contact_phone: "",
+  });
 
   const { data: account } = useQuery({
     queryKey: ["my-account", accountId],
@@ -87,12 +93,19 @@ const CompanyTab = ({ accountId, isManager }: { accountId: string; isManager: bo
   useEffect(() => {
     if (account) {
       setForm({
+        legal_name: (account as any).legal_name || "",
         tax_id: (account as any).tax_id || "",
         phone: (account as any).phone || "",
         email: (account as any).email || "",
         address: (account as any).address || "",
         city: (account as any).city || "",
         postal_code: (account as any).postal_code || "",
+        province: (account as any).province || "",
+        country: (account as any).country || "ES",
+        website: (account as any).website || "",
+        billing_email: (account as any).billing_email || "",
+        contact_name: (account as any).contact_name || "",
+        contact_phone: (account as any).contact_phone || "",
       });
     }
   }, [account]);
@@ -101,12 +114,19 @@ const CompanyTab = ({ accountId, isManager }: { accountId: string; isManager: bo
     setSaving(true);
     try {
       const { error } = await supabase.from("accounts").update({
+        legal_name: form.legal_name || null,
         tax_id: form.tax_id || null,
         phone: form.phone || null,
         email: form.email || null,
         address: form.address || null,
         city: form.city || null,
         postal_code: form.postal_code || null,
+        province: form.province || null,
+        country: form.country || "ES",
+        website: form.website || null,
+        billing_email: form.billing_email || null,
+        contact_name: form.contact_name || null,
+        contact_phone: form.contact_phone || null,
       } as any).eq("id", accountId);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["my-account"] });
@@ -120,13 +140,20 @@ const CompanyTab = ({ accountId, isManager }: { accountId: string; isManager: bo
   };
 
   const fields = [
-    { key: "name", label: "Nombre", value: account?.name || "—", readonly: true },
+    { key: "name", label: "Nombre comercial", value: account?.name || "—", readonly: true },
+    { key: "legal_name", label: "Razón social", value: form.legal_name },
     { key: "tax_id", label: "NIF/CIF", value: form.tax_id },
     { key: "phone", label: "Teléfono", value: form.phone },
     { key: "email", label: "Email", value: form.email },
+    { key: "website", label: "Sitio web", value: form.website },
     { key: "address", label: "Dirección fiscal", value: form.address },
     { key: "city", label: "Ciudad", value: form.city },
     { key: "postal_code", label: "Código postal", value: form.postal_code },
+    { key: "province", label: "Provincia", value: form.province },
+    { key: "country", label: "País", value: form.country },
+    { key: "billing_email", label: "Email de facturación", value: form.billing_email },
+    { key: "contact_name", label: "Persona de contacto", value: form.contact_name },
+    { key: "contact_phone", label: "Teléfono de contacto", value: form.contact_phone },
   ];
 
   return (
@@ -522,6 +549,8 @@ const ScheduleTab = ({ accountId, isManager }: { accountId: string; isManager: b
           )}
         </CardContent>
       </Card>
+      <ScheduleTemplatesCard accountId={accountId} isManager={isManager} />
+      <HolidaysCard accountId={accountId} isManager={isManager} />
     </div>
   );
 };

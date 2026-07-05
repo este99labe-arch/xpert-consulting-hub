@@ -11,6 +11,7 @@ import RemindersWidget from "@/components/dashboard/RemindersWidget";
 import MyVacationsWidget from "@/components/dashboard/MyVacationsWidget";
 import MyWeekAttendanceWidget from "@/components/dashboard/MyWeekAttendanceWidget";
 import MyDocumentsWidget from "@/components/dashboard/MyDocumentsWidget";
+import { buildWeekPlan, expectedHoursBetween } from "@/lib/schedule";
 
 interface MiniKpi {
   label: string;
@@ -68,6 +69,54 @@ const EmployeeDashboard = () => {
     enabled: !!accountId,
   });
 
+  // Horario efectivo: plantilla asignada + personalización + festivos
+  const { data: myProfile } = useQuery({
+    queryKey: ["emp-schedule-profile", user?.id, accountId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("employee_profiles").select("schedule_template_id")
+        .eq("user_id", user!.id).eq("account_id", accountId!).maybeSingle();
+      return data;
+    },
+    enabled: !!user && !!accountId,
+  });
+
+  const templateId = myProfile?.schedule_template_id || null;
+  const { data: templateSlots = [] } = useQuery({
+    queryKey: ["emp-template-slots", templateId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("schedule_template_slots").select("weekday, start_time, end_time")
+        .eq("template_id", templateId!);
+      return data || [];
+    },
+    enabled: !!templateId,
+  });
+
+  const { data: myOverrides = [] } = useQuery({
+    queryKey: ["emp-schedule-overrides", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("employee_schedule_overrides").select("weekday, day_off, start_time, end_time")
+        .eq("user_id", user!.id).eq("account_id", accountId!);
+      return data || [];
+    },
+    enabled: !!user && !!accountId,
+  });
+
+  const { data: monthHolidays = [] } = useQuery({
+    queryKey: ["emp-holidays", accountId, format(monthStart, "yyyy-MM")],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("company_holidays").select("holiday_date")
+        .eq("account_id", accountId!)
+        .gte("holiday_date", format(monthStart, "yyyy-MM-dd"))
+        .lte("holiday_date", format(monthEnd, "yyyy-MM-dd"));
+      return data || [];
+    },
+    enabled: !!accountId,
+  });
+
   const { data: leave = [] } = useQuery({
     queryKey: ["emp-leave-summary", user?.id],
     queryFn: async () => {
@@ -92,18 +141,18 @@ const EmployeeDashboard = () => {
   const weekMins = sumMins(weekRecords as any[]);
   const monthMins = sumMins(monthRecords as any[]);
 
-  // Expected: count work days in month vs settings
-  const workDays: string[] = settings?.work_days || ["MON", "TUE", "WED", "THU", "FRI"];
-  const dayCodes = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
-  let expectedHoursMonth = 0;
-  const startTime = settings?.work_start_time?.slice(0, 5) || "09:00";
-  const endTime = settings?.work_end_time?.slice(0, 5) || "18:00";
-  const [sh, sm] = startTime.split(":").map(Number);
-  const [eh, em] = endTime.split(":").map(Number);
-  const dailyHours = (eh + em / 60) - (sh + sm / 60);
-  for (let d = new Date(monthStart); d <= now; d.setDate(d.getDate() + 1)) {
-    if (workDays.includes(dayCodes[d.getDay()])) expectedHoursMonth += dailyHours;
-  }
+  // Horas esperadas del mes: plantilla del empleado > horario de empresa, menos festivos
+  const weekPlan = buildWeekPlan({
+    templateSlots: templateSlots as any[],
+    overrides: myOverrides as any[],
+    fallback: {
+      workDays: settings?.work_days || ["MON", "TUE", "WED", "THU", "FRI"],
+      start: settings?.work_start_time?.slice(0, 5) || "09:00",
+      end: settings?.work_end_time?.slice(0, 5) || "18:00",
+    },
+  });
+  const holidaySet = new Set((monthHolidays as any[]).map((h) => h.holiday_date as string));
+  const expectedHoursMonth = expectedHoursBetween(weekPlan, monthStart, now, holidaySet);
   const balanceMins = monthMins - expectedHoursMonth * 60;
 
   const yearStart = `${now.getFullYear()}-01-01`;

@@ -24,7 +24,7 @@ const KIND_LABELS: Record<string, string> = {
 const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
   const qc = useQueryClient();
   const [form, setForm] = useState<any>({
-    phone_number_id: "", verify_token: "", access_token: "", display_phone: "",
+    phone_number_id: "", verify_token: "", access_token: "", app_secret: "", display_phone: "",
     is_enabled: false, bot_enabled: true,
     welcome_message: "", fallback_message: "", task_ack_message: "", task_completed_template: "",
     default_assignee: "",
@@ -32,10 +32,15 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  // Nota: access_token y app_secret son de SOLO ESCRITURA (privilegios de columna
+  // en BD impiden leerlos desde el cliente). Se selecciona la lista explícita.
   const { data: config } = useQuery({
     queryKey: ["whatsapp-config", accountId],
     queryFn: async () => {
-      const { data } = await (supabase as any).from("whatsapp_config").select("*").eq("account_id", accountId).maybeSingle();
+      const { data } = await (supabase as any)
+        .from("whatsapp_config")
+        .select("id, account_id, phone_number_id, verify_token, is_enabled, waba_id, display_phone, bot_enabled, welcome_message, fallback_message, task_ack_message, task_completed_template, default_assignee, created_at, updated_at")
+        .eq("account_id", accountId).maybeSingle();
       return data;
     },
     enabled: !!accountId,
@@ -63,7 +68,7 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
     if (config) {
       setForm({
         phone_number_id: config.phone_number_id || "", verify_token: config.verify_token || "",
-        access_token: config.access_token || "", display_phone: config.display_phone || "",
+        access_token: "", app_secret: "", display_phone: config.display_phone || "",
         is_enabled: config.is_enabled || false, bot_enabled: config.bot_enabled ?? true,
         welcome_message: config.welcome_message || "", fallback_message: config.fallback_message || "",
         task_ack_message: config.task_ack_message || "", task_completed_template: config.task_completed_template || "",
@@ -78,14 +83,17 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const payload = {
+      const payload: any = {
         phone_number_id: form.phone_number_id.trim(), verify_token: form.verify_token.trim(),
-        access_token: form.access_token.trim() || null, display_phone: form.display_phone.trim() || null,
+        display_phone: form.display_phone.trim() || null,
         is_enabled: form.is_enabled, bot_enabled: form.bot_enabled,
         welcome_message: form.welcome_message, fallback_message: form.fallback_message,
         task_ack_message: form.task_ack_message, task_completed_template: form.task_completed_template,
         default_assignee: form.default_assignee || null, updated_at: new Date().toISOString(),
       };
+      // Credenciales de solo escritura: solo se envían si el usuario escribe un valor nuevo
+      if (form.access_token.trim()) payload.access_token = form.access_token.trim();
+      if (form.app_secret.trim()) payload.app_secret = form.app_secret.trim();
       const { error } = config
         ? await (supabase as any).from("whatsapp_config").update(payload).eq("id", config.id)
         : await (supabase as any).from("whatsapp_config").insert({ account_id: accountId, ...payload });
@@ -149,10 +157,15 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
               <Label>Número visible</Label>
               <Input value={form.display_phone} onChange={(e) => set("display_phone", e.target.value)} placeholder="+34 600 000 000" />
             </div>
-            <div className="space-y-1.5 sm:col-span-2">
+            <div className="space-y-1.5">
               <Label>Access Token permanente</Label>
-              <Input type="password" value={form.access_token} onChange={(e) => set("access_token", e.target.value)} placeholder="EAAG..." />
-              <p className="text-xs text-muted-foreground">Token de tu app de Meta. Solo visible para administradores de tu cuenta.</p>
+              <Input type="password" value={form.access_token} onChange={(e) => set("access_token", e.target.value)} placeholder={config ? "•••••• (guardado — escribe para cambiarlo)" : "EAAG..."} autoComplete="new-password" />
+              <p className="text-xs text-muted-foreground">Por seguridad, el token guardado no se muestra. Rellena solo para cambiarlo.</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label>App Secret de Meta</Label>
+              <Input type="password" value={form.app_secret} onChange={(e) => set("app_secret", e.target.value)} placeholder={config ? "•••••• (guardado — escribe para cambiarlo)" : "b507b1..."} autoComplete="new-password" />
+              <p className="text-xs text-muted-foreground">Verifica la firma de los mensajes entrantes de tu app (Meta → Configuración de la app → Básico).</p>
             </div>
             <div className="space-y-1.5">
               <Label>Token de verificación</Label>
