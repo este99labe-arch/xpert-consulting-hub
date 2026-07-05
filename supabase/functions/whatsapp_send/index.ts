@@ -16,6 +16,7 @@ async function waSendText(phoneNumberId: string, token: string, to: string, text
       body: JSON.stringify({ messaging_product: "whatsapp", to, type: "text", text: { body: text } }),
     });
     const data = await res.json().catch(() => ({}));
+    if (!res.ok) console.error("WA send REJECTED:", res.status, JSON.stringify(data));
     return { ok: res.ok, id: (data as any)?.messages?.[0]?.id ?? null, error: res.ok ? null : data };
   } catch (e) {
     return { ok: false, id: null, error: String(e) };
@@ -24,6 +25,14 @@ async function waSendText(phoneNumberId: string, token: string, to: string, text
 
 const renderTemplate = (tmpl: string, vars: Record<string, string>) =>
   tmpl.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, k) => vars[k] ?? "");
+
+const errText = (err: any): string | null => {
+  if (!err) return null;
+  if (typeof err === "string") return err.slice(0, 400);
+  const m = err?.error?.message || err?.message;
+  const c = err?.error?.code;
+  return (m ? `[${c ?? "?"}] ${m}` : JSON.stringify(err)).slice(0, 400);
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
