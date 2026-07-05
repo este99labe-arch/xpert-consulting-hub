@@ -54,13 +54,6 @@ const Login = () => {
     <div className="relative min-h-screen overflow-hidden" style={{ background: PAGE_GRADIENT }}>
       {/* ───── Decoración global sobre el azul ───── */}
       <div className="pointer-events-none absolute inset-0">
-        {/* Isotipo gigante de marca de agua */}
-        <img
-          src={isoWhite}
-          alt=""
-          aria-hidden
-          className="absolute -left-24 top-1/3 w-[36rem] opacity-[0.05] select-none"
-        />
         {/* Orbes difuminados */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
@@ -88,9 +81,16 @@ const Login = () => {
       </div>
 
       {/* ───── Contenido ───── */}
-      <div className="relative z-10 grid min-h-screen lg:grid-cols-2">
+      <div className="relative z-10 mx-auto grid w-full max-w-7xl min-h-screen place-items-center px-6 lg:grid-cols-[1fr_minmax(0,32rem)] lg:gap-8 xl:gap-14">
         {/* Lado de marca */}
-        <div className="hidden flex-col justify-between p-12 text-white xl:p-16 lg:flex">
+        <div className="relative hidden flex-col justify-between overflow-hidden py-12 text-white xl:py-16 lg:flex">
+          {/* Isotipo gigante de marca de agua, centrado con el texto */}
+          <img
+            src={isoWhite}
+            alt=""
+            aria-hidden
+            className="pointer-events-none absolute left-1/2 top-1/2 w-[28rem] -translate-x-1/2 -translate-y-1/2 opacity-[0.05] select-none"
+          />
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -175,12 +175,12 @@ const Login = () => {
         </div>
 
         {/* Lado del formulario: tarjeta flotante */}
-        <div className="flex min-h-screen items-center justify-center px-4 py-10 lg:px-16">
+        <div className="flex min-h-screen items-center justify-center px-4 py-10 lg:px-12">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45 }}
-            className="w-full max-w-lg rounded-3xl border border-white/50 bg-background/95 p-8 shadow-2xl backdrop-blur-xl sm:p-12"
+            className="w-full max-w-xl rounded-3xl border border-white/50 bg-background/95 p-8 shadow-2xl backdrop-blur-xl sm:p-12"
           >
             {/* Logo (solo móvil) */}
             <div className="mb-8 flex flex-col items-center gap-3 lg:hidden">
