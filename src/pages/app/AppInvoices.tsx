@@ -169,7 +169,12 @@ const AppInvoices = () => {
       if (debouncedSearch) {
         query = query.or(`concept.ilike.%${debouncedSearch}%,invoice_number.ilike.%${debouncedSearch}%`);
       }
-      if (statusFilter !== "ALL") query = query.eq("status", statusFilter);
+      if (statusFilter === "OVERDUE") {
+        // Vencida = pendiente de cobro y pasada su fecha de vencimiento
+        query = query.in("status", ["SENT", "PARTIALLY_PAID"]).lt("due_date", format(new Date(), "yyyy-MM-dd"));
+      } else if (statusFilter !== "ALL") {
+        query = query.eq("status", statusFilter);
+      }
       if (typeFilter !== "ALL") query = query.eq("type", typeFilter);
       if (dateFrom) query = query.gte("issue_date", format(dateFrom, "yyyy-MM-dd"));
       if (dateTo) query = query.lte("issue_date", format(dateTo, "yyyy-MM-dd"));
@@ -238,7 +243,11 @@ const AppInvoices = () => {
       if (debouncedSearch) {
         query = query.or(`concept.ilike.%${debouncedSearch}%,invoice_number.ilike.%${debouncedSearch}%`);
       }
-      if (statusFilter !== "ALL") query = query.eq("status", statusFilter);
+      if (statusFilter === "OVERDUE") {
+        query = query.in("status", ["SENT", "PARTIALLY_PAID"]).lt("due_date", format(new Date(), "yyyy-MM-dd"));
+      } else if (statusFilter !== "ALL") {
+        query = query.eq("status", statusFilter);
+      }
       if (typeFilter !== "ALL") query = query.eq("type", typeFilter);
       if (dateFrom) query = query.gte("issue_date", format(dateFrom, "yyyy-MM-dd"));
       if (dateTo) query = query.lte("issue_date", format(dateTo, "yyyy-MM-dd"));

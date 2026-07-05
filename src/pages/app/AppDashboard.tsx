@@ -32,6 +32,14 @@ const periodDays: Record<Period, number> = { "7d": 7, "30d": 30, "90d": 90, year
 const greetingForHour = (h: number) =>
   h < 12 ? "Buenos días" : h < 20 ? "Buenas tardes" : "Buenas noches";
 
+// Vencida = pendiente de cobro y pasada su fecha de vencimiento
+// (si no tiene due_date, se usa la heurística antigua de 30 días desde emisión)
+const isInvoiceOverdue = (i: any, now: Date): boolean => {
+  if (i.type !== "INVOICE" || !["SENT", "PARTIALLY_PAID"].includes(i.status)) return false;
+  if (i.due_date) return i.due_date < format(now, "yyyy-MM-dd");
+  return differenceInDays(now, parseISO(i.issue_date)) > 30;
+};
+
 const ManagerDashboard = () => {
   const { accountId, user } = useAuth();
   const navigate = useNavigate();
@@ -43,7 +51,7 @@ const ManagerDashboard = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("invoices")
-        .select("id, type, status, amount_total, issue_date, created_at, client_id, business_clients(name)")
+        .select("id, type, status, amount_total, issue_date, due_date, created_at, client_id, business_clients(name)")
         .eq("account_id", accountId!)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -138,7 +146,7 @@ const ManagerDashboard = () => {
     const income = list.filter((i: any) => i.type === "INVOICE").reduce((s: number, i: any) => s + Number(i.amount_total), 0);
     const expense = list.filter((i: any) => i.type === "EXPENSE").reduce((s: number, i: any) => s + Number(i.amount_total), 0);
     const pending = list.filter((i: any) => i.status === "DRAFT" || i.status === "SENT").length;
-    const overdue = list.filter((i: any) => i.status === "SENT" && differenceInDays(now, parseISO(i.issue_date)) > 30).length;
+    const overdue = list.filter((i: any) => isInvoiceOverdue(i, now)).length;
     const clients = new Set(list.map((i: any) => i.client_id)).size;
     return { income, expense, pending, overdue, clients };
   };
@@ -203,9 +211,7 @@ const ManagerDashboard = () => {
 
   // Global overdue (all periods) for the "needs attention" widget
   const overdueInvoices = useMemo(() =>
-    invoices.filter((i: any) =>
-      i.type === "INVOICE" && i.status === "SENT" && differenceInDays(now, parseISO(i.issue_date)) > 30
-    ),
+    invoices.filter((i: any) => isInvoiceOverdue(i, now)),
     [invoices]
   );
   const overdueAmountAll = overdueInvoices.reduce((s: number, i: any) => s + Number(i.amount_total), 0);

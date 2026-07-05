@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       account_modules: {
@@ -77,7 +52,18 @@ export type Database = {
       }
       account_settings: {
         Row: {
+          acc_customers: string
+          acc_expense_default: string
+          acc_irpf_payable: string
+          acc_irpf_receivable: string
+          acc_sales_default: string
+          acc_suppliers: string
+          acc_treasury: string
+          acc_vat_input: string
+          acc_vat_output: string
           account_id: string
+          accounting_auto_enabled: boolean
+          accounting_method: string
           id: string
           invoice_template: string
           updated_at: string
@@ -90,7 +76,18 @@ export type Database = {
           work_start_time: string
         }
         Insert: {
+          acc_customers?: string
+          acc_expense_default?: string
+          acc_irpf_payable?: string
+          acc_irpf_receivable?: string
+          acc_sales_default?: string
+          acc_suppliers?: string
+          acc_treasury?: string
+          acc_vat_input?: string
+          acc_vat_output?: string
           account_id: string
+          accounting_auto_enabled?: boolean
+          accounting_method?: string
           id?: string
           invoice_template?: string
           updated_at?: string
@@ -103,7 +100,18 @@ export type Database = {
           work_start_time?: string
         }
         Update: {
+          acc_customers?: string
+          acc_expense_default?: string
+          acc_irpf_payable?: string
+          acc_irpf_receivable?: string
+          acc_sales_default?: string
+          acc_suppliers?: string
+          acc_treasury?: string
+          acc_vat_input?: string
+          acc_vat_output?: string
           account_id?: string
+          accounting_auto_enabled?: boolean
+          accounting_method?: string
           id?: string
           invoice_template?: string
           updated_at?: string
@@ -125,60 +133,137 @@ export type Database = {
           },
         ]
       }
+      accounting_categories: {
+        Row: {
+          account_code: string
+          account_id: string
+          created_at: string
+          id: string
+          is_default: boolean
+          kind: string
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          account_code: string
+          account_id: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          kind: string
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          account_code?: string
+          account_id?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          kind?: string
+          name?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounting_categories_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       accounts: {
         Row: {
           address: string | null
           address_enc: string | null
+          billing_email: string | null
           city: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          country: string
           created_at: string
           created_by: string | null
           email: string | null
           id: string
           is_active: boolean
+          language: string
+          legal_name: string | null
+          logo_url: string | null
           name: string
           phone: string | null
           phone_enc: string | null
+          plan_code: string
           postal_code: string | null
+          province: string | null
+          suspended_at: string | null
           tax_id: string | null
           tax_id_enc: string | null
           tax_id_hash: string | null
+          timezone: string
           type: string
+          website: string | null
         }
         Insert: {
           address?: string | null
           address_enc?: string | null
+          billing_email?: string | null
           city?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          country?: string
           created_at?: string
           created_by?: string | null
           email?: string | null
           id?: string
           is_active?: boolean
+          language?: string
+          legal_name?: string | null
+          logo_url?: string | null
           name: string
           phone?: string | null
           phone_enc?: string | null
+          plan_code?: string
           postal_code?: string | null
+          province?: string | null
+          suspended_at?: string | null
           tax_id?: string | null
           tax_id_enc?: string | null
           tax_id_hash?: string | null
+          timezone?: string
           type: string
+          website?: string | null
         }
         Update: {
           address?: string | null
           address_enc?: string | null
+          billing_email?: string | null
           city?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          country?: string
           created_at?: string
           created_by?: string | null
           email?: string | null
           id?: string
           is_active?: boolean
+          language?: string
+          legal_name?: string | null
+          logo_url?: string | null
           name?: string
           phone?: string | null
           phone_enc?: string | null
+          plan_code?: string
           postal_code?: string | null
+          province?: string | null
+          suspended_at?: string | null
           tax_id?: string | null
           tax_id_enc?: string | null
           tax_id_hash?: string | null
+          timezone?: string
           type?: string
+          website?: string | null
         }
         Relationships: []
       }
@@ -577,6 +662,189 @@ export type Database = {
           },
         ]
       }
+      chat_conversations: {
+        Row: {
+          account_id: string
+          assigned_to: string | null
+          bot_paused: boolean
+          client_id: string | null
+          contact_id: string | null
+          contact_name: string | null
+          contact_phone: string
+          created_at: string
+          id: string
+          last_direction: string | null
+          last_message_at: string | null
+          last_message_preview: string | null
+          status: string
+          unread_count: number
+        }
+        Insert: {
+          account_id: string
+          assigned_to?: string | null
+          bot_paused?: boolean
+          client_id?: string | null
+          contact_id?: string | null
+          contact_name?: string | null
+          contact_phone: string
+          created_at?: string
+          id?: string
+          last_direction?: string | null
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          status?: string
+          unread_count?: number
+        }
+        Update: {
+          account_id?: string
+          assigned_to?: string | null
+          bot_paused?: boolean
+          client_id?: string | null
+          contact_id?: string | null
+          contact_name?: string | null
+          contact_phone?: string
+          created_at?: string
+          id?: string
+          last_direction?: string | null
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          status?: string
+          unread_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_conversations_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_conversations_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "business_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_conversations_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "client_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_intents: {
+        Row: {
+          account_id: string
+          assignee: string | null
+          auto_reply: string | null
+          created_at: string
+          creates_task: boolean
+          id: string
+          is_active: boolean
+          keywords: string[]
+          kind: string
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          account_id: string
+          assignee?: string | null
+          auto_reply?: string | null
+          created_at?: string
+          creates_task?: boolean
+          id?: string
+          is_active?: boolean
+          keywords?: string[]
+          kind?: string
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          account_id?: string
+          assignee?: string | null
+          auto_reply?: string | null
+          created_at?: string
+          creates_task?: boolean
+          id?: string
+          is_active?: boolean
+          keywords?: string[]
+          kind?: string
+          name?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_intents_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_messages: {
+        Row: {
+          account_id: string
+          author_type: string
+          author_user_id: string | null
+          body: string | null
+          conversation_id: string
+          created_at: string
+          direction: string
+          error_detail: string | null
+          id: string
+          media_url: string | null
+          status: string
+          wa_message_id: string | null
+        }
+        Insert: {
+          account_id: string
+          author_type?: string
+          author_user_id?: string | null
+          body?: string | null
+          conversation_id: string
+          created_at?: string
+          direction: string
+          error_detail?: string | null
+          id?: string
+          media_url?: string | null
+          status?: string
+          wa_message_id?: string | null
+        }
+        Update: {
+          account_id?: string
+          author_type?: string
+          author_user_id?: string | null
+          body?: string | null
+          conversation_id?: string
+          created_at?: string
+          direction?: string
+          error_detail?: string | null
+          id?: string
+          media_url?: string | null
+          status?: string
+          wa_message_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_contacts: {
         Row: {
           account_id: string
@@ -668,6 +936,35 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "client_plans_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      departments: {
+        Row: {
+          account_id: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "departments_account_id_fkey"
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
@@ -824,75 +1121,111 @@ export type Database = {
           address: string | null
           address_enc: string | null
           city: string | null
+          contract_type: string | null
+          corporate_email: string | null
           created_at: string
           date_of_birth: string | null
           date_of_birth_enc: string | null
           department: string | null
+          department_id: string | null
           dni: string | null
           dni_enc: string | null
           dni_hash: string | null
+          end_date: string | null
           first_name: string
+          iban: string | null
           id: string
           last_name: string
+          manager_user_id: string | null
+          notes: string | null
           phone: string | null
           phone_enc: string | null
           position: string | null
           postal_code: string | null
+          salary: number | null
           social_security_number: string | null
           ssn_enc: string | null
           start_date: string | null
+          status: string
           updated_at: string
           user_id: string
+          vacation_days_override: number | null
+          weekly_hours: number | null
+          work_center_id: string | null
         }
         Insert: {
           account_id: string
           address?: string | null
           address_enc?: string | null
           city?: string | null
+          contract_type?: string | null
+          corporate_email?: string | null
           created_at?: string
           date_of_birth?: string | null
           date_of_birth_enc?: string | null
           department?: string | null
+          department_id?: string | null
           dni?: string | null
           dni_enc?: string | null
           dni_hash?: string | null
+          end_date?: string | null
           first_name: string
+          iban?: string | null
           id?: string
           last_name: string
+          manager_user_id?: string | null
+          notes?: string | null
           phone?: string | null
           phone_enc?: string | null
           position?: string | null
           postal_code?: string | null
+          salary?: number | null
           social_security_number?: string | null
           ssn_enc?: string | null
           start_date?: string | null
+          status?: string
           updated_at?: string
           user_id: string
+          vacation_days_override?: number | null
+          weekly_hours?: number | null
+          work_center_id?: string | null
         }
         Update: {
           account_id?: string
           address?: string | null
           address_enc?: string | null
           city?: string | null
+          contract_type?: string | null
+          corporate_email?: string | null
           created_at?: string
           date_of_birth?: string | null
           date_of_birth_enc?: string | null
           department?: string | null
+          department_id?: string | null
           dni?: string | null
           dni_enc?: string | null
           dni_hash?: string | null
+          end_date?: string | null
           first_name?: string
+          iban?: string | null
           id?: string
           last_name?: string
+          manager_user_id?: string | null
+          notes?: string | null
           phone?: string | null
           phone_enc?: string | null
           position?: string | null
           postal_code?: string | null
+          salary?: number | null
           social_security_number?: string | null
           ssn_enc?: string | null
           start_date?: string | null
+          status?: string
           updated_at?: string
           user_id?: string
+          vacation_days_override?: number | null
+          weekly_hours?: number | null
+          work_center_id?: string | null
         }
         Relationships: [
           {
@@ -900,6 +1233,20 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_profiles_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_profiles_work_center_id_fkey"
+            columns: ["work_center_id"]
+            isOneToOne: false
+            referencedRelation: "work_centers"
             referencedColumns: ["id"]
           },
         ]
@@ -1125,10 +1472,12 @@ export type Database = {
           amount_vat: number
           attachment_name: string | null
           attachment_path: string | null
+          category_id: string | null
           client_id: string
           concept: string
           created_at: string
           description: string | null
+          due_date: string | null
           id: string
           invoice_number: string | null
           irpf_amount: number
@@ -1136,6 +1485,8 @@ export type Database = {
           issue_date: string
           operation_date: string | null
           paid_at: string | null
+          payment_method: string | null
+          rectifies_invoice_id: string | null
           special_mentions: string | null
           status: string
           type: string
@@ -1156,10 +1507,12 @@ export type Database = {
           amount_vat: number
           attachment_name?: string | null
           attachment_path?: string | null
+          category_id?: string | null
           client_id: string
           concept?: string
           created_at?: string
           description?: string | null
+          due_date?: string | null
           id?: string
           invoice_number?: string | null
           irpf_amount?: number
@@ -1167,6 +1520,8 @@ export type Database = {
           issue_date: string
           operation_date?: string | null
           paid_at?: string | null
+          payment_method?: string | null
+          rectifies_invoice_id?: string | null
           special_mentions?: string | null
           status?: string
           type: string
@@ -1187,10 +1542,12 @@ export type Database = {
           amount_vat?: number
           attachment_name?: string | null
           attachment_path?: string | null
+          category_id?: string | null
           client_id?: string
           concept?: string
           created_at?: string
           description?: string | null
+          due_date?: string | null
           id?: string
           invoice_number?: string | null
           irpf_amount?: number
@@ -1198,6 +1555,8 @@ export type Database = {
           issue_date?: string
           operation_date?: string | null
           paid_at?: string | null
+          payment_method?: string | null
+          rectifies_invoice_id?: string | null
           special_mentions?: string | null
           status?: string
           type?: string
@@ -1220,10 +1579,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "invoices_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_categories"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "invoices_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "business_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_rectifies_invoice_id_fkey"
+            columns: ["rectifies_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
             referencedColumns: ["id"]
           },
         ]
@@ -1235,9 +1608,12 @@ export type Database = {
           created_by: string
           date: string
           description: string
+          entry_kind: string | null
           entry_number: string | null
           id: string
           invoice_id: string | null
+          payment_id: string | null
+          source: string
           status: string
         }
         Insert: {
@@ -1246,9 +1622,12 @@ export type Database = {
           created_by: string
           date: string
           description?: string
+          entry_kind?: string | null
           entry_number?: string | null
           id?: string
           invoice_id?: string | null
+          payment_id?: string | null
+          source?: string
           status?: string
         }
         Update: {
@@ -1257,9 +1636,12 @@ export type Database = {
           created_by?: string
           date?: string
           description?: string
+          entry_kind?: string | null
           entry_number?: string | null
           id?: string
           invoice_id?: string | null
+          payment_id?: string | null
+          source?: string
           status?: string
         }
         Relationships: [
@@ -1755,6 +2137,7 @@ export type Database = {
           account_id: string
           archived_at: string | null
           assigned_to: string | null
+          chat_conversation_id: string | null
           client_id: string | null
           column_id: string | null
           completed_at: string | null
@@ -1767,8 +2150,9 @@ export type Database = {
           id: string
           is_completed: boolean
           labels: string[]
+          origin: string
           priority: string
-          remind_at: string
+          remind_at: string | null
           status: string
           title: string
         }
@@ -1776,6 +2160,7 @@ export type Database = {
           account_id: string
           archived_at?: string | null
           assigned_to?: string | null
+          chat_conversation_id?: string | null
           client_id?: string | null
           column_id?: string | null
           completed_at?: string | null
@@ -1788,8 +2173,9 @@ export type Database = {
           id?: string
           is_completed?: boolean
           labels?: string[]
+          origin?: string
           priority?: string
-          remind_at: string
+          remind_at?: string | null
           status?: string
           title: string
         }
@@ -1797,6 +2183,7 @@ export type Database = {
           account_id?: string
           archived_at?: string | null
           assigned_to?: string | null
+          chat_conversation_id?: string | null
           client_id?: string | null
           column_id?: string | null
           completed_at?: string | null
@@ -1809,8 +2196,9 @@ export type Database = {
           id?: string
           is_completed?: boolean
           labels?: string[]
+          origin?: string
           priority?: string
-          remind_at?: string
+          remind_at?: string | null
           status?: string
           title?: string
         }
@@ -1820,6 +2208,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reminders_chat_conversation_id_fkey"
+            columns: ["chat_conversation_id"]
+            isOneToOne: false
+            referencedRelation: "chat_conversations"
             referencedColumns: ["id"]
           },
           {
@@ -2376,37 +2771,102 @@ export type Database = {
       }
       whatsapp_config: {
         Row: {
+          access_token: string | null
           account_id: string
+          app_secret: string | null
+          bot_enabled: boolean
           created_at: string
+          default_assignee: string | null
+          display_phone: string | null
+          fallback_message: string
           id: string
           is_enabled: boolean
           phone_number_id: string
+          task_ack_message: string
+          task_completed_template: string
           updated_at: string
           verify_token: string
+          waba_id: string | null
+          welcome_message: string
         }
         Insert: {
+          access_token?: string | null
           account_id: string
+          app_secret?: string | null
+          bot_enabled?: boolean
           created_at?: string
+          default_assignee?: string | null
+          display_phone?: string | null
+          fallback_message?: string
           id?: string
           is_enabled?: boolean
           phone_number_id?: string
+          task_ack_message?: string
+          task_completed_template?: string
           updated_at?: string
           verify_token?: string
+          waba_id?: string | null
+          welcome_message?: string
         }
         Update: {
+          access_token?: string | null
           account_id?: string
+          app_secret?: string | null
+          bot_enabled?: boolean
           created_at?: string
+          default_assignee?: string | null
+          display_phone?: string | null
+          fallback_message?: string
           id?: string
           is_enabled?: boolean
           phone_number_id?: string
+          task_ack_message?: string
+          task_completed_template?: string
           updated_at?: string
           verify_token?: string
+          waba_id?: string | null
+          welcome_message?: string
         }
         Relationships: [
           {
             foreignKeyName: "whatsapp_config_account_id_fkey"
             columns: ["account_id"]
             isOneToOne: true
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_centers: {
+        Row: {
+          account_id: string
+          address: string | null
+          city: string | null
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          account_id: string
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          account_id?: string
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_centers_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
@@ -2648,6 +3108,40 @@ export type Database = {
       }
     }
     Functions: {
+      _acc_chart_id: {
+        Args: { p_account: string; p_code: string }
+        Returns: string
+      }
+      _acc_creator: { Args: { p_account: string }; Returns: string }
+      _acc_next_entry_number: {
+        Args: { p_account: string; p_date: string }
+        Returns: string
+      }
+      _acc_post_accrual: { Args: { p_invoice: string }; Returns: undefined }
+      _acc_post_collection: {
+        Args: {
+          p_amount: number
+          p_date: string
+          p_invoice: string
+          p_payment_id: string
+        }
+        Returns: undefined
+      }
+      _acc_resolver: {
+        Args: { p_account: string }
+        Returns: {
+          cust: string
+          expd: string
+          irpfp: string
+          irpfr: string
+          method: string
+          salesd: string
+          supp: string
+          treas: string
+          vatin: string
+          vatout: string
+        }[]
+      }
       _decrypt_text: { Args: { _cipher: string }; Returns: string }
       _encrypt_text: { Args: { _plain: string }; Returns: string }
       _get_encryption_key: { Args: never; Returns: string }
@@ -2940,9 +3434,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },

@@ -45,6 +45,8 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
   const [categoryId, setCategoryId] = useState("");
   const [issueDate, setIssueDate] = useState("");
   const [operationDate, setOperationDate] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("TRANSFER");
   const [vatPercentage, setVatPercentage] = useState("21");
   const [irpfPercentage, setIrpfPercentage] = useState("0");
   const [specialMentions, setSpecialMentions] = useState("");
@@ -81,6 +83,8 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
       setCategoryId(invoice.category_id || "");
       setIssueDate(invoice.issue_date || "");
       setOperationDate(invoice.operation_date || "");
+      setDueDate(invoice.due_date || "");
+      setPaymentMethod(invoice.payment_method || "TRANSFER");
       setVatPercentage(String(invoice.vat_percentage || "21"));
       setIrpfPercentage(String(invoice.irpf_percentage || "0"));
       setSpecialMentions(invoice.special_mentions || "");
@@ -234,6 +238,8 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
         updatePayload.concept = concept;
         updatePayload.issue_date = issueDate;
         updatePayload.operation_date = operationDate || null;
+        updatePayload.due_date = dueDate || null;
+        updatePayload.payment_method = paymentMethod || null;
         updatePayload.amount_net = amountNet;
         updatePayload.vat_percentage = vatNum;
         updatePayload.amount_vat = amountVat;
@@ -354,9 +360,28 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label>Fecha de operación <span className="text-xs text-muted-foreground">(si difiere)</span></Label>
+                    <Input type="date" value={operationDate} onChange={(e) => setOperationDate(e.target.value)} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Fecha de vencimiento</Label>
+                    <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+                  </div>
+                </div>
                 <div className="space-y-1.5">
-                  <Label>Fecha de operación <span className="text-xs text-muted-foreground">(si difiere)</span></Label>
-                  <Input type="date" value={operationDate} onChange={(e) => setOperationDate(e.target.value)} />
+                  <Label>Forma de pago</Label>
+                  <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="TRANSFER">Transferencia</SelectItem>
+                      <SelectItem value="DIRECT_DEBIT">Domiciliación</SelectItem>
+                      <SelectItem value="CARD">Tarjeta</SelectItem>
+                      <SelectItem value="CASH">Efectivo</SelectItem>
+                      <SelectItem value="OTHER">Otra</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </FormSection>
 

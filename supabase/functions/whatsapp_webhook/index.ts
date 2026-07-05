@@ -186,36 +186,45 @@ Deno.serve(async (req) => {
 
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405, headers: corsHeaders });
 
-  // ─── POST: verificación de firma HMAC ───
+  // ─── POST: cuerpo crudo (NO confiar hasta verificar la firma HMAC) ───
   const rawBody = await req.text();
-  const appSecret = Deno.env.get("WHATSAPP_APP_SECRET");
-  if (!appSecret) return new Response("Server misconfigured", { status: 500, headers: corsHeaders });
   const sigHeader = req.headers.get("X-Hub-Signature-256") || req.headers.get("x-hub-signature-256") || "";
-  try {
-    const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(appSecret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-    const sigBytes = new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(rawBody)));
-    const expected = "sha256=" + Array.from(sigBytes).map((b) => b.toString(16).padStart(2, "0")).join("");
-    if (sigHeader.length !== expected.length) return new Response("Forbidden", { status: 403, headers: corsHeaders });
-    let diff = 0;
-    for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ sigHeader.charCodeAt(i);
-    if (diff !== 0) return new Response("Forbidden", { status: 403, headers: corsHeaders });
-  } catch (e) {
-    console.error("Signature verification failed:", e);
-    return new Response("Forbidden", { status: 403, headers: corsHeaders });
-  }
 
-  const body = JSON.parse(rawBody);
+  let body: any;
+  try { body = JSON.parse(rawBody); } catch { return new Response("Bad request", { status: 400, headers: corsHeaders }); }
   const value = body?.entry?.[0]?.changes?.[0]?.value;
   const messages = value?.messages;
   const okResponse = new Response(JSON.stringify({ ok: true }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-  if (!messages || messages.length === 0) return okResponse;
 
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-  // Identificar la cuenta por el número que RECIBIÓ el mensaje
+  // Identificar la cuenta por el número que RECIBIÓ el mensaje (aún sin confiar)
   const phoneNumberId = value?.metadata?.phone_number_id;
-  if (!phoneNumberId) return okResponse;
-  const { data: cfg } = await admin.from("whatsapp_config").select("*").eq("phone_number_id", phoneNumberId).eq("is_enabled", true).maybeSingle();
+  const { data: cfg } = phoneNumberId
+    ? await admin.from("whatsapp_config").select("*").eq("phone_number_id", phoneNumberId).eq("is_enabled", true).maybeSingle()
+    : { data: null };
+
+  // Verificación de firma: app_secret de la cuenta o secreto global (fallback)
+  const secrets = [cfg?.app_secret, Deno.env.get("WHATSAPP_APP_SECRET")].filter(Boolean) as string[];
+  if (secrets.length === 0) return new Response("Server misconfigured", { status: 500, headers: corsHeaders });
+
+  let signatureOk = false;
+  for (const secret of secrets) {
+    try {
+      const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+      const sigBytes = new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(rawBody)));
+      const expected = "sha256=" + Array.from(sigBytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+      if (sigHeader.length !== expected.length) continue;
+      let diff = 0;
+      for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ sigHeader.charCodeAt(i);
+      if (diff === 0) { signatureOk = true; break; }
+    } catch (e) {
+      console.error("Signature verification error:", e);
+    }
+  }
+  if (!signatureOk) return new Response("Forbidden", { status: 403, headers: corsHeaders });
+
+  if (!messages || messages.length === 0) return okResponse;
   if (!cfg) { console.log(`No config for phone_number_id ${phoneNumberId}`); return okResponse; }
 
   const contactName = value?.contacts?.[0]?.profile?.name || null;

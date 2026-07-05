@@ -35,6 +35,9 @@ const CreateEmployeeDialog = ({ open, onOpenChange }: { open: boolean; onOpenCha
   const [position, setPosition] = useState("");
   const [startDate, setStartDate] = useState("");
   const [ssn, setSsn] = useState("");
+  const [contractType, setContractType] = useState("INDEFINIDO");
+  const [weeklyHours, setWeeklyHours] = useState("40");
+  const [corporateEmail, setCorporateEmail] = useState("");
   const [sendEmail, setSendEmail] = useState(true);
 
   const resetForm = () => {
@@ -43,6 +46,7 @@ const CreateEmployeeDialog = ({ open, onOpenChange }: { open: boolean; onOpenCha
     setFirstName(""); setLastName(""); setDni(""); setPhone("");
     setDateOfBirth(""); setAddress(""); setPostalCode(""); setCity("");
     setDepartment(""); setPosition(""); setStartDate(""); setSsn("");
+    setContractType("INDEFINIDO"); setWeeklyHours("40"); setCorporateEmail("");
     setSendEmail(true);
   };
 
@@ -71,7 +75,10 @@ const CreateEmployeeDialog = ({ open, onOpenChange }: { open: boolean; onOpenCha
           postal_code: postalCode || null, city: city || null,
           department: department || null, position: position || null,
           start_date: startDate || null, social_security_number: ssn || null,
-        });
+          contract_type: contractType || null,
+          weekly_hours: weeklyHours ? parseFloat(weeklyHours) : null,
+          corporate_email: corporateEmail || null,
+        } as any);
       }
 
       if (sendEmail) {
@@ -197,6 +204,30 @@ const CreateEmployeeDialog = ({ open, onOpenChange }: { open: boolean; onOpenCha
                   <Label>Nº Seguridad Social</Label>
                   <Input value={ssn} onChange={(e) => setSsn(e.target.value)} placeholder="28/12345678/09" />
                 </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Tipo de contrato</Label>
+                  <Select value={contractType} onValueChange={setContractType}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="INDEFINIDO">Indefinido</SelectItem>
+                      <SelectItem value="TEMPORAL">Temporal</SelectItem>
+                      <SelectItem value="PRACTICAS">Prácticas</SelectItem>
+                      <SelectItem value="BECA">Beca</SelectItem>
+                      <SelectItem value="AUTONOMO">Autónomo</SelectItem>
+                      <SelectItem value="OTRO">Otro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Jornada semanal (horas)</Label>
+                  <Input type="number" min="1" max="60" step="0.5" value={weeklyHours} onChange={(e) => setWeeklyHours(e.target.value)} placeholder="40" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Email corporativo <span className="text-xs text-muted-foreground">(si difiere del de acceso)</span></Label>
+                <Input type="email" value={corporateEmail} onChange={(e) => setCorporateEmail(e.target.value)} placeholder="nombre@empresa.com" />
               </div>
               <div className="flex items-center gap-2 pt-2">
                 <input type="checkbox" id="send-email" checked={sendEmail} onChange={(e) => setSendEmail(e.target.checked)} className="h-4 w-4 rounded border-input" />
