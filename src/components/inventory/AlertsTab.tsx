@@ -54,7 +54,7 @@ const AlertsTab = ({ lowStockProducts, isManager, onQuickOrder }: AlertsTabProps
           <TableHeader>
             <TableRow>
               <TableHead>Producto</TableHead><TableHead>SKU</TableHead>
-              <TableHead className="text-right">Stock Actual</TableHead><TableHead className="text-right">Stock Mínimo</TableHead>
+              <TableHead className="text-right">Stock actual</TableHead><TableHead className="text-right">Stock mínimo</TableHead>
               <TableHead className="text-right">Déficit</TableHead>{isManager && <TableHead />}
             </TableRow>
           </TableHeader>

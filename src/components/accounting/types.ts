@@ -33,4 +33,4 @@ export const typeColors: Record<string, string> = {
   EXPENSE: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
 };
 
-export const EUR = (n: number) => n.toLocaleString("es-ES", { style: "currency", currency: "EUR" });
+export { fmtEUR as EUR } from "@/lib/format";

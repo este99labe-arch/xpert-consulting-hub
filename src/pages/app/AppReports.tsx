@@ -1,3 +1,4 @@
+import { fmtEUR as EUR } from "@/lib/format";
 import { useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
@@ -16,7 +17,6 @@ import { format, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOf
 import { es } from "date-fns/locale";
 import MasterAccountSelector from "@/components/shared/MasterAccountSelector";
 
-const EUR = (n: number) => n.toLocaleString("es-ES", { style: "currency", currency: "EUR" });
 
 // ─── P&L REPORT ─────────────────────────────────────────
 const PLReport = ({ accountId }: { accountId: string }) => {

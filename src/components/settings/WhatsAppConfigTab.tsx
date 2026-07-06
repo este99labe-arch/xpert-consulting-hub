@@ -1,3 +1,7 @@
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,6 +35,7 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
   });
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [intentToDelete, setIntentToDelete] = useState<any>(null);
 
   // Nota: access_token y app_secret son de SOLO ESCRITURA (privilegios de columna
   // en BD impiden leerlos desde el cliente). Se selecciona la lista explícita.
@@ -240,7 +245,7 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
                 <div className="ml-auto flex items-center gap-2">
                   <span className="text-xs text-muted-foreground">Crea tarea</span>
                   <Switch checked={it.creates_task} onCheckedChange={(v) => intentMut.mutate({ type: "update", row: { ...it, creates_task: v } })} />
-                  <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => intentMut.mutate({ type: "delete", row: it })}><Trash2 className="h-4 w-4 text-muted-foreground" /></Button>
+                  <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setIntentToDelete(it)} aria-label="Eliminar intención"><Trash2 className="h-4 w-4 text-muted-foreground" /></Button>
                 </div>
               </div>
               <div className="grid gap-2 sm:grid-cols-2">
@@ -268,6 +273,26 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={saving} className="gap-1.5"><Save className="h-4 w-4" />{saving ? "Guardando..." : "Guardar configuración"}</Button>
       </div>
+
+      <AlertDialog open={!!intentToDelete} onOpenChange={(o) => !o && setIntentToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar esta intención?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se eliminará "{intentToDelete?.name}" y el bot dejará de aplicar sus reglas. Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { if (intentToDelete) intentMut.mutate({ type: "delete", row: intentToDelete }); setIntentToDelete(null); }}
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

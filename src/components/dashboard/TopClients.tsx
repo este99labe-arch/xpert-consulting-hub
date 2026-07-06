@@ -1,3 +1,4 @@
+import { fmtEUR as EUR } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users } from "lucide-react";
 
@@ -10,8 +11,6 @@ interface TopClientsProps {
   clients: ClientData[];
 }
 
-const EUR = (n: number) =>
-  n.toLocaleString("es-ES", { style: "currency", currency: "EUR" });
 
 const TopClients = ({ clients }: TopClientsProps) => {
   const max = clients.length > 0 ? clients[0].total : 1;

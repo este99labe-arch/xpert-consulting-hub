@@ -113,7 +113,7 @@ const CreateEmployeeDialog = ({ open, onOpenChange }: { open: boolean; onOpenCha
     <Dialog open={open} onOpenChange={(v) => { if (!v) resetForm(); onOpenChange(v); }}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Dar de Alta Empleado</DialogTitle>
+          <DialogTitle>Dar de alta empleado</DialogTitle>
           <DialogDescription>
             {step === 1 ? "Paso 1: Datos de cuenta e información personal" : "Paso 2: Datos laborales y opciones"}
           </DialogDescription>
@@ -238,7 +238,7 @@ const CreateEmployeeDialog = ({ open, onOpenChange }: { open: boolean; onOpenCha
               <div className="flex gap-2">
                 <Button type="button" variant="outline" className="flex-1" onClick={() => setStep(1)}>← Atrás</Button>
                 <Button type="submit" className="flex-1" disabled={loading}>
-                  {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Dar de Alta
+                  {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Dar de alta
                 </Button>
               </div>
             </>

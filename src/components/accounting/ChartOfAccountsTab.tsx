@@ -1,3 +1,4 @@
+import { fmtEUR as EUR } from "@/lib/format";
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,6 @@ import {
 import { Search, Plus, Pencil } from "lucide-react";
 import { ChartAccount } from "./types";
 
-const EUR = (n: number) => n.toLocaleString("es-ES", { style: "currency", currency: "EUR" });
 
 const typeLabels: Record<string, string> = {
   ASSET: "Activo", LIABILITY: "Pasivo", EQUITY: "Patrimonio", INCOME: "Ingresos", EXPENSE: "Gastos",

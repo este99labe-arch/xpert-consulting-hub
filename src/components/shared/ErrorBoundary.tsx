@@ -49,9 +49,14 @@ export class ErrorBoundary extends React.Component<
               {this.state.error.message}
             </pre>
           )}
-          <Button onClick={this.handleRetry} variant="default">
-            Reintentar
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={this.handleRetry} variant="default">
+              Reintentar
+            </Button>
+            <Button onClick={() => window.location.reload()} variant="outline">
+              Recargar página
+            </Button>
+          </div>
         </div>
       );
     }

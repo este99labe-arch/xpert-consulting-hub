@@ -1,3 +1,4 @@
+import { fmtEUR0 as EUR0 } from "@/lib/format";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -12,7 +13,6 @@ import { format, subMonths, startOfMonth, parseISO, differenceInDays } from "dat
 import { es } from "date-fns/locale";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, BarChart, Bar } from "recharts";
 
-const EUR0 = (n: number) => Number(n).toLocaleString("es-ES", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
 
 const MasterDashboard = () => {
   const navigate = useNavigate();

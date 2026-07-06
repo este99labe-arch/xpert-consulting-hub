@@ -1,3 +1,4 @@
+import { fmtEUR0 as EUR } from "@/lib/format";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Wallet } from "lucide-react";
 import { startOfMonth, endOfMonth, format, parseISO, differenceInDays } from "date-fns";
 
-const EUR = (n: number) => Number(n).toLocaleString("es-ES", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
 
 const CashflowMiniWidget = () => {
   const { accountId } = useAuth();

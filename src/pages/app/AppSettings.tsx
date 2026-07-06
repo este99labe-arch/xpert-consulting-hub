@@ -870,7 +870,7 @@ const UsersTab = ({ userId, accountId }: { userId: string; accountId: string }) 
       {/* User list */}
       <div className="flex justify-end">
         <Button onClick={() => setShowCreateDialog(true)}>
-          <UserPlus className="h-4 w-4 mr-2" /> Dar de Alta
+          <UserPlus className="h-4 w-4 mr-2" /> Dar de alta
         </Button>
       </div>
 

@@ -1,3 +1,4 @@
+import { fmtEUR0 as EUR } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import {
@@ -11,8 +12,6 @@ interface AttentionWidgetProps {
   pendingApprovals: number;
 }
 
-const EUR = (n: number) =>
-  n.toLocaleString("es-ES", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
 
 interface Item {
   key: string;
