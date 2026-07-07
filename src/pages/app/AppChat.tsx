@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
 import {
-  MessageCircle, Send, Search, Bot, UserRound, Hand, Building2, Loader2, ShieldAlert, CheckCheck, Bell, BellOff,
+  MessageCircle, Send, Search, Bot, UserRound, Hand, Building2, Loader2, ShieldAlert, CheckCheck, Bell, BellOff, Clock3,
 } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import { es } from "date-fns/locale";
@@ -76,7 +76,7 @@ const AppChat = () => {
     queryKey: ["chat-wa-config", accountId],
     queryFn: async () => {
       const { data } = await supabase
-        .from("whatsapp_config").select("is_enabled, phone_number_id, display_phone")
+        .from("whatsapp_config").select("is_enabled, phone_number_id, display_phone, reopen_template_name, reopen_template_lang")
         .eq("account_id", accountId).maybeSingle();
       return data;
     },
@@ -154,6 +154,29 @@ const AppChat = () => {
     },
     onSuccess: () => { setDraft(""); qc.invalidateQueries({ queryKey: ["chat-messages", selectedId] }); },
     onError: (e: any) => toast({ title: "No se pudo enviar", description: e.message, variant: "destructive" }),
+  });
+
+  // Ventana de 24h de WhatsApp: solo se puede responder libremente si el
+  // contacto ha escrito en las últimas 24 horas; fuera de ella, plantillas.
+  const lastInAt = useMemo(() => {
+    const ins = (messages as any[]).filter((m) => m.direction === "IN");
+    return ins.length ? new Date(ins[ins.length - 1].created_at) : null;
+  }, [messages]);
+  const windowOpen = !!lastInAt && Date.now() - lastInAt.getTime() < 24 * 60 * 60 * 1000;
+
+  const sendReopenTemplate = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("whatsapp_send", {
+        body: { conversation_id: selectedId, use_template: true },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+    },
+    onSuccess: () => {
+      toast({ title: "Plantilla enviada", description: "Cuando el contacto responda se reabrirá la ventana de 24 h." });
+      qc.invalidateQueries({ queryKey: ["chat-messages", selectedId] });
+    },
+    onError: (e: any) => toast({ title: "No se pudo enviar la plantilla", description: e.message, variant: "destructive" }),
   });
 
   const intervene = useMutation({
@@ -317,6 +340,24 @@ const AppChat = () => {
               )}
             </div>
 
+            {/* Ventana de 24h cerrada: solo plantillas aprobadas */}
+            {!windowOpen && (
+              <div className="flex flex-wrap items-center gap-2 border-t border-border bg-[hsl(var(--warning))]/10 px-4 py-2.5 text-sm">
+                <Clock3 className="h-4 w-4 shrink-0 text-[hsl(var(--warning))]" />
+                <span className="flex-1 text-muted-foreground">
+                  Han pasado más de 24 h desde el último mensaje del contacto. WhatsApp solo permite reabrir con una plantilla aprobada.
+                </span>
+                {(waConfig as any)?.reopen_template_name ? (
+                  <Button size="sm" variant="outline" className="gap-1.5" onClick={() => sendReopenTemplate.mutate()} disabled={sendReopenTemplate.isPending}>
+                    {sendReopenTemplate.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                    Reabrir con plantilla
+                  </Button>
+                ) : (
+                  <span className="text-xs text-muted-foreground">Configura la plantilla en Configuración → WhatsApp</span>
+                )}
+              </div>
+            )}
+
             {/* Compositor */}
             <form
               onSubmit={(e) => { e.preventDefault(); if (draft.trim() && !send.isPending) send.mutate(draft.trim()); }}
@@ -325,11 +366,11 @@ const AppChat = () => {
               <Input
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
-                placeholder={waConfig?.is_enabled ? "Escribe un mensaje..." : "Configura WhatsApp para responder"}
-                disabled={!waConfig?.is_enabled || send.isPending}
+                placeholder={!waConfig?.is_enabled ? "Configura WhatsApp para responder" : windowOpen ? "Escribe un mensaje..." : "Ventana de 24 h cerrada — usa la plantilla"}
+                disabled={!waConfig?.is_enabled || send.isPending || !windowOpen}
                 className="h-11"
               />
-              <Button type="submit" size="icon" className="h-11 w-11 shrink-0" disabled={!draft.trim() || send.isPending || !waConfig?.is_enabled}>
+              <Button type="submit" size="icon" className="h-11 w-11 shrink-0" disabled={!draft.trim() || send.isPending || !waConfig?.is_enabled || !windowOpen} aria-label="Enviar mensaje">
                 {send.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               </Button>
             </form>

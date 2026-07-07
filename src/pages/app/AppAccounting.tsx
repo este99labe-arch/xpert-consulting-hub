@@ -343,6 +343,37 @@ const AppAccounting = () => {
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
+  // Export del libro diario en CSV (formato genérico para gestorías:
+  // Asiento;Fecha;Cuenta;Título;Concepto;Debe;Haber — importable en A3/ContaSol/Excel)
+  const handleExportJournal = () => {
+    const posted = [...entries].filter((e) => e.status === "POSTED").sort((a, b) => a.date.localeCompare(b.date));
+    if (posted.length === 0) {
+      toast({ title: "Sin asientos contabilizados", description: "Solo se exportan los asientos en estado Contabilizado.", variant: "destructive" });
+      return;
+    }
+    const num = (n: number) => Number(n || 0).toFixed(2).replace(".", ",");
+    const clean = (t: string) => (t || "").replace(/;/g, ",");
+    const rows: string[][] = [["Asiento", "Fecha", "Cuenta", "Titulo cuenta", "Concepto", "Debe", "Haber"]];
+    posted.forEach((e) => {
+      getEntryLines(e.id).forEach((l) => {
+        const acc = chartAccounts.find((c) => c.id === l.chart_account_id);
+        rows.push([
+          e.entry_number || "", format(new Date(e.date), "dd/MM/yyyy"),
+          acc?.code || "", clean(acc?.name || ""), clean(e.description || ""),
+          num(Number(l.debit)), num(Number(l.credit)),
+        ]);
+      });
+    });
+    const csv = "\ufeff" + rows.map((r) => r.join(";")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `diario_${format(new Date(), "yyyy-MM-dd")}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast({ title: "Diario exportado", description: `${posted.length} asientos · listo para tu gestoría.` });
+  };
+
   // ---- Render ----
   // Master admin no longer blocked — defaults to own account
 
@@ -418,6 +449,7 @@ const AppAccounting = () => {
           <JournalEntriesTab
             accountId={activeAccountId!} pendingDeleteRequests={pendingDeleteRequests}
             isManager={isManager} canEditEntry={canEditEntry} canDeleteEntry={canDeleteEntry}
+            onExportCsv={handleExportJournal}
             onCreateEntry={openCreateEntry} onEditEntry={openEditEntry}
             onPostEntry={(id) => postEntry.mutate(id)}
             onDeleteEntry={setDeleteConfirmEntry}
@@ -436,7 +468,7 @@ const AppAccounting = () => {
         </TabsContent>
 
         <TabsContent value="taxes">
-          <TaxesTab invoices={invoices} />
+          <TaxesTab invoices={invoices} accountId={activeAccountId!} />
         </TabsContent>
       </Tabs>
 
