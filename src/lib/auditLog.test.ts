@@ -1,22 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const mockInsert = vi.fn().mockResolvedValue({ error: null });
+const mockRpc = vi.fn().mockResolvedValue({ error: null });
 
 vi.mock("@/integrations/supabase/client", () => ({
-  supabase: {
-    from: vi.fn(() => ({ insert: mockInsert })),
-  },
+  supabase: { rpc: (...args: any[]) => mockRpc(...args) },
 }));
 
 import { logAudit } from "./auditLog";
-import { supabase } from "@/integrations/supabase/client";
 
 describe("logAudit", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockRpc.mockResolvedValue({ error: null });
   });
 
-  it("inserts an audit log entry", async () => {
+  it("registra el evento vía RPC log_audit_event (server-side)", async () => {
     await logAudit({
       accountId: "acc-1",
       userId: "user-1",
@@ -26,20 +24,16 @@ describe("logAudit", () => {
       details: { amount: 100 },
     });
 
-    expect(supabase.from).toHaveBeenCalledWith("audit_logs");
-    expect(mockInsert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        account_id: "acc-1",
-        user_id: "user-1",
-        action: "CREATE",
-        entity_type: "invoice",
-        entity_id: "inv-1",
-      })
-    );
+    expect(mockRpc).toHaveBeenCalledWith("log_audit_event", {
+      _action: "CREATE",
+      _entity_type: "invoice",
+      _entity_id: "inv-1",
+      _details: { amount: 100 },
+    });
   });
 
-  it("does not throw on error", async () => {
-    mockInsert.mockRejectedValueOnce(new Error("DB error"));
+  it("no lanza excepción si el registro falla (fire-and-forget)", async () => {
+    mockRpc.mockRejectedValueOnce(new Error("DB error"));
     await expect(
       logAudit({
         accountId: "acc-1",

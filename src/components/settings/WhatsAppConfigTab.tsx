@@ -42,7 +42,7 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
   const { data: config } = useQuery({
     queryKey: ["whatsapp-config", accountId],
     queryFn: async () => {
-      const { data } = await (supabase as any)
+      const { data } = await supabase
         .from("whatsapp_config")
         .select("id, account_id, phone_number_id, verify_token, is_enabled, waba_id, display_phone, bot_enabled, welcome_message, fallback_message, task_ack_message, task_completed_template, default_assignee, created_at, updated_at")
         .eq("account_id", accountId).maybeSingle();
@@ -63,7 +63,7 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
   const { data: intents = [] } = useQuery({
     queryKey: ["chat-intents", accountId],
     queryFn: async () => {
-      const { data } = await (supabase as any).from("chat_intents").select("*").eq("account_id", accountId).order("sort_order");
+      const { data } = await supabase.from("chat_intents").select("*").eq("account_id", accountId).order("sort_order");
       return data || [];
     },
     enabled: !!accountId && isManager,
@@ -100,8 +100,8 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
       if (form.access_token.trim()) payload.access_token = form.access_token.trim();
       if (form.app_secret.trim()) payload.app_secret = form.app_secret.trim();
       const { error } = config
-        ? await (supabase as any).from("whatsapp_config").update(payload).eq("id", config.id)
-        : await (supabase as any).from("whatsapp_config").insert({ account_id: accountId, ...payload });
+        ? await supabase.from("whatsapp_config").update(payload).eq("id", config.id)
+        : await supabase.from("whatsapp_config").insert({ account_id: accountId, ...payload });
       if (error) throw error;
       qc.invalidateQueries({ queryKey: ["whatsapp-config", accountId] });
       toast({ title: "Configuración guardada" });
@@ -113,18 +113,18 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
   const intentMut = useMutation({
     mutationFn: async (op: { type: "add" | "update" | "delete"; row?: any }) => {
       if (op.type === "add") {
-        const { error } = await (supabase as any).from("chat_intents").insert({
+        const { error } = await supabase.from("chat_intents").insert({
           account_id: accountId, name: "Nueva intención", kind: "GENERAL", keywords: [], sort_order: intents.length + 1,
         });
         if (error) throw error;
       } else if (op.type === "update") {
-        const { error } = await (supabase as any).from("chat_intents").update({
+        const { error } = await supabase.from("chat_intents").update({
           name: op.row.name, kind: op.row.kind, keywords: op.row.keywords,
           auto_reply: op.row.auto_reply || null, creates_task: op.row.creates_task, assignee: op.row.assignee || null,
         }).eq("id", op.row.id);
         if (error) throw error;
       } else {
-        const { error } = await (supabase as any).from("chat_intents").delete().eq("id", op.row.id);
+        const { error } = await supabase.from("chat_intents").delete().eq("id", op.row.id);
         if (error) throw error;
       }
     },

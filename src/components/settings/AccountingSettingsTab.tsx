@@ -36,7 +36,7 @@ const AccountingSettingsTab = ({ accountId }: Props) => {
   const { data: settings } = useQuery({
     queryKey: ["acc-settings", accountId],
     queryFn: async () => {
-      const { data } = await (supabase as any)
+      const { data } = await supabase
         .from("account_settings").select("*").eq("account_id", accountId).maybeSingle();
       return data;
     },
@@ -57,7 +57,7 @@ const AccountingSettingsTab = ({ accountId }: Props) => {
   const { data: categories = [] } = useQuery({
     queryKey: ["acc-categories", accountId],
     queryFn: async () => {
-      const { data } = await (supabase as any)
+      const { data } = await supabase
         .from("accounting_categories").select("*")
         .eq("account_id", accountId).order("sort_order");
       return (data || []) as any[];
@@ -67,7 +67,7 @@ const AccountingSettingsTab = ({ accountId }: Props) => {
 
   const saveSettings = useMutation({
     mutationFn: async (patch: Record<string, any>) => {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("account_settings")
         .upsert({ account_id: accountId, ...patch }, { onConflict: "account_id" });
       if (error) throw error;
@@ -82,19 +82,19 @@ const AccountingSettingsTab = ({ accountId }: Props) => {
         const sameKind = categories.filter((c) => c.kind === op.row.kind);
         const firstAcc = chart.find((a: any) =>
           (op.row.kind === "INCOME" ? a.type === "INCOME" : a.type === "EXPENSE"));
-        const { error } = await (supabase as any).from("accounting_categories").insert({
+        const { error } = await supabase.from("accounting_categories").insert({
           account_id: accountId, kind: op.row.kind, name: "Nueva categoría",
           account_code: firstAcc?.code || "", sort_order: sameKind.length + 1,
         });
         if (error) throw error;
       } else if (op.type === "update") {
-        const { error } = await (supabase as any)
+        const { error } = await supabase
           .from("accounting_categories")
           .update({ name: op.row.name, account_code: op.row.account_code })
           .eq("id", op.row.id);
         if (error) throw error;
       } else {
-        const { error } = await (supabase as any)
+        const { error } = await supabase
           .from("accounting_categories").delete().eq("id", op.row.id);
         if (error) throw error;
       }

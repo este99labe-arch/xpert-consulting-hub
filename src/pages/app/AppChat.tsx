@@ -75,7 +75,7 @@ const AppChat = () => {
   const { data: waConfig } = useQuery({
     queryKey: ["chat-wa-config", accountId],
     queryFn: async () => {
-      const { data } = await (supabase as any)
+      const { data } = await supabase
         .from("whatsapp_config").select("is_enabled, phone_number_id, display_phone")
         .eq("account_id", accountId).maybeSingle();
       return data;
@@ -86,7 +86,7 @@ const AppChat = () => {
   const { data: conversations = [], isLoading } = useQuery({
     queryKey: ["chat-conversations", accountId],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("chat_conversations")
         .select("id, contact_phone, contact_name, status, assigned_to, bot_paused, last_message_at, last_message_preview, last_direction, unread_count, client_id, business_clients(name), client_contacts(name, position)")
         .eq("account_id", accountId)
@@ -101,7 +101,7 @@ const AppChat = () => {
     queryKey: ["chat-messages", selectedId],
     queryFn: async () => {
       if (!selectedId) return [];
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("chat_messages")
         .select("id, direction, author_type, body, status, created_at")
         .eq("conversation_id", selectedId)
@@ -158,7 +158,7 @@ const AppChat = () => {
 
   const intervene = useMutation({
     mutationFn: async () => {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("chat_conversations")
         .update({ bot_paused: true, status: "HUMAN", assigned_to: user!.id })
         .eq("id", selectedId);
@@ -172,7 +172,7 @@ const AppChat = () => {
     setSelectedId(id);
     const conv = conversations.find((c: any) => c.id === id);
     if (conv?.unread_count > 0) {
-      await (supabase as any).from("chat_conversations").update({ unread_count: 0 }).eq("id", id);
+      await supabase.from("chat_conversations").update({ unread_count: 0 }).eq("id", id);
       qc.invalidateQueries({ queryKey: ["chat-conversations", accountId] });
     }
   };
