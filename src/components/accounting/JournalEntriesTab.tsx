@@ -1,3 +1,4 @@
+import { Download } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
 import { BookText } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -23,6 +24,7 @@ interface JournalEntriesTabProps {
   canEditEntry: (e: JournalEntry) => boolean;
   canDeleteEntry: (e: JournalEntry) => boolean;
   onCreateEntry: () => void;
+  onExportCsv?: () => void;
   onEditEntry: (entry: JournalEntry) => void;
   onPostEntry: (entryId: string) => void;
   onDeleteEntry: (entry: JournalEntry) => void;
@@ -32,6 +34,7 @@ interface JournalEntriesTabProps {
 }
 
 const JournalEntriesTab = ({
+  onExportCsv,
   accountId, pendingDeleteRequests, isManager,
   canEditEntry, canDeleteEntry,
   onCreateEntry, onEditEntry, onPostEntry, onDeleteEntry, onRequestDelete,
@@ -117,6 +120,9 @@ const JournalEntriesTab = ({
             <SelectItem value="POSTED">Contabilizado</SelectItem>
           </SelectContent>
         </Select>
+        {onExportCsv && (
+          <Button size="sm" variant="outline" onClick={onExportCsv}><Download className="h-4 w-4 mr-1" />Exportar diario</Button>
+        )}
         {isManager && (
           <Button size="sm" onClick={onCreateEntry}><Plus className="h-4 w-4 mr-1" />Nuevo asiento</Button>
         )}

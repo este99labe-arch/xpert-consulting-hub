@@ -31,6 +31,7 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
     phone_number_id: "", verify_token: "", access_token: "", app_secret: "", display_phone: "",
     is_enabled: false, bot_enabled: true,
     welcome_message: "", fallback_message: "", task_ack_message: "", task_completed_template: "",
+    reopen_template_name: "", reopen_template_lang: "es",
     default_assignee: "",
   });
   const [saving, setSaving] = useState(false);
@@ -44,7 +45,7 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
     queryFn: async () => {
       const { data } = await supabase
         .from("whatsapp_config")
-        .select("id, account_id, phone_number_id, verify_token, is_enabled, waba_id, display_phone, bot_enabled, welcome_message, fallback_message, task_ack_message, task_completed_template, default_assignee, created_at, updated_at")
+        .select("id, account_id, phone_number_id, verify_token, is_enabled, waba_id, display_phone, bot_enabled, welcome_message, fallback_message, task_ack_message, task_completed_template, reopen_template_name, reopen_template_lang, default_assignee, created_at, updated_at")
         .eq("account_id", accountId).maybeSingle();
       return data;
     },
@@ -77,6 +78,7 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
         is_enabled: config.is_enabled || false, bot_enabled: config.bot_enabled ?? true,
         welcome_message: config.welcome_message || "", fallback_message: config.fallback_message || "",
         task_ack_message: config.task_ack_message || "", task_completed_template: config.task_completed_template || "",
+        reopen_template_name: (config as any).reopen_template_name || "", reopen_template_lang: (config as any).reopen_template_lang || "es",
         default_assignee: config.default_assignee || "",
       });
     }
@@ -94,6 +96,7 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
         is_enabled: form.is_enabled, bot_enabled: form.bot_enabled,
         welcome_message: form.welcome_message, fallback_message: form.fallback_message,
         task_ack_message: form.task_ack_message, task_completed_template: form.task_completed_template,
+        reopen_template_name: form.reopen_template_name.trim() || null, reopen_template_lang: form.reopen_template_lang || "es",
         default_assignee: form.default_assignee || null, updated_at: new Date().toISOString(),
       };
       // Credenciales de solo escritura: solo se envían si el usuario escribe un valor nuevo
@@ -214,6 +217,25 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
             <div className="space-y-1.5"><Label>Sin intención reconocida</Label><Textarea rows={2} value={form.fallback_message} onChange={(e) => set("fallback_message", e.target.value)} /></div>
           </div>
           <div className="space-y-1.5"><Label>Plantilla "tarea completada"</Label><Textarea rows={2} value={form.task_completed_template} onChange={(e) => set("task_completed_template", e.target.value)} /></div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label>Plantilla de reapertura (24 h)</Label>
+              <Input value={form.reopen_template_name} onChange={(e) => set("reopen_template_name", e.target.value)} placeholder="nombre_plantilla_aprobada" />
+              <p className="text-xs text-muted-foreground">Nombre exacto de una plantilla APROBADA en Meta. Permite escribir primero cuando la ventana de 24 h está cerrada.</p>
+            </div>
+            <div className="space-y-1.5 sm:max-w-[140px]">
+              <Label>Idioma</Label>
+              <Select value={form.reopen_template_lang} onValueChange={(v) => set("reopen_template_lang", v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="es">es</SelectItem>
+                  <SelectItem value="es_ES">es_ES</SelectItem>
+                  <SelectItem value="en">en</SelectItem>
+                  <SelectItem value="en_US">en_US</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
           <div className="space-y-1.5 sm:max-w-xs">
             <Label>Responsable por defecto</Label>
             <Select value={form.default_assignee || "NONE"} onValueChange={(v) => set("default_assignee", v === "NONE" ? "" : v)}>
