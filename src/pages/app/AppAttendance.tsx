@@ -332,7 +332,7 @@ const AppAttendance = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Control Horario</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Control horario</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             Gestiona tus fichajes y consulta tu historial
           </p>
@@ -353,7 +353,7 @@ const AppAttendance = () => {
                 }`}
               >
                 <Clock className="h-3.5 w-3.5" />
-                Mis Fichajes
+                Mis fichajes
               </button>
               <button
                 onClick={() => setActiveTab("team")}

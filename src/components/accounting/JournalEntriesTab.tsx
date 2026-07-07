@@ -1,3 +1,5 @@
+import EmptyState from "@/components/shared/EmptyState";
+import { BookText } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -123,7 +125,7 @@ const JournalEntriesTab = ({
       {/* Mobile cards */}
       <div className="space-y-3 md:hidden">
         {entries.length === 0 ? (
-          <Card className="p-8 text-center text-muted-foreground">Sin asientos contables</Card>
+          <EmptyState icon={BookText} title="Sin asientos contables" description="Los asientos se generan automáticamente al facturar, o puedes crearlos a mano." />
         ) : entries.map(entry => (
           <Card key={entry.id} className="p-4 space-y-2">
             <div className="flex items-center justify-between">
@@ -168,7 +170,7 @@ const JournalEntriesTab = ({
           </TableHeader>
           <TableBody>
             {entries.length === 0 && (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Sin asientos contables</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5}><EmptyState bare icon={BookText} title="Sin asientos contables" description="Los asientos se generan automáticamente al facturar, o puedes crearlos a mano." /></TableCell></TableRow>
             )}
             {entries.map(entry => (
               <TableRow key={entry.id}>

@@ -1,3 +1,4 @@
+import { fmtEUR0 as EUR } from "@/lib/format";
 import { Card } from "@/components/ui/card";
 import {
   TrendingUp, TrendingDown, BarChart3, DollarSign, FileText, Users,
@@ -21,8 +22,6 @@ interface KpiCardsProps {
   onKpiClick?: (kpiKey: string) => void;
 }
 
-const EUR = (n: number) =>
-  n.toLocaleString("es-ES", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
 
 const pctChange = (current: number, previous: number) => {
   if (previous === 0) return current > 0 ? 100 : 0;

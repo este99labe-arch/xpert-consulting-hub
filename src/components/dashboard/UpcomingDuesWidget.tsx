@@ -1,3 +1,4 @@
+import { fmtEUR as EUR } from "@/lib/format";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +10,6 @@ import { CalendarClock, ExternalLink } from "lucide-react";
 import { addDays, format, parseISO, differenceInDays } from "date-fns";
 import { es } from "date-fns/locale";
 
-const EUR = (n: number) => Number(n).toLocaleString("es-ES", { style: "currency", currency: "EUR" });
 
 const UpcomingDuesWidget = () => {
   const { accountId } = useAuth();

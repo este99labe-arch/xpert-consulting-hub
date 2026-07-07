@@ -1,3 +1,7 @@
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,13 +35,14 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
   });
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [intentToDelete, setIntentToDelete] = useState<any>(null);
 
   // Nota: access_token y app_secret son de SOLO ESCRITURA (privilegios de columna
   // en BD impiden leerlos desde el cliente). Se selecciona la lista explícita.
   const { data: config } = useQuery({
     queryKey: ["whatsapp-config", accountId],
     queryFn: async () => {
-      const { data } = await (supabase as any)
+      const { data } = await supabase
         .from("whatsapp_config")
         .select("id, account_id, phone_number_id, verify_token, is_enabled, waba_id, display_phone, bot_enabled, welcome_message, fallback_message, task_ack_message, task_completed_template, default_assignee, created_at, updated_at")
         .eq("account_id", accountId).maybeSingle();
@@ -58,7 +63,7 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
   const { data: intents = [] } = useQuery({
     queryKey: ["chat-intents", accountId],
     queryFn: async () => {
-      const { data } = await (supabase as any).from("chat_intents").select("*").eq("account_id", accountId).order("sort_order");
+      const { data } = await supabase.from("chat_intents").select("*").eq("account_id", accountId).order("sort_order");
       return data || [];
     },
     enabled: !!accountId && isManager,
@@ -95,8 +100,8 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
       if (form.access_token.trim()) payload.access_token = form.access_token.trim();
       if (form.app_secret.trim()) payload.app_secret = form.app_secret.trim();
       const { error } = config
-        ? await (supabase as any).from("whatsapp_config").update(payload).eq("id", config.id)
-        : await (supabase as any).from("whatsapp_config").insert({ account_id: accountId, ...payload });
+        ? await supabase.from("whatsapp_config").update(payload).eq("id", config.id)
+        : await supabase.from("whatsapp_config").insert({ account_id: accountId, ...payload });
       if (error) throw error;
       qc.invalidateQueries({ queryKey: ["whatsapp-config", accountId] });
       toast({ title: "Configuración guardada" });
@@ -108,18 +113,18 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
   const intentMut = useMutation({
     mutationFn: async (op: { type: "add" | "update" | "delete"; row?: any }) => {
       if (op.type === "add") {
-        const { error } = await (supabase as any).from("chat_intents").insert({
+        const { error } = await supabase.from("chat_intents").insert({
           account_id: accountId, name: "Nueva intención", kind: "GENERAL", keywords: [], sort_order: intents.length + 1,
         });
         if (error) throw error;
       } else if (op.type === "update") {
-        const { error } = await (supabase as any).from("chat_intents").update({
+        const { error } = await supabase.from("chat_intents").update({
           name: op.row.name, kind: op.row.kind, keywords: op.row.keywords,
           auto_reply: op.row.auto_reply || null, creates_task: op.row.creates_task, assignee: op.row.assignee || null,
         }).eq("id", op.row.id);
         if (error) throw error;
       } else {
-        const { error } = await (supabase as any).from("chat_intents").delete().eq("id", op.row.id);
+        const { error } = await supabase.from("chat_intents").delete().eq("id", op.row.id);
         if (error) throw error;
       }
     },
@@ -240,7 +245,7 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
                 <div className="ml-auto flex items-center gap-2">
                   <span className="text-xs text-muted-foreground">Crea tarea</span>
                   <Switch checked={it.creates_task} onCheckedChange={(v) => intentMut.mutate({ type: "update", row: { ...it, creates_task: v } })} />
-                  <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => intentMut.mutate({ type: "delete", row: it })}><Trash2 className="h-4 w-4 text-muted-foreground" /></Button>
+                  <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setIntentToDelete(it)} aria-label="Eliminar intención"><Trash2 className="h-4 w-4 text-muted-foreground" /></Button>
                 </div>
               </div>
               <div className="grid gap-2 sm:grid-cols-2">
@@ -268,6 +273,26 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={saving} className="gap-1.5"><Save className="h-4 w-4" />{saving ? "Guardando..." : "Guardar configuración"}</Button>
       </div>
+
+      <AlertDialog open={!!intentToDelete} onOpenChange={(o) => !o && setIntentToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar esta intención?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se eliminará "{intentToDelete?.name}" y el bot dejará de aplicar sus reglas. Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { if (intentToDelete) intentMut.mutate({ type: "delete", row: intentToDelete }); setIntentToDelete(null); }}
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

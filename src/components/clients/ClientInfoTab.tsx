@@ -162,7 +162,7 @@ const ClientInfoTab = ({ client, onSave, saving, isAdmin }: Props) => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
-              Datos Generales
+              Datos generales
               <Badge variant={form.status === "ACTIVE" ? "default" : "secondary"}>
                 {form.status === "ACTIVE" ? "Activo" : "Inactivo"}
               </Badge>

@@ -30,6 +30,8 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
 import CreateInvoiceDialog from "@/components/invoices/CreateInvoiceDialog";
+import EmptyState from "@/components/shared/EmptyState";
+import TableSkeleton from "@/components/shared/TableSkeleton";
 import InvoicePreviewDialog from "@/components/invoices/InvoicePreviewDialog";
 import EditInvoiceDialog from "@/components/invoices/EditInvoiceDialog";
 import InvoiceActionsMenu from "@/components/invoices/InvoiceActionsMenu";
@@ -648,9 +650,15 @@ const AppInvoices = () => {
           {/* Mobile cards */}
           <div className="space-y-3 md:hidden">
             {isLoading ? (
-              <div className="p-8 text-center text-muted-foreground">Cargando facturas...</div>
+              <TableSkeleton rows={5} columns={3} />
             ) : paginatedInvoices.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">No se encontraron facturas</div>
+              <EmptyState
+                icon={FileText}
+                title="No se encontraron facturas"
+                description="Crea tu primera factura o ajusta los filtros de búsqueda."
+                actionLabel="Nueva factura"
+                onAction={() => { setCreateDefaultType("INVOICE"); setDialogOpen(true); }}
+              />
             ) : (
               <>
                 {paginatedInvoices.map((inv: any) => (
@@ -690,9 +698,16 @@ const AppInvoices = () => {
           <Card className="hidden md:block">
             <CardContent className="p-0">
               {isLoading ? (
-                <div className="p-8 text-center text-muted-foreground">Cargando facturas...</div>
+                <TableSkeleton rows={8} columns={6} />
               ) : paginatedInvoices.length === 0 ? (
-                <div className="p-8 text-center text-muted-foreground">No se encontraron facturas</div>
+                <EmptyState
+                  bare
+                  icon={FileText}
+                  title="No se encontraron facturas"
+                  description="Crea tu primera factura o ajusta los filtros de búsqueda."
+                  actionLabel="Nueva factura"
+                  onAction={() => { setCreateDefaultType("INVOICE"); setDialogOpen(true); }}
+                />
               ) : (
                 <>
                    <div className="overflow-x-auto">

@@ -1,3 +1,4 @@
+import { fmtEUR as EUR } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { PieChart, Pie, Cell } from "recharts";
@@ -13,8 +14,6 @@ interface InvoiceStatusChartProps {
   data: StatusData[];
 }
 
-const EUR = (n: number) =>
-  n.toLocaleString("es-ES", { style: "currency", currency: "EUR" });
 
 const chartConfig = {
   count: { label: "Facturas" },

@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,31 +8,38 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AuthRedirect } from "@/components/AuthRedirect";
 import Login from "@/pages/Login";
-import ForgotPassword from "@/pages/ForgotPassword";
-import ResetPassword from "@/pages/ResetPassword";
-import NotFound from "@/pages/NotFound";
-import MasterLayout from "@/layouts/MasterLayout";
-import MasterDashboard from "@/pages/master/MasterDashboard";
-import MasterClients from "@/pages/master/MasterClients";
-import MasterSettings from "@/pages/master/MasterSettings";
-import MasterApiDocs from "@/pages/master/MasterApiDocs";
 import ClientLayout from "@/layouts/ClientLayout";
+import MasterLayout from "@/layouts/MasterLayout";
 import AppDashboard from "@/pages/app/AppDashboard";
-import AppPlaceholder from "@/pages/app/AppPlaceholder";
-import AppAccounting from "@/pages/app/AppAccounting";
-import AppAttendance from "@/pages/app/AppAttendance";
-import AppHR from "@/pages/app/AppHR";
-import AppInvoices from "@/pages/app/AppInvoices";
-import AppClients from "@/pages/app/AppClients";
-import AppClientDetail from "@/pages/app/AppClientDetail";
-import AppSettings from "@/pages/app/AppSettings";
-import AppInventory from "@/pages/app/AppInventory";
-import AppReports from "@/pages/app/AppReports";
-import AppTasks from "@/pages/app/AppTasks";
-import AppXpertRed from "@/pages/app/AppXpertRed";
-import AppChat from "@/pages/app/AppChat";
-import CookiePolicy from "@/pages/legal/CookiePolicy";
 import CookieConsent from "@/components/legal/CookieConsent";
+
+// Rutas cargadas bajo demanda (code-splitting): reducen el bundle inicial.
+const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
+const MasterDashboard = lazy(() => import("@/pages/master/MasterDashboard"));
+const MasterClients = lazy(() => import("@/pages/master/MasterClients"));
+const MasterSettings = lazy(() => import("@/pages/master/MasterSettings"));
+const MasterApiDocs = lazy(() => import("@/pages/master/MasterApiDocs"));
+const AppAccounting = lazy(() => import("@/pages/app/AppAccounting"));
+const AppAttendance = lazy(() => import("@/pages/app/AppAttendance"));
+const AppHR = lazy(() => import("@/pages/app/AppHR"));
+const AppInvoices = lazy(() => import("@/pages/app/AppInvoices"));
+const AppClients = lazy(() => import("@/pages/app/AppClients"));
+const AppClientDetail = lazy(() => import("@/pages/app/AppClientDetail"));
+const AppSettings = lazy(() => import("@/pages/app/AppSettings"));
+const AppInventory = lazy(() => import("@/pages/app/AppInventory"));
+const AppReports = lazy(() => import("@/pages/app/AppReports"));
+const AppTasks = lazy(() => import("@/pages/app/AppTasks"));
+const AppXpertRed = lazy(() => import("@/pages/app/AppXpertRed"));
+const AppChat = lazy(() => import("@/pages/app/AppChat"));
+const CookiePolicy = lazy(() => import("@/pages/legal/CookiePolicy"));
+
+const RouteFallback = () => (
+  <div className="flex min-h-[60vh] items-center justify-center" role="status" aria-label="Cargando página">
+    <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
+  </div>
+);
 
 const queryClient = new QueryClient();
 
@@ -43,6 +51,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <CookieConsent />
+          <Suspense fallback={<RouteFallback />}>
           <Routes>
             <Route path="/" element={<AuthRedirect />} />
             <Route path="/login" element={<Login />} />
@@ -91,6 +100,7 @@ const App = () => (
 
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </Suspense>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

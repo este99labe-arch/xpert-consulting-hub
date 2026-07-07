@@ -1,3 +1,6 @@
+import EmptyState from "@/components/shared/EmptyState";
+import TableSkeleton from "@/components/shared/TableSkeleton";
+import { Users } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -63,7 +66,7 @@ const EmployeesTab = () => {
 
   const pagination = usePagination(filtered);
 
-  if (isLoading) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+  if (isLoading) return <Card><TableSkeleton rows={6} columns={4} /></Card>;
 
   return (
     <div className="space-y-4">
@@ -77,7 +80,7 @@ const EmployeesTab = () => {
       {/* Mobile cards */}
       <div className="space-y-3 md:hidden">
         {filtered.length === 0 ? (
-          <Card className="p-8 text-center text-muted-foreground">No se encontraron empleados</Card>
+          <EmptyState icon={Users} title="No se encontraron empleados" description="Da de alta a tu equipo desde Configuración → Usuarios." />
         ) : (
           pagination.paginatedItems.map((emp: any) => (
             <Card key={emp.id} className="p-4 space-y-2">
@@ -133,7 +136,7 @@ const EmployeesTab = () => {
             </TableHeader>
             <TableBody>
               {filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={isManager ? 5 : 4} className="text-center text-muted-foreground py-8">No se encontraron empleados</TableCell></TableRow>
+                <TableRow><TableCell colSpan={isManager ? 5 : 4}><EmptyState bare icon={Users} title="No se encontraron empleados" description="Da de alta a tu equipo desde Configuración → Usuarios." /></TableCell></TableRow>
               ) : (
                 pagination.paginatedItems.map((emp: any) => (
                   <TableRow key={emp.id}>

@@ -98,7 +98,7 @@ const MasterClients = () => {
         <h1 className="text-2xl font-bold">Gestión de Cuentas</h1>
         <Button onClick={() => setShowCreate(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Nueva Cuenta
+          Nueva cuenta
         </Button>
       </div>
 
@@ -192,7 +192,7 @@ const MasterClients = () => {
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Crear Nueva Cuenta</DialogTitle>
+            <DialogTitle>Crear nueva cuenta</DialogTitle>
             <DialogDescription>Introduce los datos de la nueva cuenta</DialogDescription>
           </DialogHeader>
           <CreateClientForm onSuccess={() => {

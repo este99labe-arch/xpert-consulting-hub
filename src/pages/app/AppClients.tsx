@@ -171,7 +171,7 @@ const AppClients = () => {
           </div>
           <Button onClick={() => setShowCreate(true)} className="shadow-sm">
             <Plus className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Nuevo Cliente</span>
+            <span className="hidden sm:inline">Nuevo cliente</span>
             <span className="sm:hidden">Nuevo</span>
           </Button>
         </div>
@@ -236,7 +236,7 @@ const AppClients = () => {
             icon={Users}
             title="No hay clientes"
             description="Crea tu primer cliente para comenzar a facturar"
-            actionLabel="Nuevo Cliente"
+            actionLabel="Nuevo cliente"
             onAction={() => setShowCreate(true)}
           />
         ) : filtered.length === 0 ? (

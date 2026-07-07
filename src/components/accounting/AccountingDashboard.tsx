@@ -1,3 +1,4 @@
+import { fmtEUR as EUR } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, Calculator, TrendingUp, TrendingDown } from "lucide-react";
 import {
@@ -6,7 +7,6 @@ import {
 } from "recharts";
 
 const CHART_COLORS = ["hsl(var(--primary))", "hsl(var(--destructive))", "hsl(var(--accent))", "#f59e0b", "#8b5cf6", "#06b6d4"];
-const EUR = (n: number) => n.toLocaleString("es-ES", { style: "currency", currency: "EUR" });
 
 interface AccountingDashboardProps {
   totalIncome: number;

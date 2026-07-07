@@ -115,7 +115,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
     queryKey: ["accounting_categories", accountId, categoryKind],
     queryFn: async () => {
       if (!accountId) return [] as any[];
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("accounting_categories")
         .select("id, name, kind, is_default, sort_order")
         .eq("account_id", accountId).eq("kind", categoryKind)
