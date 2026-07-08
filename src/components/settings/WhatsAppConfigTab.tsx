@@ -204,7 +204,7 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
             <Bot className="h-5 w-5 text-primary" />
             <CardTitle className="text-base">Bot y respuestas automáticas</CardTitle>
           </div>
-          <CardDescription>Mensajes fijos del bot y plantillas. Variables disponibles: <code>{"{{contacto}}"}</code>, <code>{"{{tarea}}"}</code>.</CardDescription>
+          <CardDescription>Mensajes fijos del bot y plantillas. Variables disponibles: <code>{"{{contacto}}"}</code>, <code>{"{{tarea}}"}</code>, <code>{"{{descripcion}}"}</code>.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between rounded-lg border border-border p-3">

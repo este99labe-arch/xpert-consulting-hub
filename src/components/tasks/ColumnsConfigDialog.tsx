@@ -12,22 +12,24 @@ import ColumnRow from "./ColumnRow";
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
+  boardId?: string;
+  boardName?: string;
 }
 
-const ColumnsConfigDialog = ({ open, onOpenChange }: Props) => {
-  const { data: columns = [] } = useTaskColumns();
+const ColumnsConfigDialog = ({ open, onOpenChange, boardId, boardName }: Props) => {
+  const { data: columns = [] } = useTaskColumns(boardId);
   const { create, update, remove } = useColumnMutations();
   const [newName, setNewName] = useState("");
   const [newColor, setNewColor] = useState(COLUMN_COLOR_PRESETS[0]);
 
   const addCol = () => {
-    if (!newName.trim()) return;
+    if (!newName.trim() || !boardId) return;
     if (columns.length >= 10) {
       toast({ title: "Máximo 10 columnas", variant: "destructive" });
       return;
     }
     create.mutate(
-      { name: newName.trim(), color: newColor, sort_order: columns.length },
+      { name: newName.trim(), color: newColor, sort_order: columns.length, board_id: boardId },
       {
         onSuccess: () => {
           setNewName("");
@@ -59,8 +61,8 @@ const ColumnsConfigDialog = ({ open, onOpenChange }: Props) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Configurar tablero</DialogTitle>
-          <DialogDescription>Edita, reordena, añade o elimina columnas del tablero.</DialogDescription>
+          <DialogTitle>Configurar columnas{boardName ? ` · ${boardName}` : ""}</DialogTitle>
+          <DialogDescription>Edita, reordena, añade o elimina columnas. Marca en qué columnas se avisa al cliente por WhatsApp.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-2">
@@ -70,6 +72,7 @@ const ColumnsConfigDialog = ({ open, onOpenChange }: Props) => {
               id={col.id}
               name={col.name}
               color={col.color}
+              notifyOnEnter={col.notify_on_enter}
               isFirst={i === 0}
               isLast={i === columns.length - 1}
               onUpdate={(updates) => update.mutate({ id: col.id, updates })}
