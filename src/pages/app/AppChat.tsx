@@ -9,10 +9,14 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
 import {
   MessageCircle, Send, Search, Bot, UserRound, Hand, Building2, Loader2, ShieldAlert, CheckCheck, Bell, BellOff, Clock3,
+  Paperclip, ListTodo, X, CheckSquare,
 } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import { es } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
+import ChatMedia from "@/components/chat/ChatMedia";
+import CreateTaskFromChatDialog from "@/components/chat/CreateTaskFromChatDialog";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const STATUS_META: Record<string, { label: string; className: string }> = {
   BOT:     { label: "Bot", className: "bg-primary/10 text-primary" },
@@ -41,6 +45,18 @@ const AppChat = () => {
   const [search, setSearch] = useState("");
   const [draft, setDraft] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  // Selección de mensajes del cliente para generar tarea
+  const [selectMode, setSelectMode] = useState(false);
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const [taskOpen, setTaskOpen] = useState(false);
+  const togglePick = (id: string) =>
+    setPicked((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
 
   // Notificaciones de mensajes nuevos (con sonido), configurable
   const [soundEnabled, setSoundEnabled] = useState(() => {
@@ -103,7 +119,7 @@ const AppChat = () => {
       if (!selectedId) return [];
       const { data, error } = await supabase
         .from("chat_messages")
-        .select("id, direction, author_type, body, status, created_at")
+        .select("id, direction, author_type, body, status, created_at, message_type, media_url, media_mime, media_transcription")
         .eq("conversation_id", selectedId)
         .order("created_at", { ascending: true });
       if (error) throw error;
@@ -156,6 +172,33 @@ const AppChat = () => {
     onError: (e: any) => toast({ title: "No se pudo enviar", description: e.message, variant: "destructive" }),
   });
 
+  // Envío de imagen: sube al bucket privado y la manda por la Cloud API
+  const sendImage = useMutation({
+    mutationFn: async (file: File) => {
+      if (!selectedId || !accountId) throw new Error("Sin conversación");
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+      const path = `${accountId}/${selectedId}/${crypto.randomUUID()}.${ext}`;
+      const upl = await supabase.storage.from("chat-media").upload(path, file, { contentType: file.type || "image/jpeg" });
+      if (upl.error) throw upl.error;
+      const { data, error } = await supabase.functions.invoke("whatsapp_send", {
+        body: { conversation_id: selectedId, media_path: path, caption: draft.trim() || undefined },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+    },
+    onSuccess: () => { setDraft(""); qc.invalidateQueries({ queryKey: ["chat-messages", selectedId] }); },
+    onError: (e: any) => toast({ title: "No se pudo enviar la imagen", description: e.message, variant: "destructive" }),
+  });
+
+  const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    if (!f) return;
+    if (!f.type.startsWith("image/")) { toast({ title: "Solo se admiten imágenes", variant: "destructive" }); return; }
+    if (f.size > 5 * 1024 * 1024) { toast({ title: "La imagen supera 5 MB", variant: "destructive" }); return; }
+    sendImage.mutate(f);
+  };
+
   // Ventana de 24h de WhatsApp: solo se puede responder libremente si el
   // contacto ha escrito en las últimas 24 horas; fuera de ella, plantillas.
   const lastInAt = useMemo(() => {
@@ -193,6 +236,8 @@ const AppChat = () => {
 
   const openConversation = async (id: string) => {
     setSelectedId(id);
+    setSelectMode(false);
+    setPicked(new Set());
     const conv = conversations.find((c: any) => c.id === id);
     if (conv?.unread_count > 0) {
       await supabase.from("chat_conversations").update({ unread_count: 0 }).eq("id", id);
@@ -304,6 +349,12 @@ const AppChat = () => {
                   <Building2 className="h-4 w-4" /> Ver cliente
                 </Button>
               )}
+              <Button
+                variant={selectMode ? "default" : "ghost"} size="sm" className="gap-1.5"
+                onClick={() => { setSelectMode((v) => !v); setPicked(new Set()); }}
+              >
+                <CheckSquare className="h-4 w-4" /> {selectMode ? "Cancelar" : "Tarea"}
+              </Button>
               {selected.status !== "HUMAN" && (
                 <Button variant="outline" size="sm" className="gap-1.5" onClick={() => intervene.mutate()} disabled={intervene.isPending}>
                   <Hand className="h-4 w-4" /> Intervenir
@@ -318,16 +369,41 @@ const AppChat = () => {
             <div ref={scrollRef} className="flex-1 space-y-2 overflow-y-auto px-4 py-4 scrollbar-hide">
               {messages.map((m: any) => {
                 const out = m.direction === "OUT";
+                const selectable = selectMode && !out;
+                const isImage = m.message_type === "image" && m.media_url;
+                const isAudio = m.message_type === "audio" && m.media_url;
+                const isDoc = m.message_type === "document" && m.media_url;
                 return (
-                  <div key={m.id} className={`flex ${out ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[75%] rounded-2xl px-3.5 py-2 text-sm shadow-2xs ${out ? "rounded-br-md bg-primary text-primary-foreground" : "rounded-bl-md bg-card"}`}>
+                  <div key={m.id} className={`flex items-center gap-2 ${out ? "justify-end" : "justify-start"}`}>
+                    {selectable && (
+                      <Checkbox
+                        checked={picked.has(m.id)}
+                        onCheckedChange={() => togglePick(m.id)}
+                        className="shrink-0"
+                        aria-label="Seleccionar mensaje"
+                      />
+                    )}
+                    <div
+                      className={`max-w-[75%] rounded-2xl px-3.5 py-2 text-sm shadow-2xs ${out ? "rounded-br-md bg-primary text-primary-foreground" : "rounded-bl-md bg-card"} ${selectable ? "cursor-pointer" : ""} ${picked.has(m.id) ? "ring-2 ring-primary" : ""}`}
+                      onClick={selectable ? () => togglePick(m.id) : undefined}
+                    >
                       {out && m.author_type === "BOT" && (
                         <span className="mb-0.5 flex items-center gap-1 text-[11px] opacity-80"><Bot className="h-3 w-3" /> Bot</span>
                       )}
                       {out && m.author_type === "SYSTEM" && (
                         <span className="mb-0.5 flex items-center gap-1 text-[11px] opacity-80"><CheckCheck className="h-3 w-3" /> Automático</span>
                       )}
-                      <p className="whitespace-pre-wrap break-words">{m.body}</p>
+                      {(isImage || isAudio || isDoc) && (
+                        <div className="mb-1">
+                          <ChatMedia
+                            path={m.media_url}
+                            type={isImage ? "image" : isAudio ? "audio" : "document"}
+                            mime={m.media_mime}
+                            transcription={m.media_transcription}
+                          />
+                        </div>
+                      )}
+                      {m.body && !isAudio && <p className="whitespace-pre-wrap break-words">{m.body}</p>}
                       <span className={`mt-0.5 block text-right text-[10px] ${out ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
                         {format(new Date(m.created_at), "HH:mm")}{m.status === "FAILED" ? " · error" : ""}
                       </span>
@@ -358,11 +434,36 @@ const AppChat = () => {
               </div>
             )}
 
+            {/* Barra de selección para crear tarea */}
+            {selectMode && (
+              <div className="flex items-center gap-2 border-t border-border bg-primary/5 px-4 py-2.5 text-sm">
+                <ListTodo className="h-4 w-4 shrink-0 text-primary" />
+                <span className="flex-1 text-muted-foreground">
+                  {picked.size > 0 ? `${picked.size} mensaje${picked.size > 1 ? "s" : ""} seleccionado${picked.size > 1 ? "s" : ""}` : "Marca los mensajes del cliente para generar una tarea"}
+                </span>
+                <Button size="sm" className="gap-1.5" onClick={() => setTaskOpen(true)} disabled={picked.size === 0}>
+                  <ListTodo className="h-3.5 w-3.5" /> Crear tarea
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => { setSelectMode(false); setPicked(new Set()); }}>
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            )}
+
             {/* Compositor */}
             <form
               onSubmit={(e) => { e.preventDefault(); if (draft.trim() && !send.isPending) send.mutate(draft.trim()); }}
               className="flex items-center gap-2 border-t border-border bg-background px-4 py-3"
             >
+              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPickFile} />
+              <Button
+                type="button" size="icon" variant="ghost" className="h-11 w-11 shrink-0"
+                onClick={() => fileRef.current?.click()}
+                disabled={!waConfig?.is_enabled || sendImage.isPending || !windowOpen}
+                title="Adjuntar imagen" aria-label="Adjuntar imagen"
+              >
+                {sendImage.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
+              </Button>
               <Input
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
@@ -377,6 +478,14 @@ const AppChat = () => {
           </>
         )}
       </section>
+
+      <CreateTaskFromChatDialog
+        open={taskOpen}
+        onOpenChange={setTaskOpen}
+        conversation={selected ? { id: selected.id, client_id: selected.client_id, display_name: displayName(selected) } : null}
+        messages={(messages as any[]).filter((m) => picked.has(m.id)).map((m) => ({ body: m.body, created_at: m.created_at }))}
+        onCreated={() => { setSelectMode(false); setPicked(new Set()); }}
+      />
     </div>
   );
 };
