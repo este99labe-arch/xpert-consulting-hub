@@ -2,22 +2,43 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import type { Task, TaskColumn, TaskComment, TaskActivity } from "./types";
+import type { Task, TaskColumn, TaskBoard, TaskComment, TaskActivity } from "./types";
 
-export const useTaskColumns = () => {
+// Las tablas de tableros son nuevas; el tipado generado se castea como en el resto del módulo.
+const db = supabase as any;
+
+export const useTaskBoards = () => {
   const { accountId } = useAuth();
   return useQuery({
-    queryKey: ["task-columns", accountId],
+    queryKey: ["task-boards", accountId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
+        .from("task_boards")
+        .select("*")
+        .order("sort_order");
+      if (error) throw error;
+      return (data || []) as TaskBoard[];
+    },
+    enabled: !!accountId,
+  });
+};
+
+export const useTaskColumns = (boardId?: string) => {
+  const { accountId } = useAuth();
+  return useQuery({
+    queryKey: ["task-columns", accountId, boardId || "all"],
+    queryFn: async () => {
+      let q = supabase
         .from("task_columns")
         .select("*")
         .eq("is_archived", false)
         .order("sort_order");
+      if (boardId) q = q.eq("board_id", boardId);
+      const { data, error } = await q;
       if (error) throw error;
-      return (data || []) as TaskColumn[];
+      return (data || []) as unknown as TaskColumn[];
     },
-    enabled: !!accountId,
+    enabled: !!accountId && (boardId === undefined || !!boardId),
   });
 };
 
@@ -253,10 +274,10 @@ export const useColumnMutations = () => {
   };
 
   const create = useMutation({
-    mutationFn: async ({ name, color, sort_order }: { name: string; color: string; sort_order: number }) => {
+    mutationFn: async ({ name, color, sort_order, board_id }: { name: string; color: string; sort_order: number; board_id: string }) => {
       if (!accountId) throw new Error("No account");
       const { error } = await supabase.from("task_columns").insert({
-        account_id: accountId, name, color, sort_order,
+        account_id: accountId, name, color, sort_order, board_id,
       } as any);
       if (error) throw error;
     },
@@ -301,4 +322,94 @@ export const useColumnMutations = () => {
   });
 
   return { create, update, archive, remove };
+};
+
+export const useBoardMembers = (boardId?: string) => {
+  const { accountId } = useAuth();
+  return useQuery({
+    queryKey: ["board-members", boardId],
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("task_board_members")
+        .select("user_id")
+        .eq("board_id", boardId!);
+      if (error) throw error;
+      return (data || []).map((r: any) => r.user_id as string);
+    },
+    enabled: !!accountId && !!boardId,
+  });
+};
+
+export const useBoardMutations = () => {
+  const qc = useQueryClient();
+  const { accountId } = useAuth();
+
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["task-boards", accountId] });
+  };
+
+  const create = useMutation({
+    mutationFn: async ({ name, sort_order }: { name: string; sort_order: number }) => {
+      if (!accountId) throw new Error("No account");
+      const { data, error } = await db
+        .from("task_boards")
+        .insert({ account_id: accountId, name, sort_order })
+        .select("id")
+        .single();
+      if (error) throw error;
+      // Toda tabla necesita al menos dos columnas de partida
+      const base = [
+        { name: "Por hacer", color: "#64748b", sort_order: 0 },
+        { name: "En curso", color: "#3860AA", sort_order: 1 },
+        { name: "Hecho", color: "#22c55e", sort_order: 2, notify_on_enter: false },
+      ];
+      await db.from("task_columns").insert(
+        base.map((c) => ({ account_id: accountId, board_id: data.id, ...c }))
+      );
+      return data.id as string;
+    },
+    onSuccess: () => {
+      invalidate();
+      qc.invalidateQueries({ queryKey: ["task-columns", accountId] });
+    },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  const update = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: { name?: string; color?: string; sort_order?: number } }) => {
+      const { error } = await db.from("task_boards").update(updates).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: invalidate,
+  });
+
+  const remove = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await db.from("task_boards").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      invalidate();
+      qc.invalidateQueries({ queryKey: ["task-columns", accountId] });
+      qc.invalidateQueries({ queryKey: ["tasks", accountId] });
+    },
+    onError: (e: any) => toast({ title: "No se pudo eliminar", description: e.message, variant: "destructive" }),
+  });
+
+  const setMembers = useMutation({
+    mutationFn: async ({ boardId, userIds }: { boardId: string; userIds: string[] }) => {
+      if (!accountId) throw new Error("No account");
+      await db.from("task_board_members").delete().eq("board_id", boardId);
+      if (userIds.length > 0) {
+        const { error } = await db.from("task_board_members").insert(
+          userIds.map((user_id) => ({ board_id: boardId, user_id, account_id: accountId }))
+        );
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_d, vars) => qc.invalidateQueries({ queryKey: ["board-members", vars.boardId] }),
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  return { create, update, remove, setMembers };
 };

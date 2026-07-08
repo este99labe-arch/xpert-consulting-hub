@@ -12,11 +12,14 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Plus, Search, LayoutGrid, List, Settings2, X, Filter, BarChart3, ChevronDown, Archive, ArchiveRestore,
+  Columns3, Sliders,
 } from "lucide-react";
 import { format, isPast } from "date-fns";
 import { es } from "date-fns/locale";
 import { useAuth } from "@/contexts/AuthContext";
-import { useTaskColumns, useTasks, useTeamMembers, useClientsLite, useTaskMutations } from "@/components/tasks/hooks";
+import {
+  useTaskBoards, useTaskColumns, useTasks, useTeamMembers, useClientsLite, useTaskMutations, useBoardMutations,
+} from "@/components/tasks/hooks";
 import {
   PRIORITIES, PRIORITY_RANK, ENTITY_META, getPriorityMeta, initials, type Task,
 } from "@/components/tasks/types";
@@ -24,16 +27,29 @@ import TaskCard from "@/components/tasks/TaskCard";
 import TaskDetailSheet from "@/components/tasks/TaskDetailSheet";
 import CreateTaskDialog from "@/components/tasks/CreateTaskDialog";
 import ColumnsConfigDialog from "@/components/tasks/ColumnsConfigDialog";
+import BoardConfigDialog from "@/components/tasks/BoardConfigDialog";
 
 const AppTasks = () => {
-  const { user } = useAuth();
-  const { data: columns = [] } = useTaskColumns();
+  const { user, role } = useAuth();
+  const isManager = role === "MANAGER" || role === "MASTER_ADMIN";
+  const { data: boards = [] } = useTaskBoards();
+  const [boardId, setBoardId] = useState<string>("");
+  const activeBoardId = boardId || boards[0]?.id || "";
+  const activeBoard = boards.find((b) => b.id === activeBoardId) || null;
+  const { create: createBoard } = useBoardMutations();
+
+  const { data: columns = [] } = useTaskColumns(activeBoardId || undefined);
   const [showArchived, setShowArchived] = useState(false);
-  const { data: tasks = [] } = useTasks({ archived: showArchived });
+  const { data: allTasks = [] } = useTasks({ archived: showArchived });
   const { data: members = [] } = useTeamMembers();
   const { data: clients = [] } = useClientsLite();
   const { update, unarchive } = useTaskMutations();
 
+  // Solo las tareas cuyas columnas pertenecen al tablero activo
+  const columnIds = useMemo(() => new Set(columns.map((c) => c.id)), [columns]);
+  const tasks = useMemo(() => allTasks.filter((t) => t.column_id && columnIds.has(t.column_id)), [allTasks, columnIds]);
+
+  const [showBoardConfig, setShowBoardConfig] = useState(false);
   const [view, setView] = useState<"kanban" | "list">("kanban");
   const [search, setSearch] = useState("");
   const [priorityFilter, setPriorityFilter] = useState<string[]>([]);
@@ -144,8 +160,46 @@ const AppTasks = () => {
     setSelected(new Set());
   };
 
+  const addBoard = () => {
+    createBoard.mutate(
+      { name: `Tablero ${boards.length + 1}`, sort_order: boards.length },
+      { onSuccess: (id: string) => { setBoardId(id); setShowBoardConfig(true); } }
+    );
+  };
+
   return (
     <div className="space-y-4">
+      {/* Selector de tableros */}
+      {boards.length > 0 && (
+        <div className="flex items-center gap-1.5 overflow-x-auto border-b border-border pb-2">
+          {boards.map((b) => (
+            <button
+              key={b.id}
+              type="button"
+              onClick={() => setBoardId(b.id)}
+              className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                b.id === activeBoardId ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent/60"
+              }`}
+            >
+              <span className="h-2.5 w-2.5 rounded-full" style={{ background: b.color }} />
+              {b.name}
+            </button>
+          ))}
+          {isManager && (
+            <>
+              {activeBoard && (
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" title="Ajustes del tablero" onClick={() => setShowBoardConfig(true)}>
+                  <Sliders className="h-4 w-4" />
+                </Button>
+              )}
+              <Button variant="ghost" size="sm" className="shrink-0 gap-1.5 text-muted-foreground" onClick={addBoard} disabled={createBoard.isPending}>
+                <Plus className="h-4 w-4" /> Tablero
+              </Button>
+            </>
+          )}
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
@@ -176,11 +230,13 @@ const AppTasks = () => {
             <Archive className="h-4 w-4" />
             <span className="hidden sm:inline">{showArchived ? "Ver activas" : "Ver archivadas"}</span>
           </Button>
-          <Button size="sm" variant="outline" onClick={() => setShowConfig(true)} className="gap-1.5">
-            <Settings2 className="h-4 w-4" />
-            <span className="hidden sm:inline">Configurar tablero</span>
-          </Button>
-          <Button size="sm" className="gap-1.5" onClick={() => setShowCreate(true)} disabled={showArchived}>
+          {isManager && (
+            <Button size="sm" variant="outline" onClick={() => setShowConfig(true)} className="gap-1.5" disabled={!activeBoardId}>
+              <Columns3 className="h-4 w-4" />
+              <span className="hidden sm:inline">Columnas</span>
+            </Button>
+          )}
+          <Button size="sm" className="gap-1.5" onClick={() => setShowCreate(true)} disabled={showArchived || !activeBoardId}>
             <Plus className="h-4 w-4" />
             Nueva
           </Button>
@@ -342,7 +398,24 @@ const AppTasks = () => {
       )}
 
       {/* Views */}
-      {view === "kanban" ? (
+      {!activeBoardId ? (
+        <Card>
+          <CardContent className="flex flex-col items-center gap-3 py-16 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <LayoutGrid className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="font-medium">Aún no hay tableros</p>
+              <p className="text-sm text-muted-foreground">Crea tu primer tablero para empezar a organizar tareas.</p>
+            </div>
+            {isManager && (
+              <Button className="gap-1.5" onClick={addBoard} disabled={createBoard.isPending}>
+                <Plus className="h-4 w-4" /> Crear tablero
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      ) : view === "kanban" ? (
         <div className="overflow-x-auto -mx-2 sm:mx-0 pb-2">
           <div
             className="flex gap-3 px-2 sm:px-0"
@@ -474,8 +547,14 @@ const AppTasks = () => {
         </Card>
       )}
 
-      <CreateTaskDialog open={showCreate} onOpenChange={setShowCreate} />
-      <ColumnsConfigDialog open={showConfig} onOpenChange={setShowConfig} />
+      <CreateTaskDialog open={showCreate} onOpenChange={setShowCreate} boardId={activeBoardId} />
+      <ColumnsConfigDialog open={showConfig} onOpenChange={setShowConfig} boardId={activeBoardId} boardName={activeBoard?.name} />
+      <BoardConfigDialog
+        open={showBoardConfig}
+        onOpenChange={setShowBoardConfig}
+        board={activeBoard}
+        onDeleted={() => setBoardId("")}
+      />
       <TaskDetailSheet
         task={selectedTask}
         columns={columns}

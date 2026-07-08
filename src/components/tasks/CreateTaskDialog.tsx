@@ -18,15 +18,16 @@ interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   defaultClientId?: string;
+  boardId?: string;
 }
 
 type DraftLink = { entity_type: LinkEntityType; entity_id: string; entity_label: string | null };
 
-const CreateTaskDialog = ({ open, onOpenChange, defaultClientId }: Props) => {
+const CreateTaskDialog = ({ open, onOpenChange, defaultClientId, boardId }: Props) => {
   const { user, accountId } = useAuth();
   const { data: members = [] } = useTeamMembers();
   const { data: clients = [] } = useClientsLite();
-  const { data: columns = [] } = useTaskColumns();
+  const { data: columns = [] } = useTaskColumns(boardId);
   const { create } = useTaskMutations();
 
   const [title, setTitle] = useState("");
@@ -43,7 +44,8 @@ const CreateTaskDialog = ({ open, onOpenChange, defaultClientId }: Props) => {
   });
 
   useEffect(() => {
-    if (open && columns.length && !columnId) setColumnId(columns[0].id);
+    // Al abrir o cambiar de tablero, asegura que la columna elegida pertenece al tablero activo
+    if (open && columns.length && !columns.some((c) => c.id === columnId)) setColumnId(columns[0].id);
   }, [open, columns, columnId]);
 
   useEffect(() => {

@@ -34,13 +34,23 @@ export const COLUMN_COLOR_PRESETS = [
   "#64748b", "#84cc16",
 ];
 
-export interface TaskColumn {
+export interface TaskBoard {
   id: string;
   account_id: string;
   name: string;
   color: string;
   sort_order: number;
+}
+
+export interface TaskColumn {
+  id: string;
+  account_id: string;
+  board_id: string | null;
+  name: string;
+  color: string;
+  sort_order: number;
   is_archived: boolean;
+  notify_on_enter: boolean;
 }
 
 export interface Task {
