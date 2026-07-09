@@ -90,7 +90,8 @@ const SidebarInner = () => {
   const companyInitials = companyName.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase();
   const isXpertAccount = accountInfo?.type === "MASTER";
 
-  const CORE_CODES = ["DASHBOARD", "ATTENDANCE", "TASKS", "SETTINGS"];
+  // TASKS dejó de ser "core": ahora es configurable por empleado en Permisos de módulos
+  const CORE_CODES = ["DASHBOARD", "ATTENDANCE", "SETTINGS"];
 
   const { data: modules = [] } = useQuery({
     queryKey: ["account_modules", accountId, role, user?.id],

@@ -1,6 +1,8 @@
 // Shared invoice template definitions used by both preview (React) and PDF export (Edge Function)
 
-export type InvoiceTemplateId = "classic" | "modern" | "minimal";
+export type InvoiceTemplateId =
+  | "classic" | "modern" | "minimal"
+  | "corporate" | "elegant" | "emerald" | "slate" | "warm";
 
 export interface InvoiceTemplateInfo {
   id: InvoiceTemplateId;
@@ -10,9 +12,48 @@ export interface InvoiceTemplateInfo {
 
 export const INVOICE_TEMPLATES: InvoiceTemplateInfo[] = [
   { id: "classic", name: "Clásico", description: "Diseño corporativo tradicional con cabecera formal y líneas separadoras" },
-  { id: "modern", name: "Moderno", description: "Diseño contemporáneo con acentos de color y tipografía bold" },
-  { id: "minimal", name: "Minimalista", description: "Diseño limpio y elegante con máximo espacio en blanco" },
+  { id: "modern", name: "Moderno", description: "Diseño contemporáneo con acentos azules y tabla destacada" },
+  { id: "minimal", name: "Minimalista", description: "Diseño limpio en serif con máximo espacio en blanco" },
+  { id: "corporate", name: "Corporativo", description: "Cabecera de banda en azul corporativo, ideal para consultoría" },
+  { id: "elegant", name: "Elegante", description: "Serif con detalles dorados y franja lateral, para servicios premium" },
+  { id: "emerald", name: "Esmeralda", description: "Banda verde y estilo fresco, para negocios de producto o retail" },
+  { id: "slate", name: "Pizarra", description: "Franja lateral gris oscuro, sobrio y técnico" },
+  { id: "warm", name: "Cálido", description: "Tonos terracota y fondos suaves, cercano y artesanal" },
 ];
+
+/**
+ * Opciones de personalización por cuenta (se guardan en
+ * account_settings.invoice_template_options como JSON).
+ */
+export interface InvoiceTemplateOptions {
+  /** Nombre que aparece como emisor en el documento (si difiere del nombre de la cuenta) */
+  displayName?: string;
+  /** Color de acento en hex (#rrggbb); sustituye el color propio de la plantilla */
+  accentColor?: string;
+  /** Texto del pie de página */
+  footerText?: string;
+  /** Mostrar la etiqueta de estado (Enviada, Pagada...) — por defecto sí */
+  showStatus?: boolean;
+  /** Mostrar la fecha de operación — por defecto sí */
+  showOperationDate?: boolean;
+  /** Mostrar los pagos registrados — por defecto sí */
+  showPayments?: boolean;
+  /** Mostrar las menciones especiales — por defecto sí */
+  showSpecialMentions?: boolean;
+  /** Incluir el QR tributario VERI*FACTU cuando esté disponible — por defecto sí (obligatorio si emites con VERI*FACTU) */
+  showQr?: boolean;
+}
+
+export const DEFAULT_TEMPLATE_OPTIONS: Required<Omit<InvoiceTemplateOptions, "displayName" | "accentColor" | "footerText">> & Pick<InvoiceTemplateOptions, "displayName" | "accentColor" | "footerText"> = {
+  displayName: undefined,
+  accentColor: undefined,
+  footerText: undefined,
+  showStatus: true,
+  showOperationDate: true,
+  showPayments: true,
+  showSpecialMentions: true,
+  showQr: true,
+};
 
 export interface InvoiceLine {
   description: string;
@@ -74,6 +115,10 @@ const esc = (s: unknown): string => {
     .replace(/'/g, "&#39;");
 };
 
+// Valida un color hex para evitar inyección CSS desde opciones guardadas
+const safeHex = (c?: string): string | undefined =>
+  c && /^#[0-9a-fA-F]{6}$/.test(c.trim()) ? c.trim() : undefined;
+
 const statusColors: Record<string, { bg: string; color: string }> = {
   DRAFT: { bg: "#f1f5f9", color: "#475569" },
   SENT: { bg: "#dbeafe", color: "#1e40af" },
@@ -81,6 +126,8 @@ const statusColors: Record<string, { bg: string; color: string }> = {
   PARTIALLY_PAID: { bg: "#fef3c7", color: "#92400e" },
   OVERDUE: { bg: "#fee2e2", color: "#991b1b" },
 };
+
+type HeaderStyle = "classic" | "band" | "stripe";
 
 interface Theme {
   accent: string;
@@ -96,6 +143,21 @@ interface Theme {
   headingFontFamily: string;
   totalBg: string;
   totalText: string;
+  headerStyle: HeaderStyle;
+}
+
+/** Aplica el color de acento personalizado sobre la paleta base de la plantilla. */
+function applyAccent(t: Theme, accentColor?: string): Theme {
+  const accent = safeHex(accentColor);
+  if (!accent) return t;
+  return {
+    ...t,
+    accent,
+    heading: accent,
+    totalBg: accent,
+    // Solo se recolorea la cabecera de tabla si ya era de color (texto blanco)
+    tableHeadBg: t.tableHeadText === "#ffffff" ? accent : t.tableHeadBg,
+  };
 }
 
 function renderPartyBlock(title: string, party: InvoiceData["company"] | InvoiceData["client"]) {
@@ -200,8 +262,36 @@ function renderSpecialMentions(d: InvoiceData) {
   `;
 }
 
-function renderTemplate(d: InvoiceData, t: Theme): string {
+/** CSS específico del estilo de cabecera de cada plantilla. */
+function headerCss(t: Theme): string {
+  if (t.headerStyle === "band") {
+    return `
+    .header {
+      background: ${t.accent};
+      margin: -44px -40px 28px;
+      padding: 36px 40px 28px;
+      border-bottom: none;
+    }
+    .brand, .doc-number { color: #ffffff; }
+    .brand-details, .doc-type { color: rgba(255,255,255,0.78); }
+    `;
+  }
+  if (t.headerStyle === "stripe") {
+    return `
+    .page { border-left: 5mm solid ${t.accent}; }
+    .header { border-bottom: 2px solid ${t.accent}; }
+    `;
+  }
+  return "";
+}
+
+function renderTemplate(d: InvoiceData, t: Theme, o: InvoiceTemplateOptions = {}): string {
   const sc = statusColors[d.status] || statusColors.DRAFT;
+  const opts = { ...DEFAULT_TEMPLATE_OPTIONS, ...o };
+  const companyName = (opts.displayName || "").trim() || d.company.name;
+  const footerText = (opts.footerText || "").trim() || "Documento generado automáticamente";
+  const showQr = opts.showQr !== false && !!d.qrDataUrl;
+  const metaCols = opts.showOperationDate !== false ? 3 : 2;
 
   return `<!DOCTYPE html>
 <html lang="es">
@@ -318,7 +408,7 @@ function renderTemplate(d: InvoiceData, t: Theme): string {
     }
     .meta-row {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(${metaCols}, minmax(0, 1fr));
       gap: 10px;
       margin-bottom: 18px;
     }
@@ -466,6 +556,7 @@ function renderTemplate(d: InvoiceData, t: Theme): string {
       max-width: 40mm;
       line-height: 1.3;
     }
+    ${headerCss(t)}
     @media print {
       html, body { width: 210mm; max-width: 210mm; margin: 0; }
       .page { min-height: 297mm; }
@@ -474,7 +565,7 @@ function renderTemplate(d: InvoiceData, t: Theme): string {
 </head>
 <body>
   <div class="page">
-    ${d.qrDataUrl ? `
+    ${showQr ? `
     <div class="verifactu-qr">
       <div class="verifactu-qr-label">QR tributario:</div>
       <img src="${d.qrDataUrl}" alt="QR tributario VERI*FACTU" />
@@ -482,7 +573,7 @@ function renderTemplate(d: InvoiceData, t: Theme): string {
     </div>` : ""}
     <div class="header">
       <div>
-        <div class="brand">${esc(d.company.name)}</div>
+        <div class="brand">${esc(companyName)}</div>
         <div class="brand-details">
           ${d.company.taxId ? `NIF/CIF: ${esc(d.company.taxId)}<br>` : ""}
           ${d.company.address ? `${esc(d.company.address)}${d.company.postalCode ? `, ${esc(d.company.postalCode)}` : ""}${d.company.city ? ` ${esc(d.company.city)}` : ""}<br>` : ""}
@@ -492,98 +583,109 @@ function renderTemplate(d: InvoiceData, t: Theme): string {
       <div class="doc-meta">
         <div class="doc-type">${esc(d.typeLabel)}</div>
         <div class="doc-number">${esc(d.invoiceNumber)}</div>
-        <div class="status">${esc(d.statusLabel)}</div>
+        ${opts.showStatus !== false ? `<div class="status">${esc(d.statusLabel)}</div>` : ""}
       </div>
     </div>
 
     <div class="parties">
-      ${renderPartyBlock("Emisor", d.company)}
+      ${renderPartyBlock("Emisor", { ...d.company, name: companyName })}
       ${renderPartyBlock("Destinatario", d.client)}
     </div>
 
     <div class="meta-row">
       <div class="meta-box"><div class="meta-label">Nº Documento</div><div class="meta-value">${esc(d.invoiceNumber)}</div></div>
       <div class="meta-box"><div class="meta-label">Fecha emisión</div><div class="meta-value">${esc(d.issueDate)}</div></div>
-      <div class="meta-box"><div class="meta-label">Fecha operación</div><div class="meta-value">${d.operationDate ? esc(d.operationDate) : "—"}</div></div>
+      ${opts.showOperationDate !== false ? `<div class="meta-box"><div class="meta-label">Fecha operación</div><div class="meta-value">${d.operationDate ? esc(d.operationDate) : "—"}</div></div>` : ""}
     </div>
 
     ${renderLinesTable(d)}
-    ${renderSpecialMentions(d)}
-    ${renderPayments(d)}
+    ${opts.showSpecialMentions !== false ? renderSpecialMentions(d) : ""}
+    ${opts.showPayments !== false ? renderPayments(d) : ""}
     ${renderTotals(d, t)}
 
     <div class="footer">
-      ${esc(d.company.name)}${d.company.taxId ? ` · NIF/CIF: ${esc(d.company.taxId)}` : ""}<br>
-      Documento generado automáticamente
+      ${esc(companyName)}${d.company.taxId ? ` · NIF/CIF: ${esc(d.company.taxId)}` : ""}<br>
+      ${esc(footerText)}
     </div>
   </div>
 </body>
 </html>`;
 }
 
-function classicTemplate(d: InvoiceData): string {
-  return renderTemplate(d, {
-    accent: "#0f172a",
-    heading: "#0f172a",
-    text: "#1e293b",
-    muted: "#64748b",
-    softBg: "#f8fafc",
-    softBorder: "#e2e8f0",
-    tableHeadBg: "#f1f5f9",
-    tableHeadText: "#475569",
+// ─── PALETAS DE PLANTILLA ───────────────────────────────────
+const THEMES: Record<InvoiceTemplateId, Theme> = {
+  classic: {
+    accent: "#0f172a", heading: "#0f172a", text: "#1e293b", muted: "#64748b",
+    softBg: "#f8fafc", softBorder: "#e2e8f0", tableHeadBg: "#f1f5f9", tableHeadText: "#475569",
     pageBg: "#ffffff",
     fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
     headingFontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-    totalBg: "#0f172a",
-    totalText: "#ffffff",
-  });
-}
-
-function modernTemplate(d: InvoiceData): string {
-  return renderTemplate(d, {
-    accent: "#2563eb",
-    heading: "#1d4ed8",
-    text: "#0f172a",
-    muted: "#475569",
-    softBg: "#f8fbff",
-    softBorder: "#dbeafe",
-    tableHeadBg: "#2563eb",
-    tableHeadText: "#ffffff",
+    totalBg: "#0f172a", totalText: "#ffffff", headerStyle: "classic",
+  },
+  modern: {
+    accent: "#2563eb", heading: "#1d4ed8", text: "#0f172a", muted: "#475569",
+    softBg: "#f8fbff", softBorder: "#dbeafe", tableHeadBg: "#2563eb", tableHeadText: "#ffffff",
     pageBg: "#ffffff",
     fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
     headingFontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-    totalBg: "#2563eb",
-    totalText: "#ffffff",
-  });
-}
-
-function minimalTemplate(d: InvoiceData): string {
-  return renderTemplate(d, {
-    accent: "#111111",
-    heading: "#111111",
-    text: "#222222",
-    muted: "#666666",
-    softBg: "#ffffff",
-    softBorder: "#e5e7eb",
-    tableHeadBg: "#fafafa",
-    tableHeadText: "#555555",
+    totalBg: "#2563eb", totalText: "#ffffff", headerStyle: "classic",
+  },
+  minimal: {
+    accent: "#111111", heading: "#111111", text: "#222222", muted: "#666666",
+    softBg: "#ffffff", softBorder: "#e5e7eb", tableHeadBg: "#fafafa", tableHeadText: "#555555",
     pageBg: "#ffffff",
     fontFamily: "Georgia, 'Times New Roman', serif",
     headingFontFamily: "Georgia, 'Times New Roman', serif",
-    totalBg: "#111111",
-    totalText: "#ffffff",
-  });
-}
+    totalBg: "#111111", totalText: "#ffffff", headerStyle: "classic",
+  },
+  corporate: {
+    accent: "#3860AA", heading: "#2d4d88", text: "#1e293b", muted: "#5a6b85",
+    softBg: "#f6f8fc", softBorder: "#dbe4f0", tableHeadBg: "#3860AA", tableHeadText: "#ffffff",
+    pageBg: "#ffffff",
+    fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    headingFontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    totalBg: "#3860AA", totalText: "#ffffff", headerStyle: "band",
+  },
+  elegant: {
+    accent: "#b45309", heading: "#78350f", text: "#292524", muted: "#78716c",
+    softBg: "#fafaf9", softBorder: "#e7e5e4", tableHeadBg: "#f5f5f4", tableHeadText: "#57534e",
+    pageBg: "#ffffff",
+    fontFamily: "Georgia, 'Times New Roman', serif",
+    headingFontFamily: "Georgia, 'Times New Roman', serif",
+    totalBg: "#78350f", totalText: "#ffffff", headerStyle: "stripe",
+  },
+  emerald: {
+    accent: "#047857", heading: "#065f46", text: "#1c1917", muted: "#57635c",
+    softBg: "#f4faf7", softBorder: "#d1e7dd", tableHeadBg: "#047857", tableHeadText: "#ffffff",
+    pageBg: "#ffffff",
+    fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    headingFontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    totalBg: "#047857", totalText: "#ffffff", headerStyle: "band",
+  },
+  slate: {
+    accent: "#334155", heading: "#1e293b", text: "#1e293b", muted: "#64748b",
+    softBg: "#f8fafc", softBorder: "#e2e8f0", tableHeadBg: "#334155", tableHeadText: "#ffffff",
+    pageBg: "#ffffff",
+    fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    headingFontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    totalBg: "#1e293b", totalText: "#ffffff", headerStyle: "stripe",
+  },
+  warm: {
+    accent: "#c2410c", heading: "#9a3412", text: "#292524", muted: "#78716c",
+    softBg: "#fff7ed", softBorder: "#fed7aa", tableHeadBg: "#ffedd5", tableHeadText: "#9a3412",
+    pageBg: "#ffffff",
+    fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    headingFontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    totalBg: "#c2410c", totalText: "#ffffff", headerStyle: "classic",
+  },
+};
 
 // ─── RENDERER ───────────────────────────────────────────────
-export function renderInvoiceHtml(template: InvoiceTemplateId, data: InvoiceData): string {
-  switch (template) {
-    case "modern":
-      return modernTemplate(data);
-    case "minimal":
-      return minimalTemplate(data);
-    case "classic":
-    default:
-      return classicTemplate(data);
-  }
+export function renderInvoiceHtml(
+  template: InvoiceTemplateId,
+  data: InvoiceData,
+  options: InvoiceTemplateOptions = {},
+): string {
+  const theme = THEMES[template] || THEMES.classic;
+  return renderTemplate(data, applyAccent(theme, options.accentColor), options);
 }

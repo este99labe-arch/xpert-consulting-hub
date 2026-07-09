@@ -140,7 +140,7 @@ const EmployeeModulesTab: React.FC<Props> = ({ accountId }) => {
                 const um = (userMods as any[]).find((u) => u.module_id === mod.id);
                 // Default for employees: disabled unless explicitly enabled
                 const enabled = um ? um.is_enabled : false;
-                const isCore = ["DASHBOARD", "ATTENDANCE", "TASKS", "SETTINGS"].includes(mod.code);
+                const isCore = ["DASHBOARD", "ATTENDANCE", "SETTINGS"].includes(mod.code);
                 return (
                   <div key={mod.id} className="flex items-center justify-between rounded-md border p-3">
                     <div className="flex-1 min-w-0">
