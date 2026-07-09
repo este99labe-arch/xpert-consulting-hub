@@ -10,7 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import InvoiceAttachment from "@/components/invoices/InvoiceAttachment";
-import { renderInvoiceHtml, INVOICE_TEMPLATES, type InvoiceTemplateId, type InvoiceData } from "./invoiceTemplates";
+import { renderInvoiceHtml, INVOICE_TEMPLATES, type InvoiceTemplateId, type InvoiceData, type InvoiceTemplateOptions } from "./invoiceTemplates";
 import { tryBuildVerifactuQRUrl } from "@/lib/verifactu";
 import QRCode from "qrcode";
 
@@ -128,6 +128,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEma
   const typeLabel = invoice.type === "INVOICE" ? "FACTURA" : invoice.type === "QUOTE" ? "PRESUPUESTO" : "GASTO";
   const invoiceNumber = invoice.invoice_number || invoice.id.slice(0, 8).toUpperCase();
   const template: InvoiceTemplateId = templateOverride || ((accountSettings as any)?.invoice_template as InvoiceTemplateId) || "classic";
+  const templateOptions: InvoiceTemplateOptions = ((accountSettings as any)?.invoice_template_options as InvoiceTemplateOptions) || {};
 
   const methodLabels: Record<string, string> = {
     TRANSFER: "Transferencia", CASH: "Efectivo", CARD: "Tarjeta", CHECK: "Cheque", OTHER: "Otro",
@@ -183,7 +184,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEma
   };
 
   invoiceData.qrDataUrl = qrDataUrl;
-  const html = renderInvoiceHtml(template, invoiceData);
+  const html = renderInvoiceHtml(template, invoiceData, templateOptions);
 
   const handlePrint = () => {
     const printWindow = window.open("", "_blank");

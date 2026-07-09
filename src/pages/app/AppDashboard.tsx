@@ -21,6 +21,7 @@ import UpcomingDuesWidget from "@/components/dashboard/UpcomingDuesWidget";
 import CashflowMiniWidget from "@/components/dashboard/CashflowMiniWidget";
 import AttentionWidget from "@/components/dashboard/AttentionWidget";
 import EmployeeDashboard from "@/components/dashboard/EmployeeDashboard";
+import CustomDashboard from "@/components/dashboard/CustomDashboard";
 
 const SectionLabel = ({ children }: { children: React.ReactNode }) => (
   <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">{children}</h2>
@@ -268,6 +269,9 @@ const ManagerDashboard = () => {
           }
         }}
       />
+
+      {/* ── Mi panel (personalizable) ── */}
+      <CustomDashboard />
 
       {/* ── Finanzas ── */}
       <div className="space-y-3">
