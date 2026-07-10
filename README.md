@@ -56,9 +56,15 @@ External systems can access data via the Public API using API keys. See [docs/ap
 ```bash
 git clone <YOUR_GIT_URL>
 cd <YOUR_PROJECT_NAME>
-npm install
-npm run dev
+npm install -g pnpm   # una sola vez
+pnpm install
+pnpm dev
 ```
+
+> Este proyecto usa **pnpm** (ver `pnpm-workspace.yaml`): los scripts de
+> instalación de dependencias están bloqueados por defecto y hay una
+> cuarentena de 2 días para versiones recién publicadas, como protección
+> frente a ataques de cadena de suministro en npm.
 
 ## Environment Variables
 
@@ -70,7 +76,7 @@ Configured automatically by Lovable Cloud:
 ## Testing
 
 ```bash
-npm test
+pnpm test
 ```
 
 ## License

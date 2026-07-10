@@ -1,0 +1,14 @@
+# Configuración de pnpm — seguridad frente a ataques de cadena de suministro
+#
+# 1. minimumReleaseAge: cuarentena de publicación. No se instalan versiones
+#    publicadas hace menos de 2 días (2880 min). Los paquetes comprometidos
+#    suelen detectarse y retirarse en 24-48 h, así que nunca llegan aquí.
+# 2. allowBuilds: pnpm NO ejecuta scripts de instalación (postinstall) de
+#    dependencias —el vector típico de malware en npm— salvo decisión
+#    explícita aquí. true = permitido (binarios legítimos), false = denegado.
+minimumReleaseAge: 2880
+
+allowBuilds:
+  esbuild: true        # instala/verifica su binario nativo (Vite)
+  '@swc/core': true    # binario nativo del compilador SWC (plugin React)
+  core-js: false       # su postinstall solo muestra un banner; innecesario

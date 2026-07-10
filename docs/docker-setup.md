@@ -9,7 +9,7 @@ version: "3.8"
 
 services:
   # Supabase local (usa Supabase CLI)
-  # Asegúrate de tener instalado: npm install -g supabase
+  # Asegúrate de tener instalado: pnpm add -g supabase
   # Inicializa con: supabase init && supabase start
 
   frontend:
@@ -45,19 +45,20 @@ volumes:
 
 ```dockerfile
 FROM node:20-alpine
+RUN npm install -g pnpm
 WORKDIR /app
-COPY package.json bun.lockb ./
-RUN npm install
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile
 COPY . .
 EXPOSE 5173
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+CMD ["pnpm", "dev", "--host", "0.0.0.0"]
 ```
 
 ## Instrucciones
 
 ### 1. Instalar Supabase CLI
 ```bash
-npm install -g supabase
+pnpm add -g supabase
 ```
 
 ### 2. Inicializar Supabase local
@@ -86,7 +87,7 @@ supabase db push
 
 ### 5. Levantar frontend
 ```bash
-npm run dev
+pnpm dev
 ```
 
 O con Docker:
