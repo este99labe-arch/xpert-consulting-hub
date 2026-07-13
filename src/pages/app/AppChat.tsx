@@ -9,8 +9,18 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
 import {
   MessageCircle, Send, Search, Bot, UserRound, Hand, Building2, Loader2, ShieldAlert, CheckCheck, Bell, BellOff, Clock3,
-  Paperclip, ListTodo, X, CheckSquare,
+  Paperclip, ListTodo, X, CheckSquare, Trash2, Link2,
 } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { format, isToday, isYesterday } from "date-fns";
 import { es } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
@@ -106,6 +116,7 @@ const AppChat = () => {
         .from("chat_conversations")
         .select("id, contact_phone, contact_name, status, assigned_to, bot_paused, last_message_at, last_message_preview, last_direction, unread_count, client_id, business_clients(name), client_contacts(name, position)")
         .eq("account_id", accountId)
+        .is("deleted_at", null)
         .order("last_message_at", { ascending: false, nullsFirst: false });
       if (error) throw error;
       return data || [];
@@ -234,6 +245,68 @@ const AppChat = () => {
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
+  // Conversaciones con tareas generadas (badge "tarea creada" en la bandeja)
+  const { data: taskConvIds = [] } = useQuery({
+    queryKey: ["chat-task-convs", accountId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("reminders")
+        .select("chat_conversation_id")
+        .eq("account_id", accountId!)
+        .eq("origin", "CHAT")
+        .not("chat_conversation_id", "is", null);
+      return (data || []).map((r: any) => r.chat_conversation_id as string);
+    },
+    enabled: !!accountId,
+  });
+  const taskConvSet = useMemo(() => new Set(taskConvIds), [taskConvIds]);
+
+  // Borrado lógico de la conversación (solo managers). Las tareas generadas
+  // se conservan; si el contacto vuelve a escribir, el hilo se reactiva.
+  const deleteConv = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase.from("chat_conversations") as any)
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setSelectedId(null);
+      qc.invalidateQueries({ queryKey: ["chat-conversations", accountId] });
+      toast({ title: "Conversación eliminada", description: "Las tareas generadas desde este chat se conservan." });
+    },
+    onError: (e: any) => toast({ title: "No se pudo eliminar", description: e.message, variant: "destructive" }),
+  });
+
+  // Vincular manualmente la conversación a un cliente registrado
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [linkClientId, setLinkClientId] = useState("");
+  const { data: clientsLite = [] } = useQuery({
+    queryKey: ["chat-clients-lite", accountId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("business_clients").select("id, name").eq("account_id", accountId!).order("name");
+      return data || [];
+    },
+    enabled: !!accountId && linkOpen,
+  });
+  const linkClient = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("chat_conversations")
+        .update({ client_id: linkClientId })
+        .eq("id", selectedId!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setLinkOpen(false);
+      setLinkClientId("");
+      qc.invalidateQueries({ queryKey: ["chat-conversations", accountId] });
+      toast({ title: "Cliente vinculado", description: "Las próximas tareas de este chat quedarán asociadas al cliente." });
+    },
+    onError: (e: any) => toast({ title: "No se pudo vincular", description: e.message, variant: "destructive" }),
+  });
+
   const openConversation = async (id: string) => {
     setSelectedId(id);
     setSelectMode(false);
@@ -303,6 +376,9 @@ const AppChat = () => {
                     <div className="mt-1 flex items-center gap-1.5">
                       <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${st.className}`}>{st.label}</span>
                       {c.business_clients?.name && <Building2 className="h-3 w-3 text-muted-foreground" />}
+                      {taskConvSet.has(c.id) && (
+                        <span title="Tarea creada desde este chat"><ListTodo className="h-3 w-3 text-primary" /></span>
+                      )}
                       {c.unread_count > 0 && (
                         <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-[hsl(var(--success))] px-1 text-[10px] font-bold text-white">{c.unread_count}</span>
                       )}
@@ -344,9 +420,13 @@ const AppChat = () => {
                   {selected.client_contacts?.position && ` (${selected.client_contacts.position})`}
                 </p>
               </div>
-              {selected.client_id && (
+              {selected.client_id ? (
                 <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => navigate(`/app/clients/${selected.client_id}`)}>
                   <Building2 className="h-4 w-4" /> Ver cliente
+                </Button>
+              ) : (
+                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground" onClick={() => setLinkOpen(true)}>
+                  <Link2 className="h-4 w-4" /> Vincular cliente
                 </Button>
               )}
               <Button
@@ -362,6 +442,33 @@ const AppChat = () => {
               )}
               {selected.bot_paused && (
                 <Badge variant="outline" className="gap-1"><UserRound className="h-3 w-3" /> Humano</Badge>
+              )}
+              {isManager && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" title="Eliminar conversación">
+                      <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>¿Eliminar esta conversación?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Se retirará de la bandeja de chats. Las tareas ya generadas desde esta conversación se
+                        conservan, y si el contacto vuelve a escribir el hilo se reactivará con todo su historial.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        onClick={() => deleteConv.mutate(selected.id)}
+                      >
+                        Eliminar
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               )}
             </header>
 
@@ -486,6 +593,34 @@ const AppChat = () => {
         messages={(messages as any[]).filter((m) => picked.has(m.id)).map((m) => ({ body: m.body, created_at: m.created_at }))}
         onCreated={() => { setSelectMode(false); setPicked(new Set()); }}
       />
+
+      {/* Vincular conversación a un cliente registrado */}
+      <Dialog open={linkOpen} onOpenChange={setLinkOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Link2 className="h-5 w-5 text-primary" /> Vincular cliente</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Este contacto no coincide con ningún cliente registrado. Elige a qué cliente pertenece: la conversación
+            y sus próximas tareas quedarán asociadas a su ficha.
+          </p>
+          <Select value={linkClientId} onValueChange={setLinkClientId}>
+            <SelectTrigger><SelectValue placeholder="Selecciona un cliente..." /></SelectTrigger>
+            <SelectContent className="max-h-64">
+              {clientsLite.map((c: any) => (
+                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setLinkOpen(false)}>Cancelar</Button>
+            <Button onClick={() => linkClient.mutate()} disabled={!linkClientId || linkClient.isPending}>
+              {linkClient.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Vincular
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
