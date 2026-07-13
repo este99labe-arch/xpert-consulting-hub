@@ -32,6 +32,7 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
     is_enabled: false, bot_enabled: true,
     welcome_message: "", fallback_message: "", task_ack_message: "", task_completed_template: "",
     reopen_template_name: "", reopen_template_lang: "es",
+    task_consolidation_minutes: 60,
     default_assignee: "",
   });
   const [saving, setSaving] = useState(false);
@@ -45,7 +46,7 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
     queryFn: async () => {
       const { data } = await supabase
         .from("whatsapp_config")
-        .select("id, account_id, phone_number_id, verify_token, is_enabled, waba_id, display_phone, bot_enabled, welcome_message, fallback_message, task_ack_message, task_completed_template, reopen_template_name, reopen_template_lang, default_assignee, created_at, updated_at")
+        .select("id, account_id, phone_number_id, verify_token, is_enabled, waba_id, display_phone, bot_enabled, welcome_message, fallback_message, task_ack_message, task_completed_template, reopen_template_name, reopen_template_lang, task_consolidation_minutes, default_assignee, created_at, updated_at")
         .eq("account_id", accountId).maybeSingle();
       return data;
     },
@@ -79,6 +80,7 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
         welcome_message: config.welcome_message || "", fallback_message: config.fallback_message || "",
         task_ack_message: config.task_ack_message || "", task_completed_template: config.task_completed_template || "",
         reopen_template_name: (config as any).reopen_template_name || "", reopen_template_lang: (config as any).reopen_template_lang || "es",
+        task_consolidation_minutes: (config as any).task_consolidation_minutes ?? 60,
         default_assignee: config.default_assignee || "",
       });
     }
@@ -97,6 +99,7 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
         welcome_message: form.welcome_message, fallback_message: form.fallback_message,
         task_ack_message: form.task_ack_message, task_completed_template: form.task_completed_template,
         reopen_template_name: form.reopen_template_name.trim() || null, reopen_template_lang: form.reopen_template_lang || "es",
+        task_consolidation_minutes: Math.max(1, Number(form.task_consolidation_minutes) || 60),
         default_assignee: form.default_assignee || null, updated_at: new Date().toISOString(),
       };
       // Credenciales de solo escritura: solo se envían si el usuario escribe un valor nuevo
@@ -235,6 +238,18 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
                 </SelectContent>
               </Select>
             </div>
+          </div>
+          <div className="space-y-1.5 sm:max-w-xs">
+            <Label>Ventana de consolidación (minutos)</Label>
+            <Input
+              type="number" min={1} max={1440}
+              value={form.task_consolidation_minutes}
+              onChange={(e) => set("task_consolidation_minutes", e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Los mensajes que lleguen dentro de esta ventana se añaden a la tarea abierta de la conversación
+              en lugar de crear tickets nuevos (nunca un ticket por mensaje).
+            </p>
           </div>
           <div className="space-y-1.5 sm:max-w-xs">
             <Label>Responsable por defecto</Label>
