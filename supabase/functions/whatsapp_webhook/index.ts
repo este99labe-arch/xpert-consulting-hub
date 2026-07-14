@@ -341,14 +341,17 @@ async function handleChatMessage(admin: any, cfg: any, msg: any, senderPhone: st
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // CLASIFICACIÓN: LLM (si hay OPENAI_API_KEY) con fallback a palabras clave
+  // CLASIFICACIÓN: LLM (si hay OPENAI_API_KEY) con fallback a palabras clave.
+  // Se ejecuta en TODA conversación (nueva o con historial): cada mensaje
+  // fuera de la ventana de consolidación puede ser una petición nueva.
   // ══════════════════════════════════════════════════════════════════════════
-  const lower = (text || "").toLowerCase();
+  const lower = stripAccents(text || "");
   const { data: intents } = await admin.from("chat_intents")
     .select("*").eq("account_id", account_id).eq("is_active", true).order("sort_order");
 
   let matched = lower
-    ? (intents || []).find((it: any) => (it.keywords || []).some((k: string) => lower.includes(String(k).toLowerCase())))
+    ? (intents || []).find((it: any) =>
+        (it.keywords || []).some((k: string) => lower.includes(stripAccents(String(k)))))
     : null;
 
   const ai = text && text !== "[Audio recibido]" ? await classifyLLM(intents || [], text) : null;
@@ -357,6 +360,11 @@ async function handleChatMessage(admin: any, cfg: any, msg: any, senderPhone: st
     if (byId) matched = byId;
   }
   const createsTask = Boolean(matched?.creates_task || ai?.creates_task);
+  console.log("CLASSIFY:", JSON.stringify({
+    text: (text || "").slice(0, 60), matched: matched?.name || null,
+    ai: ai ? { intent: ai.intent_id, task: ai.creates_task, due: ai.due_date } : "sin LLM",
+    createsTask,
+  }));
 
   // Fecha límite: la del LLM si es válida; si no, parser determinista
   let due: Date | null = null;
@@ -365,6 +373,8 @@ async function handleChatMessage(admin: any, cfg: any, msg: any, senderPhone: st
     if (!isNaN(d.getTime())) due = d;
   }
   if (!due && text) due = parseDueDate(text, madridNow());
+
+  let actionTaken = false;
 
   if (createsTask && lineText) {
     const assignee = matched?.assignee || cfg.default_assignee || null;
@@ -378,7 +388,7 @@ async function handleChatMessage(admin: any, cfg: any, msg: any, senderPhone: st
     }
     const title = (ai?.title || "").trim().slice(0, 80) || `WhatsApp: ${(text || "Solicitud").slice(0, 70)}`;
     const who = conv.contact_name || senderPhone;
-    await admin.from("reminders").insert({
+    const { error: insErr } = await admin.from("reminders").insert({
       account_id, created_by: creator, assigned_to: assignee,
       title,
       description: `Solicitud por WhatsApp de ${who}:\n[${stamp}] ${lineText}`,
@@ -390,15 +400,24 @@ async function handleChatMessage(admin: any, cfg: any, msg: any, senderPhone: st
       labels: matched?.name ? [matched.name] : [],
       chat_message_ids: msgRow?.id ? [msgRow.id] : [],
     });
-    if (botActive) {
+    if (insErr) {
+      console.error("TASK INSERT FAILED:", insErr.message);
+    } else {
+      actionTaken = true;
       await admin.from("chat_conversations").update({ status: "HUMAN" }).eq("id", conv.id);
-      if (cfg.task_ack_message) await botSend(cfg.task_ack_message);
+      if (botActive && cfg.task_ack_message) await botSend(cfg.task_ack_message);
     }
   } else if (botActive && matched?.auto_reply) {
     await botSend(matched.auto_reply);
-  } else if (botActive && !isNew) {
+    actionTaken = true;
+  }
+
+  // Sin acción automática → "No atendido" (PENDING) SIEMPRE, aunque el bot
+  // esté pausado o la conversación estuviera atendida: así el manager lo ve,
+  // lo revisa y lo asigna. El aviso de fallback solo se envía si el bot manda.
+  if (!actionTaken && !isNew) {
     await admin.from("chat_conversations").update({ status: "PENDING" }).eq("id", conv.id);
-    if (cfg.fallback_message) await botSend(cfg.fallback_message);
+    if (botActive && cfg.fallback_message) await botSend(cfg.fallback_message);
   }
 }
 

@@ -30,7 +30,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 const STATUS_META: Record<string, { label: string; className: string }> = {
   BOT:     { label: "Bot", className: "bg-primary/10 text-primary" },
-  PENDING: { label: "Pendiente", className: "bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))]" },
+  PENDING: { label: "No atendido", className: "bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))]" },
   HUMAN:   { label: "Atendido", className: "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]" },
   CLOSED:  { label: "Cerrado", className: "bg-muted text-muted-foreground" },
 };
@@ -146,6 +146,7 @@ const AppChat = () => {
       .channel(`chat-${accountId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "chat_messages", filter: `account_id=eq.${accountId}` }, (payload: any) => {
         qc.invalidateQueries({ queryKey: ["chat-conversations", accountId] });
+        qc.invalidateQueries({ queryKey: ["chat-task-convs", accountId] });
         if (payload?.new?.conversation_id) qc.invalidateQueries({ queryKey: ["chat-messages", payload.new.conversation_id] });
         // Notificar mensajes entrantes nuevos
         if (payload?.eventType === "INSERT" && payload?.new?.direction === "IN") {
@@ -376,6 +377,9 @@ const AppChat = () => {
                     <div className="mt-1 flex items-center gap-1.5">
                       <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${st.className}`}>{st.label}</span>
                       {c.business_clients?.name && <Building2 className="h-3 w-3 text-muted-foreground" />}
+                      {taskConvSet.has(c.id) && (
+                        <span title="Tiene tareas generadas"><ListTodo className="h-3 w-3 text-primary" /></span>
+                      )}
                       {taskConvSet.has(c.id) && (
                         <span title="Tarea creada desde este chat"><ListTodo className="h-3 w-3 text-primary" /></span>
                       )}
