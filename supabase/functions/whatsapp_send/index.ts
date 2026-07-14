@@ -166,6 +166,8 @@ Deno.serve(async (req) => {
     });
     await admin.from("chat_conversations").update({
       last_message_at: new Date().toISOString(), last_message_preview: (caption || "📷 Foto").slice(0, 120), last_direction: "OUT",
+      // La respuesta de un agente marca la conversación como atendida
+      ...(authorType === "AGENT" ? { status: "HUMAN" } : {}),
     }).eq("id", conversation_id);
     return json({ ok: result.ok, error: detail });
   }
@@ -192,6 +194,8 @@ Deno.serve(async (req) => {
     last_message_at: new Date().toISOString(),
     last_message_preview: bodyToStore.slice(0, 120),
     last_direction: "OUT",
+    // La respuesta de un agente marca la conversación como atendida
+    ...(authorType === "AGENT" ? { status: "HUMAN" } : {}),
   }).eq("id", conversation_id);
 
   return json({ ok: result.ok, error: detail });
