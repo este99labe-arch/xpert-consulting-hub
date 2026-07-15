@@ -40,6 +40,9 @@ export interface TaskBoard {
   name: string;
   color: string;
   sort_order: number;
+  /** Prefijo de referencia incremental de tareas (p. ej. "DEV" → DEV-001) */
+  prefix: string | null;
+  next_task_number: number;
 }
 
 export interface TaskColumn {
@@ -56,6 +59,8 @@ export interface TaskColumn {
 export interface Task {
   id: string;
   account_id: string;
+  /** Referencia incremental del tablero (p. ej. DEV-001) */
+  reference: string | null;
   title: string;
   description: string | null;
   remind_at: string | null;

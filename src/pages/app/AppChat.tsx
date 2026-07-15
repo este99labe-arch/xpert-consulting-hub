@@ -9,8 +9,12 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
 import {
   MessageCircle, Send, Search, Bot, UserRound, Hand, Building2, Loader2, ShieldAlert, CheckCheck, Bell, BellOff, Clock3,
-  Paperclip, ListTodo, X, CheckSquare, Trash2, Link2,
+  Paperclip, ListTodo, X, CheckSquare, Trash2, Link2, UserPlus,
 } from "lucide-react";
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { useTeamMembers } from "@/components/tasks/hooks";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
@@ -279,6 +283,42 @@ const AppChat = () => {
     onError: (e: any) => toast({ title: "No se pudo eliminar", description: e.message, variant: "destructive" }),
   });
 
+  // Asignación de la conversación a empleados (uno o varios; el manager lo ve todo)
+  const { data: team = [] } = useTeamMembers();
+  const { data: convMembers = [] } = useQuery({
+    queryKey: ["chat-conv-members", selectedId],
+    queryFn: async () => {
+      const { data } = await (supabase.from("chat_conversation_members") as any)
+        .select("user_id").eq("conversation_id", selectedId!);
+      return ((data || []) as any[]).map((r) => r.user_id as string);
+    },
+    enabled: !!selectedId && isManager,
+  });
+
+  const toggleMember = useMutation({
+    mutationFn: async ({ userId, add }: { userId: string; add: boolean }) => {
+      if (add) {
+        const { error } = await (supabase.from("chat_conversation_members") as any)
+          .insert({ conversation_id: selectedId, user_id: userId, account_id: accountId });
+        if (error) throw error;
+      } else {
+        const { error } = await (supabase.from("chat_conversation_members") as any)
+          .delete().eq("conversation_id", selectedId!).eq("user_id", userId);
+        if (error) throw error;
+      }
+      // assigned_to refleja al primer miembro (compatibilidad con el resto del flujo)
+      const next = add ? [...convMembers, userId] : convMembers.filter((u) => u !== userId);
+      await supabase.from("chat_conversations")
+        .update({ assigned_to: next[0] || null })
+        .eq("id", selectedId!);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["chat-conv-members", selectedId] });
+      qc.invalidateQueries({ queryKey: ["chat-conversations", accountId] });
+    },
+    onError: (e: any) => toast({ title: "No se pudo actualizar la asignación", description: e.message, variant: "destructive" }),
+  });
+
   // Vincular manualmente la conversación a un cliente registrado
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkClientId, setLinkClientId] = useState("");
@@ -432,6 +472,45 @@ const AppChat = () => {
                 <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground" onClick={() => setLinkOpen(true)}>
                   <Link2 className="h-4 w-4" /> Vincular cliente
                 </Button>
+              )}
+              {isManager && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="gap-1.5" title="Asignar conversación a empleados">
+                      <UserPlus className="h-4 w-4" />
+                      {convMembers.length > 0 ? (
+                        <span className="flex -space-x-1.5">
+                          {convMembers.slice(0, 3).map((uid) => {
+                            const m = team.find((t) => t.user_id === uid);
+                            return (
+                              <Avatar key={uid} className="h-5 w-5 ring-2 ring-background">
+                                <AvatarFallback className="bg-primary/10 text-[8px] font-medium text-primary">{initials(m?.name || "?")}</AvatarFallback>
+                              </Avatar>
+                            );
+                          })}
+                          {convMembers.length > 3 && <span className="pl-2 text-[10px] text-muted-foreground">+{convMembers.length - 3}</span>}
+                        </span>
+                      ) : (
+                        <span className="hidden sm:inline">Asignar</span>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>Asignar a empleados</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {team.length === 0 && <p className="px-2 py-1.5 text-xs text-muted-foreground">No hay empleados en el equipo.</p>}
+                    {team.map((m) => (
+                      <DropdownMenuCheckboxItem
+                        key={m.user_id}
+                        checked={convMembers.includes(m.user_id)}
+                        onCheckedChange={(c) => toggleMember.mutate({ userId: m.user_id, add: !!c })}
+                        onSelect={(e) => e.preventDefault()}
+                      >
+                        {m.name || "Usuario"}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
               <Button
                 variant={selectMode ? "default" : "ghost"} size="sm" className="gap-1.5"

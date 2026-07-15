@@ -38,6 +38,7 @@ import ScheduleTemplatesCard from "@/components/settings/ScheduleTemplatesCard";
 import HolidaysCard from "@/components/settings/HolidaysCard";
 import CreateEmployeeDialog from "@/components/hr/CreateEmployeeDialog";
 import EmployeeModulesTab from "@/components/settings/EmployeeModulesTab";
+import TaskBoardsTab from "@/components/settings/TaskBoardsTab";
 
 import CompanyTab from "@/components/settings/CompanyTab";
 import ProfileTab from "@/components/settings/ProfileTab";
@@ -67,6 +68,7 @@ const SECTIONS: SettingSection[] = [
   { key: "security", group: "Tu cuenta", title: "Seguridad", desc: "Contraseña y acceso a tu cuenta.", icon: Lock },
   { key: "users",       group: "Equipo", title: "Usuarios", desc: "Gestiona usuarios, roles y solicitudes.", icon: Users, managerOnly: true, badge: true },
   { key: "permissions", group: "Equipo", title: "Permisos de módulos", desc: "Qué módulos puede ver cada empleado.", icon: ShieldCheck, managerOnly: true },
+  { key: "taskboards",  group: "Equipo", title: "Tableros de tareas", desc: "Kanban, prefijos de referencia y accesos.", icon: CalendarDays, managerOnly: true },
   { key: "invoicetemplate", group: "Facturación y contabilidad", title: "Plantilla de facturas", desc: "Diseño y datos que aparecen en tus facturas.", icon: FileText, managerOnly: true },
   { key: "accounting",      group: "Facturación y contabilidad", title: "Contabilidad", desc: "Método contable, categorías y cuentas.", icon: Calculator, managerOnly: true },
   { key: "verifactu",       group: "Facturación y contabilidad", title: "VERI*FACTU", desc: "Registro de facturas ante la AEAT.", icon: ShieldCheck, managerOnly: true },
@@ -225,6 +227,11 @@ const AppSettings = () => {
         {isManager && (
           <TabsContent value="permissions">
             <EmployeeModulesTab accountId={accountId} />
+          </TabsContent>
+        )}
+        {isManager && (
+          <TabsContent value="taskboards">
+            <TaskBoardsTab />
           </TabsContent>
         )}
       </Tabs>

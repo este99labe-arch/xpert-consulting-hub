@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { format, isPast, differenceInDays } from "date-fns";
 import { es } from "date-fns/locale";
-import { CalendarClock, ExternalLink } from "lucide-react";
+import { CalendarClock, ExternalLink, Building2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { ENTITY_META, getPriorityMeta, initials, type Task } from "./types";
@@ -82,10 +82,32 @@ const TaskCard = ({ task, members, clients, onClick, onDragStart }: Props) => {
         overdue && "border-destructive/40"
       )}
     >
+      {task.reference && (
+        <span className="inline-block rounded bg-primary/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold tracking-wide text-primary">
+          {task.reference}
+        </span>
+      )}
       <div className="flex items-start gap-2">
         <PrioIcon className={cn("h-4 w-4 shrink-0 mt-0.5", prio.color)} aria-label={prio.label} />
         <p className="text-sm font-medium leading-tight flex-1 break-words">{task.title}</p>
       </div>
+
+      {/* Cliente vinculado, siempre visible en la tarjeta */}
+      {task.client_id && (() => {
+        const clientName = clients.find((c) => c.id === task.client_id)?.name;
+        if (!clientName) return null;
+        return (
+          <Link
+            to={`/app/clients/${task.client_id}`}
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-primary hover:underline"
+            title="Ir a la ficha del cliente"
+          >
+            <Building2 className="h-3 w-3 shrink-0" />
+            <span className="truncate">{clientName}</span>
+          </Link>
+        );
+      })()}
 
       {visibleLinks.length > 0 && (
         <div className="flex flex-col gap-1">

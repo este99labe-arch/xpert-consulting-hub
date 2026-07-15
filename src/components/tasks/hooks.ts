@@ -349,11 +349,11 @@ export const useBoardMutations = () => {
   };
 
   const create = useMutation({
-    mutationFn: async ({ name, sort_order }: { name: string; sort_order: number }) => {
+    mutationFn: async ({ name, sort_order, prefix }: { name: string; sort_order: number; prefix?: string }) => {
       if (!accountId) throw new Error("No account");
       const { data, error } = await db
         .from("task_boards")
-        .insert({ account_id: accountId, name, sort_order })
+        .insert({ account_id: accountId, name, sort_order, prefix: prefix?.trim() || null })
         .select("id")
         .single();
       if (error) throw error;
@@ -376,7 +376,7 @@ export const useBoardMutations = () => {
   });
 
   const update = useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: { name?: string; color?: string; sort_order?: number } }) => {
+    mutationFn: async ({ id, updates }: { id: string; updates: { name?: string; color?: string; sort_order?: number; prefix?: string | null } }) => {
       const { error } = await db.from("task_boards").update(updates).eq("id", id);
       if (error) throw error;
     },
