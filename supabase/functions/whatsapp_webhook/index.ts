@@ -386,7 +386,7 @@ async function handleChatMessage(admin: any, cfg: any, msg: any, senderPhone: st
         .select("user_id").eq("account_id", account_id).eq("is_active", true).limit(1).maybeSingle();
       creator = anyUser?.user_id;
     }
-    const title = (ai?.title || "").trim().slice(0, 80) || `WhatsApp: ${(text || "Solicitud").slice(0, 70)}`;
+    const title = (ai?.title || "").trim().slice(0, 80) || (text || "Solicitud WhatsApp").slice(0, 80);
     const who = conv.contact_name || senderPhone;
     const { error: insErr } = await admin.from("reminders").insert({
       account_id, created_by: creator, assigned_to: assignee,
@@ -404,7 +404,18 @@ async function handleChatMessage(admin: any, cfg: any, msg: any, senderPhone: st
       console.error("TASK INSERT FAILED:", insErr.message);
     } else {
       actionTaken = true;
-      await admin.from("chat_conversations").update({ status: "HUMAN" }).eq("id", conv.id);
+      // La tarea asignada arrastra la asignación del chat al mismo empleado
+      // (el manager sigue viéndolo todo por RLS de rol)
+      await admin.from("chat_conversations").update({
+        status: "HUMAN",
+        ...(assignee ? { assigned_to: assignee } : {}),
+      }).eq("id", conv.id);
+      if (assignee) {
+        await admin.from("chat_conversation_members").upsert(
+          { conversation_id: conv.id, user_id: assignee, account_id },
+          { onConflict: "conversation_id,user_id" },
+        );
+      }
       if (botActive && cfg.task_ack_message) await botSend(cfg.task_ack_message);
     }
   } else if (botActive && matched?.auto_reply) {

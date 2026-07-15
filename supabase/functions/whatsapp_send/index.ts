@@ -136,7 +136,14 @@ Deno.serve(async (req) => {
     const { data: ua } = await admin
       .from("user_accounts").select("roles(code)").eq("user_id", user.id).eq("account_id", conv.account_id).maybeSingle();
     const roleCode = ua?.roles?.code;
-    const allowed = roleCode === "MANAGER" || roleCode === "MASTER_ADMIN" || conv.assigned_to === user.id;
+    let allowed = roleCode === "MANAGER" || roleCode === "MASTER_ADMIN" || conv.assigned_to === user.id;
+    if (!allowed) {
+      // Miembros asignados a la conversación (multi-asignación)
+      const { data: mem } = await admin
+        .from("chat_conversation_members").select("user_id")
+        .eq("conversation_id", conv.id).eq("user_id", user.id).maybeSingle();
+      allowed = !!mem;
+    }
     if (!allowed) return json({ error: "Sin permiso para esta conversacion" }, 403);
 
     authorUser = user.id;
