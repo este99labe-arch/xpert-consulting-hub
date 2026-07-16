@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
 import {
   MessageCircle, Send, Search, Bot, UserRound, Hand, Building2, Loader2, ShieldAlert, CheckCheck, Bell, BellOff, Clock3,
-  Paperclip, ListTodo, X, CheckSquare, Trash2, Link2, UserPlus,
+  Paperclip, ListTodo, X, CheckSquare, Trash2, Link2, UserPlus, GraduationCap,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator,
@@ -30,6 +30,7 @@ import { es } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import ChatMedia from "@/components/chat/ChatMedia";
 import CreateTaskFromChatDialog from "@/components/chat/CreateTaskFromChatDialog";
+import BotFeedbackDialog from "@/components/chat/BotFeedbackDialog";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const STATUS_META: Record<string, { label: string; className: string }> = {
@@ -65,6 +66,7 @@ const AppChat = () => {
   const [selectMode, setSelectMode] = useState(false);
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [taskOpen, setTaskOpen] = useState(false);
+  const [feedbackMsg, setFeedbackMsg] = useState<any | null>(null);
   const togglePick = (id: string) =>
     setPicked((prev) => {
       const next = new Set(prev);
@@ -564,7 +566,7 @@ const AppChat = () => {
                 const isAudio = m.message_type === "audio" && m.media_url;
                 const isDoc = m.message_type === "document" && m.media_url;
                 return (
-                  <div key={m.id} className={`flex items-center gap-2 ${out ? "justify-end" : "justify-start"}`}>
+                  <div key={m.id} className={`group flex items-center gap-2 ${out ? "justify-end" : "justify-start"}`}>
                     {selectable && (
                       <Checkbox
                         checked={picked.has(m.id)}
@@ -598,6 +600,16 @@ const AppChat = () => {
                         {format(new Date(m.created_at), "HH:mm")}{m.status === "FAILED" ? " · error" : ""}
                       </span>
                     </div>
+                    {!out && !selectMode && (m.body || "").trim() && (
+                      <button
+                        type="button"
+                        className="shrink-0 rounded-md p-1 text-muted-foreground/60 opacity-0 transition-opacity hover:bg-muted hover:text-primary group-hover:opacity-100"
+                        title="Enseñar al bot: corregir lo que hizo con este mensaje"
+                        onClick={() => setFeedbackMsg(m)}
+                      >
+                        <GraduationCap className="h-3.5 w-3.5" />
+                      </button>
+                    )}
                   </div>
                 );
               })}
@@ -669,6 +681,12 @@ const AppChat = () => {
         )}
       </section>
 
+      <BotFeedbackDialog
+        open={!!feedbackMsg}
+        onOpenChange={(o) => !o && setFeedbackMsg(null)}
+        message={feedbackMsg}
+        conversationId={selectedId}
+      />
       <CreateTaskFromChatDialog
         open={taskOpen}
         onOpenChange={setTaskOpen}

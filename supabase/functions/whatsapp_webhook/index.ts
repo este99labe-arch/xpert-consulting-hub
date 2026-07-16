@@ -201,14 +201,23 @@ const madridNow = () => new Date(new Date().toLocaleString("en-US", { timeZone: 
 
 // ════════════════════════════════════════════════════════════════════════════
 // NLU: clasificación de intención + síntesis + fecha con LLM (si hay clave).
-// Fallback determinista: palabras clave + parseDueDate.
+// Personalizado por cuenta: contexto del negocio + correcciones del equipo
+// (few-shot). Fallback determinista: palabras clave + parseDueDate.
 // ════════════════════════════════════════════════════════════════════════════
-async function classifyLLM(intents: any[], text: string): Promise<any | null> {
+async function classifyLLM(intents: any[], text: string, businessContext: string, examples: any[]): Promise<any | null> {
   const key = Deno.env.get("OPENAI_API_KEY");
   if (!key || !text) return null;
   try {
     const now = madridNow();
     const hoy = now.toLocaleDateString("es-ES", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+    const contextPart = businessContext
+      ? `Contexto del negocio (adapta tu comprensión a su sector y vocabulario): ${businessContext.slice(0, 900)}. `
+      : "";
+    const examplesPart = examples.length
+      ? `Correcciones previas del equipo — SÍGUELAS como precedente: ${examples
+          .map((f) => `"${(f.message_text || "").slice(0, 90)}" => ${f.expected_action === "CREATE_TASK" ? "SÍ crear tarea" : "NO crear tarea"}${f.comment ? ` (nota: ${f.comment.slice(0, 80)})` : ""}`)
+          .join(" | ")}. `
+      : "";
     const res = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
@@ -221,7 +230,8 @@ async function classifyLLM(intents: any[], text: string): Promise<any | null> {
           {
             role: "system",
             content:
-              `Clasificas mensajes de WhatsApp de clientes de una gestoría/PYME española. Hoy es ${hoy} (Europe/Madrid). ` +
+              `Clasificas mensajes de WhatsApp de clientes de una empresa española. Hoy es ${hoy} (Europe/Madrid). ` +
+              contextPart + examplesPart +
               `El mensaje puede estar en castellano o catalán. Responde SOLO un objeto JSON con: ` +
               `"intent_id" (id de la lista de intenciones que mejor encaje, o null), ` +
               `"creates_task" (true si el mensaje pide un trabajo, gestión o documento que alguien debe realizar), ` +
@@ -342,27 +352,56 @@ async function handleChatMessage(admin: any, cfg: any, msg: any, senderPhone: st
 
   // ══════════════════════════════════════════════════════════════════════════
   // CLASIFICACIÓN: LLM (si hay OPENAI_API_KEY) con fallback a palabras clave.
-  // Se ejecuta en TODA conversación (nueva o con historial): cada mensaje
-  // fuera de la ventana de consolidación puede ser una petición nueva.
+  // Personalizada por cuenta: contexto del negocio + correcciones del equipo.
   // ══════════════════════════════════════════════════════════════════════════
   const lower = stripAccents(text || "");
   const { data: intents } = await admin.from("chat_intents")
     .select("*").eq("account_id", account_id).eq("is_active", true).order("sort_order");
+
+  // Correcciones activas del equipo (aprendizaje del bot)
+  const { data: fb } = await admin.from("chat_bot_feedback")
+    .select("message_text, expected_action, expected_intent_id, comment")
+    .eq("account_id", account_id).eq("is_active", true)
+    .order("created_at", { ascending: false }).limit(15);
+  const feedback = fb || [];
 
   let matched = lower
     ? (intents || []).find((it: any) =>
         (it.keywords || []).some((k: string) => lower.includes(stripAccents(String(k)))))
     : null;
 
-  const ai = text && text !== "[Audio recibido]" ? await classifyLLM(intents || [], text) : null;
+  const ai = text && text !== "[Audio recibido]"
+    ? await classifyLLM(intents || [], text, cfg.business_context || "", feedback)
+    : null;
   if (ai?.intent_id) {
     const byId = (intents || []).find((i: any) => i.id === ai.intent_id);
     if (byId) matched = byId;
   }
-  const createsTask = Boolean(matched?.creates_task || ai?.creates_task);
+  let createsTask = Boolean(matched?.creates_task || ai?.creates_task);
+
+  // Override determinista: si el mensaje es casi idéntico a una corrección
+  // revisada, se aplica la corrección aunque no haya LLM ni palabra clave.
+  const norm = lower.trim();
+  const fbMatch = norm.length >= 8
+    ? feedback.find((f: any) => {
+        const fn = stripAccents(f.message_text || "").trim();
+        return fn && (fn === norm || (norm.length >= 12 && fn.length >= 12 && (fn.includes(norm) || norm.includes(fn))));
+      })
+    : null;
+  if (fbMatch) {
+    if (fbMatch.expected_action === "CREATE_TASK") {
+      createsTask = true;
+      const byId = (intents || []).find((i: any) => i.id === fbMatch.expected_intent_id);
+      if (byId) matched = byId;
+    } else {
+      createsTask = false;
+    }
+  }
+
   console.log("CLASSIFY:", JSON.stringify({
     text: (text || "").slice(0, 60), matched: matched?.name || null,
     ai: ai ? { intent: ai.intent_id, task: ai.creates_task, due: ai.due_date } : "sin LLM",
+    fbMatch: fbMatch ? fbMatch.expected_action : null,
     createsTask,
   }));
 
