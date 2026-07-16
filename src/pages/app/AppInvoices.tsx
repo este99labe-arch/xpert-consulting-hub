@@ -23,10 +23,10 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { FileText, TrendingUp, TrendingDown, DollarSign, Plus, Search, Trash2, Check, X, RefreshCw, ClipboardList, CalendarIcon, List, LayoutGrid, Landmark, Upload, ShieldCheck } from "lucide-react";
+import { FileText, TrendingUp, TrendingDown, DollarSign, Plus, Search, Trash2, Check, X, RefreshCw, ClipboardList, CalendarIcon, List, LayoutGrid, FolderTree, Landmark, Upload, ShieldCheck } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import CreateReminderDialog from "@/components/reminders/CreateReminderDialog";
-import { format } from "date-fns";
+import { format, subDays, startOfDay } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
 import CreateInvoiceDialog from "@/components/invoices/CreateInvoiceDialog";
@@ -42,6 +42,7 @@ import { usePagination } from "@/hooks/use-pagination";
 import { dispatchWebhook } from "@/lib/webhooks";
 import { registrarFacturaVerifactu } from "@/lib/verifactu.service";
 import InvoiceKanbanView from "@/components/invoices/InvoiceKanbanView";
+import InvoiceFolderView from "@/components/invoices/InvoiceFolderView";
 import BankReconciliationTab from "@/components/invoices/BankReconciliationTab";
 import InvoiceImportTab from "@/components/invoices/InvoiceImportTab";
 
@@ -118,7 +119,7 @@ const AppInvoices = () => {
     }
   }, [location.state]);
   const [activeTab, setActiveTab] = useState("invoices");
-  const [invoiceViewMode, setInvoiceViewMode] = useState<"list" | "kanban">("list");
+  const [invoiceViewMode, setInvoiceViewMode] = useState<"list" | "kanban" | "folders">("list");
 
   // Sync URL params on mount
   useEffect(() => {
@@ -258,7 +259,7 @@ const AppInvoices = () => {
       if (error) throw error;
       return data || [];
     },
-    enabled: !!accountId && invoiceViewMode === "kanban",
+    enabled: !!accountId && invoiceViewMode !== "list",
   });
 
   // Pending delete requests (managers only)
@@ -575,12 +576,15 @@ const AppInvoices = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Buscar por nº factura o concepto..." value={search} onChange={(e) => { setSearch(e.target.value); invoicePagination.resetPage(); }} className="pl-9" />
           </div>
-          <ToggleGroup type="single" value={invoiceViewMode} onValueChange={(v) => v && setInvoiceViewMode(v as "list" | "kanban")} className="hidden sm:flex">
+          <ToggleGroup type="single" value={invoiceViewMode} onValueChange={(v) => v && setInvoiceViewMode(v as "list" | "kanban" | "folders")} className="hidden sm:flex">
             <ToggleGroupItem value="list" aria-label="Vista lista" className="px-2.5">
               <List className="h-4 w-4" />
             </ToggleGroupItem>
             <ToggleGroupItem value="kanban" aria-label="Vista kanban" className="px-2.5">
               <LayoutGrid className="h-4 w-4" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="folders" aria-label="Vista carpetas" className="px-2.5">
+              <FolderTree className="h-4 w-4" />
             </ToggleGroupItem>
           </ToggleGroup>
         </div>
@@ -604,6 +608,27 @@ const AppInvoices = () => {
               <SelectItem value="EXPENSE">Gasto</SelectItem>
             </SelectContent>
           </Select>
+          {/* Filtros rápidos de fecha */}
+          <div className="flex overflow-hidden rounded-lg border border-border">
+            {[
+              { label: "Hoy", days: 0 },
+              { label: "7 días", days: 6 },
+              { label: "30 días", days: 29 },
+            ].map((q) => (
+              <button
+                key={q.label}
+                type="button"
+                className="border-r border-border px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors last:border-r-0 hover:bg-muted hover:text-foreground"
+                onClick={() => {
+                  setDateFrom(startOfDay(subDays(new Date(), q.days)));
+                  setDateTo(new Date());
+                  invoicePagination.resetPage();
+                }}
+              >
+                {q.label}
+              </button>
+            ))}
+          </div>
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className={cn("w-full sm:w-[140px] justify-start text-left font-normal", !dateFrom && "text-muted-foreground")}>
@@ -632,12 +657,15 @@ const AppInvoices = () => {
             </Button>
           )}
           {/* Mobile view toggle */}
-          <ToggleGroup type="single" value={invoiceViewMode} onValueChange={(v) => v && setInvoiceViewMode(v as "list" | "kanban")} className="sm:hidden">
+          <ToggleGroup type="single" value={invoiceViewMode} onValueChange={(v) => v && setInvoiceViewMode(v as "list" | "kanban" | "folders")} className="sm:hidden">
             <ToggleGroupItem value="list" aria-label="Vista lista" className="px-2.5">
               <List className="h-4 w-4" />
             </ToggleGroupItem>
             <ToggleGroupItem value="kanban" aria-label="Vista kanban" className="px-2.5">
               <LayoutGrid className="h-4 w-4" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="folders" aria-label="Vista carpetas" className="px-2.5">
+              <FolderTree className="h-4 w-4" />
             </ToggleGroupItem>
           </ToggleGroup>
         </div>
@@ -645,6 +673,8 @@ const AppInvoices = () => {
 
       {invoiceViewMode === "kanban" ? (
         <InvoiceKanbanView invoices={kanbanInvoices} onPreview={setPreviewInvoice} />
+      ) : invoiceViewMode === "folders" ? (
+        <InvoiceFolderView invoices={kanbanInvoices} onPreview={setPreviewInvoice} />
       ) : (
         <>
           {/* Mobile cards */}

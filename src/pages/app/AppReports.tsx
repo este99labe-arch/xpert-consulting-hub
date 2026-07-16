@@ -11,8 +11,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
-  BarChart3, FileText, Clock, Package, TrendingUp, TrendingDown, Download, Printer, Loader2,
+  BarChart3, FileText, Clock, Package, TrendingUp, TrendingDown, Download, Printer, Loader2, ListTodo,
 } from "lucide-react";
+import TasksReport from "@/components/reports/TasksReport";
 import { format, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, subMonths, differenceInMinutes } from "date-fns";
 import { es } from "date-fns/locale";
 import MasterAccountSelector from "@/components/shared/MasterAccountSelector";
@@ -712,6 +713,9 @@ const AppReports = () => {
           <TabsTrigger value="inventory" className="gap-1">
             <Package className="h-4 w-4" /> Inventario
           </TabsTrigger>
+          <TabsTrigger value="tasks" className="gap-1">
+            <ListTodo className="h-4 w-4" /> Tareas
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="pl">
@@ -725,6 +729,9 @@ const AppReports = () => {
         </TabsContent>
         <TabsContent value="inventory">
           <InventoryReport accountId={effectiveAccountId} />
+        </TabsContent>
+        <TabsContent value="tasks">
+          <TasksReport accountId={effectiveAccountId!} />
         </TabsContent>
       </Tabs>
     </div>
