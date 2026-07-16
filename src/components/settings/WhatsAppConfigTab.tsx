@@ -31,7 +31,7 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
     phone_number_id: "", verify_token: "", access_token: "", app_secret: "", display_phone: "",
     is_enabled: false, bot_enabled: true,
     welcome_message: "", fallback_message: "", task_ack_message: "", task_completed_template: "",
-    reopen_template_name: "", reopen_template_lang: "es",
+    reopen_template_name: "", reopen_template_lang: "es", business_context: "",
     task_consolidation_minutes: 60,
     default_assignee: "",
   });
@@ -46,7 +46,7 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
     queryFn: async () => {
       const { data } = await supabase
         .from("whatsapp_config")
-        .select("id, account_id, phone_number_id, verify_token, is_enabled, waba_id, display_phone, bot_enabled, welcome_message, fallback_message, task_ack_message, task_completed_template, reopen_template_name, reopen_template_lang, task_consolidation_minutes, default_assignee, created_at, updated_at")
+        .select("id, account_id, phone_number_id, verify_token, is_enabled, waba_id, display_phone, bot_enabled, welcome_message, fallback_message, task_ack_message, task_completed_template, reopen_template_name, reopen_template_lang, task_consolidation_minutes, business_context, default_assignee, created_at, updated_at")
         .eq("account_id", accountId).maybeSingle();
       return data;
     },
@@ -80,6 +80,7 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
         welcome_message: config.welcome_message || "", fallback_message: config.fallback_message || "",
         task_ack_message: config.task_ack_message || "", task_completed_template: config.task_completed_template || "",
         reopen_template_name: (config as any).reopen_template_name || "", reopen_template_lang: (config as any).reopen_template_lang || "es",
+        business_context: (config as any).business_context || "",
         task_consolidation_minutes: (config as any).task_consolidation_minutes ?? 60,
         default_assignee: config.default_assignee || "",
       });
@@ -99,6 +100,7 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
         welcome_message: form.welcome_message, fallback_message: form.fallback_message,
         task_ack_message: form.task_ack_message, task_completed_template: form.task_completed_template,
         reopen_template_name: form.reopen_template_name.trim() || null, reopen_template_lang: form.reopen_template_lang || "es",
+        business_context: form.business_context.trim() || null,
         task_consolidation_minutes: Math.max(1, Number(form.task_consolidation_minutes) || 60),
         default_assignee: form.default_assignee || null, updated_at: new Date().toISOString(),
       };
@@ -264,6 +266,34 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
         </CardContent>
       </Card>
 
+      {/* Contexto del negocio (personalización del bot) */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Info className="h-5 w-5 text-primary" />
+            <CardTitle className="text-base">Contexto del negocio</CardTitle>
+          </div>
+          <CardDescription>
+            Describe a qué se dedica tu empresa, tu sector, servicios y vocabulario propio. El bot usa este
+            contexto para entender los mensajes con lenguaje de tu sector y clasificarlos mejor
+            (requiere el clasificador inteligente activo).
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Textarea
+            rows={4}
+            value={form.business_context}
+            onChange={(e) => set("business_context", e.target.value)}
+            placeholder="Ej.: Somos una agencia de Marketing Digital. Gestionamos redes sociales, campañas de Google/Meta Ads, SEO y diseño web. Cuando un cliente habla de «post», «creatividades», «pauta» o «parrilla» se refiere a trabajo de redes sociales…"
+            maxLength={1500}
+          />
+          <p className="mt-1.5 text-xs text-muted-foreground">{form.business_context.length}/1500 caracteres.</p>
+        </CardContent>
+      </Card>
+
+      {/* Aprendizaje del bot (correcciones del equipo) */}
+      <BotLearningCard accountId={accountId} />
+
       {/* Intenciones */}
       <Card>
         <CardHeader>
@@ -331,6 +361,94 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+};
+
+/**
+ * Correcciones enviadas desde el chat ("Enseñar al bot"). Las activas se
+ * inyectan en el clasificador de cada mensaje nuevo (máx. 15 más recientes).
+ */
+const BotLearningCard = ({ accountId }: { accountId: string }) => {
+  const qc = useQueryClient();
+  const { data: feedback = [] } = useQuery({
+    queryKey: ["bot-feedback", accountId],
+    queryFn: async () => {
+      const { data } = await (supabase.from("chat_bot_feedback") as any)
+        .select("id, message_text, expected_action, comment, is_active, created_at, chat_intents(name)")
+        .eq("account_id", accountId)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      return (data || []) as any[];
+    },
+    enabled: !!accountId,
+  });
+
+  const toggle = useMutation({
+    mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
+      const { error } = await (supabase.from("chat_bot_feedback") as any).update({ is_active }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["bot-feedback", accountId] }),
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  const remove = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase.from("chat_bot_feedback") as any).delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["bot-feedback", accountId] }),
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  const ACTION_LABEL: Record<string, string> = {
+    CREATE_TASK: "Debe crear tarea",
+    NO_TASK: "No debe crear tarea",
+    REPLY_ONLY: "Solo responder",
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <Bot className="h-5 w-5 text-primary" />
+          <CardTitle className="text-base">Aprendizaje del bot</CardTitle>
+          <Badge variant="secondary" className="ml-1">{feedback.filter((f) => f.is_active).length} activas</Badge>
+        </div>
+        <CardDescription>
+          Correcciones enviadas desde el chat (icono 🎓 sobre un mensaje). Las activas se aplican a los
+          mensajes nuevos: exactas al instante y como precedente cuando el clasificador inteligente está activo.
+          Desactiva o elimina las que ya no apliquen.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {feedback.length === 0 && (
+          <p className="py-4 text-center text-sm text-muted-foreground">
+            Aún no hay correcciones. Ve a un chat, pasa el ratón por un mensaje del cliente y pulsa el icono 🎓.
+          </p>
+        )}
+        {feedback.map((f) => (
+          <div key={f.id} className={`flex items-start gap-3 rounded-lg border border-border p-3 ${f.is_active ? "" : "opacity-55"}`}>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm italic">"{f.message_text}"</p>
+              <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                <Badge variant={f.expected_action === "CREATE_TASK" ? "default" : "secondary"} className="text-[10px]">
+                  {ACTION_LABEL[f.expected_action] || f.expected_action}
+                </Badge>
+                {f.chat_intents?.name && <Badge variant="outline" className="text-[10px]">{f.chat_intents.name}</Badge>}
+                {f.comment && <span className="text-xs text-muted-foreground">· {f.comment}</span>}
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <Switch checked={f.is_active} onCheckedChange={(v) => toggle.mutate({ id: f.id, is_active: v })} />
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => remove.mutate(f.id)} title="Eliminar corrección">
+                <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
+              </Button>
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
   );
 };
 
