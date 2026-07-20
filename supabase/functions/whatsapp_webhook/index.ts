@@ -223,7 +223,9 @@ async function classifyLLM(intents: any[], text: string, businessContext: string
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       signal: AbortSignal.timeout(6000),
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        // Modelo configurable vía secreto OPENAI_MODEL; por defecto gpt-4o-mini
+        // (mejor relación calidad-precio para clasificación JSON en ES/CA)
+        model: Deno.env.get("OPENAI_MODEL") || "gpt-4o-mini",
         temperature: 0,
         response_format: { type: "json_object" },
         messages: [
