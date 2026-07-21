@@ -12,8 +12,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Loader2, ArrowRight, Plus, Trash2, FileText, Receipt, FileSignature,
-  RefreshCw, Users, Percent, StickyNote, Paperclip, CreditCard, CalendarDays, Tags,
+  RefreshCw, Users, Percent, StickyNote, Paperclip, CreditCard, CalendarDays, Tags, Package, Boxes, Eye,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
@@ -26,19 +29,22 @@ const statusLabels: Record<string, string> = {
   ACCEPTED: "Aceptado", REJECTED: "Rechazado", INVOICED: "Facturado",
 };
 
-const allInvoiceStatuses = ["DRAFT", "SENT", "PARTIALLY_PAID", "PAID", "OVERDUE", "CANCELLED"];
+// PAID / PARTIALLY_PAID no son estados manuales: se derivan de los cobros
+// registrados (panel "Cobros y pagos"), para mantener la congruencia.
+const manualInvoiceStatuses = ["DRAFT", "SENT", "OVERDUE", "CANCELLED"];
 const allQuoteStatuses = ["DRAFT", "SENT", "ACCEPTED", "REJECTED", "INVOICED", "CANCELLED"];
 
-interface LineInput { description: string; quantity: string; unitPrice: string; }
+interface LineInput { description: string; quantity: string; unitPrice: string; productId?: string; sku?: string; stock?: number; unit?: string; }
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   invoice: any | null;
+  onPreview?: () => void;
 }
 
-const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
-  const { accountId } = useAuth();
+const EditInvoiceDialog = ({ open, onOpenChange, invoice, onPreview }: Props) => {
+  const { accountId, user } = useAuth();
   const queryClient = useQueryClient();
 
   const [clientId, setClientId] = useState("");
@@ -59,16 +65,16 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
 
   const isDraft = invoice?.status === "DRAFT";
   const isQuote = invoice?.type === "QUOTE";
-  const allStatuses = isQuote ? allQuoteStatuses : allInvoiceStatuses;
+  const allStatuses = isQuote ? allQuoteStatuses : manualInvoiceStatuses;
   const nextStatuses = allStatuses.filter((s) => s !== invoice?.status);
 
-  // Load invoice lines
+  // Load invoice lines (con datos del producto vinculado, si lo hay)
   const { data: existingLines = [] } = useQuery({
     queryKey: ["invoice-lines", invoice?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("invoice_lines")
-        .select("*")
+        .select("*, products(sku, current_stock, unit)")
         .eq("invoice_id", invoice!.id)
         .order("sort_order", { ascending: true });
       if (error) throw error;
@@ -102,6 +108,10 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
         description: l.description || "",
         quantity: String(l.quantity || 1),
         unitPrice: String(l.unit_price || 0),
+        productId: l.product_id || undefined,
+        sku: l.products?.sku,
+        stock: l.products?.current_stock != null ? Number(l.products.current_stock) : undefined,
+        unit: l.products?.unit,
       })));
     } else if (invoice && open && existingLines.length === 0) {
       // Fallback for old invoices without lines
@@ -182,7 +192,32 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
     return created.id;
   };
 
+  const { data: products = [] } = useQuery({
+    queryKey: ["invoice-products", accountId],
+    queryFn: async () => {
+      if (!accountId) return [] as any[];
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name, sku, sale_price, current_stock, unit")
+        .eq("account_id", accountId).eq("is_active", true).order("name");
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!accountId && open,
+  });
+
   const addLine = () => setLines([...lines, { description: "", quantity: "1", unitPrice: "" }]);
+  const addProductLine = (p: any) => {
+    const line: LineInput = {
+      description: p.name, quantity: "1", unitPrice: String(p.sale_price ?? 0),
+      productId: p.id, sku: p.sku, stock: Number(p.current_stock), unit: p.unit,
+    };
+    setLines((prev) => {
+      const first = prev[0];
+      if (prev.length === 1 && !first.description.trim() && !first.unitPrice.trim() && !first.productId) return [line];
+      return [...prev, line];
+    });
+  };
   const removeLine = (i: number) => {
     if (lines.length <= 1) return;
     setLines(lines.filter((_, idx) => idx !== i));
@@ -257,6 +292,7 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
           quantity: parseFloat(l.quantity) || 1,
           unit_price: parseFloat(l.unitPrice) || 0,
           amount: +((parseFloat(l.quantity) || 1) * (parseFloat(l.unitPrice) || 0)).toFixed(2),
+          product_id: l.productId || null,
           sort_order: i,
         }));
         await supabase.from("invoice_lines").insert(lineInserts as any);
@@ -272,6 +308,9 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
       queryClient.invalidateQueries({ queryKey: ["invoice-lines"] });
       queryClient.invalidateQueries({ queryKey: ["business_clients"] });
+      // El stock puede haberse descontado al emitir (trigger de venta)
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["invoice-products"] });
       onOpenChange(false);
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -391,9 +430,30 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
                 title="Conceptos"
                 desc="Servicios o productos incluidos"
                 action={
-                  <Button type="button" variant="outline" size="sm" onClick={addLine}>
-                    <Plus className="mr-1 h-3.5 w-3.5" /> Añadir línea
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button type="button" variant="outline" size="sm">
+                          <Package className="mr-1 h-3.5 w-3.5" /> Del inventario
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="max-h-72 w-72 overflow-y-auto">
+                        <DropdownMenuLabel>Añadir producto del catálogo</DropdownMenuLabel>
+                        {products.length === 0 && (
+                          <div className="px-2 py-3 text-center text-xs text-muted-foreground">No hay productos activos en inventario.</div>
+                        )}
+                        {products.map((p: any) => (
+                          <DropdownMenuItem key={p.id} onClick={() => addProductLine(p)} className="flex items-center justify-between gap-2">
+                            <span className="min-w-0 flex-1 truncate">{p.name}</span>
+                            <span className="shrink-0 text-xs text-muted-foreground">€{Number(p.sale_price).toFixed(2)} · {Number(p.current_stock)} {p.unit}</span>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Button type="button" variant="outline" size="sm" onClick={addLine}>
+                      <Plus className="mr-1 h-3.5 w-3.5" /> Añadir línea
+                    </Button>
+                  </div>
                 }
               >
                 <div className="hidden grid-cols-[1fr_5rem_7rem_6rem_2.25rem] gap-2 px-1 sm:grid">
@@ -405,7 +465,8 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
                 </div>
                 <div className="space-y-2">
                   {lines.map((line, i) => (
-                    <div key={i} className="grid grid-cols-[1fr_3.5rem_4.5rem_2.25rem] items-center gap-2 sm:grid-cols-[1fr_5rem_7rem_6rem_2.25rem]">
+                    <div key={i} className="space-y-1">
+                    <div className="grid grid-cols-[1fr_3.5rem_4.5rem_2.25rem] items-center gap-2 sm:grid-cols-[1fr_5rem_7rem_6rem_2.25rem]">
                       <Input value={line.description} onChange={(e) => updateLine(i, "description", e.target.value)}
                         placeholder="Descripción..." className="text-sm" />
                       <Input type="number" min="0" step="0.01" value={line.quantity}
@@ -419,6 +480,13 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
                         onClick={() => removeLine(i)} disabled={lines.length <= 1}>
                         <Trash2 className="h-4 w-4 text-muted-foreground" />
                       </Button>
+                    </div>
+                    {line.productId && (
+                      <div className="flex items-center gap-2 pl-1 text-xs text-muted-foreground">
+                        <Badge variant="secondary" className="gap-1 text-[10px]"><Boxes className="h-3 w-3" /> {line.sku || "Producto"}</Badge>
+                        <span>Stock actual: {line.stock ?? 0} {line.unit || "uds"} · se descuenta al emitir</span>
+                      </div>
+                    )}
                     </div>
                   ))}
                 </div>
@@ -555,6 +623,11 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice }: Props) => {
             </span>
           </div>
           <div className="flex items-center gap-2">
+            {onPreview && (
+              <Button variant="outline" onClick={onPreview} disabled={submitting} className="gap-1.5">
+                <Eye className="h-4 w-4" /> Vista previa
+              </Button>
+            )}
             <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={submitting}>Cancelar</Button>
             <Button onClick={handleSubmit} disabled={submitting || (status === invoice?.status && !isDraft && attachmentPath === (invoice?.attachment_path || null))}>
               {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

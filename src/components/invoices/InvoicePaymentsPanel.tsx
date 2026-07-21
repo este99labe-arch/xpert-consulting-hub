@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Trash2, Plus, CreditCard, Loader2 } from "lucide-react";
+import { Trash2, Plus, CreditCard, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -57,6 +57,38 @@ const InvoicePaymentsPanel = ({ invoice, onStatusChanged }: Props) => {
   const invoiceTotal = Number(invoice?.amount_total || 0);
   const remaining = Math.max(0, +(invoiceTotal - totalPaid).toFixed(2));
   const paidPercentage = invoiceTotal > 0 ? Math.min(100, (totalPaid / invoiceTotal) * 100) : 0;
+
+  // Congruencia: si la factura está marcada como PAGADA pero no hay cobros
+  // detallados (p. ej. se marcó pagada directamente), se muestra como saldada.
+  const statusPaid = invoice?.status === "PAID";
+  const markedPaidNoRecords = statusPaid && totalPaid < invoiceTotal - 0.01;
+  const effectiveRemaining = statusPaid ? 0 : remaining;
+  const effectivePercentage = statusPaid ? 100 : paidPercentage;
+
+  // Marca la factura como pagada registrando el saldo pendiente como un cobro.
+  const handleMarkFullyPaid = async () => {
+    if (!invoice || !user || !accountId) return;
+    setSubmitting(true);
+    try {
+      if (remaining > 0.01) {
+        const { error } = await supabase.from("invoice_payments" as any).insert({
+          invoice_id: invoice.id, account_id: accountId, amount: remaining,
+          payment_date: new Date().toISOString().slice(0, 10), method: invoice.payment_method === "DIRECT_DEBIT" ? "TRANSFER" : (invoice.payment_method || "TRANSFER"),
+          notes: "Saldo total", created_by: user.id,
+        } as any);
+        if (error) throw error;
+      }
+      await supabase.from("invoices").update({ status: "PAID", paid_at: new Date().toISOString() }).eq("id", invoice.id);
+      toast({ title: "Factura marcada como pagada" });
+      queryClient.invalidateQueries({ queryKey: ["invoice-payments", invoice.id] });
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      onStatusChanged?.();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleAddPayment = async () => {
     if (!invoice || !user || !accountId) return;
@@ -149,33 +181,44 @@ const InvoicePaymentsPanel = ({ invoice, onStatusChanged }: Props) => {
         <Label className="text-xs text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
           <CreditCard className="h-3.5 w-3.5" /> Pagos
         </Label>
-        {remaining > 0 && (
-          <Button variant="outline" size="sm" onClick={() => setShowForm(!showForm)}>
-            <Plus className="h-3.5 w-3.5 mr-1" /> Registrar pago
-          </Button>
+        {effectiveRemaining > 0 && (
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setShowForm(!showForm)}>
+              <Plus className="h-3.5 w-3.5 mr-1" /> Registrar pago
+            </Button>
+            <Button size="sm" onClick={handleMarkFullyPaid} disabled={submitting} className="gap-1">
+              {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />} Marcar como pagada
+            </Button>
+          </div>
         )}
       </div>
+
+      {markedPaidNoRecords && (
+        <p className="rounded-md bg-[hsl(var(--success))]/10 px-3 py-2 text-xs text-[hsl(var(--success))]">
+          Esta factura está marcada como pagada. No hay cobros detallados registrados.
+        </p>
+      )}
 
       {/* Progress bar */}
       <div className="space-y-1.5">
         <div className="flex justify-between text-xs text-muted-foreground">
-          <span>Pagado: €{totalPaid.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
-          <span>Pendiente: €{remaining.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
+          <span>Pagado: €{(statusPaid ? invoiceTotal : totalPaid).toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
+          <span>Pendiente: €{effectiveRemaining.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
         </div>
         <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-500"
             style={{
-              width: `${paidPercentage}%`,
-              backgroundColor: paidPercentage >= 100 ? "hsl(var(--primary))" : "hsl(var(--accent-foreground) / 0.5)",
+              width: `${effectivePercentage}%`,
+              backgroundColor: effectivePercentage >= 100 ? "hsl(var(--primary))" : "hsl(var(--accent-foreground) / 0.5)",
             }}
           />
         </div>
         <div className="text-right text-xs font-medium">
-          {paidPercentage >= 100 ? (
+          {effectivePercentage >= 100 ? (
             <Badge variant="default" className="text-xs">100% Pagado</Badge>
           ) : (
-            <span className="text-muted-foreground">{paidPercentage.toFixed(0)}%</span>
+            <span className="text-muted-foreground">{effectivePercentage.toFixed(0)}%</span>
           )}
         </div>
       </div>
