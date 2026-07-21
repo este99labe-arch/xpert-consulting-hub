@@ -174,6 +174,51 @@ const AppChat = () => {
 
   const selected = useMemo(() => conversations.find((c: any) => c.id === selectedId), [conversations, selectedId]);
 
+  // Filtros de la bandeja
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [assigneeFilter, setAssigneeFilter] = useState<string>("ALL");
+
+  const { data: team = [] } = useTeamMembers();
+
+  // Equipo con roles (para excluir a los managers de los avatares de asignación)
+  const { data: roster = [] } = useQuery({
+    queryKey: ["chat-roster", accountId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("user_accounts").select("user_id, roles(code)")
+        .eq("account_id", accountId!).eq("is_active", true);
+      return (data || []).map((r: any) => ({ user_id: r.user_id, role: r.roles?.code as string }));
+    },
+    enabled: !!accountId,
+  });
+  const managerIds = useMemo(
+    () => new Set(roster.filter((r) => r.role === "MANAGER" || r.role === "MASTER_ADMIN").map((r) => r.user_id)),
+    [roster],
+  );
+
+  // Miembros asignados de todas las conversaciones (para avatares y filtro)
+  const { data: allMembers = [] } = useQuery({
+    queryKey: ["chat-all-members", accountId],
+    queryFn: async () => {
+      const { data } = await (supabase.from("chat_conversation_members") as any)
+        .select("conversation_id, user_id").eq("account_id", accountId!);
+      return (data || []) as { conversation_id: string; user_id: string }[];
+    },
+    enabled: !!accountId,
+  });
+  // convId -> user_ids asignados que NO son managers (el manager siempre ve todo)
+  const membersByConv = useMemo(() => {
+    const m = new Map<string, string[]>();
+    for (const row of allMembers) {
+      if (managerIds.has(row.user_id)) continue;
+      m.set(row.conversation_id, [...(m.get(row.conversation_id) || []), row.user_id]);
+    }
+    return m;
+  }, [allMembers, managerIds]);
+  const nameOf = (uid: string) => team.find((t) => t.user_id === uid)?.name || "Usuario";
+  // Empleados (no managers) para el filtro de persona asignada
+  const assignableTeam = useMemo(() => team.filter((t) => !managerIds.has(t.user_id)), [team, managerIds]);
+
   const filtered = conversations.filter((c: any) => {
     const name = c.business_clients?.name || c.contact_name || c.contact_phone || "";
     const matchSearch = name.toLowerCase().includes(search.toLowerCase()) || (c.contact_phone || "").includes(search);
@@ -276,51 +321,6 @@ const AppChat = () => {
     enabled: !!accountId,
   });
   const taskConvSet = useMemo(() => new Set(taskConvIds), [taskConvIds]);
-
-  // Filtros de la bandeja
-  const [statusFilter, setStatusFilter] = useState<string>("ALL");
-  const [assigneeFilter, setAssigneeFilter] = useState<string>("ALL");
-
-  const { data: team = [] } = useTeamMembers();
-
-  // Equipo con roles (para excluir a los managers de los avatares de asignación)
-  const { data: roster = [] } = useQuery({
-    queryKey: ["chat-roster", accountId],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("user_accounts").select("user_id, roles(code)")
-        .eq("account_id", accountId!).eq("is_active", true);
-      return (data || []).map((r: any) => ({ user_id: r.user_id, role: r.roles?.code as string }));
-    },
-    enabled: !!accountId,
-  });
-  const managerIds = useMemo(
-    () => new Set(roster.filter((r) => r.role === "MANAGER" || r.role === "MASTER_ADMIN").map((r) => r.user_id)),
-    [roster],
-  );
-
-  // Miembros asignados de todas las conversaciones (para avatares y filtro)
-  const { data: allMembers = [] } = useQuery({
-    queryKey: ["chat-all-members", accountId],
-    queryFn: async () => {
-      const { data } = await (supabase.from("chat_conversation_members") as any)
-        .select("conversation_id, user_id").eq("account_id", accountId!);
-      return (data || []) as { conversation_id: string; user_id: string }[];
-    },
-    enabled: !!accountId,
-  });
-  // convId -> user_ids asignados que NO son managers (el manager siempre ve todo)
-  const membersByConv = useMemo(() => {
-    const m = new Map<string, string[]>();
-    for (const row of allMembers) {
-      if (managerIds.has(row.user_id)) continue;
-      m.set(row.conversation_id, [...(m.get(row.conversation_id) || []), row.user_id]);
-    }
-    return m;
-  }, [allMembers, managerIds]);
-  const nameOf = (uid: string) => team.find((t) => t.user_id === uid)?.name || "Usuario";
-  // Empleados (no managers) para el filtro de persona asignada
-  const assignableTeam = useMemo(() => team.filter((t) => !managerIds.has(t.user_id)), [team, managerIds]);
 
   // Borrado lógico de la conversación (solo managers). Las tareas generadas
   // se conservan; si el contacto vuelve a escribir, el hilo se reactiva.
