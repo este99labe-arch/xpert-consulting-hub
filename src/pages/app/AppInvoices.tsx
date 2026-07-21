@@ -23,7 +23,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { FileText, TrendingUp, TrendingDown, DollarSign, Plus, Search, Trash2, Check, X, RefreshCw, ClipboardList, CalendarIcon, List, LayoutGrid, FolderTree, Landmark, Upload, ShieldCheck } from "lucide-react";
+import { FileText, TrendingUp, TrendingDown, DollarSign, Plus, Search, Trash2, Check, X, RefreshCw, ClipboardList, CalendarIcon, List, LayoutGrid, FolderTree, Landmark, Upload, ShieldCheck, Eye } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import CreateReminderDialog from "@/components/reminders/CreateReminderDialog";
 import { format, subDays, startOfDay } from "date-fns";
@@ -692,7 +692,7 @@ const AppInvoices = () => {
             ) : (
               <>
                 {paginatedInvoices.map((inv: any) => (
-                  <Card key={inv.id} className="p-4 space-y-2 cursor-pointer active:bg-accent/50" onClick={() => setPreviewInvoice(inv)}>
+                  <Card key={inv.id} className="p-4 space-y-2 cursor-pointer active:bg-accent/50" onClick={() => setEditInvoice(inv)}>
                     <div className="flex items-center justify-between">
                       <span className="font-mono font-semibold text-sm">{inv.invoice_number || inv.id.slice(0, 8).toUpperCase()}</span>
                       <StatusBadge status={inv.status} />
@@ -757,7 +757,7 @@ const AppInvoices = () => {
                     </TableHeader>
                     <TableBody>
                       {paginatedInvoices.map((inv: any) => (
-                        <TableRow key={inv.id} className="cursor-pointer hover:bg-accent/50" onClick={() => setPreviewInvoice(inv)}>
+                        <TableRow key={inv.id} className="cursor-pointer hover:bg-accent/50" onClick={() => setEditInvoice(inv)}>
                           <TableCell className="font-mono font-semibold text-sm">
                             {inv.invoice_number || inv.id.slice(0, 8).toUpperCase()}
                           </TableCell>
@@ -789,6 +789,10 @@ const AppInvoices = () => {
                             </div>
                           </TableCell>
                           <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center justify-end gap-0.5">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Vista previa" onClick={() => setPreviewInvoice(inv)}>
+                              <Eye className="h-4 w-4" />
+                            </Button>
                             <InvoiceActionsMenu
                               onPreview={() => setPreviewInvoice(inv)}
                               onExport={() => handleExportPdf(inv.id)}
@@ -799,6 +803,7 @@ const AppInvoices = () => {
                               onRegisterVerifactu={inv.type === "INVOICE" ? () => handleRegisterVerifactu(inv) : undefined}
                               verifactuStatus={inv.verifactu_status}
                             />
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -885,7 +890,7 @@ const AppInvoices = () => {
                     </TableHeader>
                     <TableBody>
                       {paginatedQuotes.map((q: any) => (
-                        <TableRow key={q.id} className="cursor-pointer hover:bg-accent/50" onClick={() => setPreviewInvoice(q)}>
+                        <TableRow key={q.id} className="cursor-pointer hover:bg-accent/50" onClick={() => setEditInvoice(q)}>
                           <TableCell className="font-mono font-semibold text-sm">
                             {q.invoice_number || q.id.slice(0, 8).toUpperCase()}
                           </TableCell>
@@ -901,6 +906,10 @@ const AppInvoices = () => {
                             <StatusBadge status={q.status} />
                           </TableCell>
                           <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center justify-end gap-0.5">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Vista previa" onClick={() => setPreviewInvoice(q)}>
+                              <Eye className="h-4 w-4" />
+                            </Button>
                             <InvoiceActionsMenu
                               onPreview={() => setPreviewInvoice(q)}
                               onExport={() => handleExportPdf(q.id)}
@@ -909,6 +918,7 @@ const AppInvoices = () => {
                               onSendEmail={q.business_clients?.email ? () => handleSendEmail(q.id) : undefined}
                               onReminder={() => setReminderInvoice(q)}
                             />
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -949,6 +959,7 @@ const AppInvoices = () => {
         open={!!editInvoice}
         onOpenChange={() => setEditInvoice(null)}
         invoice={editInvoice}
+        onPreview={editInvoice ? () => { const cur = editInvoice; setEditInvoice(null); setPreviewInvoice(cur); } : undefined}
       />
 
       {/* Manager: direct delete confirmation */}

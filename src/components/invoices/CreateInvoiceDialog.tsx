@@ -11,10 +11,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
 import {
   Plus, Trash2, FileText, Receipt, FileSignature, Users, CalendarDays,
-  Percent, StickyNote, Paperclip, Copy, Loader2, Tags,
+  Percent, StickyNote, Paperclip, Copy, Loader2, Tags, Package, Boxes,
 } from "lucide-react";
 import InvoiceAttachment from "@/components/invoices/InvoiceAttachment";
 import FormSection from "@/components/shared/FormSection";
@@ -24,6 +28,10 @@ interface InvoiceLineInput {
   description: string;
   quantity: string;
   unitPrice: string;
+  productId?: string;
+  sku?: string;
+  stock?: number;
+  unit?: string;
 }
 
 interface Props {
@@ -33,7 +41,7 @@ interface Props {
 }
 
 const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
-  const { accountId } = useAuth();
+  const { accountId, user } = useAuth();
   const queryClient = useQueryClient();
 
   const [clientId, setClientId] = useState("");
@@ -150,7 +158,36 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
     return created.id;
   };
 
+  // Catálogo de inventario (para facturar productos con descuento de stock)
+  const { data: products = [] } = useQuery({
+    queryKey: ["invoice-products", accountId],
+    queryFn: async () => {
+      if (!accountId) return [] as any[];
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name, sku, sale_price, current_stock, unit")
+        .eq("account_id", accountId).eq("is_active", true).order("name");
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!accountId && open,
+  });
+
   const addLine = () => setLines([...lines, { description: "", quantity: "1", unitPrice: "" }]);
+
+  // Añade una línea vinculada a un producto del catálogo (stock se descuenta al emitir)
+  const addProductLine = (p: any) => {
+    const line: InvoiceLineInput = {
+      description: p.name, quantity: "1", unitPrice: String(p.sale_price ?? 0),
+      productId: p.id, sku: p.sku, stock: Number(p.current_stock), unit: p.unit,
+    };
+    setLines((prev) => {
+      const first = prev[0];
+      // Si solo hay una línea vacía, la sustituye; si no, añade
+      if (prev.length === 1 && !first.description.trim() && !first.unitPrice.trim() && !first.productId) return [line];
+      return [...prev, line];
+    });
+  };
   const removeLine = (i: number) => {
     if (lines.length <= 1) return;
     setLines(lines.filter((_, idx) => idx !== i));
@@ -208,6 +245,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
           quantity: parseFloat(l.quantity) || 1,
           unit_price: parseFloat(l.unitPrice) || 0,
           amount: +((parseFloat(l.quantity) || 1) * (parseFloat(l.unitPrice) || 0)).toFixed(2),
+          product_id: l.productId || null,
           sort_order: i,
         }));
         await supabase.from("invoice_lines").insert(lineInserts as any);
@@ -368,9 +406,32 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
             title="Conceptos"
             desc="Servicios o productos incluidos"
             action={
-              <Button type="button" variant="outline" size="sm" onClick={addLine}>
-                <Plus className="mr-1 h-3.5 w-3.5" /> Añadir línea
-              </Button>
+              <div className="flex items-center gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button type="button" variant="outline" size="sm">
+                      <Package className="mr-1 h-3.5 w-3.5" /> Del inventario
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="max-h-72 w-72 overflow-y-auto">
+                    <DropdownMenuLabel>Añadir producto del catálogo</DropdownMenuLabel>
+                    {products.length === 0 && (
+                      <div className="px-2 py-3 text-center text-xs text-muted-foreground">No hay productos activos en inventario.</div>
+                    )}
+                    {products.map((p: any) => (
+                      <DropdownMenuItem key={p.id} onClick={() => addProductLine(p)} className="flex items-center justify-between gap-2">
+                        <span className="min-w-0 flex-1 truncate">{p.name}</span>
+                        <span className="shrink-0 text-xs text-muted-foreground">
+                          €{Number(p.sale_price).toFixed(2)} · {Number(p.current_stock)} {p.unit}
+                        </span>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Button type="button" variant="outline" size="sm" onClick={addLine}>
+                  <Plus className="mr-1 h-3.5 w-3.5" /> Añadir línea
+                </Button>
+              </div>
             }
           >
             {/* Column headers (desktop) */}
@@ -383,7 +444,8 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
             </div>
             <div className="space-y-2">
               {lines.map((line, i) => (
-                <div key={i} className="grid grid-cols-[1fr_3.5rem_4.5rem_2.25rem] items-center gap-2 sm:grid-cols-[1fr_5rem_7rem_6rem_2.25rem]">
+                <div key={i} className="space-y-1">
+                <div className="grid grid-cols-[1fr_3.5rem_4.5rem_2.25rem] items-center gap-2 sm:grid-cols-[1fr_5rem_7rem_6rem_2.25rem]">
                   <Input
                     value={line.description}
                     onChange={(e) => updateLine(i, "description", e.target.value)}
@@ -415,6 +477,19 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
                   >
                     <Trash2 className="h-4 w-4 text-muted-foreground" />
                   </Button>
+                </div>
+                {line.productId && (
+                  <div className="flex items-center gap-2 pl-1 text-xs text-muted-foreground">
+                    <Badge variant="secondary" className="gap-1 text-[10px]"><Boxes className="h-3 w-3" /> {line.sku || "Producto"}</Badge>
+                    <span>
+                      Stock actual: {line.stock ?? 0} {line.unit || "uds"}
+                      {(parseFloat(line.quantity) || 0) > (line.stock ?? 0) && (
+                        <span className="ml-1 text-[hsl(var(--warning))]">· quedará en negativo</span>
+                      )}
+                      · se descontará al emitir la factura
+                    </span>
+                  </div>
+                )}
                 </div>
               ))}
             </div>
