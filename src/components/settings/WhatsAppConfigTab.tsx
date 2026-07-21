@@ -71,6 +71,17 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
     enabled: !!accountId && isManager,
   });
 
+  // Tableros disponibles para dirigir la tarea de cada intención
+  const { data: boards = [] } = useQuery({
+    queryKey: ["wa-task-boards", accountId],
+    queryFn: async () => {
+      const { data } = await (supabase.from("task_boards") as any)
+        .select("id, name").eq("account_id", accountId).order("sort_order");
+      return (data || []) as { id: string; name: string }[];
+    },
+    enabled: !!accountId && isManager,
+  });
+
   useEffect(() => {
     if (config) {
       setForm({
@@ -129,7 +140,8 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
         const { error } = await supabase.from("chat_intents").update({
           name: op.row.name, kind: op.row.kind, keywords: op.row.keywords,
           auto_reply: op.row.auto_reply || null, creates_task: op.row.creates_task, assignee: op.row.assignee || null,
-        }).eq("id", op.row.id);
+          board_id: op.row.board_id || null,
+        } as any).eq("id", op.row.id);
         if (error) throw error;
       } else {
         const { error } = await supabase.from("chat_intents").delete().eq("id", op.row.id);
@@ -319,13 +331,22 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
                 <Input defaultValue={(it.keywords || []).join(", ")} placeholder="palabras clave (separadas por comas)"
                   onBlur={(e) => intentMut.mutate({ type: "update", row: { ...it, keywords: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) } })} className="h-9" />
                 {it.creates_task ? (
-                  <Select value={it.assignee || "NONE"} onValueChange={(v) => intentMut.mutate({ type: "update", row: { ...it, assignee: v === "NONE" ? null : v } })}>
-                    <SelectTrigger className="h-9"><SelectValue placeholder="Asignar a (por defecto)" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="NONE">Responsable por defecto</SelectItem>
-                      {team.map((m: any) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <Select value={it.assignee || "NONE"} onValueChange={(v) => intentMut.mutate({ type: "update", row: { ...it, assignee: v === "NONE" ? null : v } })}>
+                      <SelectTrigger className="h-9"><SelectValue placeholder="Asignar a (por defecto)" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="NONE">Responsable por defecto</SelectItem>
+                        {team.map((m: any) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <Select value={it.board_id || "NONE"} onValueChange={(v) => intentMut.mutate({ type: "update", row: { ...it, board_id: v === "NONE" ? null : v } })}>
+                      <SelectTrigger className="h-9"><SelectValue placeholder="Tablero" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="NONE">Tablero por defecto</SelectItem>
+                        {boards.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 ) : (
                   <Input defaultValue={it.auto_reply || ""} placeholder="respuesta automática (opcional)"
                     onBlur={(e) => intentMut.mutate({ type: "update", row: { ...it, auto_reply: e.target.value } })} className="h-9" />
