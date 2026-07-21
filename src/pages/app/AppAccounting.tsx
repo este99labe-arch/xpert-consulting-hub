@@ -234,6 +234,7 @@ const AppAccounting = () => {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["journal-entries", activeAccountId] });
+      qc.invalidateQueries({ queryKey: ["journal-entries-paginated", activeAccountId] });
       qc.invalidateQueries({ queryKey: ["journal-entry-lines", activeAccountId] });
       setEntryDialog(false);
       toast({ title: editingEntry ? "Asiento actualizado" : "Asiento creado" });
