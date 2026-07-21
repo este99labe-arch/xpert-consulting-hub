@@ -249,6 +249,7 @@ const AppAccounting = () => {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["journal-entries", activeAccountId] });
+      qc.invalidateQueries({ queryKey: ["journal-entries-paginated", activeAccountId] });
       qc.invalidateQueries({ queryKey: ["journal-entry-lines", activeAccountId] });
       toast({ title: "Asiento contabilizado" });
     },
@@ -263,6 +264,7 @@ const AppAccounting = () => {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["journal-entries", activeAccountId] });
+      qc.invalidateQueries({ queryKey: ["journal-entries-paginated", activeAccountId] });
       qc.invalidateQueries({ queryKey: ["journal-entry-lines", activeAccountId] });
       setDeleteConfirmEntry(null);
       toast({ title: "Asiento eliminado" });
@@ -300,6 +302,7 @@ const AppAccounting = () => {
     onSuccess: (_, { approved }) => {
       qc.invalidateQueries({ queryKey: ["entry-delete-requests", activeAccountId] });
       qc.invalidateQueries({ queryKey: ["journal-entries", activeAccountId] });
+      qc.invalidateQueries({ queryKey: ["journal-entries-paginated", activeAccountId] });
       qc.invalidateQueries({ queryKey: ["journal-entry-lines", activeAccountId] });
       toast({ title: approved ? "Solicitud aprobada y asiento eliminado" : "Solicitud rechazada" });
     },
