@@ -153,6 +153,7 @@ const AppChat = () => {
       .on("postgres_changes", { event: "*", schema: "public", table: "chat_messages", filter: `account_id=eq.${accountId}` }, (payload: any) => {
         qc.invalidateQueries({ queryKey: ["chat-conversations", accountId] });
         qc.invalidateQueries({ queryKey: ["chat-task-convs", accountId] });
+        qc.invalidateQueries({ queryKey: ["chat-all-members", accountId] });
         if (payload?.new?.conversation_id) qc.invalidateQueries({ queryKey: ["chat-messages", payload.new.conversation_id] });
         // Notificar mensajes entrantes nuevos
         if (payload?.eventType === "INSERT" && payload?.new?.direction === "IN") {
@@ -175,8 +176,16 @@ const AppChat = () => {
 
   const filtered = conversations.filter((c: any) => {
     const name = c.business_clients?.name || c.contact_name || c.contact_phone || "";
-    return name.toLowerCase().includes(search.toLowerCase()) || (c.contact_phone || "").includes(search);
+    const matchSearch = name.toLowerCase().includes(search.toLowerCase()) || (c.contact_phone || "").includes(search);
+    if (!matchSearch) return false;
+    if (statusFilter !== "ALL" && c.status !== statusFilter) return false;
+    if (assigneeFilter !== "ALL") {
+      const mem = membersByConv.get(c.id) || [];
+      if (assigneeFilter === "NONE" ? mem.length > 0 : !mem.includes(assigneeFilter)) return false;
+    }
+    return true;
   });
+  const hasFilters = statusFilter !== "ALL" || assigneeFilter !== "ALL";
 
   const send = useMutation({
     mutationFn: async (text: string) => {
@@ -268,6 +277,51 @@ const AppChat = () => {
   });
   const taskConvSet = useMemo(() => new Set(taskConvIds), [taskConvIds]);
 
+  // Filtros de la bandeja
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [assigneeFilter, setAssigneeFilter] = useState<string>("ALL");
+
+  const { data: team = [] } = useTeamMembers();
+
+  // Equipo con roles (para excluir a los managers de los avatares de asignación)
+  const { data: roster = [] } = useQuery({
+    queryKey: ["chat-roster", accountId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("user_accounts").select("user_id, roles(code)")
+        .eq("account_id", accountId!).eq("is_active", true);
+      return (data || []).map((r: any) => ({ user_id: r.user_id, role: r.roles?.code as string }));
+    },
+    enabled: !!accountId,
+  });
+  const managerIds = useMemo(
+    () => new Set(roster.filter((r) => r.role === "MANAGER" || r.role === "MASTER_ADMIN").map((r) => r.user_id)),
+    [roster],
+  );
+
+  // Miembros asignados de todas las conversaciones (para avatares y filtro)
+  const { data: allMembers = [] } = useQuery({
+    queryKey: ["chat-all-members", accountId],
+    queryFn: async () => {
+      const { data } = await (supabase.from("chat_conversation_members") as any)
+        .select("conversation_id, user_id").eq("account_id", accountId!);
+      return (data || []) as { conversation_id: string; user_id: string }[];
+    },
+    enabled: !!accountId,
+  });
+  // convId -> user_ids asignados que NO son managers (el manager siempre ve todo)
+  const membersByConv = useMemo(() => {
+    const m = new Map<string, string[]>();
+    for (const row of allMembers) {
+      if (managerIds.has(row.user_id)) continue;
+      m.set(row.conversation_id, [...(m.get(row.conversation_id) || []), row.user_id]);
+    }
+    return m;
+  }, [allMembers, managerIds]);
+  const nameOf = (uid: string) => team.find((t) => t.user_id === uid)?.name || "Usuario";
+  // Empleados (no managers) para el filtro de persona asignada
+  const assignableTeam = useMemo(() => team.filter((t) => !managerIds.has(t.user_id)), [team, managerIds]);
+
   // Borrado lógico de la conversación (solo managers). Las tareas generadas
   // se conservan; si el contacto vuelve a escribir, el hilo se reactiva.
   const deleteConv = useMutation({
@@ -286,7 +340,6 @@ const AppChat = () => {
   });
 
   // Asignación de la conversación a empleados (uno o varios; el manager lo ve todo)
-  const { data: team = [] } = useTeamMembers();
   const { data: convMembers = [] } = useQuery({
     queryKey: ["chat-conv-members", selectedId],
     queryFn: async () => {
@@ -316,6 +369,7 @@ const AppChat = () => {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["chat-conv-members", selectedId] });
+      qc.invalidateQueries({ queryKey: ["chat-all-members", accountId] });
       qc.invalidateQueries({ queryKey: ["chat-conversations", accountId] });
     },
     onError: (e: any) => toast({ title: "No se pudo actualizar la asignación", description: e.message, variant: "destructive" }),
@@ -388,6 +442,30 @@ const AppChat = () => {
             <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar conversación..." className="h-9 pl-8" />
           </div>
+          <div className="mt-2 flex items-center gap-1.5">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="h-8 flex-1 text-xs"><SelectValue placeholder="Estado" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Todos los estados</SelectItem>
+                {Object.entries(STATUS_META).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            {isManager && (
+              <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
+                <SelectTrigger className="h-8 flex-1 text-xs"><SelectValue placeholder="Asignado" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Todos asignados</SelectItem>
+                  <SelectItem value="NONE">Sin asignar</SelectItem>
+                  {assignableTeam.map((m) => <SelectItem key={m.user_id} value={m.user_id}>{m.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
+            {hasFilters && (
+              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" title="Limpiar filtros" onClick={() => { setStatusFilter("ALL"); setAssigneeFilter("ALL"); }}>
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            )}
+          </div>
         </div>
         <div className="flex-1 overflow-y-auto scrollbar-hide">
           {isLoading ? (
@@ -420,10 +498,17 @@ const AppChat = () => {
                       <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${st.className}`}>{st.label}</span>
                       {c.business_clients?.name && <Building2 className="h-3 w-3 text-muted-foreground" />}
                       {taskConvSet.has(c.id) && (
-                        <span title="Tiene tareas generadas"><ListTodo className="h-3 w-3 text-primary" /></span>
-                      )}
-                      {taskConvSet.has(c.id) && (
                         <span title="Tarea creada desde este chat"><ListTodo className="h-3 w-3 text-primary" /></span>
+                      )}
+                      {/* Empleados asignados (discreto; el manager siempre ve todo) */}
+                      {(membersByConv.get(c.id) || []).length > 0 && (
+                        <span className="flex -space-x-1.5" title={`Asignado a: ${(membersByConv.get(c.id) || []).map(nameOf).join(", ")}`}>
+                          {(membersByConv.get(c.id) || []).slice(0, 3).map((uid) => (
+                            <Avatar key={uid} className="h-4 w-4 ring-1 ring-background">
+                              <AvatarFallback className="bg-primary/10 text-[7px] font-medium text-primary">{initials(nameOf(uid))}</AvatarFallback>
+                            </Avatar>
+                          ))}
+                        </span>
                       )}
                       {c.unread_count > 0 && (
                         <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-[hsl(var(--success))] px-1 text-[10px] font-bold text-white">{c.unread_count}</span>

@@ -41,14 +41,16 @@ const EXT_BY_MIME: Record<string, string> = {
 };
 
 async function fetchMedia(mediaId: string, token: string): Promise<{ bytes: Uint8Array; mime: string } | null> {
+  // El CDN de Meta (lookaside.fbsbx.com) rechaza descargas sin User-Agent.
+  const UA = "XpertConsulting-ERP/1.0";
   try {
     const metaRes = await fetch(`https://graph.facebook.com/v21.0/${mediaId}`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${token}`, "User-Agent": UA },
     });
     const meta = await metaRes.json().catch(() => ({}));
     if (!metaRes.ok || !meta?.url) { console.error("media meta failed", metaRes.status, JSON.stringify(meta)); return null; }
-    const binRes = await fetch(meta.url, { headers: { Authorization: `Bearer ${token}` } });
-    if (!binRes.ok) { console.error("media download failed", binRes.status); return null; }
+    const binRes = await fetch(meta.url, { headers: { Authorization: `Bearer ${token}`, "User-Agent": UA } });
+    if (!binRes.ok) { console.error("media download failed", binRes.status, await binRes.text().catch(() => "")); return null; }
     const bytes = new Uint8Array(await binRes.arrayBuffer());
     return { bytes, mime: meta.mime_type || "application/octet-stream" };
   } catch (e) {
@@ -419,8 +421,18 @@ async function handleChatMessage(admin: any, cfg: any, msg: any, senderPhone: st
 
   if (createsTask && lineText) {
     const assignee = matched?.assignee || cfg.default_assignee || null;
-    const { data: col } = await admin.from("task_columns")
-      .select("id").eq("account_id", account_id).eq("is_archived", false).order("sort_order").limit(1).maybeSingle();
+    // Primera columna del tablero de la intención; si no, del primer tablero de la cuenta
+    let colQuery = admin.from("task_columns")
+      .select("id").eq("account_id", account_id).eq("is_archived", false);
+    if (matched?.board_id) colQuery = colQuery.eq("board_id", matched.board_id);
+    let { data: col } = await colQuery.order("sort_order").limit(1).maybeSingle();
+    if (!col && matched?.board_id) {
+      // El tablero indicado no tiene columnas: cae al primero disponible
+      const fb = await admin.from("task_columns")
+        .select("id").eq("account_id", account_id).eq("is_archived", false)
+        .order("sort_order").limit(1).maybeSingle();
+      col = fb.data;
+    }
     let creator = assignee;
     if (!creator) {
       const { data: anyUser } = await admin.from("user_accounts")
