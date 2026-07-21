@@ -6,8 +6,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import MasterCostForecast from "./MasterCostForecast";
 import {
-  Building2, CheckCircle, Sparkles, Users, Boxes, TrendingUp, ExternalLink, AlertTriangle, Activity,
+  Building2, CheckCircle, Sparkles, Users, Boxes, TrendingUp, ExternalLink, AlertTriangle, Activity, LayoutDashboard, PiggyBank,
 } from "lucide-react";
 import { format, subMonths, startOfMonth, parseISO, differenceInDays } from "date-fns";
 import { es } from "date-fns/locale";
@@ -139,6 +141,13 @@ const MasterDashboard = () => {
         </Button>
       </div>
 
+      <Tabs defaultValue="resumen" className="space-y-5">
+        <TabsList>
+          <TabsTrigger value="resumen" className="gap-1.5"><LayoutDashboard className="h-4 w-4" />Resumen de red</TabsTrigger>
+          <TabsTrigger value="forecast" className="gap-1.5"><PiggyBank className="h-4 w-4" />Previsión de costes</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="resumen" className="space-y-5">
       {/* KPIs */}
       <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
         {kpis.map((k) => (
@@ -262,6 +271,12 @@ const MasterDashboard = () => {
           </div>
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="forecast">
+          <MasterCostForecast />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
