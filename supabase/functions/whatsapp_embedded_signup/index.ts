@@ -48,16 +48,28 @@ Deno.serve(async (req) => {
   if (!APP_SECRET) return json({ error: "Falta el secreto META_APP_SECRET / WHATSAPP_APP_SECRET" }, 500);
 
   // --- 1) Canjear el code por un token de acceso ---
-  // Los codes del SDK de JavaScript de Facebook (FB.login) se emiten con un
-  // redirect_uri VACÍO. El canje debe usar ese mismo redirect_uri vacío o Meta
-  // responde "Error validating verification code ... redirect_uri ...".
-  const tokenUrl = `${GRAPH}/oauth/access_token?client_id=${encodeURIComponent(APP_ID)}` +
-    `&client_secret=${encodeURIComponent(APP_SECRET)}&redirect_uri=&code=${encodeURIComponent(code)}`;
-  const tokenRes = await fetch(tokenUrl);
-  const tokenData = await tokenRes.json().catch(() => ({}));
-  if (!tokenRes.ok || !tokenData?.access_token) {
-    console.error("token exchange failed", tokenRes.status, JSON.stringify(tokenData));
-    return json({ error: `No se pudo obtener el token: ${tokenData?.error?.message || tokenRes.status}` }, 400);
+  // El SDK de JavaScript (FB.login) emite el code contra un redirect_uri que
+  // debe COINCIDIR en el canje. Probamos los candidatos habituales (redirect_uri
+  // enviado por el front, el origen de la página con/sin barra, y vacío). Un
+  // canje con redirect_uri erróneo NO consume el code, así que es seguro iterar.
+  const origin = (req.headers.get("origin") || "").replace(/\/+$/, "");
+  const redirectCandidates = Array.from(new Set(
+    [payload.redirect_uri, origin ? origin + "/" : null, origin || null, ""]
+      .filter((v) => v !== undefined && v !== null),
+  )) as string[];
+  let tokenData: any = null;
+  let lastErr = "";
+  for (const ru of redirectCandidates) {
+    const url = `${GRAPH}/oauth/access_token?client_id=${encodeURIComponent(APP_ID)}` +
+      `&client_secret=${encodeURIComponent(APP_SECRET)}&redirect_uri=${encodeURIComponent(ru)}&code=${encodeURIComponent(code)}`;
+    const r = await fetch(url);
+    const d = await r.json().catch(() => ({}));
+    if (r.ok && d?.access_token) { tokenData = d; break; }
+    lastErr = d?.error?.message || String(r.status);
+    console.error("token exchange failed", JSON.stringify(ru), r.status, JSON.stringify(d));
+  }
+  if (!tokenData?.access_token) {
+    return json({ error: `No se pudo obtener el token: ${lastErr}` }, 400);
   }
   const accessToken: string = tokenData.access_token;
 
