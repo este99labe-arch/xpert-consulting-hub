@@ -77,8 +77,13 @@ const WhatsAppEmbeddedSignup = ({ accountId, onConnected }: Props) => {
   const finish = useCallback(
     async (code: string) => {
       const { phone_number_id, waba_id } = sessionInfo.current;
+      // Enviamos el token de sesión explícitamente: la función corre con
+      // verify_jwt=false y valida la sesión por su cuenta con getUser().
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Tu sesión ha caducado. Vuelve a iniciar sesión e inténtalo de nuevo.");
       const { data, error } = await supabase.functions.invoke("whatsapp_embedded_signup", {
         body: { account_id: accountId, code, phone_number_id, waba_id },
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (error || (data as any)?.error) {
         throw new Error((data as any)?.error || error?.message || "Error al conectar");
