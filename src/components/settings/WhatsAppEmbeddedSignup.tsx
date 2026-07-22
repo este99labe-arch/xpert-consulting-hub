@@ -102,8 +102,11 @@ const WhatsAppEmbeddedSignup = ({ accountId, onConnected }: Props) => {
     sessionInfo.current = {};
     try {
       await loadFacebookSdk();
+      // Ojo: FB.login NO admite un callback async (lanza "Expression is of type
+      // asyncfunction, not function"). El callback debe ser síncrono; el trabajo
+      // asíncrono se hace dentro con .then()/.catch().
       window.FB.login(
-        async (response: any) => {
+        (response: any) => {
           const code = response?.authResponse?.code;
           if (!code) {
             setLoading(false);
@@ -112,13 +115,11 @@ const WhatsAppEmbeddedSignup = ({ accountId, onConnected }: Props) => {
             }
             return;
           }
-          try {
-            await finish(code);
-          } catch (err: any) {
-            toast({ title: "Error al conectar", description: err.message, variant: "destructive" });
-          } finally {
-            setLoading(false);
-          }
+          finish(code)
+            .catch((err: any) =>
+              toast({ title: "Error al conectar", description: err.message, variant: "destructive" }),
+            )
+            .finally(() => setLoading(false));
         },
         {
           config_id: META_ES_CONFIG_ID,
