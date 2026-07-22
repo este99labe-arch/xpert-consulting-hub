@@ -151,7 +151,9 @@ const WhatsAppEmbeddedSignup = ({ accountId, onConnected }: Props) => {
           override_default_response_type: true,
           extras: {
             setup: {},
-            featureType: META_ES_FEATURE_TYPE,
+            // Solo se incluye featureType si hay uno (coexistencia). Vacío =
+            // onboarding estándar del número (verificar + registrar).
+            ...(META_ES_FEATURE_TYPE ? { featureType: META_ES_FEATURE_TYPE } : {}),
             sessionInfoVersion: "3",
           },
         },

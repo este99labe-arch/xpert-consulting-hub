@@ -17,6 +17,8 @@ export const META_ES_CONFIG_ID = "1023022453811215";
 // Versión de la Graph API usada por el SDK.
 export const META_GRAPH_VERSION = "v21.0";
 
-// featureType que activa el flujo de COEXISTENCIA (número que ya está en la app
-// de WhatsApp Business del móvil → conexión por QR sin perder el móvil).
-export const META_ES_FEATURE_TYPE = "whatsapp_business_app_onboarding";
+// featureType del flujo. Vacío = onboarding ESTÁNDAR (seleccionar WABA, verificar
+// el número por SMS/llamada y registrarlo). Poner "whatsapp_business_app_onboarding"
+// SOLO si el número está funcionando en la app de WhatsApp Business del móvil
+// (coexistencia por QR). Para un número que NO está en la app, déjalo vacío.
+export const META_ES_FEATURE_TYPE = "";
