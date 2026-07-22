@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { MessageSquare, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { SUPABASE_ANON_KEY } from "@/integrations/supabase/config";
 import {
   META_APP_ID, META_ES_CONFIG_ID, META_GRAPH_VERSION, META_ES_FEATURE_TYPE,
 } from "@/integrations/meta/config";
@@ -83,10 +84,23 @@ const WhatsAppEmbeddedSignup = ({ accountId, onConnected }: Props) => {
       if (!session) throw new Error("Tu sesión ha caducado. Vuelve a iniciar sesión e inténtalo de nuevo.");
       const { data, error } = await supabase.functions.invoke("whatsapp_embedded_signup", {
         body: { account_id: accountId, code, phone_number_id, waba_id },
-        headers: { Authorization: `Bearer ${session.access_token}` },
+        // Al pasar headers propios se sobrescriben los de invoke, así que hay
+        // que reponer el apikey que exige el gateway de Supabase, además del
+        // Authorization con el token de sesión (que valida getUser en la función).
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
       if (error || (data as any)?.error) {
-        throw new Error((data as any)?.error || error?.message || "Error al conectar");
+        let msg = (data as any)?.error || error?.message || "Error al conectar";
+        // supabase-js expone el cuerpo de la respuesta de error en error.context
+        // (un Response). Ahí viene el detalle real del backend ({ error: "..." }).
+        try {
+          const body = await (error as any)?.context?.json?.();
+          if (body?.error) msg = body.error;
+        } catch { /* la respuesta no traía JSON */ }
+        throw new Error(msg);
       }
       toast({ title: "WhatsApp conectado", description: "Número vinculado y guardado correctamente." });
       onConnected?.();
