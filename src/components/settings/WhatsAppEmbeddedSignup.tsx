@@ -86,7 +86,14 @@ const WhatsAppEmbeddedSignup = ({ accountId, onConnected }: Props) => {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (error || (data as any)?.error) {
-        throw new Error((data as any)?.error || error?.message || "Error al conectar");
+        let msg = (data as any)?.error || error?.message || "Error al conectar";
+        // supabase-js expone el cuerpo de la respuesta de error en error.context
+        // (un Response). Ahí viene el detalle real del backend ({ error: "..." }).
+        try {
+          const body = await (error as any)?.context?.json?.();
+          if (body?.error) msg = body.error;
+        } catch { /* la respuesta no traía JSON */ }
+        throw new Error(msg);
       }
       toast({ title: "WhatsApp conectado", description: "Número vinculado y guardado correctamente." });
       onConnected?.();
