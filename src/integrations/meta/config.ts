@@ -12,7 +12,7 @@ export const META_APP_ID = "1514206456624236";
 
 // Config ID de la configuración de "Inicio de sesión con Facebook".
 // ⚠️ RELLENA ESTO con el Config ID que generaste (Login for Business → Configuraciones).
-export const META_ES_CONFIG_ID = "1390463433016484";
+export const META_ES_CONFIG_ID = "1023022453811215";
 
 // Versión de la Graph API usada por el SDK.
 export const META_GRAPH_VERSION = "v21.0";
