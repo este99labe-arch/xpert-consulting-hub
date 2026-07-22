@@ -83,7 +83,12 @@ const WhatsAppEmbeddedSignup = ({ accountId, onConnected }: Props) => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Tu sesión ha caducado. Vuelve a iniciar sesión e inténtalo de nuevo.");
       const { data, error } = await supabase.functions.invoke("whatsapp_embedded_signup", {
-        body: { account_id: accountId, code, phone_number_id, waba_id },
+        body: {
+          account_id: accountId, code, phone_number_id, waba_id,
+          // El SDK de JS emite el code contra la URL de esta página; el backend
+          // la necesita para canjear el token con el redirect_uri idéntico.
+          redirect_uri: window.location.origin + window.location.pathname,
+        },
         // Al pasar headers propios se sobrescriben los de invoke, así que hay
         // que reponer el apikey que exige el gateway de Supabase, además del
         // Authorization con el token de sesión (que valida getUser en la función).
