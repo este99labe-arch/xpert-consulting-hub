@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Save, Copy, CheckCircle2, MessageSquare, ExternalLink, Bot, Plus, Trash2, Info } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import WhatsAppEmbeddedSignup from "./WhatsAppEmbeddedSignup";
 
 interface Props { accountId: string; isManager: boolean; }
 
@@ -173,6 +174,20 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
             <div><Label>Integración activa</Label><p className="mt-1 text-xs text-muted-foreground">Recibe y envía mensajes por WhatsApp</p></div>
             <Switch checked={form.is_enabled} onCheckedChange={(v) => set("is_enabled", v)} />
           </div>
+
+          {/* Conexión guiada (Embedded Signup / coexistencia). Rellena los campos automáticamente. */}
+          <div className="rounded-lg border border-dashed border-primary/40 bg-primary/5 p-3">
+            <p className="mb-2 text-sm font-medium">Conexión recomendada</p>
+            <WhatsAppEmbeddedSignup
+              accountId={accountId}
+              onConnected={() => qc.invalidateQueries({ queryKey: ["whatsapp-config", accountId] })}
+            />
+          </div>
+
+          <div className="relative py-1 text-center text-xs text-muted-foreground">
+            <span className="bg-card px-2">o introduce las credenciales manualmente</span>
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Phone Number ID</Label>
