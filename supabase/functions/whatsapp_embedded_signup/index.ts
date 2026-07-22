@@ -48,8 +48,11 @@ Deno.serve(async (req) => {
   if (!APP_SECRET) return json({ error: "Falta el secreto META_APP_SECRET / WHATSAPP_APP_SECRET" }, 500);
 
   // --- 1) Canjear el code por un token de acceso ---
+  // Los codes del SDK de JavaScript de Facebook (FB.login) se emiten con un
+  // redirect_uri VACÍO. El canje debe usar ese mismo redirect_uri vacío o Meta
+  // responde "Error validating verification code ... redirect_uri ...".
   const tokenUrl = `${GRAPH}/oauth/access_token?client_id=${encodeURIComponent(APP_ID)}` +
-    `&client_secret=${encodeURIComponent(APP_SECRET)}&code=${encodeURIComponent(code)}`;
+    `&client_secret=${encodeURIComponent(APP_SECRET)}&redirect_uri=&code=${encodeURIComponent(code)}`;
   const tokenRes = await fetch(tokenUrl);
   const tokenData = await tokenRes.json().catch(() => ({}));
   if (!tokenRes.ok || !tokenData?.access_token) {
