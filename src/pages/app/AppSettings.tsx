@@ -107,7 +107,7 @@ const AppSettings = () => {
         {!section ? (
           <div className="space-y-7">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">Configuración</h1>
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">Configuración</h1>
               <p className="text-sm text-muted-foreground">Gestiona tu empresa, tu cuenta personal y las integraciones.</p>
             </div>
             {GROUP_ORDER.map((group) => {

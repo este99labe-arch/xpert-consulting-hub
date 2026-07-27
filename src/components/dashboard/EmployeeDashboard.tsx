@@ -205,7 +205,7 @@ const EmployeeDashboard = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25 }}
       >
-        <h1 className="text-2xl font-bold tracking-tight">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
           {greeting}{displayName ? `, ${displayName}` : ""} 👋
         </h1>
         <p className="text-sm text-muted-foreground first-letter:uppercase">

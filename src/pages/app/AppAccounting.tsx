@@ -20,6 +20,8 @@ import PLTab from "@/components/accounting/PLTab";
 import TaxesTab from "@/components/accounting/TaxesTab";
 import { DeleteConfirmDialog, DeleteRequestDialog } from "@/components/accounting/DeleteEntryDialogs";
 import { ChartAccount, JournalEntry, JournalEntryLine, DeleteRequest, EntryFormLine } from "@/components/accounting/types";
+import PageHeader from "@/components/shared/PageHeader";
+import EmptyState from "@/components/shared/EmptyState";
 
 const AppAccounting = () => {
   const { user, accountId, role } = useAuth();
@@ -385,19 +387,15 @@ const AppAccounting = () => {
 
   if (chartAccounts.length === 0) {
     return (
-      <div className="space-y-4">
-        <h1 className="text-2xl font-bold">Contabilidad</h1>
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-16 gap-4">
-            <BookOpen className="h-12 w-12 text-muted-foreground" />
-            <p className="text-lg text-muted-foreground">No hay plan contable configurado</p>
-            {isManager && (
-              <Button onClick={() => seedChart.mutate()} disabled={seedChart.isPending}>
-                <Plus className="mr-2 h-4 w-4" /> Inicializar Plan Contable Español (PGC)
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+      <div className="space-y-6">
+        <PageHeader title="Contabilidad" description="Plan contable, asientos y libros" />
+        <EmptyState
+          icon={BookOpen}
+          title="No hay plan contable configurado"
+          description="Inicializa el Plan General Contable español para empezar a registrar asientos."
+          actionLabel={isManager && !seedChart.isPending ? "Inicializar Plan Contable (PGC)" : undefined}
+          onAction={isManager ? () => seedChart.mutate() : undefined}
+        />
       </div>
     );
   }
@@ -407,10 +405,11 @@ const AppAccounting = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">Contabilidad</h1>
-        {isMaster && selectedAccountId && <MasterAccountClearButton onClear={() => setSelectedAccountId("")} />}
-      </div>
+      <PageHeader
+        title="Contabilidad"
+        description="Plan contable, asientos y libros"
+        actions={isMaster && selectedAccountId && <MasterAccountClearButton onClear={() => setSelectedAccountId("")} />}
+      />
       {isMaster && !selectedAccountId && (
         <MasterAccountSelector title="Contabilidad" onSelect={setSelectedAccountId} variant="inline" />
       )}

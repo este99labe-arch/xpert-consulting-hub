@@ -231,7 +231,7 @@ const ManagerDashboard = () => {
         className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"
       >
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
             {greeting}{displayName ? `, ${displayName}` : ""} 👋
           </h1>
           <p className="text-sm text-muted-foreground first-letter:uppercase">
