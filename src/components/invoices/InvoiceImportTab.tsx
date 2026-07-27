@@ -5,7 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { Badge, type BadgeProps } from "@/components/ui/badge";
+import StatCard from "@/components/shared/StatCard";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
@@ -17,12 +19,16 @@ import { Upload, FileText, CheckCircle2, AlertCircle, Loader2, Eye, Trash2, Impo
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
-const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
-  PROCESSING: { label: "Procesando", color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200", icon: Loader2 },
-  READY: { label: "Listo", color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200", icon: CheckCircle2 },
-  ERROR: { label: "Revisar", color: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200", icon: AlertCircle },
-  IMPORTED: { label: "Importado", color: "bg-muted text-muted-foreground", icon: Import },
+const statusConfig: Record<string, { label: string; variant: BadgeProps["variant"]; icon: any }> = {
+  PROCESSING: { label: "Procesando", variant: "info", icon: Loader2 },
+  READY: { label: "Listo", variant: "success", icon: CheckCircle2 },
+  ERROR: { label: "Revisar", variant: "warning", icon: AlertCircle },
+  IMPORTED: { label: "Importado", variant: "muted", icon: Import },
 };
+
+/** Confianza de la extracción → intención semántica (alta/media/baja). */
+const confidenceTone = (c: number) =>
+  c >= 80 ? "text-[hsl(var(--success))]" : c >= 60 ? "text-[hsl(var(--warning))]" : "text-destructive";
 
 const InvoiceImportTab = () => {
   const { accountId, user, role } = useAuth();
@@ -355,34 +361,15 @@ const InvoiceImportTab = () => {
 
       {/* KPIs */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle>
-          </CardHeader>
-          <CardContent><p className="text-2xl font-bold">{imports.length}</p></CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Procesando</CardTitle>
-          </CardHeader>
-          <CardContent><p className="text-2xl font-bold text-blue-600">{processingCount}</p></CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Pendientes</CardTitle>
-          </CardHeader>
-          <CardContent><p className="text-2xl font-bold text-amber-600">{pendingCount}</p></CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Importados</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-green-600">
-              {imports.filter((i: any) => i.status === "IMPORTED").length}
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard label="Total" value={imports.length} icon={FileText} />
+        <StatCard label="Procesando" value={processingCount} icon={Loader2} tone="primary" />
+        <StatCard label="Pendientes" value={pendingCount} icon={AlertCircle} tone="warning" />
+        <StatCard
+          label="Importados"
+          value={imports.filter((i: any) => i.status === "IMPORTED").length}
+          icon={Import}
+          tone="success"
+        />
       </div>
 
       {/* Filter */}
@@ -447,7 +434,7 @@ const InvoiceImportTab = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge className={`${sc.color} gap-1`}>
+                        <Badge variant={sc.variant} className="gap-1">
                           <Icon className={`h-3 w-3 ${imp.status === "PROCESSING" ? "animate-spin" : ""}`} />
                           {sc.label}
                         </Badge>
@@ -463,7 +450,7 @@ const InvoiceImportTab = () => {
                       </TableCell>
                       <TableCell>
                         {ext.confidence != null ? (
-                          <span className={`text-sm font-medium ${ext.confidence >= 80 ? "text-green-600" : ext.confidence >= 60 ? "text-amber-600" : "text-red-600"}`}>
+                          <span className={`text-sm font-medium ${confidenceTone(ext.confidence)}`}>
                             {ext.confidence}%
                           </span>
                         ) : "—"}
@@ -513,10 +500,10 @@ const InvoiceImportTab = () => {
           {editedData && (
             <div className="grid gap-4 py-2">
               {reviewImport?.error_message && (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
-                  <AlertCircle className="h-4 w-4 inline mr-1" />
-                  {reviewImport.error_message}
-                </div>
+                <Alert variant="warning">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{reviewImport.error_message}</AlertDescription>
+                </Alert>
               )}
 
               <div className="grid grid-cols-2 gap-4">
@@ -586,7 +573,7 @@ const InvoiceImportTab = () => {
                 <div>
                   <Label>Confianza IA</Label>
                   <div className="flex items-center h-10">
-                    <span className={`font-semibold ${(editedData.confidence || 0) >= 80 ? "text-green-600" : (editedData.confidence || 0) >= 60 ? "text-amber-600" : "text-red-600"}`}>
+                    <span className={`font-semibold ${confidenceTone(editedData.confidence || 0)}`}>
                       {editedData.confidence || 0}%
                     </span>
                   </div>

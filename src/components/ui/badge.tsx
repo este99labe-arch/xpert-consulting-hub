@@ -12,6 +12,14 @@ const badgeVariants = cva(
         secondary: "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
         destructive: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
         outline: "text-foreground",
+        // Variantes "soft" para estados: sustituyen al patrón manual
+        // `bg-green-100 text-green-800 dark:bg-green-900 …`. Al ir con tokens,
+        // se adaptan solas al modo oscuro.
+        success: "border-transparent bg-[hsl(var(--success))]/12 text-[hsl(var(--success))]",
+        warning: "border-transparent bg-[hsl(var(--warning))]/12 text-[hsl(var(--warning))]",
+        info: "border-transparent bg-primary/12 text-primary",
+        muted: "border-transparent bg-muted text-muted-foreground",
+        softDestructive: "border-transparent bg-destructive/12 text-destructive",
       },
     },
     defaultVariants: {

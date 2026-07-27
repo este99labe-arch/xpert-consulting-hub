@@ -22,11 +22,13 @@ const typeLabels: Record<string, string> = {
   ASSET: "Activo", LIABILITY: "Pasivo", EQUITY: "Patrimonio", INCOME: "Ingresos", EXPENSE: "Gastos",
 };
 const typeColors: Record<string, string> = {
-  ASSET: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-  LIABILITY: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
-  EQUITY: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
-  INCOME: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-  EXPENSE: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
+  // Paleta categórica del design system: distingue tipos de cuenta y se adapta
+  // sola al modo oscuro (a diferencia de los pares -100/-800 manuales).
+  ASSET: "bg-chart-1/12 text-chart-1",
+  LIABILITY: "bg-chart-5/12 text-chart-5",
+  EQUITY: "bg-chart-2/12 text-chart-2",
+  INCOME: "bg-chart-3/12 text-chart-3",
+  EXPENSE: "bg-chart-4/12 text-chart-4",
 };
 
 interface ChartOfAccountsTabProps {
