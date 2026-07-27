@@ -379,7 +379,7 @@ const MyAttendanceView = ({
                                     )}
                                   </span>
                                   {hasPendingDelete ? (
-                                    <Badge variant="outline" className="text-[9px] px-1 py-0 text-amber-600 border-amber-300">Pendiente</Badge>
+                                    <Badge variant="outline" className="text-[9px] px-1 py-0 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/30">Pendiente</Badge>
                                   ) : (
                                     <Button
                                       variant="ghost" size="icon"

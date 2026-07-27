@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { X, Heart, Building2, MapPin, Users, Loader2, Compass, Search, Filter, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import EmptyState from "@/components/shared/EmptyState";
@@ -112,7 +112,7 @@ const DiscoverTab = () => {
     },
     onSuccess: (_data, vars) => {
       if (vars.type === "like") {
-        toast.success("Solicitud de conexión enviada");
+        toast({ title: "Solicitud de conexión enviada" });
       }
       queryClient.invalidateQueries({ queryKey: ["xred-matched-ids"] });
       queryClient.invalidateQueries({ queryKey: ["xred-discover"] });
@@ -120,7 +120,7 @@ const DiscoverTab = () => {
       queryClient.invalidateQueries({ queryKey: ["xred-sent-requests"] });
     },
     onError: (err: any) => {
-      toast.error(err?.message || "No se pudo enviar la solicitud");
+      toast({ title: err?.message || "No se pudo enviar la solicitud", variant: "destructive" });
     },
   });
 

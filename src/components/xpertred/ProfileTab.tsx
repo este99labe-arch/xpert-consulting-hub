@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { Save, Plus, X, Star, Loader2 } from "lucide-react";
 
 const ProfileTab = () => {
@@ -73,11 +73,11 @@ const ProfileTab = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Perfil XpertRed actualizado");
+      toast({ title: "Perfil XpertRed actualizado" });
       queryClient.invalidateQueries({ queryKey: ["xred-my-profile"] });
       setForm(null);
     },
-    onError: () => toast.error("Error al guardar el perfil"),
+    onError: () => toast({ title: "Error al guardar el perfil", variant: "destructive" }),
   });
 
   const updateField = (key: string, value: any) => {
@@ -269,7 +269,7 @@ const ProfileTab = () => {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Star className="h-5 w-5 text-yellow-500" />
+            <Star className="h-5 w-5 text-[hsl(var(--warning))]" />
             Reputación
           </CardTitle>
         </CardHeader>
@@ -282,7 +282,7 @@ const ProfileTab = () => {
           ) : (
             <>
               <div className="text-center">
-                <div className="text-4xl font-bold text-yellow-500">
+                <div className="text-4xl font-bold text-[hsl(var(--warning))]">
                   {profile?.reputation_score
                     ? Number(profile.reputation_score).toFixed(1)
                     : "—"}

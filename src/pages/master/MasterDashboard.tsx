@@ -133,7 +133,7 @@ const MasterDashboard = () => {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Panel Admin</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Panel Admin</h1>
           <p className="text-sm text-muted-foreground">Resumen ejecutivo de la red XpertConsulting</p>
         </div>
         <Button onClick={() => navigate("/master/clients")} variant="outline" size="sm">

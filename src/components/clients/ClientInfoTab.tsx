@@ -123,7 +123,7 @@ const ClientInfoTab = ({ client, onSave, saving, isAdmin }: Props) => {
       <Label className="flex items-center gap-1.5">
         {label}
         {SENSITIVE_FIELDS.includes(field) && (
-          <ShieldAlert className="h-3 w-3 text-amber-500" />
+          <ShieldAlert className="h-3 w-3 text-[hsl(var(--warning))]" />
         )}
       </Label>
       <div className="relative flex gap-1.5">
@@ -147,7 +147,7 @@ const ClientInfoTab = ({ client, onSave, saving, isAdmin }: Props) => {
             {isSensitiveLocked(field) ? (
               <Lock className="h-4 w-4 text-muted-foreground" />
             ) : (
-              <Unlock className="h-4 w-4 text-amber-500" />
+              <Unlock className="h-4 w-4 text-[hsl(var(--warning))]" />
             )}
           </Button>
         )}
@@ -261,7 +261,7 @@ const ClientInfoTab = ({ client, onSave, saving, isAdmin }: Props) => {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <ShieldAlert className="h-5 w-5 text-amber-500" />
+              <ShieldAlert className="h-5 w-5 text-[hsl(var(--warning))]" />
               Confirmar cambios sensibles
             </AlertDialogTitle>
             <AlertDialogDescription>

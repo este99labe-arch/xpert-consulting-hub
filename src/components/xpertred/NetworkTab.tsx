@@ -132,7 +132,7 @@ const NetworkTab = () => {
 
               {Number(c.reputation_score) > 0 && (
                 <div className="flex items-center gap-1.5 text-xs">
-                  <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />
+                  <Star className="h-3.5 w-3.5 text-[hsl(var(--warning))] fill-[hsl(var(--warning))]" />
                   <span className="font-medium">
                     {Number(c.reputation_score).toFixed(1)}
                   </span>

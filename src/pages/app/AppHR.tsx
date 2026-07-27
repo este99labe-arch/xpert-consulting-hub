@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, CalendarIcon, FileText, CalendarDays } from "lucide-react";
+import PageHeader from "@/components/shared/PageHeader";
 
 import EmployeesTab from "@/components/hr/EmployeesTab";
 import LeaveTab from "@/components/hr/LeaveTab";
@@ -14,7 +15,10 @@ const AppHR = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Recursos Humanos</h1>
+      <PageHeader
+        title="Recursos Humanos"
+        description="Gestiona empleados, ausencias, calendario y documentación"
+      />
       <Tabs defaultValue="employees" className="space-y-4">
         <TabsList className="w-full sm:w-auto">
           <TabsTrigger value="employees">

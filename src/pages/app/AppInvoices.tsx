@@ -45,6 +45,7 @@ import InvoiceKanbanView from "@/components/invoices/InvoiceKanbanView";
 import InvoiceFolderView from "@/components/invoices/InvoiceFolderView";
 import BankReconciliationTab from "@/components/invoices/BankReconciliationTab";
 import InvoiceImportTab from "@/components/invoices/InvoiceImportTab";
+import PageHeader from "@/components/shared/PageHeader";
 
 const statusLabels: Record<string, string> = {
   DRAFT: "Borrador", SENT: "Enviada", PAID: "Pagada", PARTIALLY_PAID: "Pago parcial", OVERDUE: "Vencida",
@@ -465,14 +466,10 @@ const AppInvoices = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Facturación</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Gestiona facturas, presupuestos, gastos y cobros
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Facturación"
+        description="Gestiona facturas, presupuestos, gastos y cobros"
+      />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -522,10 +519,10 @@ const AppInvoices = () => {
 
       {/* Pending delete requests (managers) */}
       {isManager && deleteRequests.length > 0 && (
-        <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-900 dark:bg-amber-950/20">
+        <Card className="border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/10">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Trash2 className="h-4 w-4 text-amber-600" />
+              <Trash2 className="h-4 w-4 text-[hsl(var(--warning))]" />
               Solicitudes de eliminación pendientes
               <Badge variant="secondary" className="ml-1">{deleteRequests.length}</Badge>
             </CardTitle>

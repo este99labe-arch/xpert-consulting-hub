@@ -10,15 +10,15 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Download, BookOpen, Copy } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 
 const API_VERSION = "v1.0";
 
 const methodColors: Record<string, string> = {
-  GET: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30 dark:text-emerald-400",
-  POST: "bg-blue-500/15 text-blue-700 border-blue-500/30 dark:text-blue-400",
-  PUT: "bg-amber-500/15 text-amber-700 border-amber-500/30 dark:text-amber-400",
-  DELETE: "bg-red-500/15 text-red-700 border-red-500/30 dark:text-red-400",
+  GET: "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] border-[hsl(var(--success))]/30",
+  POST: "bg-primary/10 text-primary border-primary/30",
+  PUT: "bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/30",
+  DELETE: "bg-destructive/10 text-destructive border-destructive/30",
 };
 
 interface Endpoint {
@@ -301,7 +301,7 @@ function MethodBadge({ method }: { method: string }) {
 function CodeBlock({ children }: { children: string }) {
   const copyToClipboard = () => {
     navigator.clipboard.writeText(children);
-    toast.success("Copiado al portapapeles");
+    toast({ title: "Copiado al portapapeles" });
   };
   return (
     <div className="relative group">
@@ -350,7 +350,7 @@ const MasterApiDocs = () => {
 
   const handleDownloadPdf = async () => {
     setGenerating(true);
-    toast.info("Generando PDF...");
+    toast({ title: "Generando PDF..." });
     try {
       const { default: jsPDF } = await import("jspdf");
 
@@ -624,10 +624,10 @@ const MasterApiDocs = () => {
       addFooter();
 
       doc.save("xpert-api-reference-v1.pdf");
-      toast.success("PDF descargado correctamente");
+      toast({ title: "PDF descargado correctamente" });
     } catch (err: any) {
       console.error(err);
-      toast.error("Error al generar el PDF");
+      toast({ title: "Error al generar el PDF", variant: "destructive" });
     } finally {
       setGenerating(false);
     }
@@ -640,7 +640,7 @@ const MasterApiDocs = () => {
         <div>
           <div className="flex items-center gap-3 mb-2">
             <BookOpen className="h-7 w-7 text-primary" />
-            <h1 className="text-2xl font-bold">API Reference</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">API Reference</h1>
             <Badge variant="secondary" className="font-mono">{API_VERSION}</Badge>
           </div>
           <p className="text-muted-foreground text-sm max-w-2xl">

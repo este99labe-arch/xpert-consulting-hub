@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { isPast } from "date-fns";
 
 /**
@@ -38,9 +38,9 @@ const ReminderNotifier = () => {
         notifiedRef.current.add(r.id);
 
         // Show toast notification
-        toast(`⏰ ${r.title}`, {
+        toast({
+          title: `⏰ ${r.title}`,
           description: r.entity_label || "Recordatorio vencido",
-          duration: 5000,
         });
 
         // Create persistent notification in DB if not exists

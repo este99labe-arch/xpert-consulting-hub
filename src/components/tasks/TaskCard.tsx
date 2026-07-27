@@ -157,7 +157,7 @@ const TaskCard = ({ task, members, clients, onClick, onDragStart }: Props) => {
       <div className="flex items-center justify-between pt-1">
         <div className={cn(
           "flex items-center gap-1 text-[11px]",
-          overdue ? "text-destructive font-medium" : soon ? "text-orange-600 dark:text-orange-400" : "text-muted-foreground"
+          overdue ? "text-destructive font-medium" : soon ? "text-[hsl(var(--warning))]" : "text-muted-foreground"
         )}>
           <CalendarClock className="h-3 w-3" />
           {format(dateToShow, "dd MMM", { locale: es })}

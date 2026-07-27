@@ -79,10 +79,10 @@ const TeamAttendanceView = ({
         <>
           {/* Pending delete requests */}
           {pendingDeleteRequests.length > 0 && (
-            <Card className="border border-amber-200 bg-amber-50/50 shadow-sm">
+            <Card className="border border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/10 shadow-sm">
               <CardContent className="p-4">
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                  <Badge variant="outline" className="text-amber-700 border-amber-300 bg-amber-100">{pendingDeleteRequests.length}</Badge>
+                  <Badge variant="outline" className="text-[hsl(var(--warning))] border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/10">{pendingDeleteRequests.length}</Badge>
                   Solicitudes de eliminación pendientes
                 </h3>
                 <div className="space-y-2">

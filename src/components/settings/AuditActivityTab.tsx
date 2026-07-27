@@ -18,9 +18,9 @@ const actionLabels: Record<string, string> = {
 };
 
 const actionColors: Record<string, string> = {
-  CREATE: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-  UPDATE: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-  DELETE: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+  CREATE: "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]",
+  UPDATE: "bg-primary/10 text-primary",
+  DELETE: "bg-destructive/10 text-destructive",
 };
 
 const entityLabels: Record<string, string> = {

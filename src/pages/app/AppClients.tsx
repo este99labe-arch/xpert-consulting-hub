@@ -23,6 +23,7 @@ import PaginationControls from "@/components/shared/PaginationControls";
 import { useServerPagination } from "@/hooks/use-server-pagination";
 import CreateBusinessClientDialog from "@/components/clients/CreateBusinessClientDialog";
 import DeleteClientDialog from "@/components/clients/DeleteClientDialog";
+import PageHeader from "@/components/shared/PageHeader";
 
 // Iniciales a partir del nombre del cliente (máx. 2 caracteres)
 const getInitials = (name: string) => {
@@ -162,19 +163,17 @@ const AppClients = () => {
     <TooltipProvider delayDuration={200}>
       <div className="space-y-6">
         {/* Cabecera */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Clientes</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              Gestiona tu cartera de clientes y su facturación
-            </p>
-          </div>
-          <Button onClick={() => setShowCreate(true)} className="shadow-sm">
-            <Plus className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Nuevo cliente</span>
-            <span className="sm:hidden">Nuevo</span>
-          </Button>
-        </div>
+        <PageHeader
+          title="Clientes"
+          description="Gestiona tu cartera de clientes y su facturación"
+          actions={
+            <Button onClick={() => setShowCreate(true)} className="shadow-sm">
+              <Plus className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Nuevo cliente</span>
+              <span className="sm:hidden">Nuevo</span>
+            </Button>
+          }
+        />
 
         {/* Tarjetas de estadísticas */}
         <motion.div

@@ -518,7 +518,7 @@ const BankReconciliationTab = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Pendientes</CardTitle>
-            <AlertTriangle className="h-5 w-5 text-amber-500" />
+            <AlertTriangle className="h-5 w-5 text-[hsl(var(--warning))]" />
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-foreground">{kpis?.pending ?? 0}</p>
@@ -643,11 +643,11 @@ const BankReconciliationTab = () => {
                       </TableCell>
                       <TableCell>
                         {tx.is_reconciled ? (
-                          <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                          <Badge className="bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]">
                             <CheckCircle2 className="h-3 w-3 mr-1" /> Conciliada
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="text-amber-600 border-amber-300">
+                          <Badge variant="outline" className="text-[hsl(var(--warning))] border-[hsl(var(--warning))]/30">
                             <Clock className="h-3 w-3 mr-1" /> Pendiente
                           </Badge>
                         )}
@@ -848,7 +848,7 @@ const BankReconciliationTab = () => {
                     <div className="text-right">
                       <div className="font-mono text-sm font-semibold">{fmtAmount(Number(inv.amount_total))}</div>
                       {amountDiff < 0.02 ? (
-                        <span className="text-xs text-green-600">✓ Importe coincide</span>
+                        <span className="text-xs text-[hsl(var(--success))]">✓ Importe coincide</span>
                       ) : (
                         <span className="text-xs text-muted-foreground">Dif: {fmtAmount(amountDiff)}</span>
                       )}

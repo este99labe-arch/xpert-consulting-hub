@@ -189,7 +189,7 @@ const AppTasks = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
             Tareas {showArchived && <span className="text-muted-foreground font-normal text-lg">· Archivadas</span>}
           </h1>
           <p className="text-sm text-muted-foreground">

@@ -20,6 +20,8 @@ import MovementDialog from "@/components/inventory/MovementDialog";
 import OrderDialog from "@/components/inventory/OrderDialog";
 import ImportProductsDialog from "@/components/inventory/ImportProductsDialog";
 import { Product, StockMovement, PurchaseOrder } from "@/components/inventory/types";
+import PageHeader from "@/components/shared/PageHeader";
+import StatCard from "@/components/shared/StatCard";
 
 const AppInventory = () => {
   const { user, accountId, role } = useAuth();
@@ -173,16 +175,22 @@ const AppInventory = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">Inventario</h1>
-        {isMaster && <MasterAccountClearButton onClear={() => setSelectedAccountId("")} />}
-      </div>
+      <PageHeader
+        title="Inventario"
+        description="Controla productos, stock y movimientos de almacén"
+        actions={isMaster && <MasterAccountClearButton onClear={() => setSelectedAccountId("")} />}
+      />
 
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><Package className="h-8 w-8 text-primary" /><div><p className="text-2xl font-bold">{products.length}</p><p className="text-xs text-muted-foreground">Productos</p></div></div></CardContent></Card>
-        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><AlertTriangle className="h-8 w-8 text-destructive" /><div><p className="text-2xl font-bold">{lowStockProducts.length}</p><p className="text-xs text-muted-foreground">Stock bajo</p></div></div></CardContent></Card>
-        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><TrendingUp className="h-8 w-8 text-success" /><div><p className="text-lg sm:text-2xl font-bold">{inventoryValue.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}</p><p className="text-xs text-muted-foreground">Valor inventario</p></div></div></CardContent></Card>
-        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><TrendingDown className="h-8 w-8 text-muted-foreground" /><div><p className="text-2xl font-bold">{movementCount}</p><p className="text-xs text-muted-foreground">Mov. este mes</p></div></div></CardContent></Card>
+        <StatCard label="Productos" value={products.length} icon={Package} tone="primary" />
+        <StatCard label="Stock bajo" value={lowStockProducts.length} icon={AlertTriangle} tone="destructive" />
+        <StatCard
+          label="Valor inventario"
+          value={inventoryValue.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
+          icon={TrendingUp}
+          tone="success"
+        />
+        <StatCard label="Mov. este mes" value={movementCount} icon={TrendingDown} />
       </div>
 
       <Tabs defaultValue="products">

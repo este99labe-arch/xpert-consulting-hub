@@ -7,6 +7,7 @@ import XredMatchesTab from "@/components/xpertred/MatchesTab";
 import XredNetworkTab from "@/components/xpertred/NetworkTab";
 import XredProfileTab from "@/components/xpertred/ProfileTab";
 import XredAdminTab from "@/components/xpertred/AdminTab";
+import PageHeader from "@/components/shared/PageHeader";
 
 const AppXpertRed = () => {
   const { role } = useAuth();
@@ -14,14 +15,10 @@ const AppXpertRed = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          Xpert<span className="text-destructive">Red</span>
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          Red empresarial B2B — Conecta con otras empresas del ecosistema
-        </p>
-      </div>
+      <PageHeader
+        title={<>Xpert<span className="text-destructive">Red</span></>}
+        description="Red empresarial B2B — Conecta con otras empresas del ecosistema"
+      />
 
       <Tabs value={tab} onValueChange={setTab} className="w-full">
         <TabsList className="w-full justify-start overflow-x-auto">
