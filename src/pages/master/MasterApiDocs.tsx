@@ -10,7 +10,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Download, BookOpen, Copy } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 
 const API_VERSION = "v1.0";
 
@@ -301,7 +301,7 @@ function MethodBadge({ method }: { method: string }) {
 function CodeBlock({ children }: { children: string }) {
   const copyToClipboard = () => {
     navigator.clipboard.writeText(children);
-    toast.success("Copiado al portapapeles");
+    toast({ title: "Copiado al portapapeles" });
   };
   return (
     <div className="relative group">
@@ -350,7 +350,7 @@ const MasterApiDocs = () => {
 
   const handleDownloadPdf = async () => {
     setGenerating(true);
-    toast.info("Generando PDF...");
+    toast({ title: "Generando PDF..." });
     try {
       const { default: jsPDF } = await import("jspdf");
 
@@ -624,10 +624,10 @@ const MasterApiDocs = () => {
       addFooter();
 
       doc.save("xpert-api-reference-v1.pdf");
-      toast.success("PDF descargado correctamente");
+      toast({ title: "PDF descargado correctamente" });
     } catch (err: any) {
       console.error(err);
-      toast.error("Error al generar el PDF");
+      toast({ title: "Error al generar el PDF", variant: "destructive" });
     } finally {
       setGenerating(false);
     }

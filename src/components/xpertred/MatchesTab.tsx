@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Send, MessageCircle, Loader2, Check, X, UserPlus, Clock } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import EmptyState from "@/components/shared/EmptyState";
 
 interface Match {
@@ -153,7 +153,7 @@ const MatchesTab = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("¡Conexión aceptada! Ya puedes chatear.");
+      toast({ title: "¡Conexión aceptada! Ya puedes chatear." });
       queryClient.invalidateQueries({ queryKey: ["xred-pending-requests"] });
       queryClient.invalidateQueries({ queryKey: ["xred-matches"] });
       queryClient.invalidateQueries({ queryKey: ["xred-sent-requests"] });
@@ -171,7 +171,7 @@ const MatchesTab = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.info("Solicitud rechazada");
+      toast({ title: "Solicitud rechazada" });
       queryClient.invalidateQueries({ queryKey: ["xred-pending-requests"] });
     },
   });

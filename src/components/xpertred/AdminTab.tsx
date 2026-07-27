@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { Users, Heart, MessageCircle, Star, Flag, Loader2, Eye, EyeOff } from "lucide-react";
 
 const AdminTab = () => {
@@ -70,7 +70,7 @@ const AdminTab = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Valoración actualizada");
+      toast({ title: "Valoración actualizada" });
       queryClient.invalidateQueries({ queryKey: ["xred-flagged-reviews"] });
       queryClient.invalidateQueries({ queryKey: ["xred-admin-kpis"] });
     },

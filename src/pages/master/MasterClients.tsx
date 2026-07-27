@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import CreateClientForm from "@/components/master/CreateClientForm";
 import ModuleManager from "@/components/master/ModuleManager";
 
@@ -66,11 +66,11 @@ const MasterClients = () => {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast.success(data?.message || "Cuenta eliminada correctamente");
+      toast({ title: data?.message || "Cuenta eliminada correctamente" });
       queryClient.invalidateQueries({ queryKey: ["master-clients"] });
       setDeleteTarget(null);
     } catch (err: any) {
-      toast.error("Error al eliminar: " + (err.message || "Error desconocido"));
+      toast({ title: "Error al eliminar: " + (err.message || "Error desconocido"), variant: "destructive" });
     } finally {
       setDeleting(false);
     }
