@@ -130,7 +130,7 @@ const InvoiceKanbanView = ({ invoices, onPreview }: Props) => {
                     "p-3 cursor-pointer hover:shadow-md transition-shadow border-l-4",
                     inv.type === "INVOICE"
                       ? "border-l-primary bg-card"
-                      : "border-l-amber-500 bg-amber-50/30 dark:bg-amber-950/10",
+                      : "border-l-[hsl(var(--warning))] bg-[hsl(var(--warning))]/10",
                     draggingId === inv.id && "opacity-50 ring-2 ring-primary"
                   )}
                 >
@@ -138,7 +138,7 @@ const InvoiceKanbanView = ({ invoices, onPreview }: Props) => {
                     {inv.type === "INVOICE" ? (
                       <FileText className="h-3.5 w-3.5 text-primary flex-shrink-0" />
                     ) : (
-                      <Receipt className="h-3.5 w-3.5 text-amber-600 flex-shrink-0" />
+                      <Receipt className="h-3.5 w-3.5 text-[hsl(var(--warning))] flex-shrink-0" />
                     )}
                     <span className="font-mono text-xs font-semibold truncate">
                       {inv.invoice_number || inv.id.slice(0, 8).toUpperCase()}

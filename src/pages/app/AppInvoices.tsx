@@ -522,10 +522,10 @@ const AppInvoices = () => {
 
       {/* Pending delete requests (managers) */}
       {isManager && deleteRequests.length > 0 && (
-        <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-900 dark:bg-amber-950/20">
+        <Card className="border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/10">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Trash2 className="h-4 w-4 text-amber-600" />
+              <Trash2 className="h-4 w-4 text-[hsl(var(--warning))]" />
               Solicitudes de eliminación pendientes
               <Badge variant="secondary" className="ml-1">{deleteRequests.length}</Badge>
             </CardTitle>

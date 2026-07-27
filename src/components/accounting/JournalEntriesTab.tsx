@@ -82,9 +82,9 @@ const JournalEntriesTab = ({
   return (
     <div className="space-y-4">
       {isManager && pendingDeleteRequests.length > 0 && (
-        <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-900 dark:bg-amber-950/20 p-4">
+        <Card className="border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/10 p-4">
           <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
-            <AlertCircle className="h-4 w-4 text-amber-600" />
+            <AlertCircle className="h-4 w-4 text-[hsl(var(--warning))]" />
             Solicitudes de eliminación pendientes
             <Badge variant="secondary">{pendingDeleteRequests.length}</Badge>
           </h3>

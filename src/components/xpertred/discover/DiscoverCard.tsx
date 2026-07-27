@@ -82,7 +82,7 @@ const DiscoverCard = ({ profile, score, direction, isManager, isSelf, isPending,
 
           {profile.reputation_score > 0 && (
             <div className="flex items-center gap-2 text-sm">
-              <span className="text-yellow-500">
+              <span className="text-[hsl(var(--warning))]">
                 {"★".repeat(Math.round(Number(profile.reputation_score)))}
                 {"☆".repeat(5 - Math.round(Number(profile.reputation_score)))}
               </span>

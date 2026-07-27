@@ -34,10 +34,10 @@ const typeIcons: Record<string, any> = {
 };
 
 const typeColors: Record<string, string> = {
-  STOCK_LOW: "text-orange-500",
-  LEAVE_PENDING: "text-blue-500",
+  STOCK_LOW: "text-[hsl(var(--warning))]",
+  LEAVE_PENDING: "text-primary",
   INVOICE_OVERDUE: "text-destructive",
-  DELETE_REQUEST: "text-yellow-600",
+  DELETE_REQUEST: "text-[hsl(var(--warning))]",
   REMINDER: "text-primary",
 };
 

@@ -91,8 +91,8 @@ const AdminTab = () => {
         {[
           { icon: Users, label: "Perfiles activos", value: `${kpis?.activeProfiles}/${kpis?.totalProfiles}`, color: "text-primary" },
           { icon: Heart, label: "Matches", value: kpis?.totalMatches, color: "text-destructive" },
-          { icon: MessageCircle, label: "Mensajes", value: kpis?.totalMessages, color: "text-blue-500" },
-          { icon: Star, label: "Reputación media", value: kpis?.avgReputation, color: "text-yellow-500" },
+          { icon: MessageCircle, label: "Mensajes", value: kpis?.totalMessages, color: "text-primary" },
+          { icon: Star, label: "Reputación media", value: kpis?.avgReputation, color: "text-[hsl(var(--warning))]" },
         ].map((kpi) => (
           <Card key={kpi.label}>
             <CardContent className="p-4 text-center">

@@ -171,7 +171,7 @@ const ProfileTab = ({ userId, accountId, isManager }: { userId: string; accountI
                   <div className="flex items-center justify-between">
                     <Label className="text-muted-foreground text-xs flex items-center gap-1">
                       {PROFILE_FIELD_LABELS[field]}
-                      {isSensitive && <ShieldAlert className="h-3 w-3 text-amber-500" />}
+                      {isSensitive && <ShieldAlert className="h-3 w-3 text-[hsl(var(--warning))]" />}
                       {isManagerOnly && !isManager && <Lock className="h-3 w-3 text-muted-foreground" />}
                     </Label>
                     <div className="flex items-center gap-1">
@@ -194,7 +194,7 @@ const ProfileTab = ({ userId, accountId, isManager }: { userId: string; accountI
                           {isSensitiveLocked ? (
                             <Lock className="h-3 w-3 text-muted-foreground" />
                           ) : (
-                            <Unlock className="h-3 w-3 text-amber-500" />
+                            <Unlock className="h-3 w-3 text-[hsl(var(--warning))]" />
                           )}
                         </Button>
                       )}
@@ -244,7 +244,7 @@ const ProfileTab = ({ userId, accountId, isManager }: { userId: string; accountI
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <ShieldAlert className="h-5 w-5 text-amber-500" />
+              <ShieldAlert className="h-5 w-5 text-[hsl(var(--warning))]" />
               Confirmar cambio sensible
             </AlertDialogTitle>
             <AlertDialogDescription>

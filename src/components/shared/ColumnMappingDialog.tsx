@@ -89,14 +89,14 @@ function confidenceFor(score: number): Confidence {
 
 const confidenceStyles: Record<Confidence, { dot: string; label: string; badge: string }> = {
   high: {
-    dot: "bg-emerald-500",
+    dot: "bg-[hsl(var(--success))]",
     label: "Alta",
-    badge: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+    badge: "border-[hsl(var(--success))]/30 bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]",
   },
   medium: {
-    dot: "bg-amber-500",
+    dot: "bg-[hsl(var(--warning))]",
     label: "Parcial",
-    badge: "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+    badge: "border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))]",
   },
   none: {
     dot: "bg-destructive",
@@ -265,7 +265,7 @@ export default function ColumnMappingDialog({
               </DialogDescription>
             </div>
             <Badge variant="secondary" className="shrink-0 gap-1.5 px-3 py-1.5">
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+              <CheckCircle2 className="h-3.5 w-3.5 text-[hsl(var(--success))]" />
               <span className="font-medium">
                 {autoMatchedCount} de {fields.length}
               </span>
@@ -356,7 +356,7 @@ export default function ColumnMappingDialog({
                             {style.label}
                           </Badge>
                           {isDuplicate && (
-                            <span className="inline-flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400">
+                            <span className="inline-flex items-center gap-1 text-[11px] text-[hsl(var(--warning))]">
                               <AlertCircle className="h-3 w-3" />
                               Columna asignada a varios campos
                             </span>

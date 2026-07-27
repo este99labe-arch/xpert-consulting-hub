@@ -106,7 +106,7 @@ const MovementsTab = ({ accountId, products, isManager, onNewMovement }: Movemen
                 <div className="flex items-center justify-between">
                   <span className="font-medium text-sm">{m.products?.name}</span>
                   <div className="flex items-center gap-1">
-                    <Icon className={`h-4 w-4 ${m.type === "IN" ? "text-green-600" : m.type === "OUT" ? "text-destructive" : "text-muted-foreground"}`} />
+                    <Icon className={`h-4 w-4 ${m.type === "IN" ? "text-[hsl(var(--success))]" : m.type === "OUT" ? "text-destructive" : "text-muted-foreground"}`} />
                     <span className="text-sm">{movementTypeLabels[m.type]}</span>
                   </div>
                 </div>
@@ -152,7 +152,7 @@ const MovementsTab = ({ accountId, products, isManager, onNewMovement }: Movemen
                   <TableCell>{m.products?.name} <span className="text-xs text-muted-foreground">({m.products?.sku})</span></TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
-                      <Icon className={`h-4 w-4 ${m.type === "IN" ? "text-green-600" : m.type === "OUT" ? "text-destructive" : "text-muted-foreground"}`} />
+                      <Icon className={`h-4 w-4 ${m.type === "IN" ? "text-[hsl(var(--success))]" : m.type === "OUT" ? "text-destructive" : "text-muted-foreground"}`} />
                       {movementTypeLabels[m.type]}
                     </div>
                   </TableCell>

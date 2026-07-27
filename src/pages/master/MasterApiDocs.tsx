@@ -15,10 +15,10 @@ import { toast } from "sonner";
 const API_VERSION = "v1.0";
 
 const methodColors: Record<string, string> = {
-  GET: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30 dark:text-emerald-400",
-  POST: "bg-blue-500/15 text-blue-700 border-blue-500/30 dark:text-blue-400",
-  PUT: "bg-amber-500/15 text-amber-700 border-amber-500/30 dark:text-amber-400",
-  DELETE: "bg-red-500/15 text-red-700 border-red-500/30 dark:text-red-400",
+  GET: "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] border-[hsl(var(--success))]/30",
+  POST: "bg-primary/10 text-primary border-primary/30",
+  PUT: "bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/30",
+  DELETE: "bg-destructive/10 text-destructive border-destructive/30",
 };
 
 interface Endpoint {

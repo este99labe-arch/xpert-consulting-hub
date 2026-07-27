@@ -169,23 +169,23 @@ const PLReport = ({ accountId }: { accountId: string }) => {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-              <TrendingUp className="h-4 w-4 text-green-600" /> Ingresos
+              <TrendingUp className="h-4 w-4 text-[hsl(var(--success))]" /> Ingresos
             </div>
-            <p className="text-2xl font-bold text-green-600">{EUR(plData.totalIncome)}</p>
+            <p className="text-2xl font-bold text-[hsl(var(--success))]">{EUR(plData.totalIncome)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-              <TrendingDown className="h-4 w-4 text-red-600" /> Gastos
+              <TrendingDown className="h-4 w-4 text-destructive" /> Gastos
             </div>
-            <p className="text-2xl font-bold text-red-600">{EUR(plData.totalExpense)}</p>
+            <p className="text-2xl font-bold text-destructive">{EUR(plData.totalExpense)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <div className="text-sm text-muted-foreground mb-1">Resultado</div>
-            <p className={`text-2xl font-bold ${plData.result >= 0 ? "text-green-600" : "text-destructive"}`}>
+            <p className={`text-2xl font-bold ${plData.result >= 0 ? "text-[hsl(var(--success))]" : "text-destructive"}`}>
               {EUR(plData.result)}
             </p>
           </CardContent>
@@ -612,21 +612,21 @@ const InvoiceSummaryReport = ({ accountId }: { accountId: string }) => {
         <Card>
           <CardContent className="pt-6">
             <div className="text-sm text-muted-foreground mb-1">Facturado</div>
-            <p className="text-xl font-bold text-green-600">{EUR(stats.totalIncome)}</p>
+            <p className="text-xl font-bold text-[hsl(var(--success))]">{EUR(stats.totalIncome)}</p>
             <p className="text-xs text-muted-foreground">{stats.invoiceCount} facturas</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <div className="text-sm text-muted-foreground mb-1">Gastos</div>
-            <p className="text-xl font-bold text-red-600">{EUR(stats.totalExpense)}</p>
+            <p className="text-xl font-bold text-destructive">{EUR(stats.totalExpense)}</p>
             <p className="text-xs text-muted-foreground">{stats.expenseCount} gastos</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <div className="text-sm text-muted-foreground mb-1">Balance</div>
-            <p className={`text-xl font-bold ${stats.totalIncome - stats.totalExpense >= 0 ? "text-green-600" : "text-destructive"}`}>
+            <p className={`text-xl font-bold ${stats.totalIncome - stats.totalExpense >= 0 ? "text-[hsl(var(--success))]" : "text-destructive"}`}>
               {EUR(stats.totalIncome - stats.totalExpense)}
             </p>
           </CardContent>

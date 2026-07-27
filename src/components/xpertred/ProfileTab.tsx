@@ -269,7 +269,7 @@ const ProfileTab = () => {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Star className="h-5 w-5 text-yellow-500" />
+            <Star className="h-5 w-5 text-[hsl(var(--warning))]" />
             Reputación
           </CardTitle>
         </CardHeader>
@@ -282,7 +282,7 @@ const ProfileTab = () => {
           ) : (
             <>
               <div className="text-center">
-                <div className="text-4xl font-bold text-yellow-500">
+                <div className="text-4xl font-bold text-[hsl(var(--warning))]">
                   {profile?.reputation_score
                     ? Number(profile.reputation_score).toFixed(1)
                     : "—"}

@@ -24,9 +24,9 @@ const HealthCheck = () => {
       <span
         className={cn(
           "h-2 w-2 rounded-full",
-          status === "ok" && "bg-green-500",
-          status === "error" && "bg-red-500",
-          status === "checking" && "bg-yellow-500 animate-pulse"
+          status === "ok" && "bg-[hsl(var(--success))]",
+          status === "error" && "bg-destructive",
+          status === "checking" && "bg-[hsl(var(--warning))] animate-pulse"
         )}
       />
       <span>
