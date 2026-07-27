@@ -24,11 +24,11 @@ const typeLabels: Record<string, string> = {
 const typeColors: Record<string, string> = {
   // Paleta categórica del design system: distingue tipos de cuenta y se adapta
   // sola al modo oscuro (a diferencia de los pares -100/-800 manuales).
-  ASSET: "bg-chart-1/12 text-chart-1",
-  LIABILITY: "bg-chart-5/12 text-chart-5",
-  EQUITY: "bg-chart-2/12 text-chart-2",
-  INCOME: "bg-chart-3/12 text-chart-3",
-  EXPENSE: "bg-chart-4/12 text-chart-4",
+  ASSET: "bg-chart-1/15 text-chart-1",
+  LIABILITY: "bg-chart-5/15 text-chart-5",
+  EQUITY: "bg-chart-2/15 text-chart-2",
+  INCOME: "bg-chart-3/15 text-chart-3",
+  EXPENSE: "bg-chart-4/15 text-chart-4",
 };
 
 interface ChartOfAccountsTabProps {
