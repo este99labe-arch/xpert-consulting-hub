@@ -33,6 +33,7 @@ import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import OnboardingTour from "@/components/shared/OnboardingTour";
 import HealthCheck from "@/components/shared/HealthCheck";
 import MyTasksBadge from "@/components/tasks/MyTasksBadge";
+import { SupportAccountSwitcher, SupportSessionBanner } from "@/components/shared/SupportSession";
 import xpertLogo from "@/assets/brand/iso-blue.png";
 
 const moduleIcons: Record<string, any> = {
@@ -66,7 +67,7 @@ const modulePaths: Record<string, string> = {
 };
 
 const SidebarInner = () => {
-  const { signOut, user, accountId, role } = useAuth();
+  const { signOut, user, accountId, role, supportSession } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const { setOpen, isMobile } = useSidebar();
@@ -94,10 +95,12 @@ const SidebarInner = () => {
   const CORE_CODES = ["DASHBOARD", "ATTENDANCE", "SETTINGS"];
 
   const { data: modules = [] } = useQuery({
-    queryKey: ["account_modules", accountId, role, user?.id],
+    queryKey: ["account_modules", accountId, role, user?.id, supportSession?.accountId],
     queryFn: async () => {
       if (!accountId) return [];
-      if (role === "MASTER_ADMIN") {
+      // En sesión de soporte se muestran los módulos contratados por el cliente,
+      // no el catálogo completo: la idea es ver la app tal y como la ve él.
+      if (role === "MASTER_ADMIN" && !supportSession) {
         const { data, error } = await supabase.from("service_modules").select("code, name");
         if (error) throw error;
         return (data || []).map((m) => ({ code: m.code, name: m.name }));
@@ -252,6 +255,7 @@ const SidebarInner = () => {
       <GlobalSearch />
       <ReminderNotifier />
       <SidebarInset>
+        <SupportSessionBanner />
         <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b bg-background/80 backdrop-blur-sm px-6">
           <div className="flex items-center gap-3">
             <SidebarTrigger />
@@ -259,6 +263,7 @@ const SidebarInner = () => {
             <Breadcrumbs />
           </div>
           <div className="flex items-center gap-1">
+            <SupportAccountSwitcher />
             <NotificationBell />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
