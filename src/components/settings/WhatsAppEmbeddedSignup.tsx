@@ -114,7 +114,7 @@ const WhatsAppEmbeddedSignup = ({ accountId, onConnected }: Props) => {
   );
 
   const handleConnect = useCallback(async () => {
-    if (!META_ES_CONFIG_ID || META_ES_CONFIG_ID === "PON_AQUI_TU_CONFIG_ID") {
+    if (!META_ES_CONFIG_ID || META_ES_CONFIG_ID.startsWith("PON_AQUI")) {
       toast({
         title: "Falta el Config ID",
         description: "Configura META_ES_CONFIG_ID en src/integrations/meta/config.ts.",

@@ -26,7 +26,9 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { roleLabel } from "@/lib/roles";
 
-const PROFILE_FIELD_LABELS: Record<string, string> = {
+/** Etiquetas de los campos de perfil. La usa también UsersTab para mostrar
+ *  las solicitudes de cambio pendientes. */
+export const PROFILE_FIELD_LABELS: Record<string, string> = {
   first_name: "Nombre",
   last_name: "Apellidos",
   dni: "DNI/NIE",
