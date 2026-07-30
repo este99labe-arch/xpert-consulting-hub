@@ -24,7 +24,9 @@ const db = supabase as any;
 const INCOME_STATUSES = ["SENT", "PARTIALLY_PAID", "PAID", "OVERDUE"];
 
 const MasterCostForecast = () => {
-  const { accountId } = useAuth();
+  // Datos propios de XpertConsulting: se usa la cuenta REAL para que una sesión
+  // de soporte no desvíe estas consultas a la cuenta del cliente.
+  const { realAccountId: accountId } = useAuth();
   const qc = useQueryClient();
   const [monthsBack, setMonthsBack] = useState(6);
   const [monthsFwd, setMonthsFwd] = useState(3);
