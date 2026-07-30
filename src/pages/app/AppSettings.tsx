@@ -57,10 +57,21 @@ const GROUP_ORDER = [
   "General",
   "Tu cuenta",
   "Equipo",
+  "Comercial",
   "Facturación y contabilidad",
   "Integraciones y desarrolladores",
   "Auditoría",
 ];
+
+/**
+ * Orden de los grupos. GROUP_ORDER solo fija la prelación: cualquier grupo de
+ * SECTIONS que no esté listado se pinta al final en vez de desaparecer, para
+ * que añadir una sección con un grupo nuevo no la deje invisible.
+ */
+const groupsToRender = (): string[] => {
+  const extras = SECTIONS.map((s) => s.group).filter((g) => !GROUP_ORDER.includes(g));
+  return [...GROUP_ORDER, ...Array.from(new Set(extras))];
+};
 
 const SECTIONS: SettingSection[] = [
   { key: "company",  group: "General", title: "Empresa", desc: "Datos fiscales y generales de tu empresa.", icon: Building2 },
@@ -112,7 +123,7 @@ const AppSettings = () => {
               <h1 className="text-2xl font-bold tracking-tight text-foreground">Configuración</h1>
               <p className="text-sm text-muted-foreground">Gestiona tu empresa, tu cuenta personal y las integraciones.</p>
             </div>
-            {GROUP_ORDER.map((group) => {
+            {groupsToRender().map((group) => {
               const items = SECTIONS.filter((s) => s.group === group && (!s.managerOnly || isManager));
               if (items.length === 0) return null;
               return (
