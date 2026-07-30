@@ -10,6 +10,7 @@ import CreateReminderDialog from "@/components/reminders/CreateReminderDialog";
 import { toast } from "@/hooks/use-toast";
 import ClientInfoTab from "@/components/clients/ClientInfoTab";
 import ClientContactsTab from "@/components/clients/ClientContactsTab";
+import ClientServicesTab from "@/components/clients/ClientServicesTab";
 import ClientBillingConfigTab from "@/components/clients/ClientBillingConfigTab";
 import ClientPlanTab from "@/components/clients/ClientPlanTab";
 import ClientTasksTab from "@/components/clients/ClientTasksTab";
@@ -94,9 +95,10 @@ const AppClientDetail = () => {
       </div>
 
       <Tabs defaultValue="info" className="w-full">
-        <TabsList className={`grid w-full ${isAdmin ? "grid-cols-5" : "grid-cols-4"}`}>
+        <TabsList className={`grid w-full ${isAdmin ? "grid-cols-6" : "grid-cols-5"}`}>
           <TabsTrigger value="info">Información</TabsTrigger>
           <TabsTrigger value="contacts">Contactos</TabsTrigger>
+          <TabsTrigger value="services">Servicios</TabsTrigger>
           <TabsTrigger value="billing">Facturación</TabsTrigger>
           <TabsTrigger value="tasks">Tareas</TabsTrigger>
           {isAdmin && <TabsTrigger value="plan">Plan</TabsTrigger>}
@@ -113,6 +115,10 @@ const AppClientDetail = () => {
 
         <TabsContent value="contacts" className="mt-6">
           <ClientContactsTab clientId={id!} accountId={accountId!} isAdmin={isAdmin} />
+        </TabsContent>
+
+        <TabsContent value="services" className="mt-6">
+          <ClientServicesTab clientId={id!} accountId={accountId!} isAdmin={isAdmin} />
         </TabsContent>
 
         <TabsContent value="tasks" className="mt-6">
