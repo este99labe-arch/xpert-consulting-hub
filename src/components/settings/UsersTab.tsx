@@ -26,6 +26,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { roleLabel } from "@/lib/roles";
 import CreateEmployeeDialog from "@/components/hr/CreateEmployeeDialog";
+import { PROFILE_FIELD_LABELS } from "@/components/settings/ProfileTab";
 
 // ─── USUARIOS TAB ────────────────────────────────────────
 const UsersTab = ({ userId, accountId }: { userId: string; accountId: string }) => {
