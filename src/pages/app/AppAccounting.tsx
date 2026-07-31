@@ -12,6 +12,7 @@ import { es } from "date-fns/locale";
 
 import MasterAccountSelector, { MasterAccountClearButton } from "@/components/shared/MasterAccountSelector";
 import AccountingDashboard from "@/components/accounting/AccountingDashboard";
+import TreasuryKpi from "@/components/accounting/TreasuryKpi";
 import ChartOfAccountsTab from "@/components/accounting/ChartOfAccountsTab";
 import JournalEntriesTab from "@/components/accounting/JournalEntriesTab";
 import JournalEntryDialog from "@/components/accounting/JournalEntryDialog";
@@ -432,6 +433,12 @@ const AppAccounting = () => {
         </TabsList>
 
         <TabsContent value="dashboard">
+          {/* Tesorería: dinero disponible para operar. Solo para gestores. */}
+          {isManager && activeAccountId && (
+            <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <TreasuryKpi accountId={activeAccountId} showCash />
+            </div>
+          )}
           <AccountingDashboard
             totalIncome={totalIncome} totalExpense={totalExpense}
             vatCollected={vatCollected} vatPaid={vatPaid}

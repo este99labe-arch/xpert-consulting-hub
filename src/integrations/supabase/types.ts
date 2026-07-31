@@ -4011,6 +4011,18 @@ export type Database = {
         Args: { _account_id: string; _reason?: string }
         Returns: undefined
       }
+      treasury_balance: {
+        Args: { _account_id: string }
+        Returns: {
+          balance: number
+          cash_balance: number
+          cash_code: string
+          cash_name: string
+          entry_count: number
+          treasury_code: string
+          treasury_name: string
+        }[]
+      }
       xred_is_match_participant: {
         Args: { _interaction_id: string; _user_id: string }
         Returns: boolean
