@@ -66,6 +66,10 @@ async function handleClients(ctx: ApiContext, parts: string[]) {
   if (clientId && sub === "contacts") {
     return handleClientContacts(ctx, clientId, subId);
   }
+  // /clients/:id/services — servicios contratados por el cliente
+  if (clientId && sub === "services") {
+    return handleClientServices(ctx, clientId, subId);
+  }
   // /clients/:id/invoices
   if (clientId && sub === "invoices") {
     if (method !== "GET") return errorRes("Method not allowed", "METHOD_NOT_ALLOWED", 405);
@@ -1418,6 +1422,223 @@ async function handleReminders(ctx: ApiContext, parts: string[]) {
   }
 }
 
+// ─── VERTICALS ───
+async function handleVerticals(ctx: ApiContext, parts: string[]) {
+  const { supabase, accountId, method, url } = ctx;
+  const id = parts[0] || null;
+
+  switch (method) {
+    case "GET": {
+      if (id) {
+        const { data, error } = await supabase.from("verticals")
+          .select("id, name, description, sort_order, is_active, created_at, updated_at")
+          .eq("account_id", accountId).eq("id", id).maybeSingle();
+        if (error) throw error;
+        if (!data) return errorRes("Vertical not found", "NOT_FOUND", 404);
+        return jsonRes({ data });
+      }
+      const { page, limit, offset } = parsePagination(url);
+      let q = supabase.from("verticals")
+        .select("id, name, description, sort_order, is_active, created_at, updated_at", { count: "exact" })
+        .eq("account_id", accountId);
+      // ?is_active=true|false
+      const active = url.searchParams.get("is_active");
+      if (active === "true" || active === "false") q = q.eq("is_active", active === "true");
+      const { data, error, count } = await q.order("sort_order").range(offset, offset + limit - 1);
+      if (error) throw error;
+      return jsonRes({ data, pagination: { page, limit, total: count } });
+    }
+    case "POST": {
+      const body = await ctx.req.json();
+      if (!body?.name) return errorRes("name is required", "VALIDATION_ERROR", 400);
+      const { data, error } = await supabase.from("verticals").insert({
+        account_id: accountId,
+        name: body.name,
+        description: body.description ?? null,
+        sort_order: body.sort_order ?? 0,
+        is_active: body.is_active ?? true,
+      }).select().single();
+      if (error) throw error;
+      await logAudit(ctx, "CREATE", "vertical", data.id, { name: data.name });
+      return jsonRes({ data }, 201);
+    }
+    case "PUT": {
+      if (!id) return errorRes("Vertical id is required", "VALIDATION_ERROR", 400);
+      const body = await ctx.req.json();
+      const patch: Record<string, unknown> = {};
+      for (const f of ["name", "description", "sort_order", "is_active"]) {
+        if (f in body) patch[f] = body[f];
+      }
+      if (!Object.keys(patch).length) return errorRes("No fields to update", "VALIDATION_ERROR", 400);
+      const { data, error } = await supabase.from("verticals")
+        .update(patch).eq("account_id", accountId).eq("id", id).select().maybeSingle();
+      if (error) throw error;
+      if (!data) return errorRes("Vertical not found", "NOT_FOUND", 404);
+      await logAudit(ctx, "UPDATE", "vertical", id, patch);
+      return jsonRes({ data });
+    }
+    case "DELETE": {
+      if (!id) return errorRes("Vertical id is required", "VALIDATION_ERROR", 400);
+      const { error } = await supabase.from("verticals")
+        .delete().eq("account_id", accountId).eq("id", id);
+      // La BD impide borrar una vertical que tenga servicios.
+      if (error?.code === "23503") {
+        return errorRes("Vertical has services and cannot be deleted. Deactivate it instead.", "CONFLICT", 409);
+      }
+      if (error) throw error;
+      await logAudit(ctx, "DELETE", "vertical", id);
+      return jsonRes({ data: { deleted: true } });
+    }
+    default: return errorRes("Method not allowed", "METHOD_NOT_ALLOWED", 405);
+  }
+}
+
+// ─── SERVICES ───
+async function handleServices(ctx: ApiContext, parts: string[]) {
+  const { supabase, accountId, method, url } = ctx;
+  const id = parts[0] || null;
+
+  switch (method) {
+    case "GET": {
+      if (id) {
+        const { data, error } = await supabase.from("services")
+          .select("id, vertical_id, name, description, price, billing_period, sort_order, is_active, created_at, updated_at, verticals(name)")
+          .eq("account_id", accountId).eq("id", id).maybeSingle();
+        if (error) throw error;
+        if (!data) return errorRes("Service not found", "NOT_FOUND", 404);
+        return jsonRes({ data });
+      }
+      const { page, limit, offset } = parsePagination(url);
+      let q = supabase.from("services")
+        .select("id, vertical_id, name, description, price, billing_period, sort_order, is_active, created_at, updated_at, verticals(name)", { count: "exact" })
+        .eq("account_id", accountId);
+      // ?vertical_id=… y ?is_active=true|false
+      const verticalId = url.searchParams.get("vertical_id");
+      if (verticalId) q = q.eq("vertical_id", verticalId);
+      const active = url.searchParams.get("is_active");
+      if (active === "true" || active === "false") q = q.eq("is_active", active === "true");
+      const { data, error, count } = await q.order("sort_order").range(offset, offset + limit - 1);
+      if (error) throw error;
+      return jsonRes({ data, pagination: { page, limit, total: count } });
+    }
+    case "POST": {
+      const body = await ctx.req.json();
+      if (!body?.name) return errorRes("name is required", "VALIDATION_ERROR", 400);
+      if (!body?.vertical_id) return errorRes("vertical_id is required", "VALIDATION_ERROR", 400);
+      const { data, error } = await supabase.from("services").insert({
+        account_id: accountId,
+        vertical_id: body.vertical_id,
+        name: body.name,
+        description: body.description ?? null,
+        price: body.price ?? 0,
+        billing_period: body.billing_period ?? "MONTHLY",
+        sort_order: body.sort_order ?? 0,
+        is_active: body.is_active ?? true,
+      }).select().single();
+      if (error) throw error;
+      await logAudit(ctx, "CREATE", "service", data.id, { name: data.name });
+      return jsonRes({ data }, 201);
+    }
+    case "PUT": {
+      if (!id) return errorRes("Service id is required", "VALIDATION_ERROR", 400);
+      const body = await ctx.req.json();
+      const patch: Record<string, unknown> = {};
+      for (const f of ["vertical_id", "name", "description", "price", "billing_period", "sort_order", "is_active"]) {
+        if (f in body) patch[f] = body[f];
+      }
+      if (!Object.keys(patch).length) return errorRes("No fields to update", "VALIDATION_ERROR", 400);
+      const { data, error } = await supabase.from("services")
+        .update(patch).eq("account_id", accountId).eq("id", id).select().maybeSingle();
+      if (error) throw error;
+      if (!data) return errorRes("Service not found", "NOT_FOUND", 404);
+      await logAudit(ctx, "UPDATE", "service", id, patch);
+      return jsonRes({ data });
+    }
+    case "DELETE": {
+      if (!id) return errorRes("Service id is required", "VALIDATION_ERROR", 400);
+      const { error } = await supabase.from("services")
+        .delete().eq("account_id", accountId).eq("id", id);
+      // La BD impide borrar un servicio con contrataciones.
+      if (error?.code === "23503") {
+        return errorRes("Service has client contracts and cannot be deleted. Deactivate it instead.", "CONFLICT", 409);
+      }
+      if (error) throw error;
+      await logAudit(ctx, "DELETE", "service", id);
+      return jsonRes({ data: { deleted: true } });
+    }
+    default: return errorRes("Method not allowed", "METHOD_NOT_ALLOWED", 405);
+  }
+}
+
+// ─── CLIENT SERVICES (contrataciones) — /clients/:id/services ───
+async function handleClientServices(ctx: ApiContext, clientId: string, contractId: string | null) {
+  const { supabase, accountId, method, url } = ctx;
+
+  switch (method) {
+    case "GET": {
+      const { page, limit, offset } = parsePagination(url);
+      let q = supabase.from("client_services")
+        .select("id, service_id, vertical_id, status, start_date, end_date, price, notes, created_at, services(name, price, billing_period), verticals(name)", { count: "exact" })
+        .eq("account_id", accountId).eq("client_id", clientId);
+      // Por defecto solo las vigentes; ?status=ALL o un estado concreto.
+      const status = url.searchParams.get("status");
+      if (status && status !== "ALL") q = q.eq("status", status);
+      else if (!status) q = q.neq("status", "CANCELLED");
+      const { data, error, count } = await q
+        .order("start_date", { ascending: false }).range(offset, offset + limit - 1);
+      if (error) throw error;
+      return jsonRes({ data, pagination: { page, limit, total: count } });
+    }
+    case "POST": {
+      const body = await ctx.req.json();
+      if (!body?.service_id) return errorRes("service_id is required", "VALIDATION_ERROR", 400);
+      // vertical_id y account_id los fija el trigger a partir del servicio.
+      const { data: svc } = await supabase.from("services")
+        .select("vertical_id").eq("account_id", accountId).eq("id", body.service_id).maybeSingle();
+      if (!svc) return errorRes("Service not found", "NOT_FOUND", 404);
+      const { data, error } = await supabase.from("client_services").insert({
+        account_id: accountId,
+        client_id: clientId,
+        service_id: body.service_id,
+        vertical_id: svc.vertical_id,
+        status: body.status ?? "ACTIVE",
+        start_date: body.start_date ?? new Date().toISOString().slice(0, 10),
+        end_date: body.end_date ?? null,
+        price: body.price ?? null,
+        notes: body.notes ?? null,
+      }).select().single();
+      if (error) throw error;
+      await logAudit(ctx, "CREATE", "client_service", data.id, { client_id: clientId, service_id: body.service_id });
+      return jsonRes({ data }, 201);
+    }
+    case "PUT": {
+      if (!contractId) return errorRes("Contract id is required", "VALIDATION_ERROR", 400);
+      const body = await ctx.req.json();
+      const patch: Record<string, unknown> = {};
+      for (const f of ["status", "start_date", "end_date", "price", "notes"]) {
+        if (f in body) patch[f] = body[f];
+      }
+      if (!Object.keys(patch).length) return errorRes("No fields to update", "VALIDATION_ERROR", 400);
+      const { data, error } = await supabase.from("client_services")
+        .update(patch).eq("account_id", accountId).eq("client_id", clientId).eq("id", contractId)
+        .select().maybeSingle();
+      if (error) throw error;
+      if (!data) return errorRes("Contract not found", "NOT_FOUND", 404);
+      await logAudit(ctx, "UPDATE", "client_service", contractId, patch);
+      return jsonRes({ data });
+    }
+    case "DELETE": {
+      if (!contractId) return errorRes("Contract id is required", "VALIDATION_ERROR", 400);
+      const { error } = await supabase.from("client_services")
+        .delete().eq("account_id", accountId).eq("client_id", clientId).eq("id", contractId);
+      if (error) throw error;
+      await logAudit(ctx, "DELETE", "client_service", contractId);
+      return jsonRes({ data: { deleted: true } });
+    }
+    default: return errorRes("Method not allowed", "METHOD_NOT_ALLOWED", 405);
+  }
+}
+
 // ─── MAIN ROUTER ───
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -1466,12 +1687,15 @@ Deno.serve(async (req) => {
       case "notifications": return handleNotifications(ctx, rest);
       case "settings": return handleSettings(ctx, rest);
       case "reminders": return handleReminders(ctx, rest);
+      case "verticals": return handleVerticals(ctx, rest);
+      case "services": return handleServices(ctx, rest);
       default:
         return jsonRes({
           error: "Unknown resource",
           available_endpoints: [
             "clients", "invoices", "recurring-invoices", "accounting", "reconciliation",
-            "hr", "attendance", "inventory", "documents", "notifications", "settings", "reminders"
+            "hr", "attendance", "inventory", "documents", "notifications", "settings", "reminders",
+            "verticals", "services"
           ],
           docs: "See /master/api-docs for full documentation",
           pagination: "Use ?page=1&limit=50 (max 100)",

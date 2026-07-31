@@ -12,7 +12,6 @@ import ClientInfoTab from "@/components/clients/ClientInfoTab";
 import ClientContactsTab from "@/components/clients/ClientContactsTab";
 import ClientServicesTab from "@/components/clients/ClientServicesTab";
 import ClientBillingConfigTab from "@/components/clients/ClientBillingConfigTab";
-import ClientPlanTab from "@/components/clients/ClientPlanTab";
 import ClientTasksTab from "@/components/clients/ClientTasksTab";
 
 const AppClientDetail = () => {
@@ -95,13 +94,12 @@ const AppClientDetail = () => {
       </div>
 
       <Tabs defaultValue="info" className="w-full">
-        <TabsList className={`grid w-full ${isAdmin ? "grid-cols-6" : "grid-cols-5"}`}>
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="info">Información</TabsTrigger>
           <TabsTrigger value="contacts">Contactos</TabsTrigger>
           <TabsTrigger value="services">Servicios</TabsTrigger>
           <TabsTrigger value="billing">Facturación</TabsTrigger>
           <TabsTrigger value="tasks">Tareas</TabsTrigger>
-          {isAdmin && <TabsTrigger value="plan">Plan</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="info" className="mt-6">
@@ -133,16 +131,6 @@ const AppClientDetail = () => {
           />
         </TabsContent>
 
-        {isAdmin && (
-          <TabsContent value="plan" className="mt-6">
-            <ClientPlanTab
-              client={client}
-              accountId={accountId!}
-              onSave={(updates) => updateClient.mutate(updates)}
-              saving={updateClient.isPending}
-            />
-          </TabsContent>
-        )}
       </Tabs>
 
       <CreateReminderDialog
