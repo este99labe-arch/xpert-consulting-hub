@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -55,6 +56,8 @@ const AppClients = () => {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [verticalFilter, setVerticalFilter] = useState("ALL");
+  const [serviceFilter, setServiceFilter] = useState("ALL");
   const [showCreate, setShowCreate] = useState(false);
   const [deletingClientId, setDeletingClientId] = useState<string | null>(null);
 
@@ -100,6 +103,70 @@ const AppClients = () => {
     enabled: !!accountId,
   });
 
+  // Contrataciones vigentes (no canceladas) por cliente: alimenta la columna
+  // de verticales y los filtros por vertical/servicio.
+  const { data: contracts = [] } = useQuery({
+    queryKey: ["client-services-overview", accountId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("client_services")
+        .select("client_id, vertical_id, service_id, status, verticals(name), services(name)")
+        .eq("account_id", accountId!)
+        .neq("status", "CANCELLED");
+      if (error) throw error;
+      return (data as any[]) || [];
+    },
+    enabled: !!accountId,
+  });
+
+  /** client_id → verticales (nombres únicos) y servicios contratados. */
+  const contractsByClient = useMemo(() => {
+    const map = new Map<string, { verticalIds: Set<string>; serviceIds: Set<string>; verticalNames: string[] }>();
+    for (const c of contracts) {
+      let entry = map.get(c.client_id);
+      if (!entry) {
+        entry = { verticalIds: new Set(), serviceIds: new Set(), verticalNames: [] };
+        map.set(c.client_id, entry);
+      }
+      entry.serviceIds.add(c.service_id);
+      if (!entry.verticalIds.has(c.vertical_id)) {
+        entry.verticalIds.add(c.vertical_id);
+        if (c.verticals?.name) entry.verticalNames.push(c.verticals.name);
+      }
+    }
+    return map;
+  }, [contracts]);
+
+  // Catálogo para los desplegables de filtro.
+  const { data: catalogVerticals = [] } = useQuery({
+    queryKey: ["verticals", accountId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("verticals")
+        .select("id, name")
+        .eq("account_id", accountId!)
+        .order("sort_order")
+        .order("name");
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!accountId,
+  });
+  const { data: catalogServices = [] } = useQuery({
+    queryKey: ["services-filter", accountId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("services")
+        .select("id, name, vertical_id")
+        .eq("account_id", accountId!)
+        .order("sort_order")
+        .order("name");
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!accountId,
+  });
+
   // Excluir el auto-cliente (la propia cuenta) de la lista mostrada
   const externalClients = useMemo(() => {
     return (allRows as any[]).filter((c: any) => {
@@ -129,19 +196,28 @@ const AppClients = () => {
       );
     }
     if (statusFilter !== "ALL") rows = rows.filter((r: any) => r.status === statusFilter);
+    if (verticalFilter !== "ALL") {
+      rows = rows.filter((r: any) => contractsByClient.get(r.id)?.verticalIds.has(verticalFilter));
+    }
+    if (serviceFilter !== "ALL") {
+      rows = rows.filter((r: any) => contractsByClient.get(r.id)?.serviceIds.has(serviceFilter));
+    }
     return rows;
-  }, [externalClients, debouncedSearch, statusFilter]);
+  }, [externalClients, debouncedSearch, statusFilter, verticalFilter, serviceFilter, contractsByClient]);
 
   useEffect(() => {
     pagination.setTotalItems(filtered.length);
   }, [filtered.length]);
 
   const pageRows = filtered.slice(pagination.rangeFrom, pagination.rangeTo + 1);
-  const hasFiltersApplied = debouncedSearch !== "" || statusFilter !== "ALL";
+  const hasFiltersApplied =
+    debouncedSearch !== "" || statusFilter !== "ALL" || verticalFilter !== "ALL" || serviceFilter !== "ALL";
 
   const clearFilters = () => {
     setSearch("");
     setStatusFilter("ALL");
+    setVerticalFilter("ALL");
+    setServiceFilter("ALL");
     pagination.resetPage();
   };
 
@@ -228,6 +304,38 @@ const AppClients = () => {
               <SelectItem value="INACTIVE">Inactivos</SelectItem>
             </SelectContent>
           </Select>
+          <Select
+            value={verticalFilter}
+            onValueChange={(v) => {
+              setVerticalFilter(v);
+              // El servicio elegido puede no pertenecer a la nueva vertical.
+              setServiceFilter("ALL");
+              pagination.resetPage();
+            }}
+          >
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Vertical" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Todas las verticales</SelectItem>
+              {catalogVerticals.map((v: any) => (
+                <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={serviceFilter} onValueChange={(v) => { setServiceFilter(v); pagination.resetPage(); }}>
+            <SelectTrigger className="w-full sm:w-[190px]">
+              <SelectValue placeholder="Servicio" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Todos los servicios</SelectItem>
+              {catalogServices
+                .filter((s: any) => verticalFilter === "ALL" || s.vertical_id === verticalFilter)
+                .map((s: any) => (
+                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {externalClients.length === 0 ? (
@@ -264,6 +372,7 @@ const AppClients = () => {
                         <TableHead>Cliente</TableHead>
                         <TableHead className="hidden sm:table-cell">NIF/CIF</TableHead>
                         <TableHead className="hidden md:table-cell">Email</TableHead>
+                        <TableHead className="hidden md:table-cell">Verticales</TableHead>
                         <TableHead>Estado</TableHead>
                         <TableHead className="hidden lg:table-cell">Creado</TableHead>
                         <TableHead className="text-right">Acciones</TableHead>
@@ -300,6 +409,29 @@ const AppClients = () => {
                             </TableCell>
                             <TableCell className="text-muted-foreground hidden md:table-cell">
                               {client.email || "—"}
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell">
+                              {(() => {
+                                const names = contractsByClient.get(client.id)?.verticalNames ?? [];
+                                if (names.length === 0)
+                                  return <span className="text-xs text-muted-foreground">—</span>;
+                                return (
+                                  <div className="flex flex-wrap gap-1">
+                                    {names.slice(0, 2).map((n) => (
+                                      <Badge key={n} variant="info" className="text-[10px]">{n}</Badge>
+                                    ))}
+                                    {names.length > 2 && (
+                                      <Badge
+                                        variant="muted"
+                                        className="text-[10px]"
+                                        title={names.slice(2).join(", ")}
+                                      >
+                                        +{names.length - 2}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                );
+                              })()}
                             </TableCell>
                             <TableCell>
                               <span
