@@ -193,22 +193,53 @@ serve(async (req) => {
     const { error: modulesError } = await adminClient.from("account_modules").insert(moduleInserts);
     if (modulesError) throw modulesError;
 
-    // 3. Create manager user
+    // 3. Create manager user — o vincular uno EXISTENTE si el email ya está
+    // registrado (un mismo manager puede gestionar varias cuentas; elegirá la
+    // activa con el conmutador de cuenta).
+    let managerUserId: string;
+    let isExistingUser = false;
     const { data: newUser, error: authError } = await adminClient.auth.admin.createUser({
       email: manager_email, password: manager_password, email_confirm: true,
     });
-    if (authError) throw authError;
+    if (authError) {
+      const msg = (authError.message || "").toLowerCase();
+      const emailExists = (authError as any).code === "email_exists"
+        || msg.includes("already") || msg.includes("registered");
+      if (!emailExists) throw authError;
+      const { data: existingId, error: findErr } = await adminClient
+        .rpc("get_user_id_by_email", { _email: manager_email });
+      if (findErr || !existingId) {
+        throw new Error("El email ya está registrado pero no se pudo localizar el usuario");
+      }
+      managerUserId = existingId as string;
+      isExistingUser = true;
+    } else {
+      managerUserId = newUser!.user.id;
+    }
 
-    // 4. Get MANAGER role id
-    const { data: managerRole } = await adminClient
-      .from("roles").select("id").eq("code", "MANAGER").single();
-    if (!managerRole) throw new Error("MANAGER role not found");
+    // A partir de aquí, si algo falla se limpia la cuenta recién creada para
+    // no dejar cuentas huérfanas (sin manager) en producción.
+    try {
+      // 4. Get MANAGER role id
+      const { data: managerRole } = await adminClient
+        .from("roles").select("id").eq("code", "MANAGER").single();
+      if (!managerRole) throw new Error("MANAGER role not found");
 
-    // 5. Link user to account
-    const { error: linkError } = await adminClient.from("user_accounts").insert({
-      user_id: newUser.user.id, account_id: account.id, role_id: managerRole.id,
-    });
-    if (linkError) throw linkError;
+      // 5. Link user to account
+      const { error: linkError } = await adminClient.from("user_accounts").insert({
+        user_id: managerUserId, account_id: account.id, role_id: managerRole.id,
+      });
+      if (linkError) throw linkError;
+    } catch (setupErr) {
+      // Rollback best-effort: la FK con CASCADE limpia módulos y vínculos.
+      try {
+        await adminClient.from("accounts").delete().eq("id", account.id);
+        if (!isExistingUser) await adminClient.auth.admin.deleteUser(managerUserId);
+      } catch (cleanupErr: any) {
+        console.error("Cleanup after failed setup also failed:", cleanupErr?.message);
+      }
+      throw setupErr;
+    }
 
     // 6. Update synced business_client record
     if (client_info) {
@@ -269,7 +300,9 @@ serve(async (req) => {
     // 7. Generate password reset link and send welcome email
     try {
       const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-      if (RESEND_API_KEY) {
+      // A un manager existente NO se le envía el email de credenciales: ya
+      // tiene contraseña y la contraseña generada aquí nunca llegó a aplicarse.
+      if (RESEND_API_KEY && !isExistingUser) {
         // Generate a password reset link so the manager can set their own password
         const { data: resetData, error: resetError } = await adminClient.auth.admin.generateLink({
           type: "recovery",
@@ -305,7 +338,14 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, account_id: account.id, user_id: newUser.user.id }),
+      JSON.stringify({
+        success: true,
+        account_id: account.id,
+        user_id: managerUserId,
+        // El frontend puede avisar de que se vinculó a un usuario ya existente
+        // (no se le envía email de credenciales).
+        existing_user: isExistingUser,
+      }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {

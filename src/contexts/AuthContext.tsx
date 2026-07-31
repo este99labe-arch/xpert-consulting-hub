@@ -13,6 +13,13 @@ export interface SupportSession {
   expiresAt: string;
 }
 
+/** Pertenencia del usuario a una cuenta (puede tener varias). */
+export interface AccountMembership {
+  accountId: string;
+  accountName: string;
+  role: Exclude<UserRole, null>;
+}
+
 interface AuthState {
   session: Session | null;
   user: User | null;
@@ -21,6 +28,8 @@ interface AuthState {
   accountId: string | null;
   /** Cuenta propia del usuario, ignorando la suplantación. */
   realAccountId: string | null;
+  /** Todas las cuentas a las que pertenece el usuario, en orden determinista. */
+  memberships: AccountMembership[];
   supportSession: SupportSession | null;
   loading: boolean;
 }
@@ -30,6 +39,8 @@ interface AuthContextType extends AuthState {
   signOut: () => Promise<void>;
   startSupportSession: (accountId: string, reason?: string) => Promise<void>;
   endSupportSession: () => Promise<void>;
+  /** Cambia la cuenta activa del usuario (debe pertenecer a ella). */
+  switchAccount: (accountId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -48,6 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     role: null,
     accountId: null,
     realAccountId: null,
+    memberships: [],
     supportSession: null,
     loading: true,
   });
@@ -66,30 +78,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const fetchUserRole = async (userId: string) => {
-    const { data, error } = await supabase
-      .from("user_accounts")
-      .select("account_id, role_id, roles(code)")
+    const empty = {
+      role: null as UserRole, accountId: null, realAccountId: null,
+      memberships: [] as AccountMembership[], supportSession: null,
+    };
+
+    // Todas las pertenencias, con el MISMO orden determinista que usa
+    // get_user_account_id() en las políticas RLS. Es una RPC (SECURITY DEFINER)
+    // porque la RLS de accounts solo deja ver la cuenta activa.
+    const { data: rows, error } = await supabase.rpc("list_my_memberships");
+    if (error || !rows || rows.length === 0) return empty;
+
+    const memberships: AccountMembership[] = rows.map((r: any) => ({
+      accountId: r.account_id,
+      accountName: r.account_name,
+      role: r.role_code,
+    }));
+
+    // Selección explícita de cuenta activa (si existe y sigue siendo válida).
+    const { data: sel } = await supabase
+      .from("user_active_account")
+      .select("account_id")
       .eq("user_id", userId)
-      .eq("is_active", true)
-      .limit(1)
-      .single();
-
-    if (error || !data) {
-      return { role: null as UserRole, accountId: null, realAccountId: null, supportSession: null };
-    }
-
-    const roleCode = (data as any).roles?.code as UserRole;
-    const realAccountId = data.account_id;
+      .maybeSingle();
+    const active =
+      memberships.find((m) => m.accountId === sel?.account_id) ?? memberships[0];
 
     // Solo un MASTER_ADMIN puede tener sesión de soporte; para el resto ni se consulta.
-    const supportSession = roleCode === "MASTER_ADMIN" ? await fetchSupportSession() : null;
+    const supportSession =
+      active.role === "MASTER_ADMIN" ? await fetchSupportSession() : null;
 
     return {
-      role: roleCode,
+      role: active.role as UserRole,
       // La cuenta activa manda: así todas las consultas .eq("account_id", …)
       // apuntan a la misma cuenta que ya autoriza RLS.
-      accountId: supportSession?.accountId ?? realAccountId,
-      realAccountId,
+      accountId: supportSession?.accountId ?? active.accountId,
+      realAccountId: active.accountId,
+      memberships,
       supportSession,
     };
   };
@@ -115,6 +140,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             role: null,
             accountId: null,
             realAccountId: null,
+            memberships: [],
             supportSession: null,
             loading: false,
           });
@@ -174,9 +200,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     queryClient.clear();
   };
 
+  const switchAccount = async (accountId: string) => {
+    // La RPC valida la pertenencia; la selección queda persistida para que RLS
+    // y frontend resuelvan SIEMPRE la misma cuenta en próximas sesiones.
+    const { error } = await (supabase.rpc as any)("set_active_account", { _account_id: accountId });
+    if (error) throw error;
+    await refreshAccountContext();
+    // La caché guarda datos de la cuenta anterior: se vacía entera.
+    queryClient.clear();
+  };
+
   return (
     <AuthContext.Provider
-      value={{ ...state, signIn, signOut, startSupportSession, endSupportSession }}
+      value={{ ...state, signIn, signOut, startSupportSession, endSupportSession, switchAccount }}
     >
       {children}
     </AuthContext.Provider>

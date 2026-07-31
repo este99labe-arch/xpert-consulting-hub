@@ -3182,6 +3182,32 @@ export type Database = {
           },
         ]
       }
+      user_active_account: {
+        Row: {
+          account_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_active_account_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_consents: {
         Row: {
           consent_type: string
@@ -3933,6 +3959,7 @@ export type Database = {
       }
       get_real_account_id: { Args: { _user_id: string }; Returns: string }
       get_user_account_id: { Args: { _user_id: string }; Returns: string }
+      get_user_id_by_email: { Args: { _email: string }; Returns: string }
       has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
       invoice_kpis: { Args: { _account_id: string }; Returns: Json }
       list_business_clients_decrypted: {
@@ -3997,6 +4024,14 @@ export type Database = {
           user_id: string
         }[]
       }
+      list_my_memberships: {
+        Args: never
+        Returns: {
+          account_id: string
+          account_name: string
+          role_code: string
+        }[]
+      }
       log_audit_event: {
         Args: {
           _action: string
@@ -4010,6 +4045,7 @@ export type Database = {
         Args: { _new_key: string; _old_key: string }
         Returns: Json
       }
+      set_active_account: { Args: { _account_id: string }; Returns: undefined }
       start_support_session: {
         Args: { _account_id: string; _reason?: string }
         Returns: undefined

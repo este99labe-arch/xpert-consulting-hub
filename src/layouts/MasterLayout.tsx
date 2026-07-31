@@ -20,6 +20,7 @@ import { Separator } from "@/components/ui/separator";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import HealthCheck from "@/components/shared/HealthCheck";
 import { SupportSessionBanner } from "@/components/shared/SupportSession";
+import AccountSwitcher from "@/components/shared/AccountSwitcher";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/master/dashboard" },
@@ -101,8 +102,9 @@ const MasterLayoutInner = () => {
         </Sidebar>
         <SidebarInset>
           <SupportSessionBanner />
-          <header className="sticky top-0 z-10 flex h-14 items-center gap-2 border-b bg-background/80 backdrop-blur-sm px-6">
+          <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-2 border-b bg-background/80 backdrop-blur-sm px-6">
             <SidebarTrigger />
+            <AccountSwitcher />
           </header>
           <main className="flex-1 overflow-auto p-6">
             <div className="max-w-7xl mx-auto">

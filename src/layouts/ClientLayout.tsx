@@ -34,6 +34,7 @@ import OnboardingTour from "@/components/shared/OnboardingTour";
 import HealthCheck from "@/components/shared/HealthCheck";
 import MyTasksBadge from "@/components/tasks/MyTasksBadge";
 import { SupportAccountSwitcher, SupportSessionBanner } from "@/components/shared/SupportSession";
+import AccountSwitcher from "@/components/shared/AccountSwitcher";
 import xpertLogo from "@/assets/brand/iso-blue.png";
 
 const moduleIcons: Record<string, any> = {
@@ -263,6 +264,7 @@ const SidebarInner = () => {
             <Breadcrumbs />
           </div>
           <div className="flex items-center gap-1">
+            <AccountSwitcher />
             <SupportAccountSwitcher />
             <NotificationBell />
             <DropdownMenu>
