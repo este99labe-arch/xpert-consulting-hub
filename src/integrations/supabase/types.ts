@@ -2727,6 +2727,7 @@ export type Database = {
           description: string | null
           id: string
           is_active: boolean
+          is_default_for_new_accounts: boolean
           name: string
           price: number
           sort_order: number
@@ -2740,6 +2741,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean
+          is_default_for_new_accounts?: boolean
           name: string
           price?: number
           sort_order?: number
@@ -2753,6 +2755,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean
+          is_default_for_new_accounts?: boolean
           name?: string
           price?: number
           sort_order?: number
