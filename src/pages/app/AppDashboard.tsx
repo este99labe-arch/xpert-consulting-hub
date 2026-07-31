@@ -9,6 +9,7 @@ import { format, subDays, subMonths, startOfDay, startOfMonth, parseISO, differe
 import { es } from "date-fns/locale";
 
 import KpiCards from "@/components/dashboard/KpiCards";
+import TreasuryKpi from "@/components/accounting/TreasuryKpi";
 import RevenueChart from "@/components/dashboard/RevenueChart";
 import InvoiceStatusChart from "@/components/dashboard/InvoiceStatusChart";
 import LowStockAlerts from "@/components/dashboard/LowStockAlerts";
@@ -248,6 +249,14 @@ const ManagerDashboard = () => {
           </ToggleGroup>
         </div>
       </motion.div>
+
+      {/* Dinero disponible para operar. Este panel no lo ven los EMPLOYEE
+          (tienen su propio dashboard), así que no hace falta filtrar por rol. */}
+      {accountId && (
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+          <TreasuryKpi accountId={accountId} />
+        </div>
+      )}
 
       <KpiCards
         income={curr.income} expense={curr.expense} balance={curr.income - curr.expense}

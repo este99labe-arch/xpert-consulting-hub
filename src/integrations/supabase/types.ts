@@ -2727,6 +2727,7 @@ export type Database = {
           description: string | null
           id: string
           is_active: boolean
+          is_default_for_new_accounts: boolean
           name: string
           price: number
           sort_order: number
@@ -2740,6 +2741,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean
+          is_default_for_new_accounts?: boolean
           name: string
           price?: number
           sort_order?: number
@@ -2753,6 +2755,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean
+          is_default_for_new_accounts?: boolean
           name?: string
           price?: number
           sort_order?: number
@@ -4010,6 +4013,18 @@ export type Database = {
       start_support_session: {
         Args: { _account_id: string; _reason?: string }
         Returns: undefined
+      }
+      treasury_balance: {
+        Args: { _account_id: string }
+        Returns: {
+          balance: number
+          cash_balance: number
+          cash_code: string
+          cash_name: string
+          entry_count: number
+          treasury_code: string
+          treasury_name: string
+        }[]
       }
       xred_is_match_participant: {
         Args: { _interaction_id: string; _user_id: string }

@@ -32,6 +32,7 @@ type Vertical = {
 type Service = {
   id: string; vertical_id: string; name: string; description: string | null;
   price: number; billing_period: string; sort_order: number; is_active: boolean;
+  is_default_for_new_accounts: boolean;
 };
 
 const BILLING_LABELS: Record<string, string> = {
@@ -75,7 +76,7 @@ const VerticalsServicesTab = ({ accountId, isManager }: Props) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("services")
-        .select("id, vertical_id, name, description, price, billing_period, sort_order, is_active")
+        .select("id, vertical_id, name, description, price, billing_period, sort_order, is_active, is_default_for_new_accounts")
         .eq("account_id", accountId)
         .order("sort_order")
         .order("name");
@@ -167,6 +168,7 @@ const VerticalsServicesTab = ({ accountId, isManager }: Props) => {
         billing_period: s.billing_period || "MONTHLY",
         vertical_id: s.vertical_id,
         is_active: s.is_active ?? true,
+        is_default_for_new_accounts: s.is_default_for_new_accounts ?? false,
       };
       if (s.id) {
         const { error } = await supabase.from("services").update(payload).eq("id", s.id);
@@ -349,6 +351,11 @@ const VerticalsServicesTab = ({ accountId, isManager }: Props) => {
                           <Badge variant="secondary" className="shrink-0">
                             {BILLING_LABELS[s.billing_period] ?? s.billing_period}
                           </Badge>
+                          {s.is_default_for_new_accounts && (
+                            <Badge variant="info" className="shrink-0" title="Se contrata solo en cuentas nuevas">
+                              Por defecto
+                            </Badge>
+                          )}
                           {!s.is_active && <Badge variant="warning" className="shrink-0">Inactivo</Badge>}
                           <Switch
                             checked={s.is_active}
@@ -504,6 +511,19 @@ const VerticalsServicesTab = ({ accountId, isManager }: Props) => {
               <Switch
                 checked={serviceForm?.is_active ?? true}
                 onCheckedChange={(v) => setServiceForm((f) => ({ ...f, is_active: v }))}
+              />
+            </div>
+            <div className="flex items-center justify-between rounded-lg border border-border p-3">
+              <div>
+                <Label>Contratar automáticamente en cuentas nuevas</Label>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Al crear una cuenta ERP desde el Panel Admin, este servicio se dará de alta
+                  solo para ese cliente.
+                </p>
+              </div>
+              <Switch
+                checked={serviceForm?.is_default_for_new_accounts ?? false}
+                onCheckedChange={(v) => setServiceForm((f) => ({ ...f, is_default_for_new_accounts: v }))}
               />
             </div>
           </div>
