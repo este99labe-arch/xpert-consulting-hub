@@ -279,6 +279,34 @@ const sections: Section[] = [
       { method: "DELETE", path: "/reminders/:id", description: "Eliminar recordatorio" },
     ],
   },
+  {
+    title: "Líneas de negocio",
+    description:
+      "Verticales (líneas de negocio) y los servicios de cada una. No se puede eliminar una vertical con servicios ni un servicio con contrataciones: en esos casos se devuelve 409 y hay que desactivarlo.",
+    endpoints: [
+      { method: "GET", path: "/verticals", description: "Listar verticales", params: "?is_active=true&page=1&limit=50" },
+      { method: "GET", path: "/verticals/:id", description: "Detalle de vertical" },
+      { method: "POST", path: "/verticals", description: "Crear vertical", body: `{ "name": "Security", "description": "Alarmas y vigilancia", "sort_order": 0, "is_active": true }` },
+      { method: "PUT", path: "/verticals/:id", description: "Actualizar vertical" },
+      { method: "DELETE", path: "/verticals/:id", description: "Eliminar vertical (409 si tiene servicios)" },
+      { method: "GET", path: "/services", description: "Listar servicios", params: "?vertical_id=uuid&is_active=true" },
+      { method: "GET", path: "/services/:id", description: "Detalle de servicio" },
+      { method: "POST", path: "/services", description: "Crear servicio", body: `{ "vertical_id": "uuid", "name": "Alarma Hogar", "description": "Cuota mensual", "price": 29.90, "billing_period": "MONTHLY", "is_active": true }` },
+      { method: "PUT", path: "/services/:id", description: "Actualizar servicio" },
+      { method: "DELETE", path: "/services/:id", description: "Eliminar servicio (409 si tiene contrataciones)" },
+    ],
+  },
+  {
+    title: "Servicios contratados",
+    description:
+      "Servicios que un cliente tiene contratados. Por defecto se listan solo los vigentes; usa ?status=ALL para incluir las bajas.",
+    endpoints: [
+      { method: "GET", path: "/clients/:id/services", description: "Listar contrataciones del cliente", params: "?status=ACTIVE|PAUSED|CANCELLED|ALL" },
+      { method: "POST", path: "/clients/:id/services", description: "Contratar un servicio", body: `{ "service_id": "uuid", "start_date": "2026-07-01", "price": 24.90, "notes": "Precio pactado con descuento" }` },
+      { method: "PUT", path: "/clients/:id/services/:contractId", description: "Actualizar contratación (estado, fechas, precio)", body: `{ "status": "CANCELLED", "end_date": "2026-12-31" }` },
+      { method: "DELETE", path: "/clients/:id/services/:contractId", description: "Eliminar contratación del histórico" },
+    ],
+  },
 ];
 
 const errorCodes = [
