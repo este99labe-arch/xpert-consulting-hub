@@ -152,7 +152,11 @@ serve(async (req) => {
       });
     }
 
-    const { company_name, manager_email, module_ids, client_info, primary_contact } = await req.json();
+    // client_id (opcional): vincula la cuenta nueva a un cliente YA existente,
+    // en vez de crear otro. Permite que un cliente tenga varias cuentas ERP
+    // (producción, delegación Madrid…). Si no viene, el trigger crea el cliente.
+    const { company_name, manager_email, module_ids, client_info, primary_contact, client_id } =
+      await req.json();
 
     if (!company_name || !manager_email || !module_ids?.length) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
@@ -167,6 +171,8 @@ serve(async (req) => {
     const accountInsert: Record<string, any> = {
       name: company_name, type: "CLIENT", created_by: user.id,
     };
+    // Al venir informado, el trigger no crea cliente y la cuenta cuelga del existente.
+    if (client_id) accountInsert.client_id = client_id;
     if (client_info) {
       if (client_info.tax_id) accountInsert.tax_id = client_info.tax_id;
       if (client_info.email) accountInsert.email = client_info.email;
@@ -206,17 +212,34 @@ serve(async (req) => {
 
     // 6. Update synced business_client record
     if (client_info) {
-      const { data: masterAccount } = await adminClient
-        .from("accounts").select("id").eq("type", "MASTER").limit(1).single();
+      // El trigger acaba de rellenar accounts.client_id. Se lee de ahí en vez de
+      // emparejar por nombre, que fallaba con clientes homónimos.
+      const { data: createdAccount } = await adminClient
+        .from("accounts").select("client_id").eq("id", account.id).single();
 
-      if (masterAccount) {
-        const { data: syncedClient } = await adminClient
+      let syncedClient: { id: string } | null =
+        createdAccount?.client_id ? { id: createdAccount.client_id } : null;
+
+      const { data: masterAccount } = await adminClient
+        .from("accounts").select("id").eq("type", "MASTER").limit(1).maybeSingle();
+
+      // Red de seguridad: si por lo que sea no hubiera FK, se recurre al
+      // emparejamiento por nombre (comportamiento anterior).
+      if (!syncedClient && masterAccount) {
+        const { data: byName } = await adminClient
           .from("business_clients").select("id")
           .eq("account_id", masterAccount.id).eq("name", company_name)
-          .order("created_at", { ascending: false }).limit(1).single();
-
+          .order("created_at", { ascending: false }).limit(1).maybeSingle();
+        syncedClient = byName ?? null;
+        // Se deja el enlace hecho para que no vuelva a hacer falta el nombre.
         if (syncedClient) {
-          await adminClient.from("business_clients").update({
+          await adminClient.from("accounts")
+            .update({ client_id: syncedClient.id }).eq("id", account.id);
+        }
+      }
+
+      if (syncedClient) {
+        await adminClient.from("business_clients").update({
             tax_id: client_info.tax_id || "PENDIENTE",
             email: client_info.email || null,
             phone: client_info.phone || null,
@@ -232,14 +255,13 @@ serve(async (req) => {
             notes: client_info.notes || null,
           }).eq("id", syncedClient.id);
 
-          if (primary_contact?.name) {
-            await adminClient.from("client_contacts").insert({
-              client_id: syncedClient.id, account_id: masterAccount.id,
-              name: primary_contact.name, email: primary_contact.email || null,
-              phone: primary_contact.phone || null, position: primary_contact.position || null,
-              is_primary: true,
-            });
-          }
+        if (primary_contact?.name && masterAccount) {
+          await adminClient.from("client_contacts").insert({
+            client_id: syncedClient.id, account_id: masterAccount.id,
+            name: primary_contact.name, email: primary_contact.email || null,
+            phone: primary_contact.phone || null, position: primary_contact.position || null,
+            is_primary: true,
+          });
         }
       }
     }
