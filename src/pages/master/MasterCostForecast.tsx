@@ -7,9 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import TreasuryKpi from "@/components/accounting/TreasuryKpi";
+import { costAppliesTo, costOfMonth as sumCostOfMonth } from "@/lib/costForecast";
 import {
-  TrendingUp, TrendingDown, Wallet, Plus, Trash2, Loader2, Landmark, PiggyBank,
+  TrendingUp, TrendingDown, Wallet, Plus, Trash2, Loader2, Landmark, PiggyBank, CalendarOff,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format, startOfMonth, subMonths, addMonths, parseISO } from "date-fns";
@@ -23,6 +26,7 @@ const db = supabase as any;
 // Considera ingreso el importe facturado (emitido) por la cuenta matriz.
 const INCOME_STATUSES = ["SENT", "PARTIALLY_PAID", "PAID", "OVERDUE"];
 
+
 const MasterCostForecast = () => {
   // Datos propios de XpertConsulting: se usa la cuenta REAL para que una sesión
   // de soporte no desvíe estas consultas a la cuenta del cliente.
@@ -32,6 +36,10 @@ const MasterCostForecast = () => {
   const [monthsFwd, setMonthsFwd] = useState(3);
   const [newConcept, setNewConcept] = useState("");
   const [newAmount, setNewAmount] = useState("");
+  /** Mes que se está consultando en el detalle de costes. */
+  const [selectedMonth, setSelectedMonth] = useState(() => format(new Date(), "yyyy-MM"));
+  /** Alta: suscripción fija (true) o gasto puntual del mes (false). */
+  const [newRecurring, setNewRecurring] = useState(true);
 
   // Ingresos reales de XpertConsulting (sus propias facturas emitidas)
   const { data: invoices = [] } = useQuery({
@@ -64,9 +72,23 @@ const MasterCostForecast = () => {
     enabled: !!accountId,
   });
 
-  const monthlyCost = useMemo(
-    () => costs.filter((c) => c.is_active).reduce((s, c) => s + Number(c.monthly_amount || 0), 0),
-    [costs],
+  /** Coste total aplicable a un mes concreto (yyyy-MM). */
+  const costOfMonth = useMemo(() => (key: string) => sumCostOfMonth(costs, key), [costs]);
+
+  /** Costes vigentes en el mes seleccionado, para la lista de abajo. */
+  const monthCosts = useMemo(
+    () => costs.filter((c) => costAppliesTo(c, selectedMonth)),
+    [costs, selectedMonth],
+  );
+
+  /** Coste del mes seleccionado (sustituye al antiguo total constante). */
+  const monthlyCost = useMemo(() => costOfMonth(selectedMonth), [costOfMonth, selectedMonth]);
+
+  /** Solo el gasto fijo recurrente, para separarlo de los puntuales. */
+  const recurringCost = useMemo(
+    () => monthCosts.filter((c) => c.is_recurring !== false)
+      .reduce((s, c) => s + Number(c.monthly_amount || 0), 0),
+    [monthCosts],
   );
 
   const addCost = useMutation({
@@ -75,6 +97,9 @@ const MasterCostForecast = () => {
       if (!newConcept.trim() || !(amount >= 0)) throw new Error("Concepto e importe válidos requeridos");
       const { error } = await db.from("master_cost_forecast").insert({
         account_id: accountId, concept: newConcept.trim(), monthly_amount: amount, sort_order: costs.length,
+        is_recurring: newRecurring,
+        // La suscripción arranca en el mes consultado; el puntual pertenece a él.
+        start_month: `${selectedMonth}-01`,
       });
       if (error) throw error;
     },
@@ -117,11 +142,13 @@ const MasterCostForecast = () => {
       const key = format(d, "yyyy-MM");
       const future = i > 0;
       const ingreso = future ? null : (incomeByMonth.get(key) || 0);
-      const beneficio = ingreso === null ? null : ingreso - monthlyCost;
-      rows.push({ key, label: format(d, "MMM yy", { locale: es }), ingreso, coste: monthlyCost, beneficio, futuro: future });
+      // El coste ya no es constante: cada mes suma solo lo vigente en él.
+      const coste = costOfMonth(key);
+      const beneficio = ingreso === null ? null : ingreso - coste;
+      rows.push({ key, label: format(d, "MMM yy", { locale: es }), ingreso, coste, beneficio, futuro: future });
     }
     return rows;
-  }, [invoices, monthlyCost, monthsBack, monthsFwd]);
+  }, [invoices, costOfMonth, monthsBack, monthsFwd]);
 
   // KPIs sobre los meses con ingreso real
   const kpi = useMemo(() => {
@@ -132,6 +159,17 @@ const MasterCostForecast = () => {
     const margin = avgIncome > 0 ? (expectedProfit / avgIncome) * 100 : 0;
     return { avgIncome, monthlyCost, expectedProfit, margin };
   }, [series, monthlyCost]);
+
+  /** Meses seleccionables: 12 atrás y 6 vista, para cuadrar con el gráfico. */
+  const monthOptions = useMemo(() => {
+    const now = new Date();
+    const opts: { key: string; label: string }[] = [];
+    for (let i = -12; i <= 6; i++) {
+      const d = startOfMonth(i < 0 ? subMonths(now, -i) : addMonths(now, i));
+      opts.push({ key: format(d, "yyyy-MM"), label: format(d, "MMMM yyyy", { locale: es }) });
+    }
+    return opts;
+  }, []);
 
   const kpis = [
     { label: "Ingreso medio mensual", value: EUR0(kpi.avgIncome), icon: TrendingUp, tone: "text-[hsl(var(--success))]", bg: "bg-[hsl(var(--success))]/10", hint: "Media de meses con facturación" },
@@ -149,6 +187,13 @@ const MasterCostForecast = () => {
           para estimar el beneficio.
         </p>
       </div>
+
+      {/* Dinero disponible: contrapunto de caja a la previsión contable. */}
+      {accountId && (
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+          <TreasuryKpi accountId={accountId} showCash />
+        </div>
+      )}
 
       {/* KPIs */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
@@ -216,14 +261,36 @@ const MasterCostForecast = () => {
       {/* Editor de costes mensuales */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-base"><Wallet className="h-4 w-4 text-primary" />Costes mensuales previstos</CardTitle>
-          <CardDescription>Añade tus costes recurrentes (nóminas, hosting, herramientas, OpenAI…). Total: <span className="font-semibold text-foreground">{EUR(monthlyCost)}/mes</span></CardDescription>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-base"><Wallet className="h-4 w-4 text-primary" />Costes mensuales previstos</CardTitle>
+              <CardDescription>
+                Suscripciones y gastos puntuales. Total de {monthOptions.find((m) => m.key === selectedMonth)?.label ?? "el mes"}:{" "}
+                <span className="font-semibold text-foreground">{EUR(monthlyCost)}</span>
+                {recurringCost !== monthlyCost && (
+                  <> · fijo recurrente <span className="font-medium text-foreground">{EUR(recurringCost)}</span></>
+                )}
+              </CardDescription>
+            </div>
+            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+              <SelectTrigger className="h-9 w-[190px] shrink-0 capitalize"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {monthOptions.map((m) => (
+                  <SelectItem key={m.key} value={m.key} className="capitalize">{m.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
         <CardContent className="space-y-2">
-          {costs.length === 0 && (
-            <p className="py-4 text-center text-sm text-muted-foreground">Sin costes previstos todavía. Añade el primero abajo.</p>
+          {monthCosts.length === 0 && (
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              {costs.length === 0
+                ? "Sin costes previstos todavía. Añade el primero abajo."
+                : "Ningún coste vigente en este mes."}
+            </p>
           )}
-          {costs.map((c) => (
+          {monthCosts.map((c) => (
             <div key={c.id} className={`flex items-center gap-2 rounded-lg border border-border p-2.5 ${c.is_active ? "" : "opacity-55"}`}>
               <Input
                 defaultValue={c.concept}
@@ -238,6 +305,19 @@ const MasterCostForecast = () => {
                 />
                 <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
               </div>
+              <Badge variant={c.is_recurring === false ? "muted" : "info"} className="shrink-0">
+                {c.is_recurring === false ? "Puntual" : "Fijo"}
+              </Badge>
+              {/* Dar de baja una suscripción: deja de contar a partir del mes
+                  siguiente, conservando el histórico de meses anteriores. */}
+              {c.is_recurring !== false && !c.end_month && (
+                <Button
+                  variant="ghost" size="icon" className="h-9 w-9" title="Dar de baja a partir de este mes"
+                  onClick={() => updateCost.mutate({ id: c.id, patch: { end_month: `${selectedMonth}-01` } })}
+                >
+                  <CalendarOff className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              )}
               <Switch checked={c.is_active} onCheckedChange={(v) => updateCost.mutate({ id: c.id, patch: { is_active: v } })} />
               <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => removeCost.mutate(c.id)} title="Eliminar">
                 <Trash2 className="h-4 w-4 text-muted-foreground" />
@@ -245,12 +325,19 @@ const MasterCostForecast = () => {
             </div>
           ))}
 
-          <div className="flex items-center gap-2 border-t border-border pt-3">
-            <Input placeholder="Concepto (ej. Hosting, Nóminas…)" value={newConcept} onChange={(e) => setNewConcept(e.target.value)} className="h-9 flex-1" onKeyDown={(e) => e.key === "Enter" && addCost.mutate()} />
+          <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
+            <Input placeholder="Concepto (ej. Hosting, Nóminas…)" value={newConcept} onChange={(e) => setNewConcept(e.target.value)} className="h-9 min-w-[180px] flex-1" onKeyDown={(e) => e.key === "Enter" && addCost.mutate()} />
             <div className="relative w-36">
               <Input type="number" step="0.01" placeholder="0,00" value={newAmount} onChange={(e) => setNewAmount(e.target.value)} className="h-9 pr-7 text-right" onKeyDown={(e) => e.key === "Enter" && addCost.mutate()} />
               <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
             </div>
+            <Select value={newRecurring ? "FIXED" : "ONE_OFF"} onValueChange={(v) => setNewRecurring(v === "FIXED")}>
+              <SelectTrigger className="h-9 w-[150px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="FIXED">Fijo mensual</SelectItem>
+                <SelectItem value="ONE_OFF">Solo este mes</SelectItem>
+              </SelectContent>
+            </Select>
             <Button onClick={() => addCost.mutate()} disabled={!newConcept.trim() || addCost.isPending} className="gap-1.5">
               {addCost.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
               Añadir
