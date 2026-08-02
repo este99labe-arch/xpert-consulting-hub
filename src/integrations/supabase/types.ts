@@ -2139,28 +2139,37 @@ export type Database = {
           account_id: string
           concept: string
           created_at: string
+          end_month: string | null
           id: string
           is_active: boolean
+          is_recurring: boolean
           monthly_amount: number
           sort_order: number
+          start_month: string | null
         }
         Insert: {
           account_id: string
           concept: string
           created_at?: string
+          end_month?: string | null
           id?: string
           is_active?: boolean
+          is_recurring?: boolean
           monthly_amount?: number
           sort_order?: number
+          start_month?: string | null
         }
         Update: {
           account_id?: string
           concept?: string
           created_at?: string
+          end_month?: string | null
           id?: string
           is_active?: boolean
+          is_recurring?: boolean
           monthly_amount?: number
           sort_order?: number
+          start_month?: string | null
         }
         Relationships: [
           {
