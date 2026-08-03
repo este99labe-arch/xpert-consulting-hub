@@ -17,7 +17,12 @@ import {
 import {
   Loader2, ArrowRight, Plus, Trash2, FileText, Receipt, FileSignature,
   RefreshCw, Users, Percent, StickyNote, Paperclip, CreditCard, CalendarDays, Tags, Package, Boxes, Eye,
+  BadgeEuro, RotateCcw,
 } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import InvoiceAttachment from "@/components/invoices/InvoiceAttachment";
@@ -33,6 +38,22 @@ const statusLabels: Record<string, string> = {
 // registrados (panel "Cobros y pagos"), para mantener la congruencia.
 const manualInvoiceStatuses = ["DRAFT", "SENT", "OVERDUE", "CANCELLED"];
 const allQuoteStatuses = ["DRAFT", "SENT", "ACCEPTED", "REJECTED", "INVOICED", "CANCELLED"];
+
+/** Color del estado actual, para distinguirlo de un vistazo. */
+const STATUS_VARIANT: Record<string, "success" | "warning" | "info" | "muted" | "softDestructive"> = {
+  DRAFT: "muted",
+  SENT: "info",
+  PARTIALLY_PAID: "warning",
+  OVERDUE: "softDestructive",
+  PAID: "success",
+  ACCEPTED: "success",
+  REJECTED: "softDestructive",
+  INVOICED: "info",
+  CANCELLED: "muted",
+};
+
+/** Desde estos estados tiene sentido cobrar la factura. */
+const CAN_MARK_PAID = ["DRAFT", "SENT", "OVERDUE", "PARTIALLY_PAID"];
 
 interface LineInput { description: string; quantity: string; unitPrice: string; productId?: string; sku?: string; stock?: number; unit?: string; }
 
@@ -62,6 +83,80 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice, onPreview }: Props) =>
   const [attachmentName, setAttachmentName] = useState<string | null>(null);
   const [vatIncluded, setVatIncluded] = useState(false);
   const [lines, setLines] = useState<LineInput[]>([{ description: "", quantity: "1", unitPrice: "" }]);
+  const [markingPaid, setMarkingPaid] = useState(false);
+  const [confirmReopen, setConfirmReopen] = useState(false);
+
+  /**
+   * Cobra el saldo pendiente y deja la factura como pagada.
+   *
+   * Registra el cobro en lugar de tocar el estado a mano: el asiento de
+   * tesorería lo genera el trigger sobre invoice_payments, así que cambiar
+   * solo el estado dejaría la contabilidad sin el ingreso.
+   */
+  const handleMarkPaid = async () => {
+    if (!invoice || !user || !accountId) return;
+    setMarkingPaid(true);
+    try {
+      const { data: pays } = await supabase
+        .from("invoice_payments")
+        .select("amount")
+        .eq("invoice_id", invoice.id);
+      const paid = (pays || []).reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
+      const remaining = +(Number(invoice.amount_total || 0) - paid).toFixed(2);
+
+      if (remaining > 0.01) {
+        const { error } = await supabase.from("invoice_payments").insert({
+          invoice_id: invoice.id, account_id: accountId, amount: remaining,
+          payment_date: new Date().toISOString().slice(0, 10),
+          method: invoice.payment_method === "DIRECT_DEBIT" ? "TRANSFER" : (invoice.payment_method || "TRANSFER"),
+          notes: "Saldo total", created_by: user.id,
+        } as any);
+        if (error) throw error;
+      }
+      const { error: updErr } = await supabase.from("invoices")
+        .update({ status: "PAID", paid_at: new Date().toISOString() }).eq("id", invoice.id);
+      if (updErr) throw updErr;
+
+      toast({ title: "Factura marcada como pagada", description: "Se ha registrado el cobro y contabilizado." });
+      queryClient.invalidateQueries({ queryKey: ["invoice-payments", invoice.id] });
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["treasury-balance"] });
+      onOpenChange(false);
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setMarkingPaid(false);
+    }
+  };
+
+  /**
+   * Reabre una factura pagada: elimina sus cobros (lo que revierte el asiento
+   * de tesorería por el trigger) y la devuelve a "Enviada".
+   */
+  const handleReopen = async () => {
+    if (!invoice) return;
+    setMarkingPaid(true);
+    try {
+      const { error: delErr } = await supabase
+        .from("invoice_payments").delete().eq("invoice_id", invoice.id);
+      if (delErr) throw delErr;
+
+      const { error: updErr } = await supabase.from("invoices")
+        .update({ status: "SENT", paid_at: null }).eq("id", invoice.id);
+      if (updErr) throw updErr;
+
+      toast({ title: "Factura reabierta", description: "Se han eliminado los cobros y su asiento." });
+      queryClient.invalidateQueries({ queryKey: ["invoice-payments", invoice.id] });
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["treasury-balance"] });
+      setConfirmReopen(false);
+      onOpenChange(false);
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setMarkingPaid(false);
+    }
+  };
 
   const isDraft = invoice?.status === "DRAFT";
   const isQuote = invoice?.type === "QUOTE";
@@ -348,18 +443,56 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice, onPreview }: Props) =>
         {/* Body */}
         <div className="flex-1 space-y-4 overflow-y-auto bg-muted/30 px-6 py-5">
           {/* Estado */}
-          <FormSection icon={RefreshCw} title="Estado" desc="Situación actual y transición disponible">
-            <div className="flex flex-wrap items-center gap-3">
-              <Badge variant="outline" className="px-3 py-1 text-sm">{statusLabels[invoice.status]}</Badge>
-              {nextStatuses.length > 0 && (
-                <>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                  {nextStatuses.map((s) => (
-                    <Button key={s} variant={status === s ? "default" : "outline"} size="sm" onClick={() => setStatus(s)}>
-                      {statusLabels[s]}
+          <FormSection icon={RefreshCw} title="Estado" desc="Situación actual y acciones disponibles">
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm text-muted-foreground">Ahora mismo:</span>
+                <Badge variant={STATUS_VARIANT[invoice.status] ?? "muted"} className="px-3 py-1 text-sm">
+                  {statusLabels[invoice.status]}
+                </Badge>
+                {status !== invoice.status && (
+                  <>
+                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                    <Badge variant="outline" className="px-3 py-1 text-sm">{statusLabels[status]}</Badge>
+                    <Button variant="ghost" size="sm" onClick={() => setStatus(invoice.status)}>
+                      Deshacer
                     </Button>
-                  ))}
-                </>
+                  </>
+                )}
+              </div>
+
+              {/* Acción principal del momento. "Marcar como pagada" NO cambia el
+                  estado a mano: registra el cobro pendiente, que es lo que
+                  genera el asiento y mantiene la tesorería cuadrada. */}
+              <div className="flex flex-wrap items-center gap-2">
+                {!isQuote && CAN_MARK_PAID.includes(invoice.status) && (
+                  <Button size="sm" className="gap-1.5" onClick={handleMarkPaid} disabled={markingPaid}>
+                    {markingPaid ? <Loader2 className="h-4 w-4 animate-spin" /> : <BadgeEuro className="h-4 w-4" />}
+                    Marcar como pagada
+                  </Button>
+                )}
+                {!isQuote && invoice.status === "PAID" && (
+                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setConfirmReopen(true)}>
+                    <RotateCcw className="h-4 w-4" />
+                    Reabrir factura
+                  </Button>
+                )}
+                {nextStatuses.map((s) => (
+                  <Button
+                    key={s}
+                    variant={status === s ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setStatus(s)}
+                  >
+                    {statusLabels[s]}
+                  </Button>
+                ))}
+              </div>
+
+              {!isQuote && CAN_MARK_PAID.includes(invoice.status) && (
+                <p className="text-xs text-muted-foreground">
+                  Al marcarla como pagada se registra el cobro del saldo pendiente y se contabiliza en tesorería.
+                </p>
               )}
             </div>
           </FormSection>
@@ -636,6 +769,28 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice, onPreview }: Props) =>
           </div>
         </DialogFooter>
       </DialogContent>
+
+      <AlertDialog open={confirmReopen} onOpenChange={setConfirmReopen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Reabrir esta factura?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se eliminarán los cobros registrados y, con ellos, su asiento contable: el
+              importe saldrá de tesorería y la factura volverá a "Enviada". Es la forma
+              correcta de deshacer un cobro, pero no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleReopen}
+            >
+              Reabrir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 };

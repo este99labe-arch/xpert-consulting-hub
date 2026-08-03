@@ -1703,6 +1703,7 @@ export type Database = {
           invoice_id: string
           product_id: string | null
           quantity: number
+          service_id: string | null
           sort_order: number
           unit_price: number
         }
@@ -1714,6 +1715,7 @@ export type Database = {
           invoice_id: string
           product_id?: string | null
           quantity?: number
+          service_id?: string | null
           sort_order?: number
           unit_price?: number
         }
@@ -1725,6 +1727,7 @@ export type Database = {
           invoice_id?: string
           product_id?: string | null
           quantity?: number
+          service_id?: string | null
           sort_order?: number
           unit_price?: number
         }
@@ -1748,6 +1751,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_lines_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
             referencedColumns: ["id"]
           },
         ]
