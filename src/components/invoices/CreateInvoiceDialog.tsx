@@ -18,7 +18,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import {
   Plus, Trash2, FileText, Receipt, FileSignature, Users, CalendarDays,
-  Percent, StickyNote, Paperclip, Copy, Loader2, Tags, Package, Boxes,
+  Percent, StickyNote, Paperclip, Copy, Loader2, Tags, Package, Boxes, Layers,
 } from "lucide-react";
 import InvoiceAttachment from "@/components/invoices/InvoiceAttachment";
 import FormSection from "@/components/shared/FormSection";
@@ -29,6 +29,9 @@ interface InvoiceLineInput {
   quantity: string;
   unitPrice: string;
   productId?: string;
+  /** Servicio del catálogo; da la vertical para el análisis de ingresos. */
+  serviceId?: string;
+  serviceVertical?: string;
   sku?: string;
   stock?: number;
   unit?: string;
@@ -173,9 +176,38 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
     enabled: !!accountId && open,
   });
 
+  /** Servicios activos del catálogo (con su vertical, para el análisis posterior). */
+  const { data: services = [] } = useQuery({
+    queryKey: ["invoice-services", accountId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("services")
+        .select("id, name, price, vertical_id, verticals(name, is_active)")
+        .eq("account_id", accountId!)
+        .eq("is_active", true)
+        .order("sort_order");
+      if (error) throw error;
+      return (data || []).filter((s: any) => s.verticals?.is_active);
+    },
+    enabled: !!accountId,
+  });
+
   const addLine = () => setLines([...lines, { description: "", quantity: "1", unitPrice: "" }]);
 
   // Añade una línea vinculada a un producto del catálogo (stock se descuenta al emitir)
+  /** Añade una línea a partir de un servicio del catálogo (precio editable). */
+  const addServiceLine = (s: any) => {
+    const line: InvoiceLineInput = {
+      description: s.name, quantity: "1", unitPrice: String(s.price ?? 0),
+      serviceId: s.id, serviceVertical: s.verticals?.name,
+    };
+    setLines((prev) => {
+      const first = prev[0];
+      if (prev.length === 1 && !first.description.trim() && !first.unitPrice.trim() && !first.productId && !first.serviceId) return [line];
+      return [...prev, line];
+    });
+  };
+
   const addProductLine = (p: any) => {
     const line: InvoiceLineInput = {
       description: p.name, quantity: "1", unitPrice: String(p.sale_price ?? 0),
@@ -246,6 +278,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
           unit_price: parseFloat(l.unitPrice) || 0,
           amount: +((parseFloat(l.quantity) || 1) * (parseFloat(l.unitPrice) || 0)).toFixed(2),
           product_id: l.productId || null,
+          service_id: l.serviceId || null,
           sort_order: i,
         }));
         await supabase.from("invoice_lines").insert(lineInserts as any);
@@ -428,6 +461,32 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button type="button" variant="outline" size="sm">
+                      <Layers className="mr-1 h-3.5 w-3.5" /> Servicios
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="max-h-72 w-80 overflow-y-auto">
+                    <DropdownMenuLabel>Añadir servicio del catálogo</DropdownMenuLabel>
+                    {services.length === 0 && (
+                      <div className="px-2 py-3 text-center text-xs text-muted-foreground">
+                        No hay servicios activos. Créalos en Configuración → Líneas de negocio.
+                      </div>
+                    )}
+                    {services.map((s: any) => (
+                      <DropdownMenuItem key={s.id} onClick={() => addServiceLine(s)} className="flex items-center justify-between gap-2">
+                        <span className="min-w-0 flex-1 truncate">
+                          {s.name}
+                          <span className="ml-1 text-xs text-muted-foreground">· {s.verticals?.name}</span>
+                        </span>
+                        <span className="shrink-0 text-xs text-muted-foreground">€{Number(s.price).toFixed(2)}</span>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
                 <Button type="button" variant="outline" size="sm" onClick={addLine}>
                   <Plus className="mr-1 h-3.5 w-3.5" /> Añadir línea
                 </Button>
