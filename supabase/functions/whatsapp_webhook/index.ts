@@ -89,7 +89,15 @@ async function transcribeAudio(bytes: Uint8Array, mime: string): Promise<string 
   }
 }
 
-async function extractIncoming(admin: any, cfg: any, conv: any, msg: any) {
+/**
+ * Normaliza el contenido de un mensaje de WhatsApp (texto, audio, imagen o
+ * documento), descargando el binario a Storage cuando lo hay.
+ *
+ * `transcribe` se desactiva para los ecos y el histórico: transcribir lo que
+ * hemos dicho nosotros o conversaciones ya cerradas no aporta nada y gasta
+ * llamadas a Whisper.
+ */
+async function extractIncoming(admin: any, cfg: any, conv: any, msg: any, transcribe = true) {
   const token = cfg.access_token;
   const type = msg.type;
 
@@ -97,7 +105,7 @@ async function extractIncoming(admin: any, cfg: any, conv: any, msg: any) {
     const media = await fetchMedia(msg.audio.id, token);
     if (media) {
       const path = await storeMedia(admin, cfg.account_id, conv.id, media.bytes, media.mime);
-      const transcription = await transcribeAudio(media.bytes, media.mime);
+      const transcription = transcribe ? await transcribeAudio(media.bytes, media.mime) : null;
       return { text: transcription || "[Audio recibido]", message_type: "audio", media_path: path, media_mime: media.mime, transcription };
     }
     return { text: "[Audio recibido]", message_type: "audio", media_path: null, media_mime: null, transcription: null };
@@ -257,26 +265,36 @@ async function classifyLLM(intents: any[], text: string, businessContext: string
   }
 }
 
+/**
+ * Localiza la conversación del contacto o la abre, enlazándola con la ficha
+ * del contacto del cliente si el teléfono coincide (últimos 9 dígitos).
+ */
+async function findOrCreateConversation(admin: any, account_id: string, phone: string, contactName: string | null) {
+  const { data: found } = await admin.from("chat_conversations")
+    .select("*").eq("account_id", account_id).eq("contact_phone", phone).maybeSingle();
+  if (found) return { conv: found, isNew: false };
+
+  const last9 = phone.slice(-9);
+  const { data: cc } = await admin.from("client_contacts")
+    .select("id, client_id, name").eq("account_id", account_id).ilike("phone", `%${last9}`).maybeSingle();
+  const ins = await admin.from("chat_conversations").insert({
+    account_id, contact_phone: phone,
+    contact_name: cc?.name || contactName || null,
+    client_id: cc?.client_id || null, contact_id: cc?.id || null,
+    status: "BOT",
+  }).select("*").single();
+  return { conv: ins.data, isNew: true };
+}
+
 // ─── Chat pipeline: contactos externos (no empleados) ───
 async function handleChatMessage(admin: any, cfg: any, msg: any, senderPhone: string, contactName: string | null) {
   const account_id = cfg.account_id;
 
-  let { data: conv } = await admin.from("chat_conversations")
-    .select("*").eq("account_id", account_id).eq("contact_phone", senderPhone).maybeSingle();
-  let isNew = false;
-  if (!conv) {
-    const last9 = senderPhone.slice(-9);
-    const { data: cc } = await admin.from("client_contacts")
-      .select("id, client_id, name").eq("account_id", account_id).ilike("phone", `%${last9}`).maybeSingle();
-    const ins = await admin.from("chat_conversations").insert({
-      account_id, contact_phone: senderPhone,
-      contact_name: cc?.name || contactName || null,
-      client_id: cc?.client_id || null, contact_id: cc?.id || null,
-      status: "BOT",
-    }).select("*").single();
-    conv = ins.data;
-    isNew = true;
-  }
+  // Meta reintenta las entregas que no confirma a tiempo. Sin este corte, un
+  // reintento volvería a pasar el mensaje por el bot y duplicaría la tarea.
+  if (await alreadyStored(admin, account_id, msg.id)) return;
+
+  const { conv, isNew } = await findOrCreateConversation(admin, account_id, senderPhone, contactName);
   if (!conv) return;
 
   // Conversación borrada (borrado lógico): un mensaje nuevo la reactiva
@@ -530,6 +548,122 @@ async function handleAttendance(admin: any, cfg: any, profile: any, msg: any, se
   }
 }
 
+// ════════════════════════════════════════════════════════════════════════════
+// COEXISTENCIA: el número vive a la vez en la app de WhatsApp Business del
+// móvil y en la Cloud API. Meta manda un "eco" de todo lo que sale del número.
+// Sin esto, las respuestas dadas desde el móvil no aparecerían en el SaaS y
+// el bot seguiría tratando la conversación como no atendida.
+// ════════════════════════════════════════════════════════════════════════════
+
+/** ¿Ya tenemos guardado este id de Meta? Evita duplicar nuestros propios envíos. */
+async function alreadyStored(admin: any, account_id: string, waId: string | null) {
+  if (!waId) return false;
+  const { data } = await admin.from("chat_messages")
+    .select("id").eq("account_id", account_id).eq("wa_message_id", waId).maybeSingle();
+  return !!data;
+}
+
+const previewOf = (type: string, text: string) =>
+  (type === "image" ? (text || "📷 Foto")
+    : type === "audio" ? (text && text !== "[Audio recibido]" ? `🎙️ ${text}` : "🎙️ Audio")
+    : type === "document" ? "📎 Documento"
+    : text) || "";
+
+/**
+ * Eco de un mensaje enviado desde el número: normalmente escrito a mano en el
+ * móvil, pero Meta también repite los que enviamos por API (de ahí el filtro
+ * por wa_message_id).
+ */
+async function handleEcho(admin: any, cfg: any, echo: any) {
+  const account_id = cfg.account_id;
+  // En un eco, `to` es el cliente; `from` es nuestro propio número.
+  const contactPhone = normalizePhone(echo.to || echo.recipient_id || "");
+  if (!contactPhone) return;
+
+  if (await alreadyStored(admin, account_id, echo.id)) return;
+
+  const { conv } = await findOrCreateConversation(admin, account_id, contactPhone, null);
+  if (!conv) return;
+  if (conv.deleted_at) {
+    await admin.from("chat_conversations").update({ deleted_at: null }).eq("id", conv.id);
+  }
+
+  const content = await extractIncoming(admin, cfg, conv, echo, false);
+
+  const { error } = await admin.from("chat_messages").insert({
+    account_id, conversation_id: conv.id, direction: "OUT", author_type: "PHONE",
+    body: content.text, message_type: content.message_type,
+    media_url: content.media_path, media_mime: content.media_mime,
+    wa_message_id: echo.id || null, status: "SENT",
+  });
+  // 23505 = otro proceso guardó el mismo eco entre la comprobación y el insert.
+  if (error && (error as any).code !== "23505") {
+    console.error("echo insert failed", error.message);
+    return;
+  }
+
+  // Si alguien ha contestado desde el móvil, la conversación está atendida:
+  // se marca HUMAN, lo que además silencia al bot para esa conversación.
+  await admin.from("chat_conversations").update({
+    last_message_at: new Date().toISOString(),
+    last_message_preview: previewOf(content.message_type, content.text).slice(0, 120),
+    last_direction: "OUT", unread_count: 0, status: "HUMAN",
+  }).eq("id", conv.id);
+}
+
+/**
+ * Sincronización de histórico que Meta envía una vez tras conectar la
+ * coexistencia (hasta 6 meses de conversaciones del móvil).
+ *
+ * Se guarda tal cual, SIN pasar por el bot: clasificar meses de mensajes
+ * antiguos generaría cientos de tareas de cosas ya resueltas.
+ */
+async function handleHistory(admin: any, cfg: any, history: any[], businessPhone: string) {
+  const account_id = cfg.account_id;
+  let imported = 0;
+
+  for (const chunk of history || []) {
+    for (const thread of chunk?.threads || []) {
+      const threadPhone = normalizePhone(thread?.id || "");
+      if (!threadPhone) continue;
+      const { conv } = await findOrCreateConversation(admin, account_id, threadPhone, null);
+      if (!conv) continue;
+
+      for (const m of thread?.messages || []) {
+        if (await alreadyStored(admin, account_id, m.id)) continue;
+        // El histórico no trae dirección explícita: es saliente cuando el
+        // emisor es nuestro propio número.
+        const fromUs = normalizePhone(m.from || "") === businessPhone;
+        const at = m.timestamp ? new Date(Number(m.timestamp) * 1000).toISOString() : null;
+        const { error } = await admin.from("chat_messages").insert({
+          account_id, conversation_id: conv.id,
+          direction: fromUs ? "OUT" : "IN",
+          author_type: fromUs ? "PHONE" : "CONTACT",
+          body: m.text?.body || m[m.type]?.caption || "",
+          message_type: m.type === "text" ? "text" : (m.type || "text"),
+          wa_message_id: m.id || null,
+          status: fromUs ? "SENT" : "DELIVERED",
+          ...(at ? { created_at: at } : {}),
+        });
+        if (!error) imported++;
+        else if ((error as any).code !== "23505") console.error("history insert failed", error.message);
+      }
+
+      const last = (thread?.messages || []).at(-1);
+      if (last) {
+        await admin.from("chat_conversations").update({
+          last_message_at: last.timestamp ? new Date(Number(last.timestamp) * 1000).toISOString() : new Date().toISOString(),
+          last_message_preview: (last.text?.body || "").slice(0, 120),
+          last_direction: normalizePhone(last.from || "") === businessPhone ? "OUT" : "IN",
+          // El histórico es material ya atendido en el móvil.
+          status: "HUMAN",
+        }).eq("id", conv.id);
+      }
+    }
+  }
+  console.log(`HISTORY: ${imported} mensajes importados`);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   const url = new URL(req.url);
@@ -555,7 +689,6 @@ Deno.serve(async (req) => {
   let body: any;
   try { body = JSON.parse(rawBody); } catch { return new Response("Bad request", { status: 400, headers: corsHeaders }); }
   const value = body?.entry?.[0]?.changes?.[0]?.value;
-  const messages = value?.messages;
   const okResponse = new Response(JSON.stringify({ ok: true }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -584,23 +717,42 @@ Deno.serve(async (req) => {
   }
   if (!signatureOk) return new Response("Forbidden", { status: 403, headers: corsHeaders });
 
-  if (!messages || messages.length === 0) return okResponse;
   if (!cfg) { console.log(`No config for phone_number_id ${phoneNumberId}`); return okResponse; }
 
-  const contactName = value?.contacts?.[0]?.profile?.name || null;
+  // Meta puede agrupar varios entry/changes en una sola entrega.
+  for (const entry of body?.entry || []) {
+    for (const change of entry?.changes || []) {
+      const v = change?.value;
+      if (!v) continue;
+      // Solo procesamos lo que venga del número de esta configuración.
+      if (v?.metadata?.phone_number_id && v.metadata.phone_number_id !== cfg.phone_number_id) continue;
 
-  for (const msg of messages) {
-    const senderPhone = normalizePhone(msg.from || "");
+      // 1) Ecos: lo enviado desde la app del móvil (coexistencia).
+      const echoes = v.message_echoes || v.smb_message_echoes;
+      for (const echo of echoes || []) {
+        await handleEcho(admin, cfg, echo);
+      }
 
-    const last9 = senderPhone.slice(-9);
-    const { data: prof } = await admin.from("employee_profiles")
-      .select("user_id, account_id, first_name")
-      .eq("account_id", cfg.account_id).ilike("phone", `%${last9}`).maybeSingle();
+      // 2) Histórico: volcado único al conectar la coexistencia.
+      if (v.history) {
+        await handleHistory(admin, cfg, v.history, normalizePhone(v?.metadata?.display_phone_number || cfg.display_phone || ""));
+      }
 
-    if (prof) {
-      await handleAttendance(admin, cfg, prof, msg, senderPhone);
-    } else {
-      await handleChatMessage(admin, cfg, msg, senderPhone, contactName);
+      // 3) Mensajes entrantes de clientes (o fichajes, si el emisor es empleado).
+      const contactName = v?.contacts?.[0]?.profile?.name || null;
+      for (const msg of v.messages || []) {
+        const senderPhone = normalizePhone(msg.from || "");
+        const last9 = senderPhone.slice(-9);
+        const { data: prof } = await admin.from("employee_profiles")
+          .select("user_id, account_id, first_name")
+          .eq("account_id", cfg.account_id).ilike("phone", `%${last9}`).maybeSingle();
+
+        if (prof) {
+          await handleAttendance(admin, cfg, prof, msg, senderPhone);
+        } else {
+          await handleChatMessage(admin, cfg, msg, senderPhone, contactName);
+        }
+      }
     }
   }
 
