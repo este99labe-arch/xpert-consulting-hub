@@ -14,11 +14,13 @@ interface Props {
 
 const ClientBillingConfigTab = ({ client, onSave, saving }: Props) => {
   const [defaultVat, setDefaultVat] = useState(21);
+  const [defaultIrpf, setDefaultIrpf] = useState(0);
   const [autoJournal, setAutoJournal] = useState(true);
 
   useEffect(() => {
     if (client) {
       setDefaultVat(client.default_vat_percentage ?? 21);
+      setDefaultIrpf(client.default_irpf_percentage ?? 0);
       setAutoJournal(client.auto_journal_entry ?? true);
     }
   }, [client]);
@@ -27,6 +29,7 @@ const ClientBillingConfigTab = ({ client, onSave, saving }: Props) => {
     e.preventDefault();
     onSave({
       default_vat_percentage: defaultVat,
+      default_irpf_percentage: defaultIrpf,
       auto_journal_entry: autoJournal,
     });
   };
@@ -35,22 +38,38 @@ const ClientBillingConfigTab = ({ client, onSave, saving }: Props) => {
     <form onSubmit={handleSubmit} className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Configuración de IVA</CardTitle>
+          <CardTitle>Impuestos por defecto</CardTitle>
           <CardDescription>
-            El IVA por defecto se aplicará automáticamente al crear facturas para este cliente
+            Se aplican automáticamente al crear facturas para este cliente. Puedes cambiarlos en cada factura.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2 max-w-xs">
-            <Label>IVA por defecto (%)</Label>
-            <Input
-              type="number"
-              min={0}
-              max={100}
-              step={0.5}
-              value={defaultVat}
-              onChange={(e) => setDefaultVat(Number(e.target.value))}
-            />
+          <div className="grid max-w-md gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label>IVA por defecto (%)</Label>
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                step={0.5}
+                value={defaultVat}
+                onChange={(e) => setDefaultVat(Number(e.target.value))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>IRPF por defecto (%)</Label>
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                step={0.5}
+                value={defaultIrpf}
+                onChange={(e) => setDefaultIrpf(Number(e.target.value))}
+              />
+              <p className="text-xs text-muted-foreground">
+                Retención para profesionales o alquileres. 0 = sin retención.
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>

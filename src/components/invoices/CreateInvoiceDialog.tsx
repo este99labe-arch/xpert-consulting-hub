@@ -102,7 +102,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
       if (!accountId) return [];
       const { data, error } = await supabase
         .from("business_clients")
-        .select("id, name, default_vat_percentage")
+        .select("id, name, default_vat_percentage, default_irpf_percentage")
         .eq("account_id", accountId)
         .eq("status", "ACTIVE");
       if (error) throw error;
@@ -116,6 +116,10 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
       const selected = clients.find((c: any) => c.id === clientId);
       if (selected?.default_vat_percentage != null) {
         setVatPercentage(String(selected.default_vat_percentage));
+      }
+      // Retención propia del cliente (profesionales, alquileres…).
+      if (selected?.default_irpf_percentage != null) {
+        setIrpfPercentage(String(selected.default_irpf_percentage));
       }
     }
   }, [clientId, clients]);

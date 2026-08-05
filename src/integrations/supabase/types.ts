@@ -534,6 +534,7 @@ export type Database = {
           city: string | null
           country: string | null
           created_at: string
+          default_irpf_percentage: number
           default_vat_percentage: number | null
           email: string | null
           email_enc: string | null
@@ -564,6 +565,7 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string
+          default_irpf_percentage?: number
           default_vat_percentage?: number | null
           email?: string | null
           email_enc?: string | null
@@ -594,6 +596,7 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string
+          default_irpf_percentage?: number
           default_vat_percentage?: number | null
           email?: string | null
           email_enc?: string | null
@@ -3893,6 +3896,14 @@ export type Database = {
       _get_encryption_key: { Args: never; Returns: string }
       _hash_search: { Args: { _value: string }; Returns: string }
       _install_encryption_key: { Args: { _key: string }; Returns: undefined }
+      _invoice_prefix: {
+        Args: { _status: string; _type: string }
+        Returns: string
+      }
+      _next_invoice_number: {
+        Args: { _account: string; _date: string; _prefix: string }
+        Returns: string
+      }
       can_access_task_board: {
         Args: { _board_id: string; _uid: string }
         Returns: boolean

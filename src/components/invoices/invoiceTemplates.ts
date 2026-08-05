@@ -522,39 +522,32 @@ function renderTemplate(d: InvoiceData, t: Theme, o: InvoiceTemplateOptions = {}
       color: ${t.muted};
       font-size: 10px;
     }
-    /* ─── QR tributario VERI*FACTU ─── */
+    /* ─── QR tributario VERI*FACTU ───
+       Va dentro de la cabecera, alineado a la derecha bajo el número. Antes
+       era un bloque centrado ANTES de la cabecera: empujaba toda la factura
+       hacia abajo y se solapaba con el nombre de la empresa. */
     .verifactu-qr {
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 18px auto;
-      padding: 6mm;
-      background: #ffffff;
-      border: 1px solid ${t.softBorder};
-      border-radius: 6px;
-      width: fit-content;
-    }
-    .verifactu-qr-label {
-      font-size: 8.5px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      color: ${t.muted};
-      margin-bottom: 4px;
+      align-items: flex-end;
+      margin-top: 6px;
     }
     .verifactu-qr img {
-      width: 40mm;
-      height: 40mm;
+      width: 22mm;
+      height: 22mm;
       display: block;
+      padding: 1.5mm;
+      background: #ffffff;
+      border: 1px solid ${t.softBorder};
+      border-radius: 4px;
     }
     .verifactu-qr-caption {
-      margin-top: 4px;
-      font-size: 8.5px;
+      margin-top: 3px;
+      font-size: 7px;
       color: ${t.muted};
-      text-align: center;
-      max-width: 40mm;
-      line-height: 1.3;
+      text-align: right;
+      max-width: 26mm;
+      line-height: 1.25;
     }
     ${headerCss(t)}
     @media print {
@@ -565,12 +558,6 @@ function renderTemplate(d: InvoiceData, t: Theme, o: InvoiceTemplateOptions = {}
 </head>
 <body>
   <div class="page">
-    ${showQr ? `
-    <div class="verifactu-qr">
-      <div class="verifactu-qr-label">QR tributario:</div>
-      <img src="${d.qrDataUrl}" alt="QR tributario VERI*FACTU" />
-      <div class="verifactu-qr-caption">Factura verificable en la sede electrónica de la AEAT</div>
-    </div>` : ""}
     <div class="header">
       <div>
         <div class="brand">${esc(companyName)}</div>
@@ -584,6 +571,11 @@ function renderTemplate(d: InvoiceData, t: Theme, o: InvoiceTemplateOptions = {}
         <div class="doc-type">${esc(d.typeLabel)}</div>
         <div class="doc-number">${esc(d.invoiceNumber)}</div>
         ${opts.showStatus !== false ? `<div class="status">${esc(d.statusLabel)}</div>` : ""}
+        ${showQr ? `
+        <div class="verifactu-qr">
+          <img src="${d.qrDataUrl}" alt="QR tributario VERI*FACTU" />
+          <div class="verifactu-qr-caption">Verificable en la sede de la AEAT</div>
+        </div>` : ""}
       </div>
     </div>
 
