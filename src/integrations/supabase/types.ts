@@ -2459,18 +2459,81 @@ export type Database = {
           },
         ]
       }
+      recurring_invoice_lines: {
+        Row: {
+          account_id: string
+          created_at: string
+          description: string
+          id: string
+          quantity: number
+          recurring_id: string
+          service_id: string | null
+          sort_order: number
+          unit_price: number
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          description: string
+          id?: string
+          quantity?: number
+          recurring_id: string
+          service_id?: string | null
+          sort_order?: number
+          unit_price?: number
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          description?: string
+          id?: string
+          quantity?: number
+          recurring_id?: string
+          service_id?: string | null
+          sort_order?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_invoice_lines_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_invoice_lines_recurring_id_fkey"
+            columns: ["recurring_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_invoice_lines_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recurring_invoices: {
         Row: {
           account_id: string
           amount_net: number
           amount_total: number
           amount_vat: number
+          append_period: boolean
+          category_id: string | null
           client_id: string
           concept: string
           created_at: string
           created_by: string
+          end_date: string | null
           frequency: string
           id: string
+          irpf_amount: number
+          irpf_percentage: number
           is_active: boolean
           last_generated_at: string | null
           next_run_date: string
@@ -2483,12 +2546,17 @@ export type Database = {
           amount_net: number
           amount_total: number
           amount_vat: number
+          append_period?: boolean
+          category_id?: string | null
           client_id: string
           concept?: string
           created_at?: string
           created_by: string
+          end_date?: string | null
           frequency?: string
           id?: string
+          irpf_amount?: number
+          irpf_percentage?: number
           is_active?: boolean
           last_generated_at?: string | null
           next_run_date: string
@@ -2501,12 +2569,17 @@ export type Database = {
           amount_net?: number
           amount_total?: number
           amount_vat?: number
+          append_period?: boolean
+          category_id?: string | null
           client_id?: string
           concept?: string
           created_at?: string
           created_by?: string
+          end_date?: string | null
           frequency?: string
           id?: string
+          irpf_amount?: number
+          irpf_percentage?: number
           is_active?: boolean
           last_generated_at?: string | null
           next_run_date?: string
@@ -2520,6 +2593,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_invoices_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_categories"
             referencedColumns: ["id"]
           },
           {

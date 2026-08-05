@@ -15,6 +15,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Plus, RefreshCw, Pencil, Trash2, Pause, Play } from "lucide-react";
+import { buildConcept } from "@/lib/recurringPeriod";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
@@ -40,14 +41,25 @@ interface RecurringInvoicesTabProps {
   isManager: boolean;
 }
 
+interface RecurringLine {
+  description: string;
+  quantity: string;
+  unitPrice: string;
+  serviceId?: string;
+}
+
 const emptyForm = {
   client_id: "",
   concept: "",
   amount_net: "",
   vat_percentage: "21",
+  irpf_percentage: "0",
   type: "INVOICE",
   frequency: "MONTHLY",
   next_run_date: new Date().toISOString().split("T")[0],
+  end_date: "",
+  append_period: false,
+  category_id: "",
   is_active: true,
 };
 
@@ -60,6 +72,35 @@ const RecurringInvoicesTab = ({ accountId, isManager }: RecurringInvoicesTabProp
   const [saving, setSaving] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [vatIncluded, setVatIncluded] = useState(false);
+  const [lines, setLines] = useState<RecurringLine[]>([]);
+
+  /** Servicios activos del catálogo, para montar líneas rápido. */
+  const { data: services = [] } = useQuery({
+    queryKey: ["recurring-services", accountId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("services")
+        .select("id, name, price, verticals(is_active)")
+        .eq("account_id", accountId).eq("is_active", true).order("sort_order");
+      return (data || []).filter((s: any) => s.verticals?.is_active);
+    },
+    enabled: !!accountId && dialogOpen,
+  });
+
+  /** Categorías del tipo que corresponda (ingreso o gasto). */
+  const { data: categories = [] } = useQuery({
+    queryKey: ["recurring-categories", accountId, form.type],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("accounting_categories")
+        .select("id, name")
+        .eq("account_id", accountId)
+        .eq("kind", form.type === "EXPENSE" ? "EXPENSE" : "INCOME")
+        .order("sort_order");
+      return data || [];
+    },
+    enabled: !!accountId && dialogOpen,
+  });
 
   const { data: recurring = [], isLoading } = useQuery({
     queryKey: ["recurring-invoices", accountId],
@@ -95,41 +136,77 @@ const RecurringInvoicesTab = ({ accountId, isManager }: RecurringInvoicesTabProp
   const openCreate = () => {
     setEditingId(null);
     setForm(emptyForm);
+    setLines([]);
     setVatIncluded(false);
     setDialogOpen(true);
   };
 
-  const openEdit = (r: any) => {
+  const openEdit = async (r: any) => {
     setEditingId(r.id);
     setForm({
       client_id: r.client_id,
       concept: r.concept,
       amount_net: String(r.amount_net),
       vat_percentage: String(r.vat_percentage),
+      irpf_percentage: String(r.irpf_percentage ?? 0),
       type: r.type,
       frequency: r.frequency,
       next_run_date: r.next_run_date,
+      end_date: r.end_date || "",
+      append_period: r.append_period ?? false,
+      category_id: r.category_id || "",
       is_active: r.is_active,
     });
+    // Líneas de la plantilla (si es de las antiguas, no tendrá).
+    const { data: ls } = await supabase
+      .from("recurring_invoice_lines")
+      .select("description, quantity, unit_price, service_id")
+      .eq("recurring_id", r.id)
+      .order("sort_order");
+    setLines(
+      (ls || []).map((l: any) => ({
+        description: l.description,
+        quantity: String(l.quantity),
+        unitPrice: String(l.unit_price),
+        serviceId: l.service_id || undefined,
+      })),
+    );
     setVatIncluded(false);
     setDialogOpen(true);
   };
 
+  /** Base imponible: de las líneas si las hay, si no del importe suelto. */
+  const netFromLines = lines.reduce(
+    (s, l) => s + (parseFloat(l.quantity) || 0) * (parseFloat(l.unitPrice) || 0), 0,
+  );
+  const hasLines = lines.length > 0;
+
   const computeAmounts = () => {
-    const net = parseFloat(form.amount_net) || 0;
+    const raw = hasLines ? netFromLines : (parseFloat(form.amount_net) || 0);
     const vatPct = parseFloat(form.vat_percentage) || 0;
-    if (vatIncluded) {
-      const realNet = net / (1 + vatPct / 100);
-      const vat = net - realNet;
-      return { amount_net: +realNet.toFixed(2), amount_vat: +vat.toFixed(2), amount_total: +net.toFixed(2) };
-    }
+    const irpfPct = parseFloat(form.irpf_percentage) || 0;
+
+    // El "IVA incluido" solo aplica al importe suelto; con líneas el precio
+    // unitario ya es base imponible.
+    const net = !hasLines && vatIncluded ? raw / (1 + vatPct / 100) : raw;
     const vat = +(net * vatPct / 100).toFixed(2);
-    return { amount_net: +net.toFixed(2), amount_vat: vat, amount_total: +(net + vat).toFixed(2) };
+    const irpf = +(net * irpfPct / 100).toFixed(2);
+    return {
+      amount_net: +net.toFixed(2),
+      amount_vat: vat,
+      irpf_amount: irpf,
+      amount_total: +(net + vat - irpf).toFixed(2),
+    };
   };
 
   const handleSave = async () => {
-    if (!form.client_id || !form.amount_net || !form.next_run_date) {
+    const importeOk = hasLines ? netFromLines > 0 : !!form.amount_net;
+    if (!form.client_id || !importeOk || !form.next_run_date) {
       toast({ title: "Error", description: "Completa los campos obligatorios", variant: "destructive" });
+      return;
+    }
+    if (form.end_date && form.end_date < form.next_run_date) {
+      toast({ title: "Error", description: "La fecha de fin no puede ser anterior a la próxima emisión", variant: "destructive" });
       return;
     }
     setSaving(true);
@@ -141,21 +218,49 @@ const RecurringInvoicesTab = ({ accountId, isManager }: RecurringInvoicesTabProp
         concept: form.concept,
         ...amounts,
         vat_percentage: parseFloat(form.vat_percentage),
+        irpf_percentage: parseFloat(form.irpf_percentage) || 0,
         type: form.type,
         frequency: form.frequency,
         next_run_date: form.next_run_date,
+        end_date: form.end_date || null,
+        append_period: form.append_period,
+        category_id: form.category_id || null,
         is_active: form.is_active,
         created_by: user!.id,
         updated_at: new Date().toISOString(),
       };
 
+      /** Reescribe las líneas de la plantilla (borrar + insertar). */
+      const saveLines = async (recurringId: string) => {
+        await supabase.from("recurring_invoice_lines").delete().eq("recurring_id", recurringId);
+        if (!hasLines) return;
+        const inserts = lines
+          .filter((l) => l.description.trim())
+          .map((l, i) => ({
+            recurring_id: recurringId,
+            account_id: accountId,
+            description: l.description.trim(),
+            quantity: parseFloat(l.quantity) || 1,
+            unit_price: parseFloat(l.unitPrice) || 0,
+            service_id: l.serviceId || null,
+            sort_order: i,
+          }));
+        if (inserts.length) {
+          const { error } = await supabase.from("recurring_invoice_lines").insert(inserts);
+          if (error) throw error;
+        }
+      };
+
       if (editingId) {
         const { error } = await supabase.from("recurring_invoices").update(payload).eq("id", editingId);
         if (error) throw error;
+        await saveLines(editingId);
         toast({ title: "Plantilla actualizada" });
       } else {
-        const { error } = await supabase.from("recurring_invoices").insert(payload);
+        const { data: created, error } = await supabase
+          .from("recurring_invoices").insert(payload).select("id").single();
         if (error) throw error;
+        if (created) await saveLines(created.id);
         toast({ title: "Plantilla creada" });
       }
       queryClient.invalidateQueries({ queryKey: ["recurring-invoices"] });
@@ -393,10 +498,101 @@ const RecurringInvoicesTab = ({ accountId, isManager }: RecurringInvoicesTabProp
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            {/* Sufijo del periodo en el concepto */}
+            <div className="flex items-start justify-between gap-3 rounded-lg border border-border p-3">
+              <div className="min-w-0">
+                <Label htmlFor="append-period">Añadir el periodo al concepto</Label>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {form.append_period
+                    ? <>Se emitirá como: <span className="font-medium text-foreground">
+                        {buildConcept(form.concept || "Concepto", form.frequency, form.next_run_date, true)}
+                      </span></>
+                    : "Ej.: «Suscripción Claude» → «Suscripción Claude - Agosto»"}
+                </p>
+              </div>
+              <Switch
+                id="append-period"
+                checked={form.append_period}
+                onCheckedChange={(v) => setForm({ ...form, append_period: v })}
+              />
+            </div>
+
+            {/* Conceptos múltiples */}
+            <div className="space-y-2 rounded-lg border border-border p-3">
+              <div className="flex items-center justify-between">
+                <Label>Conceptos</Label>
+                <div className="flex items-center gap-2">
+                  {services.length > 0 && (
+                    <Select
+                      value=""
+                      onValueChange={(id) => {
+                        const s = services.find((x: any) => x.id === id);
+                        if (s) setLines((p) => [...p, {
+                          description: s.name, quantity: "1", unitPrice: String(s.price ?? 0), serviceId: s.id,
+                        }]);
+                      }}
+                    >
+                      <SelectTrigger className="h-8 w-[170px]"><SelectValue placeholder="Añadir servicio" /></SelectTrigger>
+                      <SelectContent>
+                        {services.map((s: any) => (
+                          <SelectItem key={s.id} value={s.id}>{s.name} · {Number(s.price).toFixed(2)} €</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  <Button
+                    type="button" variant="outline" size="sm"
+                    onClick={() => setLines((p) => [...p, { description: "", quantity: "1", unitPrice: "" }])}
+                  >
+                    <Plus className="mr-1 h-3.5 w-3.5" /> Línea
+                  </Button>
+                </div>
+              </div>
+
+              {!hasLines && (
+                <p className="py-1 text-xs text-muted-foreground">
+                  Sin líneas se factura un importe único con el concepto de arriba.
+                </p>
+              )}
+
+              {lines.map((l, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <Input
+                    value={l.description} placeholder="Descripción"
+                    onChange={(e) => setLines((p) => p.map((x, j) => j === i ? { ...x, description: e.target.value } : x))}
+                    className="h-9 flex-1"
+                  />
+                  <Input
+                    type="number" step="0.01" value={l.quantity} placeholder="1"
+                    onChange={(e) => setLines((p) => p.map((x, j) => j === i ? { ...x, quantity: e.target.value } : x))}
+                    className="h-9 w-16 text-right"
+                  />
+                  <Input
+                    type="number" step="0.01" value={l.unitPrice} placeholder="0,00"
+                    onChange={(e) => setLines((p) => p.map((x, j) => j === i ? { ...x, unitPrice: e.target.value } : x))}
+                    className="h-9 w-24 text-right"
+                  />
+                  <Button
+                    type="button" variant="ghost" size="icon" className="h-9 w-9"
+                    onClick={() => setLines((p) => p.filter((_, j) => j !== i))}
+                  >
+                    <Trash2 className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <Label>Importe *</Label>
-                <Input type="number" step="0.01" value={form.amount_net} onChange={(e) => setForm({ ...form, amount_net: e.target.value })} placeholder="0.00" />
+                <Input
+                  type="number" step="0.01"
+                  value={hasLines ? netFromLines.toFixed(2) : form.amount_net}
+                  disabled={hasLines}
+                  onChange={(e) => setForm({ ...form, amount_net: e.target.value })}
+                  placeholder="0.00"
+                />
+                {hasLines && <p className="mt-1 text-xs text-muted-foreground">Suma de las líneas</p>}
               </div>
               <div>
                 <Label>IVA</Label>
@@ -409,14 +605,57 @@ const RecurringInvoicesTab = ({ accountId, isManager }: RecurringInvoicesTabProp
                   </SelectContent>
                 </Select>
               </div>
+              <div>
+                <Label>IRPF</Label>
+                <Select value={form.irpf_percentage} onValueChange={(v) => setForm({ ...form, irpf_percentage: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">Sin retención</SelectItem>
+                    <SelectItem value="7">7%</SelectItem>
+                    <SelectItem value="15">15%</SelectItem>
+                    <SelectItem value="19">19%</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Switch checked={vatIncluded} onCheckedChange={setVatIncluded} id="vat-incl" />
-              <Label htmlFor="vat-incl" className="text-sm text-muted-foreground">IVA incluido en el importe</Label>
-            </div>
+
+            {!hasLines && (
+              <div className="flex items-center gap-2">
+                <Switch checked={vatIncluded} onCheckedChange={setVatIncluded} id="vat-incl" />
+                <Label htmlFor="vat-incl" className="text-sm text-muted-foreground">IVA incluido en el importe</Label>
+              </div>
+            )}
+
             <div>
-              <Label>Próxima fecha de generación *</Label>
-              <Input type="date" value={form.next_run_date} onChange={(e) => setForm({ ...form, next_run_date: e.target.value })} />
+              <Label>Categoría contable</Label>
+              <Select value={form.category_id || "NONE"} onValueChange={(v) => setForm({ ...form, category_id: v === "NONE" ? "" : v })}>
+                <SelectTrigger><SelectValue placeholder="Sin categoría" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="NONE">Sin categoría</SelectItem>
+                  {categories.map((c: any) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Determina la cuenta del PGC del asiento cuando la factura se cobre.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Próxima fecha de generación *</Label>
+                <Input type="date" value={form.next_run_date} onChange={(e) => setForm({ ...form, next_run_date: e.target.value })} />
+              </div>
+              <div>
+                <Label>Fecha de fin</Label>
+                <Input
+                  type="date" value={form.end_date}
+                  min={form.next_run_date}
+                  onChange={(e) => setForm({ ...form, end_date: e.target.value })}
+                />
+                <p className="mt-1 text-xs text-muted-foreground">Vacío = indefinida.</p>
+              </div>
             </div>
           </div>
           <DialogFooter>
