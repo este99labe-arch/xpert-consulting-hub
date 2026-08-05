@@ -452,14 +452,16 @@ const RecurringInvoicesTab = ({ accountId, isManager }: RecurringInvoicesTabProp
 
       {/* Create/Edit dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
+        {/* Mismo patrón que el diálogo de facturas: alto acotado a la ventana y
+            cuerpo desplazable, para que el formulario no se corte. */}
+        <DialogContent className="flex max-h-[92vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+          <DialogHeader className="shrink-0 border-b px-6 py-4">
             <DialogTitle>{editingId ? "Editar plantilla" : "Nueva plantilla recurrente"}</DialogTitle>
             <DialogDescription>
               {editingId ? "Modifica los datos de la factura recurrente." : "Configura una factura que se generará automáticamente."}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="flex-1 space-y-4 overflow-y-auto px-6 py-5">
             <div>
               <Label>Cliente *</Label>
               <Select value={form.client_id} onValueChange={(v) => setForm({ ...form, client_id: v })}>
@@ -658,7 +660,7 @@ const RecurringInvoicesTab = ({ accountId, isManager }: RecurringInvoicesTabProp
               </div>
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="shrink-0 border-t bg-muted/30 px-6 py-4">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
             <Button onClick={handleSave} disabled={saving}>
               {saving ? "Guardando..." : editingId ? "Guardar" : "Crear"}
