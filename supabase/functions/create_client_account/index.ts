@@ -27,6 +27,43 @@ function generateSecurePassword(): string {
   return chars.join("");
 }
 
+/**
+ * Aviso para un manager que YA existía: se le ha dado acceso a una cuenta
+ * nueva. No lleva credenciales a propósito — mantiene la contraseña que ya
+ * tenía y podrá cambiar de cuenta con el conmutador de la cabecera.
+ */
+function buildExistingUserEmailHtml(companyName: string, managerEmail: string): string {
+  return `<!DOCTYPE html>
+<html lang="es"><body style="margin:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <div style="max-width:560px;margin:0 auto;background:#ffffff;">
+    <div style="background:#0b64f4;padding:32px 48px;">
+      <h1 style="margin:0;color:#ffffff;font-size:20px;">Tienes acceso a una cuenta nueva</h1>
+    </div>
+    <div style="padding:32px 48px;color:#334155;font-size:14px;line-height:1.6;">
+      <p style="margin:0 0 16px;">Hola,</p>
+      <p style="margin:0 0 16px;">
+        Se te ha dado acceso a <strong>${companyName}</strong> en XpertConsulting con tu
+        cuenta <strong>${managerEmail}</strong>.
+      </p>
+      <p style="margin:0 0 16px;">
+        <strong>Entra con la contraseña que ya usas.</strong> No se ha creado ninguna
+        contraseña nueva ni ha cambiado la que tenías.
+      </p>
+      <p style="margin:0 0 16px;">
+        Una vez dentro, usa el <strong>selector de cuenta</strong> de la parte superior
+        para moverte entre tus cuentas.
+      </p>
+      <p style="margin:24px 0 0;color:#64748b;font-size:13px;">
+        Si no recuerdas tu contraseña, usa “¿Olvidaste tu contraseña?” en la pantalla de acceso.
+      </p>
+    </div>
+    <div style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:24px 48px;text-align:center;">
+      <p style="margin:0;color:#94a3b8;font-size:12px;">Correo automático de <strong>XpertConsulting</strong>.</p>
+    </div>
+  </div>
+</body></html>`;
+}
+
 function buildWelcomeEmailHtml(companyName: string, managerEmail: string, password: string, resetUrl: string): string {
   return `<!DOCTYPE html>
 <html lang="es">
@@ -300,8 +337,23 @@ serve(async (req) => {
     // 7. Generate password reset link and send welcome email
     try {
       const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-      // A un manager existente NO se le envía el email de credenciales: ya
-      // tiene contraseña y la contraseña generada aquí nunca llegó a aplicarse.
+      // A un manager EXISTENTE se le avisa del acceso nuevo, pero sin
+      // credenciales: conserva la contraseña que ya tenía (la generada aquí
+      // nunca llegó a aplicarse, porque createUser falló por email duplicado).
+      if (RESEND_API_KEY && isExistingUser) {
+        const emailRes = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            from: "XpertConsulting <noreply@xpertconsulting.es>",
+            to: [manager_email],
+            subject: `Nuevo acceso en XpertConsulting — ${company_name}`,
+            html: buildExistingUserEmailHtml(company_name, manager_email),
+          }),
+        });
+        console.log("Existing-user email response:", await emailRes.json());
+      }
+
       if (RESEND_API_KEY && !isExistingUser) {
         // Generate a password reset link so the manager can set their own password
         const { data: resetData, error: resetError } = await adminClient.auth.admin.generateLink({
