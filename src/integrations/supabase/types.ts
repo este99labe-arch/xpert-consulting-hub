@@ -534,6 +534,7 @@ export type Database = {
           city: string | null
           country: string | null
           created_at: string
+          default_irpf_percentage: number
           default_vat_percentage: number | null
           email: string | null
           email_enc: string | null
@@ -564,6 +565,7 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string
+          default_irpf_percentage?: number
           default_vat_percentage?: number | null
           email?: string | null
           email_enc?: string | null
@@ -594,6 +596,7 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string
+          default_irpf_percentage?: number
           default_vat_percentage?: number | null
           email?: string | null
           email_enc?: string | null
@@ -2456,18 +2459,81 @@ export type Database = {
           },
         ]
       }
+      recurring_invoice_lines: {
+        Row: {
+          account_id: string
+          created_at: string
+          description: string
+          id: string
+          quantity: number
+          recurring_id: string
+          service_id: string | null
+          sort_order: number
+          unit_price: number
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          description: string
+          id?: string
+          quantity?: number
+          recurring_id: string
+          service_id?: string | null
+          sort_order?: number
+          unit_price?: number
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          description?: string
+          id?: string
+          quantity?: number
+          recurring_id?: string
+          service_id?: string | null
+          sort_order?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_invoice_lines_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_invoice_lines_recurring_id_fkey"
+            columns: ["recurring_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_invoice_lines_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recurring_invoices: {
         Row: {
           account_id: string
           amount_net: number
           amount_total: number
           amount_vat: number
+          append_period: boolean
+          category_id: string | null
           client_id: string
           concept: string
           created_at: string
           created_by: string
+          end_date: string | null
           frequency: string
           id: string
+          irpf_amount: number
+          irpf_percentage: number
           is_active: boolean
           last_generated_at: string | null
           next_run_date: string
@@ -2480,12 +2546,17 @@ export type Database = {
           amount_net: number
           amount_total: number
           amount_vat: number
+          append_period?: boolean
+          category_id?: string | null
           client_id: string
           concept?: string
           created_at?: string
           created_by: string
+          end_date?: string | null
           frequency?: string
           id?: string
+          irpf_amount?: number
+          irpf_percentage?: number
           is_active?: boolean
           last_generated_at?: string | null
           next_run_date: string
@@ -2498,12 +2569,17 @@ export type Database = {
           amount_net?: number
           amount_total?: number
           amount_vat?: number
+          append_period?: boolean
+          category_id?: string | null
           client_id?: string
           concept?: string
           created_at?: string
           created_by?: string
+          end_date?: string | null
           frequency?: string
           id?: string
+          irpf_amount?: number
+          irpf_percentage?: number
           is_active?: boolean
           last_generated_at?: string | null
           next_run_date?: string
@@ -2517,6 +2593,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_invoices_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_categories"
             referencedColumns: ["id"]
           },
           {
@@ -3893,6 +3976,14 @@ export type Database = {
       _get_encryption_key: { Args: never; Returns: string }
       _hash_search: { Args: { _value: string }; Returns: string }
       _install_encryption_key: { Args: { _key: string }; Returns: undefined }
+      _invoice_prefix: {
+        Args: { _status: string; _type: string }
+        Returns: string
+      }
+      _next_invoice_number: {
+        Args: { _account: string; _date: string; _prefix: string }
+        Returns: string
+      }
       can_access_task_board: {
         Args: { _board_id: string; _uid: string }
         Returns: boolean
