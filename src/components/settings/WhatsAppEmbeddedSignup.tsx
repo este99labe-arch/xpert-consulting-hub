@@ -98,13 +98,21 @@ const WhatsAppEmbeddedSignup = ({ accountId, onConnected }: Props) => {
         },
       });
       if (error || (data as any)?.error) {
-        let msg = (data as any)?.error || error?.message || "Error al conectar";
+        let payload: any = data;
         // supabase-js expone el cuerpo de la respuesta de error en error.context
         // (un Response). Ahí viene el detalle real del backend ({ error: "..." }).
         try {
           const body = await (error as any)?.context?.json?.();
-          if (body?.error) msg = body.error;
+          if (body) payload = body;
         } catch { /* la respuesta no traía JSON */ }
+
+        let msg = payload?.error || error?.message || "Error al conectar";
+        // El código de error de Meta es lo único que permite distinguir un
+        // secreto mal puesto de un permiso que falta; sin él solo se puede
+        // adivinar, así que se muestra y se deja copiar.
+        const m = payload?.meta_error;
+        if (m?.code) msg += ` (Meta code ${m.code}${m.error_subcode ? `/${m.error_subcode}` : ""}${m.fbtrace_id ? `, trace ${m.fbtrace_id}` : ""})`;
+        console.error("Embedded Signup falló:", payload);
         throw new Error(msg);
       }
       toast({ title: "WhatsApp conectado", description: "Número vinculado y guardado correctamente." });
