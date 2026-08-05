@@ -38,7 +38,14 @@ async function canManageAccount(admin: any, userId: string, accountId: string) {
 
 // App ID de Meta (público). Puede sobreescribirse por secreto META_APP_ID.
 const APP_ID = Deno.env.get("META_APP_ID") || "1514206456624236";
-// App Secret de Meta (secreto). Reutiliza el que ya usa el webhook si existe.
+
+// App Secret de Meta. META_APP_SECRET manda sobre WHATSAPP_APP_SECRET: si el
+// primero quedó con un valor viejo, actualizar el segundo no sirve de nada, así
+// que registramos cuál se está usando para que el diagnóstico no dependa de
+// recordar qué secreto se tocó.
+const SECRET_SOURCE = Deno.env.get("META_APP_SECRET")
+  ? "META_APP_SECRET"
+  : Deno.env.get("WHATSAPP_APP_SECRET") ? "WHATSAPP_APP_SECRET" : "ninguno";
 const APP_SECRET = Deno.env.get("META_APP_SECRET") || Deno.env.get("WHATSAPP_APP_SECRET") || "";
 
 Deno.serve(async (req) => {
@@ -86,14 +93,41 @@ Deno.serve(async (req) => {
 
   if (!tokenRes.ok || !tokenData?.access_token) {
     const e = tokenData?.error || {};
-    console.error("token exchange failed", tokenRes.status, JSON.stringify(tokenData), "app_id", APP_ID);
+
+    // Meta devuelve el mismo "revisa tu redirect_uri" tanto si el code está
+    // gastado o caducado como si las credenciales de la app no son las que lo
+    // emitieron. Para distinguirlo, pedimos un token de aplicación con el mismo
+    // par client_id/client_secret: si eso falla, el problema son las
+    // credenciales; si funciona, el problema es el code.
+    let credsOk: boolean | null = null;
+    let credsErr = "";
+    try {
+      const probe = await fetch(
+        `${GRAPH}/oauth/access_token?client_id=${encodeURIComponent(APP_ID)}` +
+        `&client_secret=${encodeURIComponent(APP_SECRET)}&grant_type=client_credentials`,
+      );
+      const probeData = await probe.json().catch(() => ({} as any));
+      credsOk = probe.ok && !!probeData?.access_token;
+      if (!credsOk) credsErr = probeData?.error?.message || String(probe.status);
+    } catch (err) {
+      credsErr = String(err);
+    }
+
+    const diag = credsOk === false
+      ? `Las credenciales de la app no son válidas (app_id ${APP_ID}, secreto de ${SECRET_SOURCE}): ${credsErr}`
+      : `Credenciales de app correctas (app_id ${APP_ID}); el fallo está en el code: caducado, ya usado, o emitido por otra app.`;
+
+    console.error("token exchange failed", tokenRes.status, JSON.stringify(tokenData),
+      "app_id", APP_ID, "secret_source", SECRET_SOURCE, "creds_ok", credsOk);
+
     return json({
-      error: `No se pudo obtener el token: ${e.message || tokenRes.status}`,
-      // Detalle crudo de Meta, para no tener que adivinar desde los logs.
+      error: `No se pudo obtener el token: ${e.message || tokenRes.status} — ${diag}`,
       meta_error: {
         message: e.message ?? null, type: e.type ?? null, code: e.code ?? null,
         error_subcode: e.error_subcode ?? null, fbtrace_id: e.fbtrace_id ?? null,
         http_status: tokenRes.status,
+        app_id: APP_ID, secret_source: SECRET_SOURCE, secret_len: APP_SECRET.length,
+        credentials_ok: credsOk,
       },
     }, 400);
   }
