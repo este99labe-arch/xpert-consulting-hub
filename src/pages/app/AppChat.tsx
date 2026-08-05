@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
 import {
   MessageCircle, Send, Search, Bot, UserRound, Hand, Building2, Loader2, ShieldAlert, CheckCheck, Bell, BellOff, Clock3,
-  Paperclip, ListTodo, X, CheckSquare, Trash2, Link2, UserPlus, GraduationCap,
+  Paperclip, ListTodo, X, CheckSquare, Trash2, Link2, UserPlus, GraduationCap, Smartphone,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator,
@@ -669,6 +669,10 @@ const AppChat = () => {
                       )}
                       {out && m.author_type === "SYSTEM" && (
                         <span className="mb-0.5 flex items-center gap-1 text-[11px] opacity-80"><CheckCheck className="h-3 w-3" /> Automático</span>
+                      )}
+                      {/* Coexistencia: respondido a mano desde la app del móvil */}
+                      {out && m.author_type === "PHONE" && (
+                        <span className="mb-0.5 flex items-center gap-1 text-[11px] opacity-80"><Smartphone className="h-3 w-3" /> Desde el móvil</span>
                       )}
                       {(isImage || isAudio || isDoc) && (
                         <div className="mb-1">

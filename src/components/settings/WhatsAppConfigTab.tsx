@@ -223,7 +223,7 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
           </div>
           <div className="flex items-start gap-2 rounded-lg bg-accent/50 p-3 text-xs text-muted-foreground">
             <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-            En Meta → WhatsApp → Configuración: pega la URL del webhook, usa tu token de verificación y suscríbete al campo <strong>messages</strong>.
+            En Meta → WhatsApp → Configuración: pega la URL del webhook, usa tu token de verificación y suscríbete a los campos <strong>messages</strong> y <strong>smb_message_echoes</strong> (este último trae al Chat lo que respondas desde el móvil). Si aparece <strong>history</strong>, márcalo para importar las conversaciones anteriores.
             <a href="https://developers.facebook.com" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-primary underline">Meta <ExternalLink className="h-3 w-3" /></a>
           </div>
         </CardContent>
