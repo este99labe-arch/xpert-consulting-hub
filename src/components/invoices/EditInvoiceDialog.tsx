@@ -28,7 +28,6 @@ import { toast } from "@/hooks/use-toast";
 import InvoiceAttachment from "@/components/invoices/InvoiceAttachment";
 import InvoicePaymentsPanel from "@/components/invoices/InvoicePaymentsPanel";
 import FormSection from "@/components/shared/FormSection";
-import InvoiceStatusFlow from "@/components/invoices/InvoiceStatusFlow";
 
 const statusLabels: Record<string, string> = {
   DRAFT: "Borrador", SENT: "Enviada", PAID: "Pagada", PARTIALLY_PAID: "Pago parcial", OVERDUE: "Vencida",
@@ -37,24 +36,6 @@ const statusLabels: Record<string, string> = {
 
 // PAID / PARTIALLY_PAID no son estados manuales: se derivan de los cobros
 // registrados (panel "Cobros y pagos"), para mantener la congruencia.
-const manualInvoiceStatuses = ["DRAFT", "SENT", "OVERDUE", "CANCELLED"];
-const allQuoteStatuses = ["DRAFT", "SENT", "ACCEPTED", "REJECTED", "INVOICED", "CANCELLED"];
-
-/** Color del estado actual, para distinguirlo de un vistazo. */
-const STATUS_VARIANT: Record<string, "success" | "warning" | "info" | "muted" | "softDestructive"> = {
-  DRAFT: "muted",
-  SENT: "info",
-  PARTIALLY_PAID: "warning",
-  OVERDUE: "softDestructive",
-  PAID: "success",
-  ACCEPTED: "success",
-  REJECTED: "softDestructive",
-  INVOICED: "info",
-  CANCELLED: "muted",
-};
-
-/** Desde estos estados tiene sentido cobrar la factura. */
-const CAN_MARK_PAID = ["DRAFT", "SENT", "OVERDUE", "PARTIALLY_PAID"];
 
 interface LineInput { description: string; quantity: string; unitPrice: string; productId?: string; sku?: string; stock?: number; unit?: string; }
 
@@ -78,91 +59,14 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice, onPreview }: Props) =>
   const [vatPercentage, setVatPercentage] = useState("21");
   const [irpfPercentage, setIrpfPercentage] = useState("0");
   const [specialMentions, setSpecialMentions] = useState("");
-  const [status, setStatus] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [attachmentPath, setAttachmentPath] = useState<string | null>(null);
   const [attachmentName, setAttachmentName] = useState<string | null>(null);
   const [vatIncluded, setVatIncluded] = useState(false);
   const [lines, setLines] = useState<LineInput[]>([{ description: "", quantity: "1", unitPrice: "" }]);
-  const [markingPaid, setMarkingPaid] = useState(false);
-  const [confirmReopen, setConfirmReopen] = useState(false);
-
-  /**
-   * Cobra el saldo pendiente y deja la factura como pagada.
-   *
-   * Registra el cobro en lugar de tocar el estado a mano: el asiento de
-   * tesorería lo genera el trigger sobre invoice_payments, así que cambiar
-   * solo el estado dejaría la contabilidad sin el ingreso.
-   */
-  const handleMarkPaid = async () => {
-    if (!invoice || !user || !accountId) return;
-    setMarkingPaid(true);
-    try {
-      const { data: pays } = await supabase
-        .from("invoice_payments")
-        .select("amount")
-        .eq("invoice_id", invoice.id);
-      const paid = (pays || []).reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
-      const remaining = +(Number(invoice.amount_total || 0) - paid).toFixed(2);
-
-      if (remaining > 0.01) {
-        const { error } = await supabase.from("invoice_payments").insert({
-          invoice_id: invoice.id, account_id: accountId, amount: remaining,
-          payment_date: new Date().toISOString().slice(0, 10),
-          method: invoice.payment_method === "DIRECT_DEBIT" ? "TRANSFER" : (invoice.payment_method || "TRANSFER"),
-          notes: "Saldo total", created_by: user.id,
-        } as any);
-        if (error) throw error;
-      }
-      const { error: updErr } = await supabase.from("invoices")
-        .update({ status: "PAID", paid_at: new Date().toISOString() }).eq("id", invoice.id);
-      if (updErr) throw updErr;
-
-      toast({ title: "Factura marcada como pagada", description: "Se ha registrado el cobro y contabilizado." });
-      queryClient.invalidateQueries({ queryKey: ["invoice-payments", invoice.id] });
-      queryClient.invalidateQueries({ queryKey: ["invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["treasury-balance"] });
-      onOpenChange(false);
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    } finally {
-      setMarkingPaid(false);
-    }
-  };
-
-  /**
-   * Reabre una factura pagada: elimina sus cobros (lo que revierte el asiento
-   * de tesorería por el trigger) y la devuelve a "Enviada".
-   */
-  const handleReopen = async () => {
-    if (!invoice) return;
-    setMarkingPaid(true);
-    try {
-      const { error: delErr } = await supabase
-        .from("invoice_payments").delete().eq("invoice_id", invoice.id);
-      if (delErr) throw delErr;
-
-      const { error: updErr } = await supabase.from("invoices")
-        .update({ status: "SENT", paid_at: null }).eq("id", invoice.id);
-      if (updErr) throw updErr;
-
-      toast({ title: "Factura reabierta", description: "Se han eliminado los cobros y su asiento." });
-      queryClient.invalidateQueries({ queryKey: ["invoice-payments", invoice.id] });
-      queryClient.invalidateQueries({ queryKey: ["invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["treasury-balance"] });
-      setConfirmReopen(false);
-      onOpenChange(false);
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    } finally {
-      setMarkingPaid(false);
-    }
-  };
 
   const isDraft = invoice?.status === "DRAFT";
   const isQuote = invoice?.type === "QUOTE";
-  const allStatuses = isQuote ? allQuoteStatuses : manualInvoiceStatuses;
-  const nextStatuses = allStatuses.filter((s) => s !== invoice?.status);
 
   // Load invoice lines (con datos del producto vinculado, si lo hay)
   const { data: existingLines = [] } = useQuery({
@@ -190,7 +94,6 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice, onPreview }: Props) =>
       setVatPercentage(String(invoice.vat_percentage || "21"));
       setIrpfPercentage(String(invoice.irpf_percentage || "0"));
       setSpecialMentions(invoice.special_mentions || "");
-      setStatus(invoice.status || "DRAFT");
       setAttachmentPath(invoice.attachment_path || null);
       setAttachmentName(invoice.attachment_name || null);
       setVatIncluded(invoice.vat_included ?? false);
@@ -328,32 +231,9 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice, onPreview }: Props) =>
     if (!invoice) return;
     setSubmitting(true);
     try {
-      if (isQuote && status === "INVOICED") {
-        const { error: invErr } = await supabase.from("invoices").insert({
-          account_id: invoice.account_id, client_id: invoice.client_id,
-          type: "INVOICE", status: "PAID", concept: invoice.concept,
-          issue_date: new Date().toISOString().slice(0, 10),
-          amount_net: invoice.amount_net, vat_percentage: invoice.vat_percentage,
-          amount_vat: invoice.amount_vat, amount_total: invoice.amount_total,
-          irpf_percentage: invoice.irpf_percentage || 0,
-          irpf_amount: invoice.irpf_amount || 0,
-          attachment_path: invoice.attachment_path, attachment_name: invoice.attachment_name,
-        } as any);
-        if (invErr) throw invErr;
-        const { error: updErr } = await supabase.from("invoices").update({ status: "INVOICED" }).eq("id", invoice.id);
-        if (updErr) throw updErr;
-        toast({ title: "Factura creada desde presupuesto" });
-        queryClient.invalidateQueries({ queryKey: ["invoices"] });
-        onOpenChange(false);
-        return;
-      }
-
-      const updatePayload: any = { status };
-      if (status === "PAID" && invoice.status !== "PAID") {
-        updatePayload.paid_at = new Date().toISOString();
-      } else if (status !== "PAID" && invoice.status === "PAID") {
-        updatePayload.paid_at = null;
-      }
+      // El estado ya no se edita aquí: se cambia desde el menú de Acciones del
+      // listado, que es quien registra cobros y asientos cuando toca.
+      const updatePayload: any = {};
 
       if (isDraft) {
         const validLines = lines.filter(l => l.description.trim() && (parseFloat(l.unitPrice) || 0) > 0);
@@ -443,19 +323,6 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice, onPreview }: Props) =>
 
         {/* Body */}
         <div className="flex-1 space-y-4 overflow-y-auto bg-muted/30 px-6 py-5">
-          {/* Estado */}
-          <FormSection icon={RefreshCw} title="Estado" desc="Dónde está la factura y qué puedes hacer">
-            <InvoiceStatusFlow
-              current={invoice.status}
-              isQuote={isQuote}
-              pending={status}
-              onSelect={setStatus}
-              onMarkPaid={!isQuote && CAN_MARK_PAID.includes(invoice.status) ? handleMarkPaid : undefined}
-              onReopen={!isQuote && invoice.status === "PAID" ? () => setConfirmReopen(true) : undefined}
-              busy={markingPaid}
-            />
-          </FormSection>
-
           {isDraft && (
             <>
               {/* Datos generales */}
@@ -721,35 +588,14 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice, onPreview }: Props) =>
               </Button>
             )}
             <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={submitting}>Cancelar</Button>
-            <Button onClick={handleSubmit} disabled={submitting || (status === invoice?.status && !isDraft && attachmentPath === (invoice?.attachment_path || null))}>
+            <Button onClick={handleSubmit} disabled={submitting || (!isDraft && attachmentPath === (invoice?.attachment_path || null))}>
               {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isQuote && status === "INVOICED" ? "Convertir en factura" : "Guardar"}
+              Guardar
             </Button>
           </div>
         </DialogFooter>
       </DialogContent>
 
-      <AlertDialog open={confirmReopen} onOpenChange={setConfirmReopen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Reabrir esta factura?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Se eliminarán los cobros registrados y, con ellos, su asiento contable: el
-              importe saldrá de tesorería y la factura volverá a "Enviada". Es la forma
-              correcta de deshacer un cobro, pero no se puede deshacer.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleReopen}
-            >
-              Reabrir
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </Dialog>
   );
 };

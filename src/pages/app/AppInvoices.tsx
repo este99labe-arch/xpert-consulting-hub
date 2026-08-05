@@ -46,6 +46,7 @@ import InvoiceFolderView from "@/components/invoices/InvoiceFolderView";
 import BankReconciliationTab from "@/components/invoices/BankReconciliationTab";
 import InvoiceImportTab from "@/components/invoices/InvoiceImportTab";
 import PageHeader from "@/components/shared/PageHeader";
+import { markInvoicePaid, reopenInvoice, setInvoiceStatus, convertQuoteToInvoice, INVOICE_STATUS_LABELS } from "@/lib/invoiceStatus";
 
 const statusLabels: Record<string, string> = {
   DRAFT: "Borrador", SENT: "Enviada", PAID: "Pagada", PARTIALLY_PAID: "Pago parcial", OVERDUE: "Vencida",
@@ -136,6 +137,8 @@ const AppInvoices = () => {
   const [deleteReason, setDeleteReason] = useState("");
   const [deleteReasonDialog, setDeleteReasonDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  const [reopenTarget, setReopenTarget] = useState<any>(null);
 
   // Reminder state
   const [reminderInvoice, setReminderInvoice] = useState<any>(null);
@@ -364,6 +367,54 @@ const AppInvoices = () => {
       }
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
       queryClient.invalidateQueries({ queryKey: ["invoices-kanban"] });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  };
+
+  /** Cambia el estado desde el menú de Acciones del listado. */
+  const handleChangeStatus = async (inv: any, status: string) => {
+    try {
+      await setInvoiceStatus(inv.id, status);
+      toast({ title: `Estado: ${INVOICE_STATUS_LABELS[status] ?? status}` });
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  };
+
+  /** Registra el cobro pendiente (genera el asiento) y la deja pagada. */
+  const handleMarkPaid = async (inv: any) => {
+    if (!accountId || !user) return;
+    try {
+      await markInvoicePaid(inv, accountId, user.id);
+      toast({ title: "Factura marcada como pagada", description: "Cobro registrado y contabilizado." });
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["treasury-balance"] });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const handleReopen = async () => {
+    const inv = reopenTarget;
+    if (!inv) return;
+    try {
+      await reopenInvoice(inv.id);
+      setReopenTarget(null);
+      toast({ title: "Factura reabierta", description: "Se han eliminado los cobros y su asiento." });
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["treasury-balance"] });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const handleConvertQuote = async (quote: any) => {
+    try {
+      await convertQuoteToInvoice(quote);
+      toast({ title: "Factura creada desde presupuesto", description: "La encontrarás como borrador en Facturas." });
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     }
@@ -704,6 +755,10 @@ const AppInvoices = () => {
                     </div>
                     <div className="flex justify-end pt-1 border-t" onClick={(e) => e.stopPropagation()}>
                       <InvoiceActionsMenu
+                        status={inv.status}
+                        onChangeStatus={(st) => handleChangeStatus(inv, st)}
+                        onMarkPaid={inv.status !== "PAID" ? () => handleMarkPaid(inv) : undefined}
+                        onReopen={inv.status === "PAID" ? () => setReopenTarget(inv) : undefined}
                         onPreview={() => setPreviewInvoice(inv)}
                         onExport={() => handleExportPdf(inv.id)}
                         onEdit={() => setEditInvoice(inv)}
@@ -791,6 +846,10 @@ const AppInvoices = () => {
                               <Eye className="h-4 w-4" />
                             </Button>
                             <InvoiceActionsMenu
+                              status={inv.status}
+                              onChangeStatus={(st) => handleChangeStatus(inv, st)}
+                              onMarkPaid={inv.status !== "PAID" ? () => handleMarkPaid(inv) : undefined}
+                              onReopen={inv.status === "PAID" ? () => setReopenTarget(inv) : undefined}
                               onPreview={() => setPreviewInvoice(inv)}
                               onExport={() => handleExportPdf(inv.id)}
                               onEdit={() => setEditInvoice(inv)}
@@ -908,6 +967,10 @@ const AppInvoices = () => {
                               <Eye className="h-4 w-4" />
                             </Button>
                             <InvoiceActionsMenu
+                              status={q.status}
+                              isQuote
+                              onChangeStatus={(st) => handleChangeStatus(q, st)}
+                              onConvertToInvoice={q.status === "ACCEPTED" ? () => handleConvertQuote(q) : undefined}
                               onPreview={() => setPreviewInvoice(q)}
                               onExport={() => handleExportPdf(q.id)}
                               onEdit={() => setEditInvoice(q)}
@@ -960,6 +1023,28 @@ const AppInvoices = () => {
       />
 
       {/* Manager: direct delete confirmation */}
+      <AlertDialog open={!!reopenTarget} onOpenChange={(o) => { if (!o) setReopenTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Reabrir esta factura?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se eliminarán los cobros registrados y, con ellos, su asiento contable: el
+              importe saldrá de tesorería y la factura volverá a "Enviada". Es la forma
+              correcta de deshacer un cobro, pero no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleReopen}
+            >
+              Reabrir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <AlertDialog open={!!deleteInvoice && isManager && !deleteReasonDialog} onOpenChange={(o) => { if (!o) setDeleteInvoice(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
