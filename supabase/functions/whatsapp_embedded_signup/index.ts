@@ -113,9 +113,14 @@ Deno.serve(async (req) => {
       credsErr = String(err);
     }
 
+    // Huella del code: si dos intentos seguidos traen la misma, el SDK está
+    // devolviendo un authResponse cacheado en vez de emitir uno nuevo, y
+    // ninguna comprobación del lado del servidor lo habría delatado.
+    const codeFp = `${String(code).slice(0, 12)}…(${String(code).length})`;
+
     const diag = credsOk === false
       ? `Las credenciales de la app no son válidas (app_id ${APP_ID}, secreto de ${SECRET_SOURCE}): ${credsErr}`
-      : `Credenciales de app correctas (app_id ${APP_ID}); el fallo está en el code: caducado, ya usado, o emitido por otra app.`;
+      : `Credenciales correctas (app_id ${APP_ID}); falla el code ${codeFp}. Si esta huella se repite entre intentos, el SDK está reutilizando un code ya gastado.`;
 
     console.error("token exchange failed", tokenRes.status, JSON.stringify(tokenData),
       "app_id", APP_ID, "secret_source", SECRET_SOURCE, "creds_ok", credsOk);

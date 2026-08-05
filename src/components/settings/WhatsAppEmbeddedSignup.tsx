@@ -25,7 +25,11 @@ function loadFacebookSdk(): Promise<void> {
     window.fbAsyncInit = () => {
       window.FB.init({
         appId: META_APP_ID,
-        cookie: true,
+        // Sin cookie de sesión: con ella, FB.login puede devolver el
+        // authResponse guardado de un intento anterior — y con él un `code` ya
+        // consumido, que Meta rechaza como si estuviera caducado. Desde el
+        // servidor es indistinguible. Así cada clic emite un code nuevo.
+        cookie: false,
         xfbml: false,
         version: META_GRAPH_VERSION,
       });
@@ -157,6 +161,9 @@ const WhatsAppEmbeddedSignup = ({ accountId, onConnected }: Props) => {
           config_id: META_ES_CONFIG_ID,
           response_type: "code",
           override_default_response_type: true,
+          // Rehace la autorización aunque ya estuviera concedida, en vez de
+          // resolver al vuelo con lo que hubiera guardado.
+          auth_type: "rerequest",
           extras: {
             setup: {},
             featureType: META_ES_FEATURE_TYPE,
