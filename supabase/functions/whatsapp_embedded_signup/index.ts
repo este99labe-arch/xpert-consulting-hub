@@ -113,14 +113,19 @@ Deno.serve(async (req) => {
       credsErr = String(err);
     }
 
-    // Huella del code: si dos intentos seguidos traen la misma, el SDK está
-    // devolviendo un authResponse cacheado en vez de emitir uno nuevo, y
-    // ninguna comprobación del lado del servidor lo habría delatado.
+    // ¿Llegó a correr el asistente de Embedded Signup? phone_number_id y
+    // waba_id vienen del evento WA_EMBEDDED_SIGNUP, que SOLO emite ese
+    // asistente. Sin ellos, el popup fue un login normal de Facebook y el code
+    // es de OAuth corriente — atado a un redirect_uri, y por eso rechazado.
+    // Es la diferencia entre un problema de código y uno de configuración en
+    // Meta, y desde fuera los dos dan el mismo mensaje.
+    const esRan = !!(phone_number_id || waba_id);
     const codeFp = `${String(code).slice(0, 12)}…(${String(code).length})`;
 
     const diag = credsOk === false
       ? `Las credenciales de la app no son válidas (app_id ${APP_ID}, secreto de ${SECRET_SOURCE}): ${credsErr}`
-      : `Credenciales correctas (app_id ${APP_ID}); falla el code ${codeFp}. Si esta huella se repite entre intentos, el SDK está reutilizando un code ya gastado.`;
+      : `Credenciales OK (app_id ${APP_ID}). Meta code=${e.code ?? "?"}/${e.error_subcode ?? "-"}. ` +
+        `code=${codeFp}. Asistente Embedded Signup: ${esRan ? `SÍ (waba ${waba_id ?? "-"}, phone ${phone_number_id ?? "-"})` : "NO se ejecutó — el popup fue un login normal"}.`;
 
     console.error("token exchange failed", tokenRes.status, JSON.stringify(tokenData),
       "app_id", APP_ID, "secret_source", SECRET_SOURCE, "creds_ok", credsOk);
@@ -133,6 +138,7 @@ Deno.serve(async (req) => {
         http_status: tokenRes.status,
         app_id: APP_ID, secret_source: SECRET_SOURCE, secret_len: APP_SECRET.length,
         credentials_ok: credsOk,
+        embedded_signup_ran: esRan, waba_id: waba_id ?? null, phone_number_id: phone_number_id ?? null,
       },
     }, 400);
   }
