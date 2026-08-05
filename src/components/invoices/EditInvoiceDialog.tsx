@@ -28,6 +28,7 @@ import { toast } from "@/hooks/use-toast";
 import InvoiceAttachment from "@/components/invoices/InvoiceAttachment";
 import InvoicePaymentsPanel from "@/components/invoices/InvoicePaymentsPanel";
 import FormSection from "@/components/shared/FormSection";
+import InvoiceStatusFlow from "@/components/invoices/InvoiceStatusFlow";
 
 const statusLabels: Record<string, string> = {
   DRAFT: "Borrador", SENT: "Enviada", PAID: "Pagada", PARTIALLY_PAID: "Pago parcial", OVERDUE: "Vencida",
@@ -443,58 +444,16 @@ const EditInvoiceDialog = ({ open, onOpenChange, invoice, onPreview }: Props) =>
         {/* Body */}
         <div className="flex-1 space-y-4 overflow-y-auto bg-muted/30 px-6 py-5">
           {/* Estado */}
-          <FormSection icon={RefreshCw} title="Estado" desc="Situación actual y acciones disponibles">
-            <div className="space-y-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-sm text-muted-foreground">Ahora mismo:</span>
-                <Badge variant={STATUS_VARIANT[invoice.status] ?? "muted"} className="px-3 py-1 text-sm">
-                  {statusLabels[invoice.status]}
-                </Badge>
-                {status !== invoice.status && (
-                  <>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                    <Badge variant="outline" className="px-3 py-1 text-sm">{statusLabels[status]}</Badge>
-                    <Button variant="ghost" size="sm" onClick={() => setStatus(invoice.status)}>
-                      Deshacer
-                    </Button>
-                  </>
-                )}
-              </div>
-
-              {/* Acción principal del momento. "Marcar como pagada" NO cambia el
-                  estado a mano: registra el cobro pendiente, que es lo que
-                  genera el asiento y mantiene la tesorería cuadrada. */}
-              <div className="flex flex-wrap items-center gap-2">
-                {!isQuote && CAN_MARK_PAID.includes(invoice.status) && (
-                  <Button size="sm" className="gap-1.5" onClick={handleMarkPaid} disabled={markingPaid}>
-                    {markingPaid ? <Loader2 className="h-4 w-4 animate-spin" /> : <BadgeEuro className="h-4 w-4" />}
-                    Marcar como pagada
-                  </Button>
-                )}
-                {!isQuote && invoice.status === "PAID" && (
-                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setConfirmReopen(true)}>
-                    <RotateCcw className="h-4 w-4" />
-                    Reabrir factura
-                  </Button>
-                )}
-                {nextStatuses.map((s) => (
-                  <Button
-                    key={s}
-                    variant={status === s ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setStatus(s)}
-                  >
-                    {statusLabels[s]}
-                  </Button>
-                ))}
-              </div>
-
-              {!isQuote && CAN_MARK_PAID.includes(invoice.status) && (
-                <p className="text-xs text-muted-foreground">
-                  Al marcarla como pagada se registra el cobro del saldo pendiente y se contabiliza en tesorería.
-                </p>
-              )}
-            </div>
+          <FormSection icon={RefreshCw} title="Estado" desc="Dónde está la factura y qué puedes hacer">
+            <InvoiceStatusFlow
+              current={invoice.status}
+              isQuote={isQuote}
+              pending={status}
+              onSelect={setStatus}
+              onMarkPaid={!isQuote && CAN_MARK_PAID.includes(invoice.status) ? handleMarkPaid : undefined}
+              onReopen={!isQuote && invoice.status === "PAID" ? () => setConfirmReopen(true) : undefined}
+              busy={markingPaid}
+            />
           </FormSection>
 
           {isDraft && (
