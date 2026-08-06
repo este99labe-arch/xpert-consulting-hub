@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, useLocation } from "react-router-dom";
@@ -57,27 +56,24 @@ const typeLabels: Record<string, string> = {
   INVOICE: "Factura", EXPENSE: "Gasto", QUOTE: "Presupuesto",
 };
 
-// Estilos modernos de estado (badge con punto indicador)
-const statusBadgeStyles: Record<string, { dot: string; cls: string }> = {
-  DRAFT: { dot: "bg-muted-foreground", cls: "bg-muted text-muted-foreground" },
-  SENT: { dot: "bg-primary", cls: "bg-primary/10 text-primary" },
-  PAID: { dot: "bg-[hsl(var(--success))]", cls: "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]" },
-  PARTIALLY_PAID: { dot: "bg-[hsl(var(--warning))]", cls: "bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))]" },
-  OVERDUE: { dot: "bg-destructive", cls: "bg-destructive/10 text-destructive" },
-  ACCEPTED: { dot: "bg-[hsl(var(--success))]", cls: "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]" },
-  REJECTED: { dot: "bg-destructive", cls: "bg-destructive/10 text-destructive" },
-  INVOICED: { dot: "bg-primary", cls: "bg-primary/10 text-primary" },
+/* El estado se pinta con las variantes del sistema, no con fondos al 10 %:
+   así una factura vencida se ve igual en el listado, en el kanban y en el
+   menú de acciones, y basta con tocar badge.tsx para cambiarlas todas. */
+const STATUS_VARIANT: Record<string, "success" | "softDestructive" | "warning" | "info" | "muted"> = {
+  DRAFT: "muted",
+  SENT: "info",
+  PAID: "success",
+  PARTIALLY_PAID: "warning",
+  OVERDUE: "softDestructive",
+  ACCEPTED: "success",
+  REJECTED: "softDestructive",
+  INVOICED: "info",
+  CANCELLED: "muted",
 };
 
-const StatusBadge = ({ status }: { status: string }) => {
-  const s = statusBadgeStyles[status] || { dot: "bg-muted-foreground", cls: "bg-muted text-muted-foreground" };
-  return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${s.cls}`}>
-      <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
-      {statusLabels[status] || status}
-    </span>
-  );
-};
+const StatusBadge = ({ status }: { status: string }) => (
+  <Badge variant={STATUS_VARIANT[status] ?? "muted"}>{statusLabels[status] || status}</Badge>
+);
 
 const AppInvoices = () => {
   const { accountId, role, user } = useAuth();
@@ -292,10 +288,10 @@ const AppInvoices = () => {
   const pendingQuotes = Number(kpiData?.pending_quotes || 0);
 
   const kpis = [
-    { label: "Facturado", value: `€${totalIncome.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`, icon: TrendingUp, color: "text-primary", bg: "bg-primary/10" },
-    { label: "Gastos", value: `€${totalExpenses.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`, icon: TrendingDown, color: "text-destructive", bg: "bg-destructive/10" },
-    { label: "Cobrado", value: `€${totalPaid.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`, icon: DollarSign, color: "text-[hsl(var(--success))]", bg: "bg-[hsl(var(--success))]/10" },
-    { label: "Pendiente", value: `€${totalPending.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`, icon: FileText, color: "text-[hsl(var(--warning))]", bg: "bg-[hsl(var(--warning))]/10" },
+    { label: "Facturado", value: `€${totalIncome.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`, icon: TrendingUp, color: "text-accent-foreground", bg: "bg-primary/10" },
+    { label: "Gastos", value: `€${totalExpenses.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`, icon: TrendingDown, color: "text-destructive", bg: "bg-destructive-surface" },
+    { label: "Cobrado", value: `€${totalPaid.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`, icon: DollarSign, color: "text-[hsl(var(--success))]", bg: "bg-success-foreground" },
+    { label: "Pendiente", value: `€${totalPending.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`, icon: FileText, color: "text-[hsl(var(--warning))]", bg: "bg-warning-surface" },
   ];
 
   const handleExportPdf = async (invoiceId: string) => {
@@ -516,7 +512,7 @@ const AppInvoices = () => {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <PageHeader
         title="Facturación"
         description="Gestiona facturas, presupuestos, gastos y cobros"
@@ -544,36 +540,29 @@ const AppInvoices = () => {
           </Button>
         </div>
 
-        <TabsContent value="invoices" className="space-y-6">
+        <TabsContent value="invoices" className="space-y-4">
 
       {/* KPIs */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.25 }}
-        className="grid gap-4 grid-cols-2 lg:grid-cols-4"
-      >
+      <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
         {kpis.map((kpi) => (
-          <Card key={kpi.label} className="border-0 shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-muted-foreground">{kpi.label}</span>
-                <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${kpi.bg}`}>
-                  <kpi.icon className={`h-4 w-4 ${kpi.color}`} />
-                </div>
+          <Card key={kpi.label} className="px-[18px] py-4">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <span className="truncate text-[10.5px] font-medium text-muted-foreground">{kpi.label}</span>
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control bg-muted">
+                <kpi.icon className="h-3.5 w-3.5 stroke-[1.8] text-faint" />
               </div>
-              <p className={`text-xl font-bold tracking-tight ${kpi.color}`}>{kpi.value}</p>
-            </CardContent>
+            </div>
+            <p className={`tnum text-[22px] font-semibold tracking-[-.02em] ${kpi.color}`}>{kpi.value}</p>
           </Card>
         ))}
-      </motion.div>
+      </div>
 
       {/* Pending delete requests (managers) */}
       {isManager && deleteRequests.length > 0 && (
-        <Card className="border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/10">
+        <Card tone="warning">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Trash2 className="h-4 w-4 text-[hsl(var(--warning))]" />
+              <Trash2 className="h-4 w-4 text-warning-text" />
               Solicitudes de eliminación pendientes
               <Badge variant="secondary" className="ml-1">{deleteRequests.length}</Badge>
             </CardTitle>
@@ -586,11 +575,11 @@ const AppInvoices = () => {
                   <div key={req.id} className="flex items-center justify-between rounded-lg border bg-background p-3">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-sm font-semibold">{inv?.invoice_number || "—"}</span>
+                        <span className="font-mono text-xs font-semibold">{inv?.invoice_number || "—"}</span>
                         <Badge variant="outline" className="text-xs">
                           {inv?.type === "INVOICE" ? "Factura" : "Gasto"}
                         </Badge>
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-xs text-muted-foreground">
                           €{Number(inv?.amount_total || 0).toLocaleString("es-ES", { minimumFractionDigits: 2 })}
                         </span>
                       </div>
@@ -740,12 +729,12 @@ const AppInvoices = () => {
             ) : (
               <>
                 {paginatedInvoices.map((inv: any) => (
-                  <Card key={inv.id} className="p-4 space-y-2 cursor-pointer active:bg-accent/50" onClick={() => setEditInvoice(inv)}>
+                  <Card key={inv.id} className="cursor-pointer space-y-2 px-[18px] py-4 active:bg-popover" onClick={() => setEditInvoice(inv)}>
                     <div className="flex items-center justify-between">
-                      <span className="font-mono font-semibold text-sm">{inv.invoice_number || inv.id.slice(0, 8).toUpperCase()}</span>
+                      <span className="font-mono font-semibold text-xs">{inv.invoice_number || inv.id.slice(0, 8).toUpperCase()}</span>
                       <StatusBadge status={inv.status} />
                     </div>
-                    <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center justify-between text-xs">
                       <span className="truncate">{inv.business_clients?.name || "—"}</span>
                       <span className="font-mono font-semibold">€{Number(inv.amount_total).toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
                     </div>
@@ -809,20 +798,20 @@ const AppInvoices = () => {
                     </TableHeader>
                     <TableBody>
                       {paginatedInvoices.map((inv: any) => (
-                        <TableRow key={inv.id} className="cursor-pointer hover:bg-accent/50" onClick={() => setEditInvoice(inv)}>
-                          <TableCell className="font-mono font-semibold text-sm">
+                        <TableRow key={inv.id} className="cursor-pointer" onClick={() => setEditInvoice(inv)}>
+                          <TableCell className="tnum font-medium text-muted-foreground">
                             {inv.invoice_number || inv.id.slice(0, 8).toUpperCase()}
                           </TableCell>
-                          <TableCell className="whitespace-nowrap">
+                          <TableCell className="tnum whitespace-nowrap text-muted-foreground">
                             {format(new Date(inv.issue_date), "dd MMM yyyy", { locale: es })}
                           </TableCell>
-                          <TableCell className="whitespace-nowrap text-muted-foreground hidden lg:table-cell">
-                            {inv.paid_at ? format(new Date(inv.paid_at), "dd MMM yyyy", { locale: es }) : "—"}
+                          <TableCell className="tnum hidden whitespace-nowrap text-muted-foreground lg:table-cell">
+                            {inv.paid_at ? format(new Date(inv.paid_at), "dd MMM yyyy", { locale: es }) : <span className="text-faint">—</span>}
                           </TableCell>
                           <TableCell>{inv.business_clients?.name || "—"}</TableCell>
                           <TableCell className="max-w-[200px] truncate">{inv.concept || "—"}</TableCell>
                           <TableCell>{typeLabels[inv.type] || inv.type}</TableCell>
-                          <TableCell className="text-right font-mono font-semibold">
+                          <TableCell className="tnum text-right font-medium text-figure">
                             €{Number(inv.amount_total).toLocaleString("es-ES", { minimumFractionDigits: 2 })}
                           </TableCell>
                           <TableCell>
@@ -876,34 +865,27 @@ const AppInvoices = () => {
 
         </TabsContent>
 
-        <TabsContent value="quotes" className="space-y-6">
+        <TabsContent value="quotes" className="space-y-4">
           {/* Quote KPIs */}
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25 }}
-            className="grid gap-4 grid-cols-1 sm:grid-cols-3"
-          >
+          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
             {[
-              { label: "Total presupuestado", value: totalQuotes, icon: ClipboardList, color: "text-primary", bg: "bg-primary/10" },
-              { label: "Aceptados", value: acceptedQuotes, icon: Check, color: "text-[hsl(var(--success))]", bg: "bg-[hsl(var(--success))]/10" },
-              { label: "Pendientes", value: pendingQuotes, icon: FileText, color: "text-[hsl(var(--warning))]", bg: "bg-[hsl(var(--warning))]/10" },
+              { label: "Total presupuestado", value: totalQuotes, icon: ClipboardList, color: "text-figure" },
+              { label: "Aceptados", value: acceptedQuotes, icon: Check, color: "text-success" },
+              { label: "Pendientes", value: pendingQuotes, icon: FileText, color: "text-warning-text" },
             ].map((kpi) => (
-              <Card key={kpi.label} className="border-0 shadow-sm hover:shadow-md transition-shadow">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium text-muted-foreground">{kpi.label}</span>
-                    <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${kpi.bg}`}>
-                      <kpi.icon className={`h-4 w-4 ${kpi.color}`} />
-                    </div>
+              <Card key={kpi.label} className="px-[18px] py-4">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <span className="truncate text-[10.5px] font-medium text-muted-foreground">{kpi.label}</span>
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control bg-muted">
+                    <kpi.icon className="h-3.5 w-3.5 stroke-[1.8] text-faint" />
                   </div>
-                  <p className={`text-xl font-bold tracking-tight ${kpi.color}`}>
-                    €{kpi.value.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
-                  </p>
-                </CardContent>
+                </div>
+                <p className={`tnum text-[22px] font-semibold tracking-[-.02em] ${kpi.color}`}>
+                  €{kpi.value.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                </p>
               </Card>
             ))}
-          </motion.div>
+          </div>
 
           {/* Quote Filters */}
           <div className="flex flex-wrap gap-3">
@@ -946,8 +928,8 @@ const AppInvoices = () => {
                     </TableHeader>
                     <TableBody>
                       {paginatedQuotes.map((q: any) => (
-                        <TableRow key={q.id} className="cursor-pointer hover:bg-accent/50" onClick={() => setEditInvoice(q)}>
-                          <TableCell className="font-mono font-semibold text-sm">
+                        <TableRow key={q.id} className="cursor-pointer" onClick={() => setEditInvoice(q)}>
+                          <TableCell className="font-mono font-semibold text-xs">
                             {q.invoice_number || q.id.slice(0, 8).toUpperCase()}
                           </TableCell>
                           <TableCell className="whitespace-nowrap hidden sm:table-cell">
@@ -1079,7 +1061,7 @@ const AppInvoices = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
-            <label className="text-sm font-medium">Motivo (opcional)</label>
+            <label className="text-xs font-medium">Motivo (opcional)</label>
             <Textarea
               value={deleteReason}
               onChange={(e) => setDeleteReason(e.target.value)}

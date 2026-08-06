@@ -67,11 +67,11 @@ const AccountSwitcher = () => {
           >
             <Check
               className={`h-4 w-4 shrink-0 ${
-                m.accountId === realAccountId ? "opacity-100 text-primary" : "opacity-0"
+                m.accountId === realAccountId ? "opacity-100 text-accent-foreground" : "opacity-0"
               }`}
             />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">{m.accountName}</p>
+              <p className="truncate text-xs font-medium">{m.accountName}</p>
               <p className="text-xs text-muted-foreground">{roleLabel(m.role)}</p>
             </div>
           </DropdownMenuItem>

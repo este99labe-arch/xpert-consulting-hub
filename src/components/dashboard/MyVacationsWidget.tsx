@@ -80,7 +80,7 @@ const MyVacationsWidget = () => {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base flex items-center gap-2">
-              <Palmtree className="h-4 w-4 text-primary" />
+              <Palmtree className="h-4 w-4 text-accent-foreground" />
               Mis vacaciones
             </CardTitle>
             <Button size="sm" variant="ghost" className="h-7 gap-1 text-xs" onClick={() => setOpen(true)}>
@@ -89,10 +89,10 @@ const MyVacationsWidget = () => {
           </div>
         </CardHeader>
         <CardContent className="pt-0 space-y-3">
-          <div className="rounded-lg bg-primary/5 p-3">
+          <div className="rounded-lg bg-accent p-3">
             <div className="flex items-baseline justify-between">
               <span className="text-xs text-muted-foreground">Disponibles</span>
-              <span className="text-2xl font-bold text-primary">{available}</span>
+              <span className="tnum text-[22px] font-semibold tracking-[-.02em] text-accent-foreground">{available}</span>
             </div>
             <div className="flex justify-between text-xs text-muted-foreground mt-1">
               <span>{usedDays} usados</span>

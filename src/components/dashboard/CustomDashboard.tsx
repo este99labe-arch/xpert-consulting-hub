@@ -131,11 +131,11 @@ const WidgetCard = ({
         <ChartContainer config={chartConfig} className="!aspect-auto h-full w-full">
           {widget.type === "bar" ? (
             <BarChart {...common}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <CartesianGrid stroke="hsl(var(--chart-grid))" vertical={false} />
               <XAxis dataKey="label" tick={{ fontSize: 10 }} className="text-muted-foreground" interval="preserveStartEnd" />
               <YAxis tick={{ fontSize: 10 }} className="text-muted-foreground" width={46} />
               <ChartTooltip content={<ChartTooltipContent />} />
-              <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} barSize={widget.months > 6 ? 12 : 22} />
+              <Bar dataKey="value" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} barSize={widget.months > 6 ? 12 : 22} />
             </BarChart>
           ) : widget.type === "area" ? (
             <AreaChart {...common}>
@@ -145,7 +145,7 @@ const WidgetCard = ({
                   <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <CartesianGrid stroke="hsl(var(--chart-grid))" vertical={false} />
               <XAxis dataKey="label" tick={{ fontSize: 10 }} className="text-muted-foreground" interval="preserveStartEnd" />
               <YAxis tick={{ fontSize: 10 }} className="text-muted-foreground" width={46} />
               <ChartTooltip content={<ChartTooltipContent />} />
@@ -153,7 +153,7 @@ const WidgetCard = ({
             </AreaChart>
           ) : (
             <LineChart {...common}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <CartesianGrid stroke="hsl(var(--chart-grid))" vertical={false} />
               <XAxis dataKey="label" tick={{ fontSize: 10 }} className="text-muted-foreground" interval="preserveStartEnd" />
               <YAxis tick={{ fontSize: 10 }} className="text-muted-foreground" width={46} />
               <ChartTooltip content={<ChartTooltipContent />} />
@@ -166,9 +166,9 @@ const WidgetCard = ({
   };
 
   return (
-    <Card className="border-0 shadow-sm">
+    <Card className="border-0">
       <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
-        <CardTitle className="truncate text-sm font-semibold">{title}</CardTitle>
+        <CardTitle className="truncate text-xs font-semibold">{title}</CardTitle>
         {editing && (
           <div className="flex shrink-0 items-center gap-0.5">
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onMove(-1)} disabled={isFirst} aria-label="Mover a la izquierda">
@@ -240,7 +240,7 @@ const WidgetEditorDialog = ({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <LayoutDashboard className="h-5 w-5 text-primary" /> Configurar widget
+            <LayoutDashboard className="h-5 w-5 text-accent-foreground" /> Configurar widget
           </DialogTitle>
         </DialogHeader>
 
@@ -399,7 +399,7 @@ const CustomDashboard = () => {
         </div>
       </div>
 
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {widgets.map((w, i) => (
           <WidgetCard
             key={w.id}
@@ -417,10 +417,10 @@ const CustomDashboard = () => {
           <button
             type="button"
             onClick={addWidget}
-            className="flex min-h-[220px] flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
+            className="flex min-h-[220px] flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border text-muted-foreground transition-colors hover:border-primary/40 hover:text-accent-foreground"
           >
             <Plus className="h-6 w-6" />
-            <span className="text-sm font-medium">Añadir widget</span>
+            <span className="text-xs font-medium">Añadir widget</span>
           </button>
         )}
       </div>

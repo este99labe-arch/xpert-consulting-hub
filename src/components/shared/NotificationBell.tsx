@@ -35,10 +35,10 @@ const typeIcons: Record<string, any> = {
 
 const typeColors: Record<string, string> = {
   STOCK_LOW: "text-[hsl(var(--warning))]",
-  LEAVE_PENDING: "text-primary",
+  LEAVE_PENDING: "text-accent-foreground",
   INVOICE_OVERDUE: "text-destructive",
   DELETE_REQUEST: "text-[hsl(var(--warning))]",
-  REMINDER: "text-primary",
+  REMINDER: "text-accent-foreground",
 };
 
 interface Notification {
@@ -140,7 +140,7 @@ const NotificationBell = () => {
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-0">
         <div className="flex items-center justify-between px-4 py-3">
-          <h4 className="text-sm font-semibold">Notificaciones</h4>
+          <h4 className="text-xs font-semibold">Notificaciones</h4>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
@@ -158,7 +158,7 @@ const NotificationBell = () => {
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
               <Bell className="h-8 w-8 mb-2 opacity-40" />
-              <p className="text-sm">Sin notificaciones</p>
+              <p className="text-xs">Sin notificaciones</p>
             </div>
           ) : (
             notifications.map((notif) => {
@@ -174,7 +174,7 @@ const NotificationBell = () => {
                 >
                   <Icon className={`h-4 w-4 mt-0.5 shrink-0 ${color}`} />
                   <div className="flex-1 min-w-0">
-                    <p className={`text-sm leading-tight ${!notif.is_read ? "font-medium" : ""}`}>
+                    <p className={`text-xs leading-tight ${!notif.is_read ? "font-medium" : ""}`}>
                       {notif.title}
                     </p>
                     {notif.message && (

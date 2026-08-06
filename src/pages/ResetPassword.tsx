@@ -62,17 +62,17 @@ const ResetPassword = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent px-4">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-accent blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-primary/8 blur-3xl" />
       </div>
 
       <Card className="relative w-full max-w-md shadow-xl border-border/50 backdrop-blur-sm">
         <CardHeader className="text-center space-y-3 pb-2">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground font-bold text-2xl shadow-lg shadow-primary/25">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-2xl shadow-primary/25">
             <KeyRound className="h-7 w-7" />
           </div>
           <div className="space-y-1">
-            <CardTitle className="text-2xl font-bold tracking-tight">Nueva contraseña</CardTitle>
+            <CardTitle className="font-display text-[17px] font-semibold tracking-[-.01em]">Nueva contraseña</CardTitle>
             <CardDescription className="text-muted-foreground">
               {success ? "¡Contraseña actualizada!" : "Introduce tu nueva contraseña"}
             </CardDescription>
@@ -81,21 +81,21 @@ const ResetPassword = () => {
         <CardContent className="pt-4">
           {success ? (
             <div className="flex flex-col items-center gap-4 py-4">
-              <CheckCircle2 className="h-12 w-12 text-primary" />
-              <p className="text-sm text-muted-foreground text-center">
+              <CheckCircle2 className="h-12 w-12 text-accent-foreground" />
+              <p className="text-xs text-muted-foreground text-center">
                 Tu contraseña ha sido actualizada correctamente. Redirigiendo al login...
               </p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+                <div className="flex items-center gap-2 rounded-control border border-destructive-border bg-destructive-surface p-3 text-[11.5px] text-destructive-text">
                   <AlertCircle className="h-4 w-4 shrink-0" />
                   {error}
                 </div>
               )}
               {!isRecovery && (
-                <div className="flex items-center gap-2 rounded-lg bg-muted p-3 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2 rounded-lg bg-muted p-3 text-xs text-muted-foreground">
                   <AlertCircle className="h-4 w-4 shrink-0" />
                   No se detectó un enlace de recuperación válido. Asegúrate de usar el enlace del correo.
                 </div>
@@ -126,7 +126,7 @@ const ResetPassword = () => {
                   className="h-11"
                 />
               </div>
-              <Button type="submit" className="w-full h-11 font-medium shadow-md shadow-primary/20" disabled={loading || !isRecovery}>
+              <Button type="submit" className="w-full h-11 font-medium shadow-primary/20" disabled={loading || !isRecovery}>
                 {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                 Actualizar contraseña
               </Button>

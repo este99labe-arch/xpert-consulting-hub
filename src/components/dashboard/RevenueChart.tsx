@@ -24,13 +24,13 @@ const RevenueChart = ({ data, period, onPeriodChange }: RevenueChartProps) => {
   const useArea = period === "7d";
 
   return (
-    <Card className="border-0 shadow-sm overflow-hidden">
+    <Card className="border-0 overflow-hidden">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-base font-semibold">Ingresos vs Gastos</CardTitle>
         <ToggleGroup type="single" value={period} onValueChange={(v) => v && onPeriodChange(v)} size="sm" className="bg-muted rounded-lg p-0.5">
-          <ToggleGroupItem value="7d" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:shadow-sm">7d</ToggleGroupItem>
-          <ToggleGroupItem value="30d" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:shadow-sm">30d</ToggleGroupItem>
-          <ToggleGroupItem value="12m" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:shadow-sm">12m</ToggleGroupItem>
+          <ToggleGroupItem value="7d" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:">7d</ToggleGroupItem>
+          <ToggleGroupItem value="30d" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:">30d</ToggleGroupItem>
+          <ToggleGroupItem value="12m" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:">12m</ToggleGroupItem>
         </ToggleGroup>
       </CardHeader>
       <CardContent className="pt-0 pb-4">
@@ -48,21 +48,21 @@ const RevenueChart = ({ data, period, onPeriodChange }: RevenueChartProps) => {
                     <stop offset="100%" stopColor="hsl(var(--destructive))" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="label" tick={{ fontSize: 11 }} className="text-muted-foreground" />
-                <YAxis tick={{ fontSize: 11 }} className="text-muted-foreground" width={50} />
+                <CartesianGrid stroke="hsl(var(--chart-grid))" vertical={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 10, fill: "hsl(var(--faint))", fontFamily: "var(--font-mono)" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: "hsl(var(--faint))", fontFamily: "var(--font-mono)" }} axisLine={false} tickLine={false} width={50} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Area type="monotone" dataKey="income" stroke="hsl(var(--success))" fill="url(#incGrad)" strokeWidth={2} />
                 <Area type="monotone" dataKey="expense" stroke="hsl(var(--destructive))" fill="url(#expGrad)" strokeWidth={2} />
               </AreaChart>
             ) : (
               <BarChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="label" tick={{ fontSize: 11 }} className="text-muted-foreground" />
-                <YAxis tick={{ fontSize: 11 }} className="text-muted-foreground" width={50} />
+                <CartesianGrid stroke="hsl(var(--chart-grid))" vertical={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 10, fill: "hsl(var(--faint))", fontFamily: "var(--font-mono)" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: "hsl(var(--faint))", fontFamily: "var(--font-mono)" }} axisLine={false} tickLine={false} width={50} />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="income" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} barSize={period === "30d" ? 8 : 20} />
-                <Bar dataKey="expense" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} barSize={period === "30d" ? 8 : 20} />
+                <Bar dataKey="income" fill="hsl(var(--success))" radius={[3, 3, 0, 0]} barSize={period === "30d" ? 8 : 20} />
+                <Bar dataKey="expense" fill="hsl(var(--destructive))" radius={[3, 3, 0, 0]} barSize={period === "30d" ? 8 : 20} />
               </BarChart>
             )}
           </ChartContainer>

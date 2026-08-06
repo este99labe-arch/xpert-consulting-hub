@@ -91,17 +91,17 @@ const confidenceStyles: Record<Confidence, { dot: string; label: string; badge: 
   high: {
     dot: "bg-[hsl(var(--success))]",
     label: "Alta",
-    badge: "border-[hsl(var(--success))]/30 bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]",
+    badge: "border-[hsl(var(--success))]/30 bg-success-foreground text-[hsl(var(--success))]",
   },
   medium: {
     dot: "bg-[hsl(var(--warning))]",
     label: "Parcial",
-    badge: "border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))]",
+    badge: "border-[hsl(var(--warning))]/30 bg-warning-surface text-[hsl(var(--warning))]",
   },
   none: {
     dot: "bg-destructive",
     label: "Sin coincidencia",
-    badge: "border-destructive/30 bg-destructive/10 text-destructive",
+    badge: "border-destructive/30 bg-destructive-surface text-destructive",
   },
 };
 
@@ -255,7 +255,7 @@ export default function ColumnMappingDialog({
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-1.5">
               <DialogTitle className="text-xl flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary" />
+                <Sparkles className="h-5 w-5 text-accent-foreground" />
                 Mapea tus columnas
               </DialogTitle>
               <DialogDescription>
@@ -285,9 +285,9 @@ export default function ColumnMappingDialog({
         </DialogHeader>
 
         {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
           {requiredMissing.length > 0 && (
-            <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
               <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
               <span>
                 Faltan {requiredMissing.length} campo(s) obligatorio(s) por asignar.
@@ -325,9 +325,9 @@ export default function ColumnMappingDialog({
                         />
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="font-medium text-sm truncate">{field.label}</span>
+                            <span className="font-medium text-xs truncate">{field.label}</span>
                             {field.required ? (
-                              <Badge variant="outline" className="h-5 px-1.5 text-[10px] font-medium border-primary/30 text-primary">
+                              <Badge variant="outline" className="h-5 px-1.5 text-[10px] font-medium border-row-selected-border text-accent-foreground">
                                 Obligatorio
                               </Badge>
                             ) : (
@@ -396,7 +396,7 @@ export default function ColumnMappingDialog({
                   <TableBody>
                     {previewSample.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={fields.length} className="text-center text-sm text-muted-foreground py-6">
+                        <TableCell colSpan={fields.length} className="text-center text-xs text-muted-foreground py-6">
                           Sin filas de muestra disponibles.
                         </TableCell>
                       </TableRow>

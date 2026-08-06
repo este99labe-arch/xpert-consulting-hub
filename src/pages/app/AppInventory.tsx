@@ -174,7 +174,7 @@ const AppInventory = () => {
   if (!activeAccountId) return <p className="text-muted-foreground">Sin cuenta asignada.</p>;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <PageHeader
         title="Inventario"
         description="Controla productos, stock y movimientos de almacén"

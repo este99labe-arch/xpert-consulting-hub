@@ -18,9 +18,9 @@ const actionLabels: Record<string, string> = {
 };
 
 const actionColors: Record<string, string> = {
-  CREATE: "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]",
-  UPDATE: "bg-primary/10 text-primary",
-  DELETE: "bg-destructive/10 text-destructive",
+  CREATE: "bg-success-foreground text-[hsl(var(--success))]",
+  UPDATE: "bg-primary/10 text-accent-foreground",
+  DELETE: "bg-destructive-surface text-destructive",
 };
 
 const entityLabels: Record<string, string> = {
@@ -73,7 +73,7 @@ const AuditActivityTab = ({ accountId }: AuditActivityTabProps) => {
   if (isLoading) {
     return (
       <div className="flex justify-center py-10">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <Loader2 className="h-6 w-6 animate-spin text-accent-foreground" />
       </div>
     );
   }
@@ -116,7 +116,7 @@ const AuditActivityTab = ({ accountId }: AuditActivityTabProps) => {
         {logs.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Activity className="h-8 w-8 mx-auto mb-2 opacity-40" />
-            <p className="text-sm">Sin registros de actividad</p>
+            <p className="text-xs">Sin registros de actividad</p>
           </div>
         ) : (
           <>
@@ -132,7 +132,7 @@ const AuditActivityTab = ({ accountId }: AuditActivityTabProps) => {
                     {format(new Date(log.created_at), "dd MMM HH:mm", { locale: es })}
                   </span>
                 </div>
-                <p className="text-sm">{entityLabels[log.entity_type] || log.entity_type}</p>
+                <p className="text-xs">{entityLabels[log.entity_type] || log.entity_type}</p>
                 {log.details && Object.keys(log.details).length > 0 && (
                   <p className="text-xs text-muted-foreground truncate">
                     {Object.entries(log.details).map(([k, v]) => `${k}: ${v}`).join(", ")}
@@ -171,7 +171,7 @@ const AuditActivityTab = ({ accountId }: AuditActivityTabProps) => {
                         {actionLabels[log.action] || log.action}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm">
+                    <TableCell className="text-xs">
                       {entityLabels[log.entity_type] || log.entity_type}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground max-w-xs truncate">

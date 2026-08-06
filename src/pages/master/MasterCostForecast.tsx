@@ -172,17 +172,17 @@ const MasterCostForecast = () => {
   }, []);
 
   const kpis = [
-    { label: "Ingreso medio mensual", value: EUR0(kpi.avgIncome), icon: TrendingUp, tone: "text-[hsl(var(--success))]", bg: "bg-[hsl(var(--success))]/10", hint: "Media de meses con facturación" },
-    { label: "Coste mensual previsto", value: EUR0(kpi.monthlyCost), icon: TrendingDown, tone: "text-destructive", bg: "bg-destructive/10", hint: "Suma de costes activos" },
+    { label: "Ingreso medio mensual", value: EUR0(kpi.avgIncome), icon: TrendingUp, tone: "text-[hsl(var(--success))]", bg: "bg-success-foreground", hint: "Media de meses con facturación" },
+    { label: "Coste mensual previsto", value: EUR0(kpi.monthlyCost), icon: TrendingDown, tone: "text-destructive", bg: "bg-destructive-surface", hint: "Suma de costes activos" },
     { label: "Beneficio mensual esperado", value: EUR0(kpi.expectedProfit), icon: PiggyBank, tone: kpi.expectedProfit >= 0 ? "text-[hsl(var(--success))]" : "text-destructive", bg: "bg-primary/10", hint: "Ingreso medio − coste previsto" },
-    { label: "Margen esperado", value: `${Math.round(kpi.margin)}%`, icon: Wallet, tone: kpi.margin >= 0 ? "text-primary" : "text-destructive", bg: "bg-primary/10", hint: "Beneficio / ingreso" },
+    { label: "Margen esperado", value: `${Math.round(kpi.margin)}%`, icon: Wallet, tone: kpi.margin >= 0 ? "text-accent-foreground" : "text-destructive", bg: "bg-primary/10", hint: "Beneficio / ingreso" },
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div>
         <h2 className="text-lg font-semibold">Previsión de costes vs beneficios</h2>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Compara los ingresos reales de XpertConsulting (sus facturas emitidas) con tu coste mensual previsto
           para estimar el beneficio.
         </p>
@@ -198,15 +198,15 @@ const MasterCostForecast = () => {
       {/* KPIs */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         {kpis.map((k) => (
-          <Card key={k.label} className="border-0 shadow-sm">
+          <Card key={k.label} className="border-0">
             <CardContent className="p-4">
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-xs font-medium text-muted-foreground">{k.label}</span>
-                <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${k.bg}`}>
+                <div className={`flex h-8 w-8 items-center justify-center rounded-control ${k.bg}`}>
                   <k.icon className={`h-3.5 w-3.5 ${k.tone}`} />
                 </div>
               </div>
-              <p className={`text-xl font-bold tracking-tight ${k.tone}`}>{k.value}</p>
+              <p className={`tnum text-[20px] font-semibold tracking-[-.02em] ${k.tone}`}>{k.value}</p>
               <p className="mt-0.5 text-[11px] text-muted-foreground">{k.hint}</p>
             </CardContent>
           </Card>
@@ -217,7 +217,7 @@ const MasterCostForecast = () => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-3 pb-2">
           <div>
-            <CardTitle className="flex items-center gap-2 text-base"><Landmark className="h-4 w-4 text-primary" />Ingresos reales vs coste previsto</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-base"><Landmark className="h-4 w-4 text-accent-foreground" />Ingresos reales vs coste previsto</CardTitle>
             <CardDescription>Los meses futuros muestran solo la previsión de coste.</CardDescription>
           </div>
           <div className="flex items-center gap-2">
@@ -242,7 +242,7 @@ const MasterCostForecast = () => {
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
             <ComposedChart data={series} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+              <CartesianGrid stroke="hsl(var(--chart-grid))" vertical={false} />
               <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
               <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" tickFormatter={(v) => EUR0(v)} width={70} />
               <Tooltip
@@ -250,7 +250,7 @@ const MasterCostForecast = () => {
                 formatter={(v: any, name: any) => [v === null ? "—" : EUR(Number(v)), name]}
               />
               <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Bar name="Ingresos" dataKey="ingreso" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} maxBarSize={40} />
+              <Bar name="Ingresos" dataKey="ingreso" fill="hsl(var(--success))" radius={[3, 3, 0, 0]} maxBarSize={40} />
               <Line name="Coste previsto" dataKey="coste" stroke="hsl(var(--destructive))" strokeWidth={2} strokeDasharray="5 4" dot={false} />
               <Line name="Beneficio" dataKey="beneficio" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 3 }} connectNulls={false} />
             </ComposedChart>
@@ -263,7 +263,7 @@ const MasterCostForecast = () => {
         <CardHeader className="pb-2">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <CardTitle className="flex items-center gap-2 text-base"><Wallet className="h-4 w-4 text-primary" />Costes mensuales previstos</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-base"><Wallet className="h-4 w-4 text-accent-foreground" />Costes mensuales previstos</CardTitle>
               <CardDescription>
                 Suscripciones y gastos puntuales. Total de {monthOptions.find((m) => m.key === selectedMonth)?.label ?? "el mes"}:{" "}
                 <span className="font-semibold text-foreground">{EUR(monthlyCost)}</span>
@@ -284,7 +284,7 @@ const MasterCostForecast = () => {
         </CardHeader>
         <CardContent className="space-y-2">
           {monthCosts.length === 0 && (
-            <p className="py-4 text-center text-sm text-muted-foreground">
+            <p className="py-4 text-center text-xs text-muted-foreground">
               {costs.length === 0
                 ? "Sin costes previstos todavía. Añade el primero abajo."
                 : "Ningún coste vigente en este mes."}
@@ -303,7 +303,7 @@ const MasterCostForecast = () => {
                   onBlur={(e) => { const v = Number(e.target.value); if (v >= 0 && v !== Number(c.monthly_amount)) updateCost.mutate({ id: c.id, patch: { monthly_amount: v } }); }}
                   className="h-9 pr-7 text-right"
                 />
-                <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
+                <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">€</span>
               </div>
               <Badge variant={c.is_recurring === false ? "muted" : "info"} className="shrink-0">
                 {c.is_recurring === false ? "Puntual" : "Fijo"}
@@ -329,7 +329,7 @@ const MasterCostForecast = () => {
             <Input placeholder="Concepto (ej. Hosting, Nóminas…)" value={newConcept} onChange={(e) => setNewConcept(e.target.value)} className="h-9 min-w-[180px] flex-1" onKeyDown={(e) => e.key === "Enter" && addCost.mutate()} />
             <div className="relative w-36">
               <Input type="number" step="0.01" placeholder="0,00" value={newAmount} onChange={(e) => setNewAmount(e.target.value)} className="h-9 pr-7 text-right" onKeyDown={(e) => e.key === "Enter" && addCost.mutate()} />
-              <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
+              <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">€</span>
             </div>
             <Select value={newRecurring ? "FIXED" : "ONE_OFF"} onValueChange={(v) => setNewRecurring(v === "FIXED")}>
               <SelectTrigger className="h-9 w-[150px]"><SelectValue /></SelectTrigger>

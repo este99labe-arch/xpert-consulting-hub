@@ -145,7 +145,7 @@ const DeleteClientDialog = ({ open, clientId, onClose, onSuccess }: Props) => {
             <RadioGroupItem value="ONLY" id="only" className="mt-1" />
             <Label htmlFor="only" className="flex-1 cursor-pointer font-normal">
               <div className="font-medium">Solo el cliente</div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-xs text-muted-foreground">
                 Elimina únicamente la ficha del cliente. Fallará si tiene facturas u otros datos asociados.
               </div>
             </Label>
@@ -157,7 +157,7 @@ const DeleteClientDialog = ({ open, clientId, onClose, onSuccess }: Props) => {
                 <AlertTriangle className="h-4 w-4 text-destructive" />
                 Cliente y todos sus datos
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-xs text-muted-foreground">
                 Elimina facturas, gastos, asientos contables, cobros, contactos, recordatorios y facturación recurrente asociados.
               </div>
             </Label>

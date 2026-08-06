@@ -186,9 +186,9 @@ const WebhooksTab = ({ accountId, isManager }: WebhooksTabProps) => {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">Cargando...</p>
+            <p className="text-xs text-muted-foreground py-4 text-center">Cargando...</p>
           ) : webhooks.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">No hay webhooks configurados</p>
+            <p className="text-xs text-muted-foreground py-4 text-center">No hay webhooks configurados</p>
           ) : (
             <div className="space-y-3">
               {webhooks.map((w: any) => (
@@ -200,7 +200,7 @@ const WebhooksTab = ({ accountId, isManager }: WebhooksTabProps) => {
                           {w.is_active ? "Activo" : "Pausado"}
                         </Badge>
                         <div className="min-w-0">
-                          <div className="font-medium text-sm truncate">{w.name || w.url}</div>
+                          <div className="font-medium text-xs truncate">{w.name || w.url}</div>
                           <div className="text-xs text-muted-foreground truncate">{w.url}</div>
                           <div className="flex flex-wrap gap-1 mt-1">
                             {(w.events || []).map((e: string) => (
@@ -251,7 +251,7 @@ const WebhooksTab = ({ accountId, isManager }: WebhooksTabProps) => {
                                 <TableRow key={log.id}>
                                   <TableCell>
                                     {log.success
-                                      ? <CheckCircle2 className="h-4 w-4 text-primary" />
+                                      ? <CheckCircle2 className="h-4 w-4 text-accent-foreground" />
                                       : <XCircle className="h-4 w-4 text-destructive" />
                                     }
                                   </TableCell>
@@ -303,7 +303,7 @@ const WebhooksTab = ({ accountId, isManager }: WebhooksTabProps) => {
               <Label className="mb-2 block">Eventos *</Label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {WEBHOOK_EVENTS.map((evt) => (
-                  <label key={evt.value} className="flex items-center gap-2 text-sm cursor-pointer">
+                  <label key={evt.value} className="flex items-center gap-2 text-xs cursor-pointer">
                     <Checkbox
                       checked={form.events.includes(evt.value)}
                       onCheckedChange={() => toggleEvent(evt.value)}

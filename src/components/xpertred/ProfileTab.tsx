@@ -129,7 +129,7 @@ const ProfileTab = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       {/* Profile form */}
       <Card>
         <CardHeader>
@@ -273,9 +273,9 @@ const ProfileTab = () => {
             Reputación
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-5">
+        <CardContent className="space-y-4">
           {reviews.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Aún no tienes valoraciones. Cierra operaciones con tus matches para recibir
               feedback.
             </p>
@@ -287,7 +287,7 @@ const ProfileTab = () => {
                     ? Number(profile.reputation_score).toFixed(1)
                     : "—"}
                 </div>
-                <div className="text-sm text-muted-foreground">
+                <div className="text-xs text-muted-foreground">
                   {reviews.length} valoraciones
                 </div>
               </div>
@@ -299,7 +299,7 @@ const ProfileTab = () => {
                 { label: "Precio justo", value: avgFairPrice },
               ].map((item) => (
                 <div key={item.label} className="space-y-1">
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-xs">
                     <span className="text-muted-foreground">{item.label}</span>
                     <span className="font-medium">{item.value.toFixed(1)}</span>
                   </div>

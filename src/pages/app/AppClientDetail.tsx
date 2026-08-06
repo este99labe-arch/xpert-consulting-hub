@@ -57,7 +57,7 @@ const AppClientDetail = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-accent-foreground" />
       </div>
     );
   }
@@ -68,7 +68,7 @@ const AppClientDetail = () => {
         <Button variant="ghost" onClick={() => navigate("/app/clients")}>
           <ArrowLeft className="h-4 w-4 mr-2" /> Volver
         </Button>
-        <div className="rounded-md bg-destructive/10 p-4 text-destructive">
+        <div className="rounded-md bg-destructive-surface p-4 text-destructive">
           Cliente no encontrado
         </div>
       </div>
@@ -76,15 +76,15 @@ const AppClientDetail = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate("/app/clients")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">{client.name}</h1>
-            <p className="text-sm text-muted-foreground">{client.tax_id}</p>
+            <h1 className="font-display text-[17px] font-semibold tracking-[-.01em] text-foreground">{client.name}</h1>
+            <p className="text-xs text-muted-foreground">{client.tax_id}</p>
           </div>
         </div>
         <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setShowReminder(true)}>

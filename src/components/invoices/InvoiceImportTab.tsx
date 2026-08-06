@@ -334,12 +334,12 @@ const InvoiceImportTab = () => {
   const processingCount = imports.filter((i: any) => i.status === "PROCESSING").length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header + Upload */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold">Cola de importación</h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Sube facturas o gastos y la IA extraerá los datos automáticamente
           </p>
         </div>
@@ -430,7 +430,7 @@ const InvoiceImportTab = () => {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-                          <span className="text-sm truncate max-w-[200px]">{imp.file_name}</span>
+                          <span className="text-xs truncate max-w-[200px]">{imp.file_name}</span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -439,23 +439,23 @@ const InvoiceImportTab = () => {
                           {sc.label}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm">
+                      <TableCell className="text-xs">
                         {ext.type === "EXPENSE" ? "Gasto" : ext.type === "INVOICE" ? "Factura" : "—"}
                       </TableCell>
-                      <TableCell className="text-sm truncate max-w-[200px]">
+                      <TableCell className="text-xs truncate max-w-[200px]">
                         {ext.concept || imp.error_message || "—"}
                       </TableCell>
-                      <TableCell className="text-right text-sm font-mono">
+                      <TableCell className="text-right text-xs font-mono">
                         {ext.amount_total ? `€${Number(ext.amount_total).toLocaleString("es-ES", { minimumFractionDigits: 2 })}` : "—"}
                       </TableCell>
                       <TableCell>
                         {ext.confidence != null ? (
-                          <span className={`text-sm font-medium ${confidenceTone(ext.confidence)}`}>
+                          <span className={`text-xs font-medium ${confidenceTone(ext.confidence)}`}>
                             {ext.confidence}%
                           </span>
                         ) : "—"}
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
+                      <TableCell className="text-xs text-muted-foreground">
                         {format(new Date(imp.created_at), "dd/MM/yy HH:mm", { locale: es })}
                       </TableCell>
                       <TableCell className="text-right">
@@ -627,10 +627,10 @@ const InvoiceImportTab = () => {
                       <TableBody>
                         {editedData.lines.map((line: any, i: number) => (
                           <TableRow key={i}>
-                            <TableCell className="text-sm">{line.description || "—"}</TableCell>
-                            <TableCell className="text-right text-sm">{line.quantity}</TableCell>
-                            <TableCell className="text-right text-sm">{Number(line.unit_price).toFixed(2)}</TableCell>
-                            <TableCell className="text-right text-sm">{Number(line.amount).toFixed(2)}</TableCell>
+                            <TableCell className="text-xs">{line.description || "—"}</TableCell>
+                            <TableCell className="text-right text-xs">{line.quantity}</TableCell>
+                            <TableCell className="text-right text-xs">{Number(line.unit_price).toFixed(2)}</TableCell>
+                            <TableCell className="text-right text-xs">{Number(line.amount).toFixed(2)}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>

@@ -83,7 +83,7 @@ const VacationCalendarTab = () => {
                     isToday && "border-primary",
                     isWeekend && "bg-muted/30",
                     hasApproved && "bg-primary/15 border-primary/40",
-                    hasPending && !hasApproved && "shadow-md shadow-muted-foreground/20 border-dashed border-muted-foreground/40"
+                    hasPending && !hasApproved && " shadow-muted-foreground/20 border-dashed border-muted-foreground/40"
                   )}
                 >
                   <div className="font-medium">{day.getDate()}</div>
@@ -94,7 +94,7 @@ const VacationCalendarTab = () => {
                     return (
                       <div key={l.id} className={cn(
                         "truncate text-[10px]",
-                        isPending ? "text-muted-foreground italic" : "text-primary font-medium"
+                        isPending ? "text-muted-foreground italic" : "text-accent-foreground font-medium"
                       )}>
                         {email ? email.split("@")[0] : ""} {typeLabel}
                         {isPending && " ⏳"}

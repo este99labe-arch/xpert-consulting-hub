@@ -19,13 +19,13 @@ interface PageHeaderProps {
 const PageHeader = ({ title, description, actions, className }: PageHeaderProps) => (
   <div
     className={cn(
-      "flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between",
+      "flex flex-col gap-3 pb-5 sm:flex-row sm:items-center sm:justify-between",
       className,
     )}
   >
     <div className="min-w-0 space-y-1">
-      <h1 className="truncate text-2xl font-bold tracking-tight text-foreground">{title}</h1>
-      {description && <p className="text-sm text-muted-foreground">{description}</p>}
+      <h1 className="truncate font-display text-[17px] font-semibold tracking-[-.01em] text-foreground">{title}</h1>
+      {description && <p className="text-[11.5px] leading-[1.6] text-muted-foreground">{description}</p>}
     </div>
     {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
   </div>

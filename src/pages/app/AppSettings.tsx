@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -23,7 +23,7 @@ import {
 import {
   Loader2, KeyRound, UserPlus, AlertCircle, Settings, Users, CalendarDays,
   Clock, ShieldCheck, Save, User, Lock, Unlock, Check, X, Mail, Activity, Key, Webhook, MessageSquare, ShieldAlert, FileText, Calculator,
-  ChevronRight, ChevronLeft, Building2, Layers,
+  Building2, Layers,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { roleLabel } from "@/lib/roles";
@@ -114,73 +114,82 @@ const AppSettings = () => {
 
   if (!user || !accountId) return null;
 
+  const visible = SECTIONS.filter((sec) => !sec.managerOnly || isManager);
+  const current = visible.find((sec) => sec.key === section);
+
+  /* Al entrar sin sección se abre la primera, en vez de una rejilla de
+     tarjetas intermedia: con la navegación siempre a la vista, ese paso
+     sobraba y obligaba a dos clics para llegar a cualquier ajuste. */
+  const active = section || visible[0]?.key || "";
+
   return (
-    <div className="space-y-6">
-      <Tabs value={section} onValueChange={setSection} className="space-y-6">
-        {!section ? (
-          <div className="space-y-7">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">Configuración</h1>
-              <p className="text-sm text-muted-foreground">Gestiona tu empresa, tu cuenta personal y las integraciones.</p>
-            </div>
-            {groupsToRender().map((group) => {
-              const items = SECTIONS.filter((s) => s.group === group && (!s.managerOnly || isManager));
-              if (items.length === 0) return null;
-              return (
-                <div key={group} className="space-y-3">
-                  <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">{group}</h2>
-                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                    {items.map((s) => (
-                      <button
-                        key={s.key}
-                        type="button"
-                        onClick={() => setSection(s.key)}
-                        className="group flex items-start gap-3 rounded-xl border border-border bg-card p-4 text-left shadow-2xs transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                      >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                          <s.icon className="h-5 w-5" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium leading-tight">{s.title}</p>
-                            {s.badge && pendingCount > 0 && (
-                              <Badge variant="destructive" className="h-5 min-w-5 px-1 text-xs">{pendingCount}</Badge>
-                            )}
-                          </div>
-                          <p className="mt-0.5 text-sm text-muted-foreground">{s.desc}</p>
-                        </div>
-                        <ChevronRight className="mt-2 h-4 w-4 shrink-0 text-muted-foreground/50 transition-all group-hover:translate-x-0.5 group-hover:text-primary" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          (() => {
-            const current = SECTIONS.find((s) => s.key === section);
-            return (
-              <div className="flex items-center gap-3">
-                <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => setSection("")}>
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                {current && (
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                      <current.icon className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h1 className="text-xl font-bold leading-tight tracking-tight">{current.title}</h1>
-                      <p className="text-sm text-muted-foreground">{current.desc}</p>
-                    </div>
-                  </div>
-                )}
+    <div className="flex min-h-full gap-4">
+      {/* Navegación secundaria (212 px) */}
+      <aside className="hidden w-[212px] shrink-0 lg:block">
+        {groupsToRender().map((group) => {
+          const items = visible.filter((sec) => sec.group === group);
+          if (items.length === 0) return null;
+          return (
+            <div key={group}>
+              <div className="px-2.5 pb-1.5 pt-4 font-mono text-[9.5px] font-semibold uppercase tracking-[.07em] text-faint first:pt-0">
+                {group}
               </div>
-            );
-          })()
+              <div className="flex flex-col gap-px">
+                {items.map((sec) => {
+                  const isActive = active === sec.key;
+                  return (
+                    <button
+                      key={sec.key}
+                      type="button"
+                      onClick={() => setSection(sec.key)}
+                      aria-current={isActive ? "page" : undefined}
+                      className={`flex h-[30px] w-full items-center gap-2.5 rounded-control px-2.5 text-left transition-colors duration-150 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/[.16] ${
+                        isActive
+                          ? "bg-sidebar-accent text-[12.5px] font-semibold text-foreground"
+                          : "text-xs font-medium text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground"
+                      }`}
+                    >
+                      <sec.icon
+                        className={`h-[15px] w-[15px] shrink-0 stroke-[1.8] ${isActive ? "text-accent-foreground" : "text-faint"}`}
+                      />
+                      <span className="flex-1 truncate">{sec.title}</span>
+                      {sec.badge && pendingCount > 0 && (
+                        <span className="tnum shrink-0 text-[10px] font-semibold text-destructive-text">
+                          {pendingCount}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </aside>
+
+      <div className="min-w-0 flex-1">
+        {/* Selector para pantallas estrechas, donde no cabe la columna */}
+        <div className="mb-4 lg:hidden">
+          <Select value={active} onValueChange={setSection}>
+            <SelectTrigger><SelectValue placeholder="Elige una sección" /></SelectTrigger>
+            <SelectContent>
+              {visible.map((sec) => (
+                <SelectItem key={sec.key} value={sec.key}>{sec.title}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {current && (
+          <div className="mb-5">
+            <h1 className="font-display text-[17px] font-semibold tracking-[-.01em] text-foreground">
+              {current.title}
+            </h1>
+            <p className="mt-0.5 text-[11.5px] leading-[1.6] text-muted-foreground">{current.desc}</p>
+          </div>
         )}
 
+        <Tabs value={active} onValueChange={setSection}>
         <TabsContent value="company">
           <CompanyTab accountId={accountId} isManager={isManager} />
         </TabsContent>
@@ -252,7 +261,8 @@ const AppSettings = () => {
             <TaskBoardsTab />
           </TabsContent>
         )}
-      </Tabs>
+        </Tabs>
+      </div>
     </div>
   );
 };

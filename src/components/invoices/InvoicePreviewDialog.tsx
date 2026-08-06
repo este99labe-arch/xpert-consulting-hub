@@ -201,15 +201,15 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEma
         {/* Toolbar */}
         <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between bg-background border-b px-4 md:px-6 py-3 gap-2">
           <div className="flex items-center gap-3">
-            <span className="font-semibold text-foreground text-sm md:text-base">{typeLabel} {invoiceNumber}</span>
+            <span className="font-semibold text-foreground text-xs md:text-base">{typeLabel} {invoiceNumber}</span>
             <Badge variant="outline">{statusLabels[invoice.status] || invoice.status}</Badge>
             {invoice.verifactu_status === "SENT" && (
-              <Badge className="bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] border-transparent gap-1">
+              <Badge className="bg-success-foreground text-[hsl(var(--success))] border-transparent gap-1">
                 <ShieldCheck className="h-3 w-3" /> AEAT
               </Badge>
             )}
             {invoice.verifactu_status === "PREPARED" && (
-              <Badge className="bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))] border-transparent gap-1">
+              <Badge className="bg-warning-surface text-[hsl(var(--warning))] border-transparent gap-1">
                 <ShieldCheck className="h-3 w-3" /> Preparada
               </Badge>
             )}
@@ -265,7 +265,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEma
 
         {/* A4 Preview */}
         <div className="p-4 flex justify-center bg-muted/30">
-          <div className="w-full max-w-[860px] shadow-lg rounded-lg overflow-hidden bg-white">
+          <div className="w-full max-w-[860px] rounded-lg overflow-hidden bg-white">
             <iframe
               ref={iframeRef} srcDoc={html} title="Vista previa factura"
               className="w-full border-0"
@@ -307,11 +307,11 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEma
           <div className="px-6 py-4 border-t bg-muted/20">
             <div className="flex items-center gap-2 mb-3">
               <Clock className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-foreground">Historial de envíos</span>
+              <span className="text-xs font-medium text-foreground">Historial de envíos</span>
             </div>
             <div className="space-y-2">
               {emailLogs.map((log: any) => (
-                <div key={log.id} className="flex items-center justify-between text-sm">
+                <div key={log.id} className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
                     <Mail className="h-3 w-3 text-muted-foreground" />
                     <span className="text-muted-foreground">{log.recipient}</span>

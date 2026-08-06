@@ -78,18 +78,20 @@ const TaskCard = ({ task, members, clients, onClick, onDragStart }: Props) => {
       onDragStart={onDragStart}
       onClick={onClick}
       className={cn(
-        "p-3 space-y-2 cursor-grab active:cursor-grabbing transition-all hover:shadow-md hover:border-primary/40",
-        overdue && "border-destructive/40"
+        "cursor-grab space-y-2 rounded-[12px] px-3.5 py-3 transition-colors duration-150 active:cursor-grabbing",
+        "hover:bg-popover",
+        overdue && "border-destructive-border bg-[linear-gradient(140deg,hsl(var(--destructive-surface)),hsl(var(--card))_70%)]",
+        task.is_completed && "bg-[hsl(var(--sidebar))] opacity-75"
       )}
     >
       {task.reference && (
-        <span className="inline-block rounded bg-primary/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold tracking-wide text-primary">
+        <span className="tnum inline-block rounded-chip bg-muted px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-[.06em] text-faint">
           {task.reference}
         </span>
       )}
       <div className="flex items-start gap-2">
         <PrioIcon className={cn("h-4 w-4 shrink-0 mt-0.5", prio.color)} aria-label={prio.label} />
-        <p className="text-sm font-medium leading-tight flex-1 break-words">{task.title}</p>
+        <p className={cn("flex-1 break-words text-xs font-medium leading-[1.45]", task.is_completed && "text-muted-foreground line-through")}>{task.title}</p>
       </div>
 
       {/* Cliente vinculado, siempre visible en la tarjeta */}
@@ -100,7 +102,7 @@ const TaskCard = ({ task, members, clients, onClick, onDragStart }: Props) => {
           <Link
             to={`/app/clients/${task.client_id}`}
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-primary hover:underline"
+            className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-accent-foreground hover:underline"
             title="Ir a la ficha del cliente"
           >
             <Building2 className="h-3 w-3 shrink-0" />
@@ -128,7 +130,7 @@ const TaskCard = ({ task, members, clients, onClick, onDragStart }: Props) => {
                 key={idx}
                 to={href}
                 onClick={(e) => e.stopPropagation()}
-                className="text-muted-foreground hover:text-primary hover:underline transition-colors"
+                className="text-muted-foreground hover:text-accent-foreground hover:underline transition-colors"
                 title={`Ir a ${meta?.label || l.entity_type}`}
               >
                 {content}
@@ -164,7 +166,7 @@ const TaskCard = ({ task, members, clients, onClick, onDragStart }: Props) => {
         </div>
         {assignee ? (
           <Avatar className="h-6 w-6">
-            <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+            <AvatarFallback className="text-[10px] bg-primary/10 text-accent-foreground">
               {initials(assignee.name)}
             </AvatarFallback>
           </Avatar>

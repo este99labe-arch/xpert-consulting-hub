@@ -23,7 +23,7 @@ const ClientTasksTab = ({ clientId }: { clientId: string }) => {
     <Card>
       <CardContent className="p-4 space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold">Tareas asociadas ({tasks.length})</h3>
+          <h3 className="text-xs font-semibold">Tareas asociadas ({tasks.length})</h3>
           <Button size="sm" className="gap-1.5" onClick={() => setShowCreate(true)}>
             <Plus className="h-4 w-4" /> Nueva tarea
           </Button>
@@ -42,7 +42,7 @@ const ClientTasksTab = ({ clientId }: { clientId: string }) => {
                 className="flex items-center gap-3 p-2.5 rounded border hover:bg-accent/40 cursor-pointer"
               >
                 <PrioIcon className={`h-4 w-4 shrink-0 ${prio.color}`} />
-                <span className="font-medium flex-1 truncate text-sm">{t.title}</span>
+                <span className="font-medium flex-1 truncate text-xs">{t.title}</span>
                 {col && (
                   <Badge variant="outline" className="text-[10px]">
                     <span className="h-1.5 w-1.5 rounded-full mr-1.5" style={{ background: col.color }} />
@@ -59,7 +59,7 @@ const ClientTasksTab = ({ clientId }: { clientId: string }) => {
             );
           })}
           {tasks.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-6">Sin tareas para este cliente</p>
+            <p className="text-xs text-muted-foreground text-center py-6">Sin tareas para este cliente</p>
           )}
         </div>
         <CreateTaskDialog open={showCreate} onOpenChange={setShowCreate} defaultClientId={clientId} />

@@ -95,7 +95,7 @@ const PLTab = ({ chartAccounts, postedLines }: PLTabProps) => {
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader className="py-3">
-            <CardTitle className="text-base text-primary">Ingresos</CardTitle>
+            <CardTitle className="text-base text-accent-foreground">Ingresos</CardTitle>
           </CardHeader>
           <Table>
             <TableBody>
@@ -108,7 +108,7 @@ const PLTab = ({ chartAccounts, postedLines }: PLTabProps) => {
               ))}
               <TableRow className="font-bold border-t-2">
                 <TableCell colSpan={2}>TOTAL INGRESOS</TableCell>
-                <TableCell className="text-right font-mono text-primary">{EUR(plData.totalIncome)}</TableCell>
+                <TableCell className="text-right font-mono text-accent-foreground">{EUR(plData.totalIncome)}</TableCell>
               </TableRow>
             </TableBody>
           </Table>
@@ -138,7 +138,7 @@ const PLTab = ({ chartAccounts, postedLines }: PLTabProps) => {
       <Card>
         <CardContent className="py-6 flex justify-between items-center">
           <span className="text-lg font-bold">Resultado del periodo</span>
-          <span className={`text-2xl font-bold font-mono ${plData.result >= 0 ? "" : "text-destructive"}`}>
+          <span className={`tnum text-[22px] font-semibold tracking-[-.02em] ${plData.result >= 0 ? "" : "text-destructive"}`}>
             {EUR(plData.result)}
           </span>
         </CardContent>

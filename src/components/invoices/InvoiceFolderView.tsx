@@ -131,7 +131,7 @@ const InvoiceFolderView = ({ invoices, onPreview }: Props) => {
   const ZipButton = ({ list, name, k }: { list: any[]; name: string; k: string }) => (
     <Button
       variant="ghost" size="sm"
-      className="h-7 gap-1 px-2 text-xs text-muted-foreground hover:text-primary"
+      className="h-7 gap-1 px-2 text-xs text-muted-foreground hover:text-accent-foreground"
       disabled={!!zipping}
       onClick={(e) => { e.stopPropagation(); downloadZip(list, name, k); }}
       title={`Descargar ${list.length} facturas en ZIP`}
@@ -154,7 +154,7 @@ const InvoiceFolderView = ({ invoices, onPreview }: Props) => {
         >
           <ChevronRight className={`h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform ${isOpen ? "rotate-90" : ""}`} />
           {isOpen ? <FolderOpen className="h-4 w-4 shrink-0 text-[hsl(var(--warning))]" /> : <Icon className="h-4 w-4 shrink-0 text-[hsl(var(--warning))]" />}
-          <span className="truncate text-sm font-medium">{label}</span>
+          <span className="truncate text-xs font-medium">{label}</span>
           <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">{count}</Badge>
           <span className="ml-auto hidden text-xs tabular-nums text-muted-foreground sm:inline">{EUR(total)}</span>
           <ZipButton list={zipList} name={zipName} k={`zip-${k}`} />
@@ -169,7 +169,7 @@ const InvoiceFolderView = ({ invoices, onPreview }: Props) => {
 
   if (invoices.length === 0) {
     return (
-      <Card className="p-10 text-center text-sm text-muted-foreground">
+      <Card className="p-10 text-center text-xs text-muted-foreground">
         No hay facturas con los filtros actuales.
       </Card>
     );
@@ -223,8 +223,8 @@ const InvoiceFolderView = ({ invoices, onPreview }: Props) => {
                                   style={{ paddingLeft: `${8 + 4 * 22}px` }}
                                   onClick={() => onPreview(inv)}
                                 >
-                                  <FileText className="h-4 w-4 shrink-0 text-primary" />
-                                  <span className="truncate text-sm">{inv.invoice_number || inv.concept || inv.id.slice(0, 8)}</span>
+                                  <FileText className="h-4 w-4 shrink-0 text-accent-foreground" />
+                                  <span className="truncate text-xs">{inv.invoice_number || inv.concept || inv.id.slice(0, 8)}</span>
                                   <Badge variant="outline" className="h-4 px-1.5 text-[10px]">
                                     {inv.type === "EXPENSE" ? "Gasto" : "Factura"}
                                   </Badge>

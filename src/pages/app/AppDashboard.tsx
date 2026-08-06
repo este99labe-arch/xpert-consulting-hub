@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,8 +7,10 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { format, subDays, subMonths, startOfDay, startOfMonth, parseISO, differenceInDays } from "date-fns";
 import { es } from "date-fns/locale";
 
-import KpiCards from "@/components/dashboard/KpiCards";
-import TreasuryKpi from "@/components/accounting/TreasuryKpi";
+import StatCard from "@/components/shared/StatCard";
+import { fmtEUR as EUR } from "@/lib/format";
+import CashFeatureCard from "@/components/dashboard/CashFeatureCard";
+import CustomDashboard from "@/components/dashboard/CustomDashboard";
 import RevenueChart from "@/components/dashboard/RevenueChart";
 import InvoiceStatusChart from "@/components/dashboard/InvoiceStatusChart";
 import LowStockAlerts from "@/components/dashboard/LowStockAlerts";
@@ -19,10 +20,8 @@ import QuickActions from "@/components/dashboard/QuickActions";
 import TodayAttendanceWidget from "@/components/dashboard/TodayAttendanceWidget";
 import RemindersWidget from "@/components/dashboard/RemindersWidget";
 import UpcomingDuesWidget from "@/components/dashboard/UpcomingDuesWidget";
-import CashflowMiniWidget from "@/components/dashboard/CashflowMiniWidget";
 import AttentionWidget from "@/components/dashboard/AttentionWidget";
 import EmployeeDashboard from "@/components/dashboard/EmployeeDashboard";
-import CustomDashboard from "@/components/dashboard/CustomDashboard";
 
 const SectionLabel = ({ children }: { children: React.ReactNode }) => (
   <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">{children}</h2>
@@ -30,6 +29,14 @@ const SectionLabel = ({ children }: { children: React.ReactNode }) => (
 
 type Period = "7d" | "30d" | "90d" | "year";
 const periodDays: Record<Period, number> = { "7d": 7, "30d": 30, "90d": 90, year: 365 };
+
+/** Variación frente al periodo anterior. Sin base previa no hay porcentaje
+ *  que enseñar: "+100 %" sobre cero engaña más que informar. */
+const pct = (curr: number, prev: number): string => {
+  if (!prev) return "Sin periodo anterior";
+  const v = ((curr - prev) / Math.abs(prev)) * 100;
+  return `${v >= 0 ? "+" : ""}${v.toFixed(1)} % vs. periodo anterior`;
+};
 
 const greetingForHour = (h: number) =>
   h < 12 ? "Buenos días" : h < 20 ? "Buenas tardes" : "Buenas noches";
@@ -211,6 +218,33 @@ const ManagerDashboard = () => {
 
   const recent = invoices.slice(0, 8);
 
+  /* Saldo acumulado de los últimos doce meses: ingresos menos gastos mes a
+     mes, arrastrando el acumulado. Alimenta el área de la tarjeta de caja. */
+  const cashTrend = useMemo(() => {
+    let running = 0;
+    return Array.from({ length: 12 }, (_, i) => {
+      const month = startOfMonth(subMonths(now, 11 - i));
+      const key = format(month, "yyyy-MM");
+      const net = invoices
+        .filter((inv: any) => inv.issue_date?.startsWith(key))
+        .reduce(
+          (s: number, inv: any) =>
+            s + (inv.type === "INVOICE" ? Number(inv.amount_total) : -Number(inv.amount_total)),
+          0,
+        );
+      running += net;
+      return { label: format(month, "MMM", { locale: es }), value: running };
+    });
+  }, [invoices]);
+
+  /* Gasto medio de los últimos seis meses, para estimar el runway. */
+  const monthlyBurn = useMemo(() => {
+    const total = invoices
+      .filter((inv: any) => inv.type === "EXPENSE" && inv.issue_date >= format(subMonths(now, 6), "yyyy-MM-dd"))
+      .reduce((s: number, inv: any) => s + Number(inv.amount_total), 0);
+    return total / 6;
+  }, [invoices]);
+
   // Global overdue (all periods) for the "needs attention" widget
   const overdueInvoices = useMemo(() =>
     invoices.filter((i: any) => isInvoiceOverdue(i, now)),
@@ -224,70 +258,48 @@ const ManagerDashboard = () => {
   const todayLabel = format(now, "EEEE, d 'de' MMMM", { locale: es });
 
   return (
-    <div className="space-y-5">
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.25 }}
-        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-      >
+    <div className="space-y-4">
+      <div className="flex flex-col justify-between gap-3 pb-1 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          <h1 className="font-display text-[17px] font-semibold tracking-[-.01em] text-foreground">
             {greeting}{displayName ? `, ${displayName}` : ""} 👋
           </h1>
-          <p className="text-sm text-muted-foreground first-letter:uppercase">
+          <p className="text-[11.5px] text-muted-foreground first-letter:uppercase">
             {todayLabel} · Resumen ejecutivo
           </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <QuickActions />
           <ToggleGroup type="single" value={period} onValueChange={(v) => v && setPeriod(v as Period)} size="sm" className="bg-muted rounded-lg p-0.5">
-            <ToggleGroupItem value="7d" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:shadow-sm">7d</ToggleGroupItem>
-            <ToggleGroupItem value="30d" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:shadow-sm">30d</ToggleGroupItem>
-            <ToggleGroupItem value="90d" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:shadow-sm">90d</ToggleGroupItem>
-            <ToggleGroupItem value="year" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:shadow-sm">Año</ToggleGroupItem>
+            <ToggleGroupItem value="7d" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:">7d</ToggleGroupItem>
+            <ToggleGroupItem value="30d" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:">30d</ToggleGroupItem>
+            <ToggleGroupItem value="90d" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:">90d</ToggleGroupItem>
+            <ToggleGroupItem value="year" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:">Año</ToggleGroupItem>
           </ToggleGroup>
         </div>
-      </motion.div>
+      </div>
 
-      {/* Dinero disponible para operar. Este panel no lo ven los EMPLOYEE
-          (tienen su propio dashboard), así que no hace falta filtrar por rol. */}
-      {accountId && (
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-          <TreasuryKpi accountId={accountId} />
-        </div>
-      )}
-
-      <KpiCards
-        income={curr.income} expense={curr.expense} balance={curr.income - curr.expense}
-        pendingCount={curr.pending} overdueCount={curr.overdue} activeClients={activeClientsCount}
-        prevIncome={prev.income} prevExpense={prev.expense}
-        prevPendingCount={prev.pending} prevOverdueCount={prev.overdue} prevActiveClients={prev.clients}
-        teamPresent={presence}
-        pendingApprovals={pendingApprovals as number}
-        onKpiClick={(key) => {
-          switch (key) {
-            case "income": navigate("/app/invoices?type=INVOICE"); break;
-            case "expense": navigate("/app/invoices?type=EXPENSE"); break;
-            case "balance": navigate("/app/invoices"); break;
-            case "pending": navigate("/app/invoices?status=SENT"); break;
-            case "overdue": navigate("/app/invoices?status=OVERDUE"); break;
-            case "clients": navigate("/app/clients"); break;
-            case "team": navigate("/app/attendance"); break;
-            case "approvals": navigate("/app/settings"); break;
-          }
-        }}
-      />
-
-      {/* ── Mi panel (personalizable) ── */}
-      <CustomDashboard />
-
-      {/* ── Finanzas ── */}
-      <div className="space-y-3">
-        <SectionLabel>Finanzas</SectionLabel>
-        <div className="grid gap-5 lg:grid-cols-3">
-          <div className="lg:col-span-2"><RevenueChart data={chartData} period={chartPeriod} onPeriodChange={setChartPeriod} /></div>
-          <div className="lg:col-span-1">
+      {/* ── Fila 1: caja protagonista · ingresos y gastos · atención ── */}
+      <div className="grid gap-4 lg:grid-cols-[1.55fr_1fr]">
+        {accountId && (
+          <CashFeatureCard accountId={accountId} trend={cashTrend} monthlyBurn={monthlyBurn} />
+        )}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+          <StatCard
+            label="Ingresos"
+            value={EUR(curr.income)}
+            tone="default"
+            hint={pct(curr.income, prev.income)}
+            onClick={() => navigate("/app/invoices?type=INVOICE")}
+          />
+          <StatCard
+            label="Gastos"
+            value={EUR(curr.expense)}
+            tone="default"
+            hint={pct(curr.expense, prev.expense)}
+            onClick={() => navigate("/app/invoices?type=EXPENSE")}
+          />
+          <div className="sm:col-span-2 lg:col-span-1 xl:col-span-2">
             <AttentionWidget
               overdueCount={overdueInvoices.length}
               overdueAmount={overdueAmountAll}
@@ -296,18 +308,33 @@ const ManagerDashboard = () => {
             />
           </div>
         </div>
-        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+      </div>
+
+      {/* ── Fila 2: evolución · próximos vencimientos ── */}
+      <div className="grid gap-4 lg:grid-cols-[1.55fr_1fr]">
+        <RevenueChart data={chartData} period={chartPeriod} onPeriodChange={setChartPeriod} />
+        <UpcomingDuesWidget />
+      </div>
+
+      {/* Panel personalizable por usuario. El dossier lo daba por widget
+          duplicado, pero es una funcionalidad propia con configuración
+          guardada en dashboard_configs, así que se conserva. */}
+      <CustomDashboard />
+
+      {/* ── Finanzas ── */}
+      <div className="space-y-3">
+        <SectionLabel>Finanzas</SectionLabel>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <InvoiceStatusChart data={statusData} />
-          <CashflowMiniWidget />
-          <UpcomingDuesWidget />
+          <TopClients clients={topClients} />
+          <LowStockAlerts products={lowStockProducts} />
         </div>
       </div>
 
       {/* ── Clientes y equipo ── */}
       <div className="space-y-3">
         <SectionLabel>Clientes y equipo</SectionLabel>
-        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          <TopClients clients={topClients} />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <TodayAttendanceWidget />
           <RemindersWidget />
         </div>
@@ -316,10 +343,7 @@ const ManagerDashboard = () => {
       {/* ── Operativa ── */}
       <div className="space-y-3">
         <SectionLabel>Operativa</SectionLabel>
-        <div className="grid gap-5 lg:grid-cols-3">
-          <div className="lg:col-span-2"><RecentActivity invoices={recent} /></div>
-          <div className="lg:col-span-1"><LowStockAlerts products={lowStockProducts} /></div>
-        </div>
+        <RecentActivity invoices={recent} />
       </div>
     </div>
   );

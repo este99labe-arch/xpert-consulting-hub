@@ -166,11 +166,11 @@ const AppTasks = () => {
               key={b.id}
               type="button"
               onClick={() => setBoardId(b.id)}
-              className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                b.id === activeBoardId ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent/60"
+              className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                b.id === activeBoardId ? "bg-primary/10 text-accent-foreground" : "text-muted-foreground hover:bg-accent/60"
               }`}
             >
-              <span className="h-2.5 w-2.5 rounded-full" style={{ background: b.color }} />
+              <span className="h-1.5 w-1.5 rounded-full" style={{ background: b.color }} aria-hidden />
               {b.name}
             </button>
           ))}
@@ -189,10 +189,10 @@ const AppTasks = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          <h1 className="font-display text-[17px] font-semibold tracking-[-.01em] text-foreground">
             Tareas {showArchived && <span className="text-muted-foreground font-normal text-lg">· Archivadas</span>}
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             {metrics.total} tareas{!showArchived && metrics.overdue > 0 && (
               <> · <span className="text-destructive font-medium">{metrics.overdue} vencidas</span></>
             )}
@@ -352,9 +352,9 @@ const AppTasks = () => {
 
       {/* Bulk actions */}
       {selected.size > 0 && (
-        <Card className="bg-primary/5 border-primary/30">
+        <Card className="bg-accent border-row-selected-border">
           <CardContent className="p-2 flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-medium px-2">{selected.size} seleccionadas</span>
+            <span className="text-xs font-medium px-2">{selected.size} seleccionadas</span>
             <Select onValueChange={(v) => bulkUpdate({ column_id: v })}>
               <SelectTrigger className="h-8 w-[160px]"><SelectValue placeholder="Mover a columna" /></SelectTrigger>
               <SelectContent>
@@ -381,12 +381,12 @@ const AppTasks = () => {
       {!activeBoardId ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-16 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-faint">
               <LayoutGrid className="h-6 w-6" />
             </div>
             <div>
               <p className="font-medium">Aún no hay tableros</p>
-              <p className="text-sm text-muted-foreground">Crea tu primer tablero para empezar a organizar tareas.</p>
+              <p className="text-xs text-muted-foreground">Crea tu primer tablero para empezar a organizar tareas.</p>
             </div>
             {isManager && (
               <Button className="gap-1.5" onClick={() => navigate("/app/settings")}>
@@ -404,19 +404,21 @@ const AppTasks = () => {
             {columns.map((col) => (
               <div
                 key={col.id}
-                className={`flex flex-col rounded-lg transition-colors p-2 shrink-0 w-[280px] ${
-                  dragOverColumn === col.id ? "bg-accent/40 ring-2 ring-primary/30" : "bg-muted/30"
+                className={`flex w-[280px] shrink-0 flex-col rounded-[12px] p-2 transition-colors duration-150 ${
+                  dragOverColumn === col.id
+                    ? "bg-row-selected ring-1 ring-row-selected-border"
+                    : "bg-muted"
                 }`}
                 onDragOver={(e) => handleDragOver(e, col.id)}
                 onDragLeave={() => setDragOverColumn(null)}
                 onDrop={(e) => handleDrop(e, col.id)}
               >
-                <div className="flex items-center gap-2 mb-2 px-1">
-                  <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: col.color }} />
-                  <h3 className="text-sm font-semibold truncate">{col.name}</h3>
-                  <Badge variant="secondary" className="text-[10px] px-1.5 h-4 ml-auto shrink-0">
+                <div className="mb-2 flex items-center gap-2 px-1.5 py-1">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: col.color }} aria-hidden />
+                  <h3 className="truncate text-[11.5px] font-semibold text-foreground">{col.name}</h3>
+                  <span className="tnum ml-auto shrink-0 text-[11px] text-subtle">
                     {columnData[col.id]?.length || 0}
-                  </Badge>
+                  </span>
                 </div>
                 <ScrollArea className="flex-1">
                   <div className="space-y-2 min-h-[200px]">
@@ -444,9 +446,9 @@ const AppTasks = () => {
       ) : (
         <Card>
           <CardContent className="p-0 overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-xs">
               <thead>
-                <tr className="border-b bg-muted/40">
+                <tr className="border-b border-border bg-muted">
                   <th className="p-2 w-8"></th>
                   <th className="text-left p-2 font-medium text-muted-foreground">Título</th>
                   <th className="text-left p-2 font-medium text-muted-foreground">Prioridad</th>
@@ -518,7 +520,7 @@ const AppTasks = () => {
                 })}
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-muted-foreground text-sm">Sin tareas</td>
+                    <td colSpan={7} className="p-8 text-center text-muted-foreground text-xs">Sin tareas</td>
                   </tr>
                 )}
               </tbody>
@@ -545,7 +547,7 @@ const MetricCard = ({
   <Card>
     <CardContent className="p-3">
       <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className={`text-2xl font-bold ${accent === "destructive" ? "text-destructive" : accentColor || ""}`}>{value}</p>
+      <p className={`tnum text-[22px] font-semibold tracking-[-.02em] ${accent === "destructive" ? "text-destructive" : accentColor || ""}`}>{value}</p>
     </CardContent>
   </Card>
 );

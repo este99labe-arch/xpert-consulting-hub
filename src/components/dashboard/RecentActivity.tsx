@@ -29,7 +29,7 @@ const RecentActivity = ({ invoices }: RecentActivityProps) => {
   const navigate = useNavigate();
 
   return (
-    <Card className="border-0 shadow-sm">
+    <Card className="border-0">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-base font-semibold flex items-center gap-2">
           <FileText className="h-4 w-4 text-muted-foreground" />
@@ -41,22 +41,22 @@ const RecentActivity = ({ invoices }: RecentActivityProps) => {
       </CardHeader>
       <CardContent className="space-y-2">
         {invoices.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-8">Sin actividad reciente</p>
+          <p className="text-xs text-muted-foreground text-center py-8">Sin actividad reciente</p>
         ) : (
           invoices.map((inv) => {
             const st = statusMap[inv.status] || statusMap.DRAFT;
             const isIncome = inv.type === "INVOICE";
             return (
               <div key={inv.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/40 hover:bg-muted/60 transition-colors">
-                <div className={`flex h-8 w-8 items-center justify-center rounded-full shrink-0 ${isIncome ? "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]" : "bg-destructive/10 text-destructive"}`}>
+                <div className={`flex h-8 w-8 items-center justify-center rounded-full shrink-0 ${isIncome ? "bg-success-foreground text-[hsl(var(--success))]" : "bg-destructive-surface text-destructive"}`}>
                   {isIncome ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{inv.business_clients?.name || "—"}</p>
+                  <p className="text-xs font-medium truncate">{inv.business_clients?.name || "—"}</p>
                   <p className="text-xs text-muted-foreground">{format(parseISO(inv.issue_date), "dd MMM yyyy", { locale: es })}</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className={`text-sm font-semibold ${isIncome ? "text-[hsl(var(--success))]" : "text-destructive"}`}>
+                  <p className={`text-xs font-semibold ${isIncome ? "text-[hsl(var(--success))]" : "text-destructive"}`}>
                     {isIncome ? "+" : "-"}{Number(inv.amount_total).toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
                   </p>
                   <Badge variant={st.variant} className="text-[10px] px-1.5 py-0">{st.label}</Badge>

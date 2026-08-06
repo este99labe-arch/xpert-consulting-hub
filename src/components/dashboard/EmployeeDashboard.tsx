@@ -171,24 +171,24 @@ const EmployeeDashboard = () => {
   };
 
   const kpis: MiniKpi[] = [
-    { label: "Esta semana", value: fmtH(weekMins), icon: Clock, color: "text-primary", bg: "bg-primary/10" },
+    { label: "Esta semana", value: fmtH(weekMins), icon: Clock, color: "text-accent-foreground", bg: "bg-primary/10" },
     {
       label: "Balance del mes", value: fmtH(balanceMins),
       icon: CalendarCheck,
       color: balanceMins >= 0 ? "text-[hsl(var(--success))]" : "text-destructive",
-      bg: balanceMins >= 0 ? "bg-[hsl(var(--success))]/10" : "bg-destructive/10",
+      bg: balanceMins >= 0 ? "bg-success-foreground" : "bg-destructive-surface",
       hint: balanceMins >= 0 ? "A favor" : "Por recuperar",
     },
     {
       label: "Vacaciones disponibles", value: `${availableVacation} días`,
-      icon: Palmtree, color: "text-primary", bg: "bg-primary/10",
+      icon: Palmtree, color: "text-accent-foreground", bg: "bg-primary/10",
       hint: `${usedVacationDays} / ${totalVacation} usados`,
     },
     {
       label: "Solicitudes pendientes", value: String(pendingLeaves),
       icon: Bell,
       color: pendingLeaves > 0 ? "text-[hsl(var(--warning))]" : "text-muted-foreground",
-      bg: pendingLeaves > 0 ? "bg-[hsl(var(--warning))]/10" : "bg-muted",
+      bg: pendingLeaves > 0 ? "bg-warning-surface" : "bg-muted",
     },
   ];
 
@@ -198,17 +198,17 @@ const EmployeeDashboard = () => {
   const todayLabel = format(now, "EEEE, d 'de' MMMM", { locale: es });
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* Hero header */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25 }}
       >
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+        <h1 className="font-display text-[17px] font-semibold tracking-[-.01em] text-foreground">
           {greeting}{displayName ? `, ${displayName}` : ""} 👋
         </h1>
-        <p className="text-sm text-muted-foreground first-letter:uppercase">
+        <p className="text-xs text-muted-foreground first-letter:uppercase">
           {todayLabel} · Tu jornada y lo importante de la semana
         </p>
       </motion.div>
@@ -216,15 +216,15 @@ const EmployeeDashboard = () => {
       {/* Personal KPIs */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         {kpis.map((k) => (
-          <Card key={k.label} className="border-0 shadow-sm">
+          <Card key={k.label} className="border-0">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-medium text-muted-foreground">{k.label}</span>
-                <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${k.bg}`}>
+                <div className={`flex h-8 w-8 items-center justify-center rounded-control ${k.bg}`}>
                   <k.icon className={`h-3.5 w-3.5 ${k.color}`} />
                 </div>
               </div>
-              <p className={`text-xl font-bold tracking-tight ${k.color}`}>{k.value}</p>
+              <p className={`tnum text-[20px] font-semibold tracking-[-.02em] ${k.color}`}>{k.value}</p>
               {k.hint && <p className="text-[11px] text-muted-foreground mt-1">{k.hint}</p>}
             </CardContent>
           </Card>
@@ -232,7 +232,7 @@ const EmployeeDashboard = () => {
       </div>
 
       {/* Hero attendance + Reminders */}
-      <div className="grid gap-5 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <TodayAttendanceWidget />
         </div>
@@ -242,7 +242,7 @@ const EmployeeDashboard = () => {
       </div>
 
       {/* Week chart + Vacations + Documents */}
-      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <MyWeekAttendanceWidget />
         <MyVacationsWidget />
         <MyDocumentsWidget />

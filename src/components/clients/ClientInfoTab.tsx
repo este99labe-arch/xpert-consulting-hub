@@ -157,7 +157,7 @@ const ClientInfoTab = ({ client, onSave, saving, isAdmin }: Props) => {
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4">
         {/* General Info */}
         <Card>
           <CardHeader>

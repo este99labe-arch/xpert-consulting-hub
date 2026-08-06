@@ -97,7 +97,7 @@ const ScheduleTab = ({ accountId, isManager }: { accountId: string; isManager: b
     }
   };
 
-  if (isLoading) return <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+  if (isLoading) return <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-accent-foreground" /></div>;
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
@@ -126,7 +126,7 @@ const ScheduleTab = ({ accountId, isManager }: { accountId: string; isManager: b
                     onCheckedChange={() => isManager && toggleDay(day.code)}
                     disabled={!isManager}
                   />
-                  <span className="text-sm">{day.label}</span>
+                  <span className="text-xs">{day.label}</span>
                 </label>
               ))}
             </div>

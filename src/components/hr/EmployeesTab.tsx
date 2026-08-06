@@ -85,7 +85,7 @@ const EmployeesTab = () => {
           pagination.paginatedItems.map((emp: any) => (
             <Card key={emp.id} className="p-4 space-y-2">
               <div className="flex items-center justify-between gap-2">
-                <span className="font-medium text-sm truncate">{emailMap.get(emp.user_id) || emp.user_id}</span>
+                <span className="font-medium text-xs truncate">{emailMap.get(emp.user_id) || emp.user_id}</span>
                 <div className="flex shrink-0 items-center gap-1">
                   <Badge variant="outline">{roleLabel((emp as any).roles?.code)}</Badge>
                   {isManager && (
@@ -99,9 +99,9 @@ const EmployeesTab = () => {
                   )}
                 </div>
               </div>
-              <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center justify-between text-xs">
                 {emp.is_active ? (
-                  <span className="flex items-center gap-1"><UserCheck className="h-4 w-4 text-primary" />Activo</span>
+                  <span className="flex items-center gap-1"><UserCheck className="h-4 w-4 text-accent-foreground" />Activo</span>
                 ) : (
                   <span className="flex items-center gap-1 text-muted-foreground"><UserX className="h-4 w-4" />Inactivo</span>
                 )}
@@ -146,9 +146,9 @@ const EmployeesTab = () => {
                     </TableCell>
                     <TableCell>
                       {emp.is_active ? (
-                        <span className="flex items-center gap-1 text-sm"><UserCheck className="h-4 w-4 text-primary" />Activo</span>
+                        <span className="flex items-center gap-1 text-xs"><UserCheck className="h-4 w-4 text-accent-foreground" />Activo</span>
                       ) : (
-                        <span className="flex items-center gap-1 text-sm text-muted-foreground"><UserX className="h-4 w-4" />Inactivo</span>
+                        <span className="flex items-center gap-1 text-xs text-muted-foreground"><UserX className="h-4 w-4" />Inactivo</span>
                       )}
                     </TableCell>
                     <TableCell className="text-muted-foreground">{new Date(emp.created_at).toLocaleDateString("es-ES")}</TableCell>

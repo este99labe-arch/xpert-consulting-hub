@@ -20,14 +20,14 @@ interface AccountingDashboardProps {
 const AccountingDashboard = ({
   totalIncome, totalExpense, vatCollected, vatPaid, monthlyData, pieData,
 }: AccountingDashboardProps) => (
-  <div className="space-y-6">
+  <div className="space-y-4">
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center gap-3">
-            <TrendingUp className="h-8 w-8 shrink-0 text-primary" />
+            <TrendingUp className="h-8 w-8 shrink-0 text-accent-foreground" />
             <div className="min-w-0">
-              <p className="text-2xl font-bold truncate">{EUR(totalIncome)}</p>
+              <p className="tnum text-[22px] font-semibold tracking-[-.02em] truncate">{EUR(totalIncome)}</p>
               <p className="text-xs text-muted-foreground">Ingresos totales</p>
             </div>
           </div>
@@ -38,7 +38,7 @@ const AccountingDashboard = ({
           <div className="flex items-center gap-3">
             <TrendingDown className="h-8 w-8 shrink-0 text-destructive" />
             <div className="min-w-0">
-              <p className="text-2xl font-bold truncate">{EUR(totalExpense)}</p>
+              <p className="tnum text-[22px] font-semibold tracking-[-.02em] truncate">{EUR(totalExpense)}</p>
               <p className="text-xs text-muted-foreground">Gastos totales</p>
             </div>
           </div>
@@ -47,9 +47,9 @@ const AccountingDashboard = ({
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center gap-3">
-            <BarChart3 className="h-8 w-8 shrink-0 text-primary" />
+            <BarChart3 className="h-8 w-8 shrink-0 text-accent-foreground" />
             <div className="min-w-0">
-              <p className={`text-2xl font-bold truncate ${totalIncome - totalExpense >= 0 ? "" : "text-destructive"}`}>
+              <p className={`tnum text-[22px] font-semibold tracking-[-.02em] truncate ${totalIncome - totalExpense >= 0 ? "" : "text-destructive"}`}>
                 {EUR(totalIncome - totalExpense)}
               </p>
               <p className="text-xs text-muted-foreground">Resultado neto</p>
@@ -62,7 +62,7 @@ const AccountingDashboard = ({
           <div className="flex items-center gap-3">
             <Calculator className="h-8 w-8 shrink-0 text-muted-foreground" />
             <div className="min-w-0">
-              <p className={`text-2xl font-bold truncate ${vatCollected - vatPaid >= 0 ? "text-destructive" : ""}`}>
+              <p className={`tnum text-[22px] font-semibold tracking-[-.02em] truncate ${vatCollected - vatPaid >= 0 ? "text-destructive" : ""}`}>
                 {EUR(vatCollected - vatPaid)}
               </p>
               <p className="text-xs text-muted-foreground">IVA a {vatCollected - vatPaid >= 0 ? "liquidar" : "compensar"}</p>
@@ -79,7 +79,7 @@ const AccountingDashboard = ({
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={monthlyData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                <CartesianGrid stroke="hsl(var(--chart-grid))" vertical={false} />
                 <XAxis dataKey="month" className="text-xs" tick={{ fontSize: 11 }} />
                 <YAxis className="text-xs" tick={{ fontSize: 11 }} width={60} />
                 <Tooltip formatter={(v: number) => EUR(v)} />

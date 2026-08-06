@@ -41,8 +41,8 @@ const CookiePolicy = () => {
             </Link>
           </Button>
           <div className="flex items-center gap-2">
-            <Cookie className="h-5 w-5 text-primary" />
-            <span className="text-sm font-semibold">Política de Cookies</span>
+            <Cookie className="h-5 w-5 text-accent-foreground" />
+            <span className="text-xs font-semibold">Política de Cookies</span>
           </div>
         </div>
       </header>
@@ -52,17 +52,17 @@ const CookiePolicy = () => {
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
             Política de Cookies
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Última actualización: 22 de abril de 2026 · Versión 1.0
           </p>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>¿Qué son las cookies?</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm leading-relaxed text-muted-foreground">
+            <CardContent className="space-y-3 text-xs leading-relaxed text-muted-foreground">
               <p>
                 Las cookies son pequeños archivos de texto que los sitios web guardan en
                 tu dispositivo cuando los visitas. Permiten recordar información sobre tu
@@ -100,30 +100,30 @@ const CookiePolicy = () => {
                   <TableBody>
                     <TableRow>
                       <TableCell className="font-medium">Necesarias</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
+                      <TableCell className="text-xs text-muted-foreground">
                         Sesión de usuario, autenticación, seguridad CSRF, preferencias
                         de interfaz (sidebar, tema).
                       </TableCell>
-                      <TableCell className="text-sm">Sesión / 1 año</TableCell>
-                      <TableCell className="text-sm">Interés legítimo</TableCell>
+                      <TableCell className="text-xs">Sesión / 1 año</TableCell>
+                      <TableCell className="text-xs">Interés legítimo</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-medium">Analíticas</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
+                      <TableCell className="text-xs text-muted-foreground">
                         Medir uso de funcionalidades, detectar errores y mejorar el
                         rendimiento (datos agregados y anónimos).
                       </TableCell>
-                      <TableCell className="text-sm">Hasta 1 año</TableCell>
-                      <TableCell className="text-sm">Consentimiento</TableCell>
+                      <TableCell className="text-xs">Hasta 1 año</TableCell>
+                      <TableCell className="text-xs">Consentimiento</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-medium">Marketing</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
+                      <TableCell className="text-xs text-muted-foreground">
                         Personalización de contenidos y comunicaciones promocionales
                         (no se usan actualmente para terceros).
                       </TableCell>
-                      <TableCell className="text-sm">Hasta 1 año</TableCell>
-                      <TableCell className="text-sm">Consentimiento</TableCell>
+                      <TableCell className="text-xs">Hasta 1 año</TableCell>
+                      <TableCell className="text-xs">Consentimiento</TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
@@ -135,7 +135,7 @@ const CookiePolicy = () => {
             <CardHeader>
               <CardTitle>Gestión y revocación del consentimiento</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm leading-relaxed text-muted-foreground">
+            <CardContent className="space-y-3 text-xs leading-relaxed text-muted-foreground">
               <p>
                 Tu consentimiento queda registrado de forma fehaciente conforme al
                 artículo 7 del RGPD, incluyendo la versión de esta política, la fecha y un
@@ -159,7 +159,7 @@ const CookiePolicy = () => {
             <CardHeader>
               <CardTitle>Cookies de terceros</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm leading-relaxed text-muted-foreground">
+            <CardContent className="space-y-3 text-xs leading-relaxed text-muted-foreground">
               <p>
                 Actualmente XpertConsulting no comparte datos con servicios analíticos o
                 publicitarios de terceros. Si en el futuro se incorporara alguno (por
@@ -173,13 +173,13 @@ const CookiePolicy = () => {
             <CardHeader>
               <CardTitle>Más información</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 text-sm leading-relaxed text-muted-foreground">
+            <CardContent className="space-y-2 text-xs leading-relaxed text-muted-foreground">
               <p>
                 Para más información sobre cómo tratamos tus datos personales, consulta
                 nuestra{" "}
                 <Link
                   to="/legal/privacy"
-                  className="font-medium text-primary underline-offset-2 hover:underline"
+                  className="font-medium text-accent-foreground underline-offset-2 hover:underline"
                 >
                   Política de Privacidad
                 </Link>
@@ -189,7 +189,7 @@ const CookiePolicy = () => {
                 Si tienes cualquier pregunta, puedes escribirnos a{" "}
                 <a
                   href="mailto:privacidad@xpertconsulting.es"
-                  className="font-medium text-primary underline-offset-2 hover:underline"
+                  className="font-medium text-accent-foreground underline-offset-2 hover:underline"
                 >
                   privacidad@xpertconsulting.es
                 </a>

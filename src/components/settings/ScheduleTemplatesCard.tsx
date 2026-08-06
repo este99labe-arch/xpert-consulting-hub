@@ -160,16 +160,16 @@ const ScheduleTemplatesCard = ({ accountId, isManager }: Props) => {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+          <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-accent-foreground" /></div>
         ) : templates.length === 0 ? (
-          <p className="py-6 text-center text-sm text-muted-foreground">No hay plantillas. Crea la primera.</p>
+          <p className="py-6 text-center text-xs text-muted-foreground">No hay plantillas. Crea la primera.</p>
         ) : (
           <div className="grid gap-2 sm:grid-cols-2">
             {templates.map((tpl: any) => (
               <div key={tpl.id} className="flex items-center gap-3 rounded-lg border border-border p-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="truncate text-sm font-medium">{tpl.name}</p>
+                    <p className="truncate text-xs font-medium">{tpl.name}</p>
                     <Badge variant="outline" className="shrink-0 text-[10px]">
                       {KIND_OPTIONS.find((k) => k.value === tpl.kind)?.label || tpl.kind}
                     </Badge>
@@ -245,7 +245,7 @@ const ScheduleTemplatesCard = ({ accountId, isManager }: Props) => {
                 <Input type="time" value={t1e} onChange={(e) => setT1e(e.target.value)} />
               </div>
             </div>
-            <label className="flex cursor-pointer items-center gap-2 text-sm">
+            <label className="flex cursor-pointer items-center gap-2 text-xs">
               <Checkbox checked={hasT2} onCheckedChange={(v) => setHasT2(!!v)} />
               Segundo tramo (jornada partida)
             </label>

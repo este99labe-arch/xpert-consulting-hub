@@ -214,7 +214,7 @@ const TaskLinksManager = ({ taskId, draftLinks, onDraftChange }: Props) => {
               {href && !isDraft ? (
                 <Link
                   to={href}
-                  className="truncate max-w-[200px] hover:text-primary hover:underline inline-flex items-center gap-1"
+                  className="truncate max-w-[200px] hover:text-accent-foreground hover:underline inline-flex items-center gap-1"
                   title={`Ir a ${getTypeLabel(l.entity_type)}`}
                 >
                   {l.entity_label || l.entity_id.slice(0, 8)}

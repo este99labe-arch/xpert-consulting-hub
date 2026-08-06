@@ -60,7 +60,7 @@ const InvoiceAttachment = ({
     return (
       <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
         <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-        <span className="text-sm truncate flex-1">{attachmentName}</span>
+        <span className="text-xs truncate flex-1">{attachmentName}</span>
         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleDownload}>
           <Download className="h-3.5 w-3.5" />
         </Button>

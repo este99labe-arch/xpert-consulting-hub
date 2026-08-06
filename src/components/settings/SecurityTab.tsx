@@ -109,7 +109,7 @@ const SecurityTab = ({ userId, accountId, isManager }: { userId: string; account
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Own password change */}
       <Card>
         <CardHeader>

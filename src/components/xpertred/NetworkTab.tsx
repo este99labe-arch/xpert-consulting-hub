@@ -93,14 +93,14 @@ const NetworkTab = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filtered.map((c: any) => (
-          <Card key={c.account_id} className="hover:shadow-md transition-shadow">
+          <Card key={c.account_id} className="hover:bg-popover transition-colors">
             <CardContent className="p-4 space-y-3">
               <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-lg font-bold text-primary">
+                <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center text-lg font-bold text-accent-foreground">
                   {(c.accounts as any)?.name?.charAt(0) || "?"}
                 </div>
                 <div className="min-w-0">
-                  <h4 className="font-medium text-sm truncate">
+                  <h4 className="font-medium text-xs truncate">
                     {(c.accounts as any)?.name}
                   </h4>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">

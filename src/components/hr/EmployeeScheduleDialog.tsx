@@ -153,17 +153,17 @@ const EmployeeScheduleDialog = ({ open, onOpenChange, accountId, userId, label }
       <DialogContent className="flex max-h-[92vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
         <DialogHeader className="flex-shrink-0 space-y-0 border-b border-border px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-accent-foreground">
               <CalendarClock className="h-5 w-5" />
             </div>
             <div className="min-w-0">
               <DialogTitle className="text-lg">Horario del empleado</DialogTitle>
-              <p className="truncate text-sm text-muted-foreground">{label}</p>
+              <p className="truncate text-xs text-muted-foreground">{label}</p>
             </div>
           </div>
         </DialogHeader>
 
-        <div className="flex-1 space-y-5 overflow-y-auto bg-muted/30 px-6 py-5">
+        <div className="flex-1 space-y-4 overflow-y-auto bg-muted/30 px-6 py-5">
           <div className="space-y-1.5">
             <Label>Plantilla de horario</Label>
             <Select value={templateId} onValueChange={setTemplateId}>
@@ -181,7 +181,7 @@ const EmployeeScheduleDialog = ({ open, onOpenChange, accountId, userId, label }
           </div>
 
           {loadingOverrides ? (
-            <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+            <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-accent-foreground" /></div>
           ) : (
             <div className="space-y-2">
               <Label>Personalización por día</Label>
@@ -190,7 +190,7 @@ const EmployeeScheduleDialog = ({ open, onOpenChange, accountId, userId, label }
                 return (
                   <div key={d.value} className="rounded-lg border border-border bg-card p-3">
                     <div className="flex items-center gap-3">
-                      <span className="w-20 shrink-0 text-sm font-medium">{d.label}</span>
+                      <span className="w-20 shrink-0 text-xs font-medium">{d.label}</span>
                       <Select value={st.mode} onValueChange={(v) => setDay(d.value, { mode: v as DayMode })}>
                         <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
                         <SelectContent>

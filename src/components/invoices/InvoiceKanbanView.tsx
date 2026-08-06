@@ -103,7 +103,7 @@ const InvoiceKanbanView = ({ invoices, onPreview }: Props) => {
           className={cn(
             "flex-shrink-0 w-[220px] lg:w-[240px] rounded-lg border border-t-4 bg-muted/30 transition-colors",
             statusColumnColors[col.key],
-            dragOverColumn === col.key && "bg-accent/40 ring-2 ring-primary/30"
+            dragOverColumn === col.key && "bg-accent/40 ring-2 ring-primary/[.16]"
           )}
           onDragOver={(e) => handleDragOver(e, col.key)}
           onDragLeave={handleDragLeave}
@@ -111,7 +111,7 @@ const InvoiceKanbanView = ({ invoices, onPreview }: Props) => {
         >
           <div className="p-3 border-b">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold text-foreground">{col.label}</span>
+              <span className="text-xs font-semibold text-foreground">{col.label}</span>
               <Badge variant="secondary" className="text-xs">{col.items.length}</Badge>
             </div>
           </div>
@@ -127,16 +127,16 @@ const InvoiceKanbanView = ({ invoices, onPreview }: Props) => {
                   onDragEnd={handleDragEnd}
                   onClick={() => onPreview(inv)}
                   className={cn(
-                    "p-3 cursor-pointer hover:shadow-md transition-shadow border-l-4",
+                    "p-3 cursor-pointer hover:bg-popover transition-colors border-l-4",
                     inv.type === "INVOICE"
                       ? "border-l-primary bg-card"
-                      : "border-l-[hsl(var(--warning))] bg-[hsl(var(--warning))]/10",
+                      : "border-l-[hsl(var(--warning))] bg-warning-surface",
                     draggingId === inv.id && "opacity-50 ring-2 ring-primary"
                   )}
                 >
                   <div className="flex items-center gap-1.5 mb-1.5">
                     {inv.type === "INVOICE" ? (
-                      <FileText className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                      <FileText className="h-3.5 w-3.5 text-accent-foreground flex-shrink-0" />
                     ) : (
                       <Receipt className="h-3.5 w-3.5 text-[hsl(var(--warning))] flex-shrink-0" />
                     )}

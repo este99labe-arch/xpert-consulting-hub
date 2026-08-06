@@ -145,12 +145,12 @@ const CreateBusinessClientDialog = ({ open, onOpenChange, accountId, onSuccess }
         {/* Header */}
         <DialogHeader className="flex-shrink-0 space-y-0 border-b border-border px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-accent-foreground">
               <Building2 className="h-5 w-5" />
             </div>
             <div>
               <DialogTitle className="text-lg">Nuevo cliente</DialogTitle>
-              <p className="text-sm text-muted-foreground">Completa los datos del cliente y su contacto principal</p>
+              <p className="text-xs text-muted-foreground">Completa los datos del cliente y su contacto principal</p>
             </div>
           </div>
         </DialogHeader>
@@ -159,7 +159,7 @@ const CreateBusinessClientDialog = ({ open, onOpenChange, accountId, onSuccess }
           {/* Body */}
           <div className="flex-1 space-y-4 overflow-y-auto bg-muted/30 px-6 py-5">
             {error && (
-              <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+              <div className="flex items-center gap-2 rounded-control border border-destructive-border bg-destructive-surface p-3 text-[11.5px] text-destructive-text">
                 <AlertCircle className="h-4 w-4 shrink-0" />
                 {error}
               </div>

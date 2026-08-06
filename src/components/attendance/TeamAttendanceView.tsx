@@ -56,7 +56,7 @@ const TeamAttendanceView = ({
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {isMasterAdmin && (
         <MasterAccountSelector
           title="Asistencia"
@@ -67,22 +67,22 @@ const TeamAttendanceView = ({
       )}
 
       {isMasterAdmin && !selectedClientAccountId ? (
-        <Card className="border shadow-sm">
+        <Card className="border">
           <CardContent className="flex flex-col items-center justify-center py-16 text-muted-foreground">
             <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3">
               <Building2 className="h-5 w-5" />
             </div>
-            <p className="text-sm">Selecciona un cliente para ver la asistencia de su equipo</p>
+            <p className="text-xs">Selecciona un cliente para ver la asistencia de su equipo</p>
           </CardContent>
         </Card>
       ) : (
         <>
           {/* Pending delete requests */}
           {pendingDeleteRequests.length > 0 && (
-            <Card className="border border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/10 shadow-sm">
+            <Card tone="warning">
               <CardContent className="p-4">
-                <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                  <Badge variant="outline" className="text-[hsl(var(--warning))] border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/10">{pendingDeleteRequests.length}</Badge>
+                <h3 className="text-xs font-semibold mb-3 flex items-center gap-2">
+                  <Badge variant="warning">{pendingDeleteRequests.length}</Badge>
                   Solicitudes de eliminación pendientes
                 </h3>
                 <div className="space-y-2">
@@ -91,18 +91,18 @@ const TeamAttendanceView = ({
                     return (
                       <div key={req.id} className="flex items-center justify-between bg-card rounded-lg border p-3">
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium">{info?.email || "Empleado"}</p>
+                          <p className="text-xs font-medium">{info?.email || "Empleado"}</p>
                           <p className="text-xs text-muted-foreground">
                             {info ? `${info.work_date} · ${info.check_in ? format(new Date(info.check_in), "HH:mm") : "—"} → ${info.check_out ? format(new Date(info.check_out), "HH:mm") : "en curso"}` : "Registro no encontrado"}
                           </p>
                           <p className="text-xs text-muted-foreground mt-0.5">Motivo: {req.reason}</p>
                         </div>
                         <div className="flex items-center gap-1.5 ml-3">
-                          <Button size="sm" variant="outline" className="h-7 text-xs gap-1 text-primary border-primary/30 hover:bg-primary/10"
+                          <Button size="sm" variant="outline" className="h-7 text-xs gap-1 text-accent-foreground border-row-selected-border hover:bg-primary/10"
                             onClick={() => onApproveDelete(req.id, req.attendance_id)}>
                             <Check className="h-3 w-3" /> Aprobar
                           </Button>
-                          <Button size="sm" variant="ghost" className="h-7 text-xs gap-1 text-destructive hover:bg-destructive/10"
+                          <Button size="sm" variant="ghost" className="h-7 text-xs gap-1 text-destructive-text hover:bg-destructive-surface"
                             onClick={() => onRejectDelete(req.id)}>
                             <X className="h-3 w-3" /> Rechazar
                           </Button>
@@ -117,7 +117,7 @@ const TeamAttendanceView = ({
 
           {/* Header with export */}
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold capitalize">
+            <h3 className="text-xs font-semibold capitalize">
               {format(selectedMonth, "MMMM yyyy", { locale: es })}
             </h3>
             <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={onExport} disabled={teamRecordsCount === 0}>
@@ -126,14 +126,14 @@ const TeamAttendanceView = ({
           </div>
 
           {teamLoading ? (
-            <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+            <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-accent-foreground" /></div>
           ) : teamSummary.length === 0 ? (
-            <Card className="border shadow-sm">
+            <Card className="border">
               <CardContent className="flex flex-col items-center justify-center py-16 text-muted-foreground">
                 <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3">
                   <Users className="h-5 w-5" />
                 </div>
-                <p className="text-sm">No hay registros de asistencia para este mes</p>
+                <p className="text-xs">No hay registros de asistencia para este mes</p>
               </CardContent>
             </Card>
           ) : (
@@ -143,23 +143,23 @@ const TeamAttendanceView = ({
               {teamSummary.map(emp => (
                 <Card key={emp.userId} className="p-4">
                   <div className="flex items-center gap-2.5 mb-2">
-                    <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-[11px] font-semibold text-primary">
+                    <div className="h-7 w-7 rounded-full bg-[hsl(var(--border-strong))] flex items-center justify-center text-[11px] font-semibold text-accent-foreground">
                       {emp.email.charAt(0).toUpperCase()}
                     </div>
-                    <span className="text-sm font-medium truncate">{emp.email}</span>
+                    <span className="text-xs font-medium truncate">{emp.email}</span>
                   </div>
                   <div className="grid grid-cols-3 gap-2 text-center">
                     <div>
                       <p className="text-[10px] text-muted-foreground uppercase">Días</p>
-                      <p className="text-sm font-medium tabular-nums">{emp.days}</p>
+                      <p className="text-xs font-medium tabular-nums">{emp.days}</p>
                     </div>
                     <div>
                       <p className="text-[10px] text-muted-foreground uppercase">Total</p>
-                      <p className="text-sm font-medium tabular-nums">{formatMinutes(emp.worked)}</p>
+                      <p className="text-xs font-medium tabular-nums">{formatMinutes(emp.worked)}</p>
                     </div>
                     <div>
                       <p className="text-[10px] text-muted-foreground uppercase">Media</p>
-                      <p className="text-sm text-muted-foreground tabular-nums">
+                      <p className="text-xs text-muted-foreground tabular-nums">
                         {emp.days > 0 ? formatMinutes(Math.round(emp.worked / emp.days)) : "—"}
                       </p>
                     </div>
@@ -169,7 +169,7 @@ const TeamAttendanceView = ({
             </div>
 
             {/* Desktop table */}
-            <Card className="border shadow-sm overflow-hidden hidden md:block">
+            <Card className="border overflow-hidden hidden md:block">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/20 hover:bg-muted/20">
@@ -184,15 +184,15 @@ const TeamAttendanceView = ({
                     <TableRow key={emp.userId}>
                       <TableCell className="py-3">
                         <div className="flex items-center gap-2.5">
-                          <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-[11px] font-semibold text-primary">
+                          <div className="h-7 w-7 rounded-full bg-[hsl(var(--border-strong))] flex items-center justify-center text-[11px] font-semibold text-accent-foreground">
                             {emp.email.charAt(0).toUpperCase()}
                           </div>
-                          <span className="text-sm font-medium">{emp.email}</span>
+                          <span className="text-xs font-medium">{emp.email}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="py-3 text-sm tabular-nums">{emp.days}</TableCell>
-                      <TableCell className="py-3 text-sm font-medium tabular-nums">{formatMinutes(emp.worked)}</TableCell>
-                      <TableCell className="py-3 text-sm text-muted-foreground tabular-nums">
+                      <TableCell className="py-3 text-xs tabular-nums">{emp.days}</TableCell>
+                      <TableCell className="py-3 text-xs font-medium tabular-nums">{formatMinutes(emp.worked)}</TableCell>
+                      <TableCell className="py-3 text-xs text-muted-foreground tabular-nums">
                         {emp.days > 0 ? formatMinutes(Math.round(emp.worked / emp.days)) : "—"}
                       </TableCell>
                     </TableRow>

@@ -51,7 +51,7 @@ const MyWeekAttendanceWidget = () => {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
-            <BarChart3 className="h-4 w-4 text-primary" />
+            <BarChart3 className="h-4 w-4 text-accent-foreground" />
             Mi semana
           </CardTitle>
           <span className="text-xs text-muted-foreground">{totalH.toFixed(1)}h totales</span>
@@ -68,7 +68,7 @@ const MyWeekAttendanceWidget = () => {
                   title={`${d.hours.toFixed(1)}h`}
                 />
               </div>
-              <span className={`text-[10px] capitalize ${d.isToday ? "font-semibold text-primary" : "text-muted-foreground"}`}>
+              <span className={`text-[10px] capitalize ${d.isToday ? "font-semibold text-accent-foreground" : "text-muted-foreground"}`}>
                 {d.label}
               </span>
             </div>

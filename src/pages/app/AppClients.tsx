@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -34,19 +33,11 @@ const getInitials = (name: string) => {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 };
 
-// Color de avatar determinista a partir del nombre, usando los charts del tema
-const AVATAR_COLORS = [
-  "bg-[hsl(var(--chart-1))]/15 text-[hsl(var(--chart-1))]",
-  "bg-[hsl(var(--chart-2))]/15 text-[hsl(var(--chart-2))]",
-  "bg-[hsl(var(--chart-3))]/15 text-[hsl(var(--chart-3))]",
-  "bg-[hsl(var(--chart-4))]/15 text-[hsl(var(--chart-4))]",
-  "bg-[hsl(var(--chart-5))]/15 text-[hsl(var(--chart-5))]",
-];
-const colorForName = (name: string) => {
-  let hash = 0;
-  for (let i = 0; i < (name || "").length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
-};
+/* Avatar del sistema: iniciales sobre superficie elevada, siempre igual.
+   Antes rotaba entre cinco colores según el nombre; con la escala secuencial
+   azul de Midnight ese color ya no distingue nada y además reserva el color
+   para lo que sí es estado. */
+const AVATAR_CLASS = "bg-[hsl(var(--border-strong))] text-accent-foreground";
 
 const AppClients = () => {
   const { accountId } = useAuth();
@@ -224,26 +215,26 @@ const AppClients = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-accent-foreground" />
       </div>
     );
   }
 
   const statCards = [
-    { key: "total", label: "Total clientes", value: stats.total, icon: Users, color: "text-primary", bg: "bg-primary/10" },
-    { key: "active", label: "Activos", value: stats.active, icon: UserCheck, color: "text-[hsl(var(--success))]", bg: "bg-[hsl(var(--success))]/10" },
-    { key: "inactive", label: "Inactivos", value: stats.inactive, icon: UserX, color: "text-muted-foreground", bg: "bg-muted" },
+    { key: "total", label: "Total clientes", value: stats.total, icon: Users, color: "text-figure" },
+    { key: "active", label: "Activos", value: stats.active, icon: UserCheck, color: "text-success" },
+    { key: "inactive", label: "Inactivos", value: stats.inactive, icon: UserX, color: "text-muted-foreground" },
   ];
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Cabecera */}
         <PageHeader
           title="Clientes"
           description="Gestiona tu cartera de clientes y su facturación"
           actions={
-            <Button onClick={() => setShowCreate(true)} className="shadow-sm">
+            <Button onClick={() => setShowCreate(true)} className="">
               <Plus className="h-4 w-4 mr-2" />
               <span className="hidden sm:inline">Nuevo cliente</span>
               <span className="sm:hidden">Nuevo</span>
@@ -252,26 +243,19 @@ const AppClients = () => {
         />
 
         {/* Tarjetas de estadísticas */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25 }}
-          className="grid gap-4 grid-cols-3"
-        >
+        <div className="grid grid-cols-3 gap-3.5">
           {statCards.map((s) => (
-            <Card key={s.key} className="border-0 shadow-sm hover:shadow-md transition-shadow">
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${s.bg}`}>
-                  <s.icon className={`h-5 w-5 ${s.color}`} />
+            <Card key={s.key} className="px-[18px] py-4 transition-colors hover:bg-popover">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <span className="truncate text-[10.5px] font-medium text-muted-foreground">{s.label}</span>
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control bg-muted">
+                  <s.icon className="h-3.5 w-3.5 stroke-[1.8] text-faint" />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-medium text-muted-foreground truncate">{s.label}</p>
-                  <p className={`text-2xl font-bold tracking-tight ${s.color}`}>{s.value}</p>
-                </div>
-              </CardContent>
+              </div>
+              <p className={`tnum text-[22px] font-semibold tracking-[-.02em] ${s.color}`}>{s.value}</p>
             </Card>
           ))}
-        </motion.div>
+        </div>
 
         {/* Barra de búsqueda y filtros */}
         <div className="flex flex-col sm:flex-row gap-3">
@@ -347,23 +331,18 @@ const AppClients = () => {
             onAction={() => setShowCreate(true)}
           />
         ) : filtered.length === 0 ? (
-          <Card className="border-0 shadow-sm">
+          <Card>
             <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
               <Search className="h-10 w-10 mb-3" />
               <p className="text-lg font-medium">Sin resultados</p>
-              <p className="text-sm mt-1">No se encontraron clientes con los filtros aplicados</p>
+              <p className="text-xs mt-1">No se encontraron clientes con los filtros aplicados</p>
               <Button variant="outline" className="mt-4" onClick={clearFilters}>
                 Limpiar filtros
               </Button>
             </CardContent>
           </Card>
         ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25, delay: 0.05 }}
-          >
-            <Card className="border-0 shadow-sm">
+          <Card>
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <Table>
@@ -389,13 +368,13 @@ const AppClients = () => {
                           >
                             <TableCell>
                               <div className="flex items-center gap-3">
-                                <Avatar className="h-9 w-9">
-                                  <AvatarFallback className={`text-xs font-semibold ${colorForName(client.name)}`}>
+                                <Avatar className="h-8 w-8">
+                                  <AvatarFallback className={`text-[11px] font-semibold ${AVATAR_CLASS}`}>
                                     {getInitials(client.name)}
                                   </AvatarFallback>
                                 </Avatar>
                                 <div className="min-w-0">
-                                  <p className="font-medium truncate group-hover:text-primary transition-colors">
+                                  <p className="font-medium truncate group-hover:text-accent-foreground transition-colors">
                                     {client.name}
                                   </p>
                                   <p className="text-xs text-muted-foreground sm:hidden truncate">
@@ -404,7 +383,7 @@ const AppClients = () => {
                                 </div>
                               </div>
                             </TableCell>
-                            <TableCell className="hidden sm:table-cell font-mono text-sm text-muted-foreground">
+                            <TableCell className="hidden sm:table-cell font-mono text-xs text-muted-foreground">
                               {client.tax_id}
                             </TableCell>
                             <TableCell className="text-muted-foreground hidden md:table-cell">
@@ -437,7 +416,7 @@ const AppClients = () => {
                               <span
                                 className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${
                                   isActive
-                                    ? "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]"
+                                    ? "bg-success-foreground text-[hsl(var(--success))]"
                                     : "bg-muted text-muted-foreground"
                                 }`}
                               >
@@ -471,7 +450,7 @@ const AppClients = () => {
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      className="hover:bg-destructive/10"
+                                      className="hover:bg-destructive-surface"
                                       onClick={(e) => { e.stopPropagation(); setDeletingClientId(client.id); }}
                                     >
                                       <Trash2 className="h-4 w-4 text-destructive" />
@@ -501,8 +480,7 @@ const AppClients = () => {
                   />
                 </div>
               </CardContent>
-            </Card>
-          </motion.div>
+          </Card>
         )}
 
         <CreateBusinessClientDialog

@@ -168,24 +168,24 @@ const PLReport = ({ accountId }: { accountId: string }) => {
       <div className="grid gap-4 md:grid-cols-3 print:grid-cols-3">
         <Card>
           <CardContent className="pt-6">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
               <TrendingUp className="h-4 w-4 text-[hsl(var(--success))]" /> Ingresos
             </div>
-            <p className="text-2xl font-bold text-[hsl(var(--success))]">{EUR(plData.totalIncome)}</p>
+            <p className="tnum text-[22px] font-semibold tracking-[-.02em] text-[hsl(var(--success))]">{EUR(plData.totalIncome)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
               <TrendingDown className="h-4 w-4 text-destructive" /> Gastos
             </div>
-            <p className="text-2xl font-bold text-destructive">{EUR(plData.totalExpense)}</p>
+            <p className="tnum text-[22px] font-semibold tracking-[-.02em] text-destructive">{EUR(plData.totalExpense)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <div className="text-sm text-muted-foreground mb-1">Resultado</div>
-            <p className={`text-2xl font-bold ${plData.result >= 0 ? "text-[hsl(var(--success))]" : "text-destructive"}`}>
+            <div className="text-xs text-muted-foreground mb-1">Resultado</div>
+            <p className={`tnum text-[22px] font-semibold tracking-[-.02em] ${plData.result >= 0 ? "text-[hsl(var(--success))]" : "text-destructive"}`}>
               {EUR(plData.result)}
             </p>
           </CardContent>
@@ -197,7 +197,7 @@ const PLReport = ({ accountId }: { accountId: string }) => {
           <CardHeader><CardTitle className="text-base">Ingresos</CardTitle></CardHeader>
           <CardContent>
             {plData.income.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Sin datos</p>
+              <p className="text-xs text-muted-foreground">Sin datos</p>
             ) : (
               <Table>
                 <TableHeader>
@@ -206,8 +206,8 @@ const PLReport = ({ accountId }: { accountId: string }) => {
                 <TableBody>
                   {plData.income.map((a: any) => (
                     <TableRow key={a.id}>
-                      <TableCell className="text-sm">{a.code} — {a.name}</TableCell>
-                      <TableCell className="text-right text-sm font-medium">{EUR(a.total)}</TableCell>
+                      <TableCell className="text-xs">{a.code} — {a.name}</TableCell>
+                      <TableCell className="text-right text-xs font-medium">{EUR(a.total)}</TableCell>
                     </TableRow>
                   ))}
                   <TableRow className="font-bold">
@@ -223,7 +223,7 @@ const PLReport = ({ accountId }: { accountId: string }) => {
           <CardHeader><CardTitle className="text-base">Gastos</CardTitle></CardHeader>
           <CardContent>
             {plData.expenses.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Sin datos</p>
+              <p className="text-xs text-muted-foreground">Sin datos</p>
             ) : (
               <Table>
                 <TableHeader>
@@ -232,8 +232,8 @@ const PLReport = ({ accountId }: { accountId: string }) => {
                 <TableBody>
                   {plData.expenses.map((a: any) => (
                     <TableRow key={a.id}>
-                      <TableCell className="text-sm">{a.code} — {a.name}</TableCell>
-                      <TableCell className="text-right text-sm font-medium">{EUR(a.total)}</TableCell>
+                      <TableCell className="text-xs">{a.code} — {a.name}</TableCell>
+                      <TableCell className="text-right text-xs font-medium">{EUR(a.total)}</TableCell>
                     </TableRow>
                   ))}
                   <TableRow className="font-bold">
@@ -350,7 +350,7 @@ const AttendanceReport = ({ accountId }: { accountId: string }) => {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+        <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-accent-foreground" /></div>
       ) : summary.length === 0 ? (
         <Card><CardContent className="py-8 text-center text-muted-foreground">Sin datos de asistencia</CardContent></Card>
       ) : (
@@ -433,20 +433,20 @@ const InventoryReport = ({ accountId }: { accountId: string }) => {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardContent className="pt-6">
-            <div className="text-sm text-muted-foreground mb-1">Valor a coste</div>
-            <p className="text-2xl font-bold">{EUR(totalValue)}</p>
+            <div className="text-xs text-muted-foreground mb-1">Valor a coste</div>
+            <p className="tnum text-[22px] font-semibold tracking-[-.02em]">{EUR(totalValue)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <div className="text-sm text-muted-foreground mb-1">Valor a PVP</div>
-            <p className="text-2xl font-bold">{EUR(totalSaleValue)}</p>
+            <div className="text-xs text-muted-foreground mb-1">Valor a PVP</div>
+            <p className="tnum text-[22px] font-semibold tracking-[-.02em]">{EUR(totalSaleValue)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <div className="text-sm text-muted-foreground mb-1">Productos bajo mínimo</div>
-            <p className={`text-2xl font-bold ${lowStockCount > 0 ? "text-destructive" : ""}`}>
+            <div className="text-xs text-muted-foreground mb-1">Productos bajo mínimo</div>
+            <p className={`tnum text-[22px] font-semibold tracking-[-.02em] ${lowStockCount > 0 ? "text-destructive" : ""}`}>
               {lowStockCount}
             </p>
           </CardContent>
@@ -454,7 +454,7 @@ const InventoryReport = ({ accountId }: { accountId: string }) => {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+        <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-accent-foreground" /></div>
       ) : (
         <Card>
           <CardContent className="pt-6">
@@ -474,7 +474,7 @@ const InventoryReport = ({ accountId }: { accountId: string }) => {
                   return (
                     <TableRow key={p.id}>
                       <TableCell className="text-xs font-mono">{p.sku}</TableCell>
-                      <TableCell className="font-medium text-sm">{p.name}</TableCell>
+                      <TableCell className="font-medium text-xs">{p.name}</TableCell>
                       <TableCell className="text-center">
                         <span className={isLow ? "text-destructive font-bold" : ""}>
                           {p.current_stock}
@@ -611,29 +611,29 @@ const InvoiceSummaryReport = ({ accountId }: { accountId: string }) => {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardContent className="pt-6">
-            <div className="text-sm text-muted-foreground mb-1">Facturado</div>
-            <p className="text-xl font-bold text-[hsl(var(--success))]">{EUR(stats.totalIncome)}</p>
+            <div className="text-xs text-muted-foreground mb-1">Facturado</div>
+            <p className="tnum text-[20px] font-semibold tracking-[-.02em] text-[hsl(var(--success))]">{EUR(stats.totalIncome)}</p>
             <p className="text-xs text-muted-foreground">{stats.invoiceCount} facturas</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <div className="text-sm text-muted-foreground mb-1">Gastos</div>
-            <p className="text-xl font-bold text-destructive">{EUR(stats.totalExpense)}</p>
+            <div className="text-xs text-muted-foreground mb-1">Gastos</div>
+            <p className="tnum text-[20px] font-semibold tracking-[-.02em] text-destructive">{EUR(stats.totalExpense)}</p>
             <p className="text-xs text-muted-foreground">{stats.expenseCount} gastos</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <div className="text-sm text-muted-foreground mb-1">Balance</div>
-            <p className={`text-xl font-bold ${stats.totalIncome - stats.totalExpense >= 0 ? "text-[hsl(var(--success))]" : "text-destructive"}`}>
+            <div className="text-xs text-muted-foreground mb-1">Balance</div>
+            <p className={`tnum text-[20px] font-semibold tracking-[-.02em] ${stats.totalIncome - stats.totalExpense >= 0 ? "text-[hsl(var(--success))]" : "text-destructive"}`}>
               {EUR(stats.totalIncome - stats.totalExpense)}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <div className="text-sm text-muted-foreground mb-1">Por estado</div>
+            <div className="text-xs text-muted-foreground mb-1">Por estado</div>
             <div className="flex flex-wrap gap-1 mt-1">
               {Object.entries(stats.byStatus).map(([status, count]) => (
                 <Badge key={status} variant="secondary" className="text-xs">
@@ -687,9 +687,9 @@ const AppReports = () => {
   if (!effectiveAccountId) return null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+        <h1 className="font-display text-[17px] font-semibold tracking-[-.01em] text-foreground flex items-center gap-2">
           <BarChart3 className="h-6 w-6" /> Informes
         </h1>
         {role === "MASTER_ADMIN" && selectedAccount && (

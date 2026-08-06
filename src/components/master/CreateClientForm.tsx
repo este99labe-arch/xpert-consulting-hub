@@ -127,7 +127,7 @@ const CreateClientForm: React.FC<Props> = ({ onSuccess }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="flex items-center gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+        <div className="flex items-center gap-2 rounded-md bg-destructive-surface p-3 text-xs text-destructive">
           <AlertCircle className="h-4 w-4 shrink-0" />
           {error}
         </div>
@@ -242,7 +242,7 @@ const CreateClientForm: React.FC<Props> = ({ onSuccess }) => {
       </Card>
 
       {/* Primary Contact */}
-      <Card className="border-primary/30">
+      <Card className="border-row-selected-border">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Contacto Principal *</CardTitle>
         </CardHeader>
@@ -279,7 +279,7 @@ const CreateClientForm: React.FC<Props> = ({ onSuccess }) => {
                   checked={selectedModules.includes(mod.id)}
                   onCheckedChange={() => toggleModule(mod.id)}
                 />
-                <span className="text-sm">{mod.name}</span>
+                <span className="text-xs">{mod.name}</span>
               </label>
             ))}
           </div>

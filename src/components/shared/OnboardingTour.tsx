@@ -96,7 +96,7 @@ const OnboardingTour = ({ forceShow, onClose }: OnboardingTourProps) => {
           ))}
         </div>
         <h3 className="text-lg font-semibold text-foreground mb-2">{step.title}</h3>
-        <p className="text-sm text-muted-foreground mb-5">{step.description}</p>
+        <p className="text-xs text-muted-foreground mb-5">{step.description}</p>
         <div className="flex justify-between items-center">
           <span className="text-xs text-muted-foreground">
             {current + 1} / {steps.length}

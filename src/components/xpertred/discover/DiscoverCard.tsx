@@ -35,12 +35,12 @@ const DiscoverCard = ({ profile, score, direction, isManager, isSelf, isPending,
       <Card className="overflow-hidden">
         <div className="bg-gradient-to-br from-primary/10 to-primary/5 p-6">
           <div className="flex items-start gap-4">
-            <div className="h-16 w-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-2xl font-bold text-primary">
+            <div className="h-16 w-16 rounded-lg bg-muted border border-primary/20 flex items-center justify-center tnum text-[22px] font-semibold tracking-[-.02em] text-accent-foreground">
               {name.charAt(0)}
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-lg font-semibold truncate">{name}</h3>
-              <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
+              <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
                 {profile.province && (
                   <span className="flex items-center gap-1">
                     <MapPin className="h-3.5 w-3.5" />
@@ -69,19 +69,19 @@ const DiscoverCard = ({ profile, score, direction, isManager, isSelf, isPending,
           )}
 
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground font-medium">Compatibilidad</span>
-              <span className="font-bold text-primary">{score}%</span>
+              <span className="font-bold text-accent-foreground">{score}%</span>
             </div>
             <Progress value={score} className="h-2" />
           </div>
 
           {profile.description && (
-            <p className="text-sm text-muted-foreground leading-relaxed">{profile.description}</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">{profile.description}</p>
           )}
 
           {profile.reputation_score > 0 && (
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 text-xs">
               <span className="text-[hsl(var(--warning))]">
                 {"★".repeat(Math.round(Number(profile.reputation_score)))}
                 {"☆".repeat(5 - Math.round(Number(profile.reputation_score)))}

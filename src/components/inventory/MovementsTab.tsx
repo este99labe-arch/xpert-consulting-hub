@@ -104,10 +104,10 @@ const MovementsTab = ({ accountId, products, isManager, onNewMovement }: Movemen
             return (
               <Card key={m.id} className="p-4 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-sm">{m.products?.name}</span>
+                  <span className="font-medium text-xs">{m.products?.name}</span>
                   <div className="flex items-center gap-1">
                     <Icon className={`h-4 w-4 ${m.type === "IN" ? "text-[hsl(var(--success))]" : m.type === "OUT" ? "text-destructive" : "text-muted-foreground"}`} />
-                    <span className="text-sm">{movementTypeLabels[m.type]}</span>
+                    <span className="text-xs">{movementTypeLabels[m.type]}</span>
                   </div>
                 </div>
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -148,7 +148,7 @@ const MovementsTab = ({ accountId, products, isManager, onNewMovement }: Movemen
               const Icon = movementTypeIcons[m.type] || RotateCcw;
               return (
                 <TableRow key={m.id}>
-                  <TableCell className="text-sm">{format(new Date(m.created_at), "dd/MM/yyyy HH:mm", { locale: es })}</TableCell>
+                  <TableCell className="text-xs">{format(new Date(m.created_at), "dd/MM/yyyy HH:mm", { locale: es })}</TableCell>
                   <TableCell>{m.products?.name} <span className="text-xs text-muted-foreground">({m.products?.sku})</span></TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
@@ -158,7 +158,7 @@ const MovementsTab = ({ accountId, products, isManager, onNewMovement }: Movemen
                   </TableCell>
                   <TableCell className="text-right font-mono">{m.type === "OUT" ? `-${m.quantity}` : m.quantity}</TableCell>
                   <TableCell className="capitalize">{m.reason}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{m.notes}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">{m.notes}</TableCell>
                 </TableRow>
               );
             })}

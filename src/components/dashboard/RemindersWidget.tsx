@@ -69,7 +69,7 @@ const RemindersWidget = () => {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <CalendarClock className="h-4 w-4 text-primary" />
+              <CalendarClock className="h-4 w-4 text-accent-foreground" />
               Recordatorios
               {overdueCount > 0 && (
                 <Badge variant="destructive" className="text-[10px] px-1.5 py-0 h-4">{overdueCount}</Badge>
@@ -88,7 +88,7 @@ const RemindersWidget = () => {
           {(todayCount > 0 || overdueCount > 0) && (
             <div className="flex gap-2 mt-1">
               {todayCount > 0 && (
-                <span className="text-xs flex items-center gap-1 text-primary">
+                <span className="text-xs flex items-center gap-1 text-accent-foreground">
                   <Clock className="h-3 w-3" /> {todayCount} hoy
                 </span>
               )}
@@ -104,7 +104,7 @@ const RemindersWidget = () => {
           {reminders.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center py-6">
               <CalendarClock className="h-8 w-8 text-muted-foreground/40 mb-2" />
-              <p className="text-sm text-muted-foreground">Sin recordatorios pendientes</p>
+              <p className="text-xs text-muted-foreground">Sin recordatorios pendientes</p>
               <Button size="sm" variant="link" className="text-xs mt-1" onClick={() => setShowCreate(true)}>
                 Crear uno nuevo
               </Button>
@@ -118,11 +118,11 @@ const RemindersWidget = () => {
                   return (
                     <div
                       key={r.id}
-                      className={`flex items-start gap-2.5 rounded-lg border p-2.5 text-sm transition-colors ${
+                      className={`flex items-start gap-2.5 rounded-lg border p-2.5 text-xs transition-colors ${
                         isOverdue
                           ? "border-destructive/30 bg-destructive/5"
                           : isNow
-                          ? "border-primary/30 bg-primary/5"
+                          ? "border-row-selected-border bg-accent"
                           : "border-border"
                       }`}
                     >

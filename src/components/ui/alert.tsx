@@ -4,20 +4,19 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const alertVariants = cva(
-  "relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground",
+  "relative w-full rounded-control border p-3.5 text-[11.5px] leading-[1.6] [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground",
   {
     variants: {
-      // Variantes semánticas: el fondo/borde se tiñen con el token y el texto
-      // se mantiene en `foreground` para que el contraste aguante en claro y oscuro.
+      // Cada estado usa su terna del sistema —texto, superficie y borde— en
+      // vez de teñir el lienzo con un color al 10 %: sobre fondo oscuro esa
+      // transparencia apenas se distingue del fondo.
       variant: {
-        default: "bg-background text-foreground",
-        info: "border-primary/30 bg-primary/10 text-foreground [&>svg]:text-primary",
-        success:
-          "border-[hsl(var(--success))]/30 bg-[hsl(var(--success))]/10 text-foreground [&>svg]:text-[hsl(var(--success))]",
-        warning:
-          "border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/10 text-foreground [&>svg]:text-[hsl(var(--warning))]",
+        default: "border-border bg-card text-foreground",
+        info: "border-info-border bg-accent text-info-text [&>svg]:text-accent-foreground",
+        success: "border-success-border bg-success-foreground text-success [&>svg]:text-success",
+        warning: "border-warning-border bg-warning-surface text-warning-text [&>svg]:text-warning",
         destructive:
-          "border-destructive/30 bg-destructive/10 text-foreground [&>svg]:text-destructive",
+          "border-destructive-border bg-destructive-surface text-destructive-text [&>svg]:text-destructive",
       },
     },
     defaultVariants: {

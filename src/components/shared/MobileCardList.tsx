@@ -27,7 +27,7 @@ export const MobileCard = ({ fields, actions, onClick, className }: MobileCardPr
     {fields.map((field, i) => (
       <div key={i} className="flex items-center justify-between gap-2">
         <span className="text-xs text-muted-foreground shrink-0">{field.label}</span>
-        <span className={cn("text-sm text-right", field.className)}>{field.value}</span>
+        <span className={cn("text-xs text-right", field.className)}>{field.value}</span>
       </div>
     ))}
     {actions && (

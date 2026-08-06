@@ -33,17 +33,17 @@ const ForgotPassword = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent px-4">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-accent blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-primary/8 blur-3xl" />
       </div>
 
       <Card className="relative w-full max-w-md shadow-xl border-border/50 backdrop-blur-sm">
         <CardHeader className="text-center space-y-3 pb-2">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground font-bold text-2xl shadow-lg shadow-primary/25">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-2xl shadow-primary/25">
             <Mail className="h-7 w-7" />
           </div>
           <div className="space-y-1">
-            <CardTitle className="text-2xl font-bold tracking-tight">Recuperar contraseña</CardTitle>
+            <CardTitle className="font-display text-[17px] font-semibold tracking-[-.01em]">Recuperar contraseña</CardTitle>
             <CardDescription className="text-muted-foreground">
               {sent
                 ? "Revisa tu bandeja de entrada"
@@ -54,8 +54,8 @@ const ForgotPassword = () => {
         <CardContent className="pt-4">
           {sent ? (
             <div className="flex flex-col items-center gap-4 py-4">
-              <CheckCircle2 className="h-12 w-12 text-primary" />
-              <p className="text-sm text-muted-foreground text-center">
+              <CheckCircle2 className="h-12 w-12 text-accent-foreground" />
+              <p className="text-xs text-muted-foreground text-center">
                 Si existe una cuenta con <strong>{email}</strong>, recibirás un correo con instrucciones para restablecer tu contraseña.
               </p>
               <Link to="/login">
@@ -68,7 +68,7 @@ const ForgotPassword = () => {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+                <div className="flex items-center gap-2 rounded-control border border-destructive-border bg-destructive-surface p-3 text-[11.5px] text-destructive-text">
                   <AlertCircle className="h-4 w-4 shrink-0" />
                   {error}
                 </div>
@@ -86,12 +86,12 @@ const ForgotPassword = () => {
                   className="h-11"
                 />
               </div>
-              <Button type="submit" className="w-full h-11 font-medium shadow-md shadow-primary/20" disabled={loading}>
+              <Button type="submit" className="w-full h-11 font-medium shadow-primary/20" disabled={loading}>
                 {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                 Enviar enlace
               </Button>
               <div className="text-center">
-                <Link to="/login" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/login" className="text-xs text-muted-foreground hover:text-accent-foreground transition-colors">
                   <ArrowLeft className="h-3 w-3 inline mr-1" />
                   Volver al login
                 </Link>

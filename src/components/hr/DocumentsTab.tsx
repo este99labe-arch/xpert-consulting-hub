@@ -258,7 +258,7 @@ const DocumentsTab = () => {
   };
 
   if (foldersLoading) {
-    return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+    return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-accent-foreground" /></div>;
   }
 
   /* ═══════════════════════════════════════════════
@@ -268,7 +268,7 @@ const DocumentsTab = () => {
     return (
       <div className="space-y-4">
         {/* Breadcrumb nav */}
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-2 text-xs">
           <button
             onClick={() => { setSelectedFolder(null); }}
             className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
@@ -303,7 +303,7 @@ const DocumentsTab = () => {
 
         {/* File grid */}
         {docsLoading ? (
-          <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+          <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-accent-foreground" /></div>
         ) : documents.length === 0 ? (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-16 text-muted-foreground">
@@ -311,7 +311,7 @@ const DocumentsTab = () => {
                 <FileText className="h-8 w-8" />
               </div>
               <p className="font-medium">Carpeta vacía</p>
-              <p className="text-sm mt-1">
+              <p className="text-xs mt-1">
                 {isManager ? "Sube un archivo para empezar" : "No hay documentos disponibles"}
               </p>
             </CardContent>
@@ -319,14 +319,14 @@ const DocumentsTab = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {documents.map((doc: any) => (
-              <Card key={doc.id} className="group hover:shadow-md transition-shadow">
+              <Card key={doc.id} className="group hover:bg-popover transition-colors">
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <File className="h-5 w-5 text-primary" />
+                    <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                      <File className="h-5 w-5 text-accent-foreground" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">{doc.name}</p>
+                      <p className="font-medium text-xs truncate">{doc.name}</p>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {doc.file_size ? `${(doc.file_size / 1024).toFixed(0)} KB · ` : ""}
                         {new Date(doc.created_at).toLocaleDateString("es-ES")}
@@ -374,7 +374,7 @@ const DocumentsTab = () => {
         {isManager && (
           <button
             onClick={() => { setSelectedEmployee(null); setSelectedFolder(null); }}
-            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             Volver a empleados
@@ -389,9 +389,9 @@ const DocumentsTab = () => {
             </AvatarFallback>
           </Avatar>
           <div>
-            <h2 className="text-xl font-bold">{selectedEmployeeInfo.displayName}</h2>
+            <h2 className="font-display text-[17px] font-semibold tracking-[-.01em]">{selectedEmployeeInfo.displayName}</h2>
             {selectedEmployeeInfo.email && (
-              <p className="text-sm text-muted-foreground">{selectedEmployeeInfo.email}</p>
+              <p className="text-xs text-muted-foreground">{selectedEmployeeInfo.email}</p>
             )}
           </div>
         </div>
@@ -406,12 +406,12 @@ const DocumentsTab = () => {
                 onClick={() => setSelectedFolder(folder.id)}
                 className="group text-left"
               >
-                <Card className="hover:shadow-md hover:border-primary/30 transition-all cursor-pointer">
+                <Card className=" hover:bg-popover hover:border-row-selected-border transition-all cursor-pointer">
                   <CardContent className="p-5 flex flex-col items-center text-center">
                     <div className="text-4xl mb-3">
                       {FOLDER_ICONS[folder.name] || "📁"}
                     </div>
-                    <p className="font-medium text-sm truncate w-full">{folder.name}</p>
+                    <p className="font-medium text-xs truncate w-full">{folder.name}</p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {count} archivo{count !== 1 ? "s" : ""}
                     </p>
@@ -427,10 +427,10 @@ const DocumentsTab = () => {
           {/* Add folder card (manager only) */}
           {isManager && (
             <button onClick={() => { setShowNewFolder(true); setNewFolderName(""); }} className="text-left">
-              <Card className="hover:shadow-md border-dashed hover:border-primary/30 transition-all cursor-pointer h-full">
+              <Card className=" hover:bg-popover border-dashed hover:border-row-selected-border transition-all cursor-pointer h-full">
                 <CardContent className="p-5 flex flex-col items-center justify-center text-center h-full text-muted-foreground">
                   <FolderPlus className="h-8 w-8 mb-2" />
-                  <p className="text-sm font-medium">Nueva carpeta</p>
+                  <p className="text-xs font-medium">Nueva carpeta</p>
                 </CardContent>
               </Card>
             </button>
@@ -480,16 +480,16 @@ const DocumentsTab = () => {
             const empFolderCount = folders.filter((f: any) => f.user_id === emp.user_id).length;
             return (
               <button key={emp.user_id} onClick={() => setSelectedEmployee(emp.user_id)} className="text-left">
-                <Card className="hover:shadow-md hover:border-primary/30 transition-all cursor-pointer">
+                <Card className=" hover:bg-popover hover:border-row-selected-border transition-all cursor-pointer">
                   <CardContent className="p-5 flex items-center gap-4">
                     <Avatar className="h-12 w-12">
-                      <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                      <AvatarFallback className="bg-primary/10 text-accent-foreground font-semibold">
                         {emp.initials}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold truncate">{emp.displayName}</p>
-                      {emp.email && <p className="text-sm text-muted-foreground truncate">{emp.email}</p>}
+                      {emp.email && <p className="text-xs text-muted-foreground truncate">{emp.email}</p>}
                       <p className="text-xs text-muted-foreground mt-1">{empFolderCount} carpeta{empFolderCount !== 1 ? "s" : ""}</p>
                     </div>
                     <Folder className="h-5 w-5 text-muted-foreground shrink-0" />

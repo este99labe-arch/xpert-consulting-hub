@@ -7,20 +7,16 @@ import { cn } from "@/lib/utils";
 export type StatTone = "default" | "primary" | "success" | "warning" | "destructive";
 
 const TONE_VALUE: Record<StatTone, string> = {
-  default: "text-foreground",
-  primary: "text-primary",
-  success: "text-[hsl(var(--success))]",
-  warning: "text-[hsl(var(--warning))]",
-  destructive: "text-destructive",
+  default: "text-figure",
+  primary: "text-accent-foreground",
+  success: "text-success",
+  warning: "text-warning-text",
+  destructive: "text-destructive-text",
 };
 
-const TONE_ICON: Record<StatTone, string> = {
-  default: "bg-muted text-muted-foreground",
-  primary: "bg-primary/10 text-primary",
-  success: "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]",
-  warning: "bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))]",
-  destructive: "bg-destructive/10 text-destructive",
-};
+/* El icono va SIEMPRE neutro: en Midnight el color es estado, no decoración.
+   Quien lleva la semántica es la cifra. */
+const ICON_BOX = "bg-muted text-faint";
 
 interface StatCardProps {
   label: string;
@@ -60,22 +56,22 @@ const StatCard = ({
           : undefined
       }
       className={cn(
-        "p-4 shadow-sm",
+        "px-[18px] py-4",
         interactive &&
-          "cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+          "cursor-pointer transition-colors duration-150 hover:bg-popover focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/[.16]",
         className,
       )}
     >
       <div className="mb-2.5 flex items-center justify-between gap-2">
-        <span className="truncate text-xs font-medium text-muted-foreground">{label}</span>
+        <span className="truncate text-[10.5px] font-medium text-muted-foreground">{label}</span>
         {Icon && (
-          <div className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-lg", TONE_ICON[tone])}>
-            <Icon className="h-4 w-4" />
+          <div className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-control", ICON_BOX)}>
+            <Icon className="h-3.5 w-3.5 stroke-[1.8]" />
           </div>
         )}
       </div>
-      <p className={cn("text-2xl font-bold tracking-tight tabular-nums", TONE_VALUE[tone])}>{value}</p>
-      {hint && <div className="mt-1.5 text-xs text-muted-foreground">{hint}</div>}
+      <p className={cn("tnum text-[22px] font-semibold tracking-[-.02em]", TONE_VALUE[tone])}>{value}</p>
+      {hint && <div className="mt-1 text-[10.5px] text-muted-foreground">{hint}</div>}
     </Card>
   );
 };

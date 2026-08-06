@@ -388,7 +388,7 @@ const AppAccounting = () => {
 
   if (chartAccounts.length === 0) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
         <PageHeader title="Contabilidad" description="Plan contable, asientos y libros" />
         <EmptyState
           icon={BookOpen}
@@ -405,7 +405,7 @@ const AppAccounting = () => {
   const canDeleteEntry = (_e: JournalEntry) => true;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <PageHeader
         title="Contabilidad"
         description="Plan contable, asientos y libros"

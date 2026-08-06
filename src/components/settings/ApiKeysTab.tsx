@@ -141,7 +141,7 @@ const ApiKeysTab = ({ accountId, isManager }: ApiKeysTabProps) => {
         </CardHeader>
         <CardContent className="space-y-4">
           {/* API docs hint */}
-          <div className="rounded-lg border bg-muted/30 p-4 text-sm space-y-2">
+          <div className="rounded-lg border bg-muted/30 p-4 text-xs space-y-2">
             <p className="font-medium text-foreground">Endpoint base</p>
             <div className="flex items-center gap-2">
               <code className="text-xs bg-muted px-2 py-1 rounded font-mono flex-1 truncate">{apiBaseUrl}</code>
@@ -155,9 +155,9 @@ const ApiKeysTab = ({ accountId, isManager }: ApiKeysTabProps) => {
           </div>
 
           {isLoading ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">Cargando...</p>
+            <p className="text-xs text-muted-foreground py-4 text-center">Cargando...</p>
           ) : apiKeys.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">No hay claves API configuradas</p>
+            <p className="text-xs text-muted-foreground py-4 text-center">No hay claves API configuradas</p>
           ) : (
             <Table>
               <TableHeader>
@@ -180,10 +180,10 @@ const ApiKeysTab = ({ accountId, isManager }: ApiKeysTabProps) => {
                         {k.is_active ? "Activa" : "Revocada"}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                       {format(new Date(k.created_at), "dd MMM yyyy", { locale: es })}
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                       {k.last_used_at ? format(new Date(k.last_used_at), "dd MMM yyyy HH:mm", { locale: es }) : "Nunca"}
                     </TableCell>
                     {isManager && (
@@ -224,9 +224,9 @@ const ApiKeysTab = ({ accountId, isManager }: ApiKeysTabProps) => {
             <div className="space-y-4">
               <div className="rounded-lg border bg-muted/50 p-4">
                 <div className="flex items-center gap-2">
-                  <code className="text-sm font-mono break-all flex-1">{newKey}</code>
+                  <code className="text-xs font-mono break-all flex-1">{newKey}</code>
                   <Button variant="outline" size="icon" className="shrink-0" onClick={() => copyToClipboard(newKey)}>
-                    {copied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
+                    {copied ? <Check className="h-4 w-4 text-accent-foreground" /> : <Copy className="h-4 w-4" />}
                   </Button>
                 </div>
               </div>

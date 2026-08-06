@@ -131,7 +131,7 @@ const InvoiceTemplateTab = ({ accountId, isManager }: Props) => {
   }, [template, opts]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* ─── Galería de plantillas ─── */}
       <Card>
         <CardHeader>
@@ -147,8 +147,8 @@ const InvoiceTemplateTab = ({ accountId, isManager }: Props) => {
               return (
                 <div
                   key={t.id}
-                  className={`relative cursor-pointer rounded-xl border-2 p-3 transition-all hover:shadow-md ${
-                    isSelected ? "border-primary bg-primary/5 shadow-sm" : "border-border hover:border-primary/50"
+                  className={`relative cursor-pointer rounded-xl border-2 p-3 transition-colors hover:bg-popover ${
+                    isSelected ? "border-primary bg-accent" : "border-border hover:border-primary/50"
                   }`}
                   onClick={() => { if (isManager) { setTemplate(t.id); setDirty(true); } }}
                 >
@@ -166,7 +166,7 @@ const InvoiceTemplateTab = ({ accountId, isManager }: Props) => {
                       loading="lazy"
                     />
                   </div>
-                  <h3 className="text-sm font-semibold text-foreground">{t.name}</h3>
+                  <h3 className="text-xs font-semibold text-foreground">{t.name}</h3>
                   <p className="mt-0.5 text-xs text-muted-foreground">{t.description}</p>
                 </div>
               );
@@ -179,10 +179,10 @@ const InvoiceTemplateTab = ({ accountId, isManager }: Props) => {
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base"><Palette className="h-4 w-4 text-primary" /> Personalización</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-base"><Palette className="h-4 w-4 text-accent-foreground" /> Personalización</CardTitle>
             <CardDescription>Ajusta el nombre, el color y los datos que aparecen en el documento.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-5">
+          <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label>Nombre en la factura</Label>
@@ -230,7 +230,7 @@ const InvoiceTemplateTab = ({ accountId, isManager }: Props) => {
               {TOGGLES.map((t) => (
                 <div key={String(t.key)} className="flex items-center justify-between rounded-lg border border-border p-3">
                   <div>
-                    <p className="text-sm font-medium">{t.label}</p>
+                    <p className="text-xs font-medium">{t.label}</p>
                     <p className="text-xs text-muted-foreground">{t.desc}</p>
                   </div>
                   <Switch
@@ -242,7 +242,7 @@ const InvoiceTemplateTab = ({ accountId, isManager }: Props) => {
               ))}
               <div className="flex items-center justify-between rounded-lg border border-border p-3">
                 <div>
-                  <p className="flex items-center gap-1.5 text-sm font-medium"><QrCode className="h-3.5 w-3.5" /> QR tributario VERI*FACTU</p>
+                  <p className="flex items-center gap-1.5 text-xs font-medium"><QrCode className="h-3.5 w-3.5" /> QR tributario VERI*FACTU</p>
                   <p className="text-xs text-muted-foreground">
                     Se imprime al inicio del documento cuando la factura tiene QR. Obligatorio si emites con VERI*FACTU.
                   </p>
@@ -273,7 +273,7 @@ const InvoiceTemplateTab = ({ accountId, isManager }: Props) => {
             <CardDescription>{INVOICE_TEMPLATES.find((t) => t.id === template)?.name}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="w-full overflow-hidden rounded-lg border border-border bg-white shadow-sm" style={{ aspectRatio: "210/297" }}>
+            <div className="w-full overflow-hidden rounded-lg border border-border bg-white" style={{ aspectRatio: "210/297" }}>
               <iframe
                 srcDoc={previewHtml}
                 title="Vista previa personalizada"

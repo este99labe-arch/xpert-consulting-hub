@@ -99,9 +99,9 @@ const HolidaysCard = ({ accountId, isManager }: Props) => {
         )}
 
         {isLoading ? (
-          <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+          <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-accent-foreground" /></div>
         ) : holidays.length === 0 ? (
-          <p className="py-4 text-center text-sm text-muted-foreground">
+          <p className="py-4 text-center text-xs text-muted-foreground">
             Sin festivos registrados en {year}. Añade los festivos nacionales, autonómicos y locales de tu empresa.
           </p>
         ) : (
@@ -111,7 +111,7 @@ const HolidaysCard = ({ accountId, isManager }: Props) => {
                 <span className="w-24 shrink-0 font-mono text-xs text-muted-foreground">
                   {format(parseISO(h.holiday_date), "dd MMM", { locale: es })}
                 </span>
-                <span className="min-w-0 flex-1 truncate text-sm">{h.name}</span>
+                <span className="min-w-0 flex-1 truncate text-xs">{h.name}</span>
                 {isManager && (
                   <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => delMut.mutate(h.id)} aria-label="Eliminar festivo">
                     <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />

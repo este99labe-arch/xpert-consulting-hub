@@ -79,23 +79,23 @@ const MasterClients = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-accent-foreground" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="rounded-md bg-destructive/10 p-4 text-destructive">
+      <div className="rounded-md bg-destructive-surface p-4 text-destructive">
         Error al cargar clientes: {(error as Error).message}
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Gestión de Cuentas</h1>
+        <h1 className="font-display text-[17px] font-semibold tracking-[-.01em] text-foreground">Gestión de Cuentas</h1>
         <Button onClick={() => setShowCreate(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Nueva cuenta
@@ -106,7 +106,7 @@ const MasterClients = () => {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
             <p className="text-lg">No hay cuentas registradas</p>
-            <p className="text-sm">Crea tu primera cuenta para comenzar</p>
+            <p className="text-xs">Crea tu primera cuenta para comenzar</p>
           </CardContent>
         </Card>
       ) : (
@@ -121,7 +121,7 @@ const MasterClients = () => {
                   {client.is_active ? "Activo" : "Inactivo"}
                 </Badge>
               </div>
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>{new Date(client.created_at).toLocaleDateString("es-ES")}</span>
                 <Switch
                   checked={client.is_active}
@@ -130,7 +130,7 @@ const MasterClients = () => {
               </div>
               <div className="flex items-center gap-2 pt-1 border-t">
                 <Button variant="outline" size="sm" className="flex-1" onClick={() => setSelectedAccountId(client.id)}>Gestionar</Button>
-                <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/10 border-destructive/30"
+                <Button variant="outline" size="sm" className="text-destructive-text hover:bg-destructive-surface border-destructive/30"
                   onClick={() => { setDeleteTarget({ id: client.id, name: client.name }); setDeleteMode("account_only"); }}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -173,7 +173,7 @@ const MasterClients = () => {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Button variant="outline" size="sm" onClick={() => setSelectedAccountId(client.id)}>Gestionar</Button>
-                        <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/10 border-destructive/30"
+                        <Button variant="outline" size="sm" className="text-destructive-text hover:bg-destructive-surface border-destructive/30"
                           onClick={() => { setDeleteTarget({ id: client.id, name: client.name }); setDeleteMode("account_only"); }}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
