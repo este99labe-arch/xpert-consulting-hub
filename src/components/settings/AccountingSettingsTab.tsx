@@ -152,7 +152,7 @@ const AccountingSettingsTab = ({ accountId }: Props) => {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
-            <Calculator className="h-4 w-4 text-primary" /> Método contable
+            <Calculator className="h-4 w-4 text-accent-foreground" /> Método contable
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -191,19 +191,19 @@ const AccountingSettingsTab = ({ accountId }: Props) => {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Categorías contables</CardTitle>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Cada factura o gasto se asigna a una categoría que determina su cuenta del PGC.
           </p>
         </CardHeader>
         <CardContent className="grid gap-6 lg:grid-cols-2">
           <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm font-semibold">
+            <div className="flex items-center gap-2 text-xs font-semibold">
               <TrendingUp className="h-4 w-4 text-[hsl(var(--success))]" /> Ingresos
             </div>
             <CategoryList kind="INCOME" cats={incomeCats} accounts={incomeAccounts} />
           </div>
           <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm font-semibold">
+            <div className="flex items-center gap-2 text-xs font-semibold">
               <TrendingDown className="h-4 w-4 text-destructive" /> Gastos
             </div>
             <CategoryList kind="EXPENSE" cats={expenseCats} accounts={expenseAccounts} />

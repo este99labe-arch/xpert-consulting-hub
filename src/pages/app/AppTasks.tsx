@@ -166,8 +166,8 @@ const AppTasks = () => {
               key={b.id}
               type="button"
               onClick={() => setBoardId(b.id)}
-              className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                b.id === activeBoardId ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent/60"
+              className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                b.id === activeBoardId ? "bg-primary/10 text-accent-foreground" : "text-muted-foreground hover:bg-accent/60"
               }`}
             >
               <span className="h-1.5 w-1.5 rounded-full" style={{ background: b.color }} aria-hidden />
@@ -192,7 +192,7 @@ const AppTasks = () => {
           <h1 className="font-display text-[17px] font-semibold tracking-[-.01em] text-foreground">
             Tareas {showArchived && <span className="text-muted-foreground font-normal text-lg">· Archivadas</span>}
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             {metrics.total} tareas{!showArchived && metrics.overdue > 0 && (
               <> · <span className="text-destructive font-medium">{metrics.overdue} vencidas</span></>
             )}
@@ -354,7 +354,7 @@ const AppTasks = () => {
       {selected.size > 0 && (
         <Card className="bg-primary/5 border-primary/30">
           <CardContent className="p-2 flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-medium px-2">{selected.size} seleccionadas</span>
+            <span className="text-xs font-medium px-2">{selected.size} seleccionadas</span>
             <Select onValueChange={(v) => bulkUpdate({ column_id: v })}>
               <SelectTrigger className="h-8 w-[160px]"><SelectValue placeholder="Mover a columna" /></SelectTrigger>
               <SelectContent>
@@ -386,7 +386,7 @@ const AppTasks = () => {
             </div>
             <div>
               <p className="font-medium">Aún no hay tableros</p>
-              <p className="text-sm text-muted-foreground">Crea tu primer tablero para empezar a organizar tareas.</p>
+              <p className="text-xs text-muted-foreground">Crea tu primer tablero para empezar a organizar tareas.</p>
             </div>
             {isManager && (
               <Button className="gap-1.5" onClick={() => navigate("/app/settings")}>
@@ -446,7 +446,7 @@ const AppTasks = () => {
       ) : (
         <Card>
           <CardContent className="p-0 overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-border bg-muted">
                   <th className="p-2 w-8"></th>
@@ -520,7 +520,7 @@ const AppTasks = () => {
                 })}
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-muted-foreground text-sm">Sin tareas</td>
+                    <td colSpan={7} className="p-8 text-center text-muted-foreground text-xs">Sin tareas</td>
                   </tr>
                 )}
               </tbody>

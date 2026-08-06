@@ -273,7 +273,7 @@ const MatchesTab = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[550px]">
               <Card className="md:col-span-1 overflow-hidden">
-                <div className="p-3 border-b font-medium text-sm">Conexiones ({matches.length})</div>
+                <div className="p-3 border-b font-medium text-xs">Conexiones ({matches.length})</div>
                 <ScrollArea className="h-[calc(100%-42px)]">
                   {matches.map((m) => (
                     <button
@@ -286,7 +286,7 @@ const MatchesTab = () => {
                           {m.other_name.charAt(0)}
                         </div>
                         <div className="min-w-0">
-                          <div className="text-sm font-medium truncate">{m.other_name}</div>
+                          <div className="text-xs font-medium truncate">{m.other_name}</div>
                           <div className="text-xs text-muted-foreground">
                             Conectado · {new Date(m.created_at).toLocaleDateString("es-ES")}
                           </div>
@@ -306,7 +306,7 @@ const MatchesTab = () => {
                           {selectedMatch.other_name.charAt(0)}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <div className="font-medium text-sm truncate">{selectedMatch.other_name}</div>
+                          <div className="font-medium text-xs truncate">{selectedMatch.other_name}</div>
                           {(selectedMatch.other_email || selectedMatch.other_phone) && (
                             <div className="text-[11px] text-muted-foreground truncate">
                               {selectedMatch.other_email}
@@ -320,13 +320,13 @@ const MatchesTab = () => {
                     <ScrollArea className="flex-1 p-4">
                       <div className="space-y-3">
                         {chatMessages.length === 0 && (
-                          <p className="text-center text-sm text-muted-foreground py-8">¡Envía el primer mensaje!</p>
+                          <p className="text-center text-xs text-muted-foreground py-8">¡Envía el primer mensaje!</p>
                         )}
                         {chatMessages.map((msg: any) => {
                           const isMine = msg.sender_account_id === accountId;
                           return (
                             <div key={msg.id} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
-                              <div className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${isMine ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted rounded-bl-md"}`}>
+                              <div className={`max-w-[75%] rounded-2xl px-4 py-2 text-xs ${isMine ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted rounded-bl-md"}`}>
                                 {msg.content}
                                 <div className={`text-[10px] mt-1 ${isMine ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
                                   {new Date(msg.created_at).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}
@@ -351,7 +351,7 @@ const MatchesTab = () => {
                     </div>
                   </>
                 ) : (
-                  <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
+                  <div className="flex-1 flex items-center justify-center text-muted-foreground text-xs">
                     Selecciona una conexión para chatear
                   </div>
                 )}
@@ -374,7 +374,7 @@ const MatchesTab = () => {
                 <Card key={req.id} className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center text-lg font-bold text-primary">
+                      <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center text-lg font-bold text-accent-foreground">
                         {req.from_name.charAt(0)}
                       </div>
                       <div>
@@ -423,11 +423,11 @@ const MatchesTab = () => {
               {sentRequests.map((req: any) => (
                 <Card key={req.id} className="p-4">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-sm font-bold text-muted-foreground">
+                    <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground">
                       {req.to_name.charAt(0)}
                     </div>
                     <div className="flex-1">
-                      <div className="font-medium text-sm">{req.to_name}</div>
+                      <div className="font-medium text-xs">{req.to_name}</div>
                       <div className="text-xs text-muted-foreground">
                         Enviada · {new Date(req.created_at).toLocaleDateString("es-ES")}
                       </div>

@@ -25,7 +25,7 @@ const AccountingDashboard = ({
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center gap-3">
-            <TrendingUp className="h-8 w-8 shrink-0 text-primary" />
+            <TrendingUp className="h-8 w-8 shrink-0 text-accent-foreground" />
             <div className="min-w-0">
               <p className="tnum text-[22px] font-semibold tracking-[-.02em] truncate">{EUR(totalIncome)}</p>
               <p className="text-xs text-muted-foreground">Ingresos totales</p>
@@ -47,7 +47,7 @@ const AccountingDashboard = ({
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center gap-3">
-            <BarChart3 className="h-8 w-8 shrink-0 text-primary" />
+            <BarChart3 className="h-8 w-8 shrink-0 text-accent-foreground" />
             <div className="min-w-0">
               <p className={`tnum text-[22px] font-semibold tracking-[-.02em] truncate ${totalIncome - totalExpense >= 0 ? "" : "text-destructive"}`}>
                 {EUR(totalIncome - totalExpense)}

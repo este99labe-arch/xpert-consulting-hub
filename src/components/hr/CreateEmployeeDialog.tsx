@@ -231,7 +231,7 @@ const CreateEmployeeDialog = ({ open, onOpenChange }: { open: boolean; onOpenCha
               </div>
               <div className="flex items-center gap-2 pt-2">
                 <input type="checkbox" id="send-email" checked={sendEmail} onChange={(e) => setSendEmail(e.target.checked)} className="h-4 w-4 rounded border-input" />
-                <Label htmlFor="send-email" className="text-sm font-normal cursor-pointer">
+                <Label htmlFor="send-email" className="text-xs font-normal cursor-pointer">
                   Enviar email de bienvenida con las credenciales
                 </Label>
               </div>

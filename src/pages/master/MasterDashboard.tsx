@@ -121,11 +121,11 @@ const MasterDashboard = () => {
   }, [invoices, accounts]);
 
   const kpis = [
-    { label: "Cuentas totales", value: total, icon: Building2, color: "text-primary", bg: "bg-primary/10" },
+    { label: "Cuentas totales", value: total, icon: Building2, color: "text-accent-foreground", bg: "bg-primary/10" },
     { label: "Cuentas activas", value: active, icon: CheckCircle, color: "text-[hsl(var(--success))]", bg: "bg-success-foreground" },
     { label: "Nuevas este mes", value: newThisMonth, icon: Sparkles, color: "text-[hsl(var(--warning))]", bg: "bg-warning-surface" },
-    { label: "Usuarios activos", value: usersCount, icon: Users, color: "text-primary", bg: "bg-primary/10" },
-    { label: "Módulos activados", value: modulesActive, icon: Boxes, color: "text-primary", bg: "bg-primary/10" },
+    { label: "Usuarios activos", value: usersCount, icon: Users, color: "text-accent-foreground", bg: "bg-primary/10" },
+    { label: "Módulos activados", value: modulesActive, icon: Boxes, color: "text-accent-foreground", bg: "bg-primary/10" },
     { label: "Ingresos red (mes)", value: EUR0(networkRevenue), icon: TrendingUp, color: "text-[hsl(var(--success))]", bg: "bg-success-foreground" },
   ];
 
@@ -134,7 +134,7 @@ const MasterDashboard = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-[17px] font-semibold tracking-[-.01em] text-foreground">Panel Admin</h1>
-          <p className="text-sm text-muted-foreground">Resumen ejecutivo de la red XpertConsulting</p>
+          <p className="text-xs text-muted-foreground">Resumen ejecutivo de la red XpertConsulting</p>
         </div>
         <Button onClick={() => navigate("/master/clients")} variant="outline" size="sm">
           Gestionar cuentas <ExternalLink className="h-3.5 w-3.5 ml-1" />
@@ -169,7 +169,7 @@ const MasterDashboard = () => {
       <div className="grid gap-5 lg:grid-cols-2">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2"><Activity className="h-4 w-4 text-primary" />Crecimiento de cuentas (6 meses)</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2"><Activity className="h-4 w-4 text-accent-foreground" />Crecimiento de cuentas (6 meses)</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
@@ -186,11 +186,11 @@ const MasterDashboard = () => {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2"><Boxes className="h-4 w-4 text-primary" />Distribución de módulos activos</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2"><Boxes className="h-4 w-4 text-accent-foreground" />Distribución de módulos activos</CardTitle>
           </CardHeader>
           <CardContent>
             {moduleDist.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-12">Sin datos</p>
+              <p className="text-xs text-muted-foreground text-center py-12">Sin datos</p>
             ) : (
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={moduleDist} layout="vertical" margin={{ left: 10 }}>
@@ -210,18 +210,18 @@ const MasterDashboard = () => {
       <div className="grid gap-5 lg:grid-cols-2">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2"><TrendingUp className="h-4 w-4 text-primary" />Cuentas más activas (mes)</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2"><TrendingUp className="h-4 w-4 text-accent-foreground" />Cuentas más activas (mes)</CardTitle>
           </CardHeader>
           <CardContent>
             {topAccounts.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-6">Sin actividad este mes</p>
+              <p className="text-xs text-muted-foreground text-center py-6">Sin actividad este mes</p>
             ) : (
               <div className="space-y-2">
                 {topAccounts.map((a, idx) => (
                   <div key={a.id} className="flex items-center justify-between p-2 rounded-md hover:bg-muted/50">
                     <div className="flex items-center gap-3 min-w-0">
                       <span className="text-xs font-bold text-muted-foreground w-5">#{idx + 1}</span>
-                      <span className="text-sm font-medium truncate">{a.name}</span>
+                      <span className="text-xs font-medium truncate">{a.name}</span>
                     </div>
                     <Badge variant="secondary" className="shrink-0">{a.count} facturas</Badge>
                   </div>
@@ -237,12 +237,12 @@ const MasterDashboard = () => {
           </CardHeader>
           <CardContent>
             {churnRisk.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-6">Toda la red ha tenido actividad reciente 🎉</p>
+              <p className="text-xs text-muted-foreground text-center py-6">Toda la red ha tenido actividad reciente 🎉</p>
             ) : (
               <div className="space-y-2">
                 {churnRisk.map((a: any) => (
                   <div key={a.id} className="flex items-center justify-between p-2 rounded-md border border-[hsl(var(--warning))]/20 bg-[hsl(var(--warning))]/5">
-                    <span className="text-sm font-medium truncate">{a.name}</span>
+                    <span className="text-xs font-medium truncate">{a.name}</span>
                     <Badge variant="outline" className="shrink-0 text-[10px]">Sin actividad 30d</Badge>
                   </div>
                 ))}
@@ -255,14 +255,14 @@ const MasterDashboard = () => {
       {/* Recent accounts */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base flex items-center gap-2"><Building2 className="h-4 w-4 text-primary" />Últimas cuentas creadas</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2"><Building2 className="h-4 w-4 text-accent-foreground" />Últimas cuentas creadas</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
             {accounts.slice(0, 5).map((a: any) => (
               <div key={a.id} className="flex items-center justify-between p-2 rounded-md hover:bg-muted/50">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{a.name}</p>
+                  <p className="text-xs font-medium truncate">{a.name}</p>
                   <p className="text-xs text-muted-foreground">{format(parseISO(a.created_at), "dd MMM yyyy", { locale: es })}</p>
                 </div>
                 <Badge variant={a.is_active ? "default" : "secondary"}>{a.is_active ? "Activa" : "Inactiva"}</Badge>

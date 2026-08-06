@@ -266,7 +266,7 @@ const TaskDetailSheet = ({ task, columns, members, clients, onClose }: Props) =>
                 onChange={(e) => setComment(e.target.value)}
                 placeholder="Escribe un comentario..."
                 rows={2}
-                className="text-sm"
+                className="text-xs"
               />
               <Button size="icon" onClick={submitComment} disabled={!comment.trim()}>
                 <Send className="h-4 w-4" />
@@ -297,7 +297,7 @@ const TaskDetailSheet = ({ task, columns, members, clients, onClose }: Props) =>
                           )}
                         </div>
                       </div>
-                      <p className="text-sm break-words whitespace-pre-wrap mt-0.5">{c.content}</p>
+                      <p className="text-xs break-words whitespace-pre-wrap mt-0.5">{c.content}</p>
                     </div>
                   </div>
                 );

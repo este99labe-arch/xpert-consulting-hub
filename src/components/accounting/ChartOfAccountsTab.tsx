@@ -83,7 +83,7 @@ const ChartOfAccountsTab = ({
           <CardHeader className="py-3">
             <div className="flex items-center gap-2">
               <Badge className={typeColors[type]}>{typeLabels[type]}</Badge>
-              <span className="text-sm text-muted-foreground">{accounts.length} cuentas</span>
+              <span className="text-xs text-muted-foreground">{accounts.length} cuentas</span>
             </div>
           </CardHeader>
           <CardContent className="p-0">

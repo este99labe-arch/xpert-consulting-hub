@@ -232,7 +232,7 @@ const VerticalsServicesTab = ({ accountId, isManager }: Props) => {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <div className="flex items-center gap-2">
-                <Layers className="h-5 w-5 text-primary" />
+                <Layers className="h-5 w-5 text-accent-foreground" />
                 <CardTitle className="text-base">Líneas de negocio</CardTitle>
               </div>
               <CardDescription className="mt-1">
@@ -247,7 +247,7 @@ const VerticalsServicesTab = ({ accountId, isManager }: Props) => {
         </CardHeader>
 
         <CardContent className="space-y-3">
-          {isLoading && <p className="py-6 text-center text-sm text-muted-foreground">Cargando…</p>}
+          {isLoading && <p className="py-6 text-center text-xs text-muted-foreground">Cargando…</p>}
 
           {!isLoading && verticals.length === 0 && (
             <EmptyState
@@ -333,7 +333,7 @@ const VerticalsServicesTab = ({ accountId, isManager }: Props) => {
                   </div>
 
                   {list.length === 0 ? (
-                    <p className="py-4 text-center text-sm text-muted-foreground">
+                    <p className="py-4 text-center text-xs text-muted-foreground">
                       Esta vertical todavía no tiene servicios.
                     </p>
                   ) : (
@@ -342,12 +342,12 @@ const VerticalsServicesTab = ({ accountId, isManager }: Props) => {
                         <div key={s.id} className="flex items-center gap-2 rounded-md bg-card p-2.5">
                           <Package className="h-4 w-4 shrink-0 text-muted-foreground" />
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium">{s.name}</p>
+                            <p className="truncate text-xs font-medium">{s.name}</p>
                             {s.description && (
                               <p className="truncate text-xs text-muted-foreground">{s.description}</p>
                             )}
                           </div>
-                          <span className="shrink-0 text-sm tabular-nums">{EUR(s.price)}</span>
+                          <span className="shrink-0 text-xs tabular-nums">{EUR(s.price)}</span>
                           <Badge variant="secondary" className="shrink-0">
                             {BILLING_LABELS[s.billing_period] ?? s.billing_period}
                           </Badge>

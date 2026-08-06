@@ -55,7 +55,7 @@ const ModuleManager: React.FC<Props> = ({ accountId }) => {
   if (isLoading) {
     return (
       <div className="flex justify-center py-8">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <Loader2 className="h-6 w-6 animate-spin text-accent-foreground" />
       </div>
     );
   }
@@ -68,7 +68,7 @@ const ModuleManager: React.FC<Props> = ({ accountId }) => {
         return (
           <div key={mod.id} className="flex items-center justify-between rounded-md border p-3">
             <div>
-              <p className="text-sm font-medium">{mod.name}</p>
+              <p className="text-xs font-medium">{mod.name}</p>
               <p className="text-xs text-muted-foreground">{mod.description}</p>
             </div>
             <Switch

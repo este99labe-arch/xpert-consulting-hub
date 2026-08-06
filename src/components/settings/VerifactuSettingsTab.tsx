@@ -79,7 +79,7 @@ const VerifactuSettingsTab = ({ accountId, isManager }: Props) => {
     }
   };
 
-  if (isLoading) return <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+  if (isLoading) return <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-accent-foreground" /></div>;
 
   const effectiveNif = nif.trim() || (account as any)?.tax_id || "";
 
@@ -88,7 +88,7 @@ const VerifactuSettingsTab = ({ accountId, isManager }: Props) => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5 text-primary" /> VERI*FACTU
+            <ShieldCheck className="h-5 w-5 text-accent-foreground" /> VERI*FACTU
           </CardTitle>
           <CardDescription>
             Registro de facturas en la AEAT mediante el sistema Veri*Factu (remisión en tiempo real).
@@ -97,7 +97,7 @@ const VerifactuSettingsTab = ({ accountId, isManager }: Props) => {
         <CardContent className="space-y-6">
           <div className="flex items-center justify-between rounded-lg border p-4">
             <div className="space-y-0.5">
-              <Label className="text-sm font-medium">Activar VERI*FACTU</Label>
+              <Label className="text-xs font-medium">Activar VERI*FACTU</Label>
               <p className="text-xs text-muted-foreground">
                 Habilita la acción "Registrar en AEAT" en las facturas.
               </p>
@@ -134,7 +134,7 @@ const VerifactuSettingsTab = ({ accountId, isManager }: Props) => {
           </div>
 
           {env === "prod" && (
-            <div className="flex items-start gap-2 rounded-lg border border-[hsl(var(--warning))]/40 bg-warning-surface p-3 text-sm">
+            <div className="flex items-start gap-2 rounded-lg border border-[hsl(var(--warning))]/40 bg-warning-surface p-3 text-xs">
               <AlertTriangle className="h-4 w-4 mt-0.5 text-[hsl(var(--warning))] shrink-0" />
               <span>
                 Entorno de <strong>producción</strong>: los registros se enviarán de forma real e irreversible a la AEAT.
@@ -158,7 +158,7 @@ const VerifactuSettingsTab = ({ accountId, isManager }: Props) => {
             <Info className="h-4 w-4 text-muted-foreground" /> Requisitos para enviar a la AEAT
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3 text-sm">
+        <CardContent className="space-y-3 text-xs">
           <div className="flex items-center justify-between">
             <span>NIF del emisor configurado</span>
             <Badge variant={effectiveNif ? "default" : "secondary"}>{effectiveNif || "Pendiente"}</Badge>

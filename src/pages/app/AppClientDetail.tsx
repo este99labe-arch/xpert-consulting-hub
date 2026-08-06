@@ -57,7 +57,7 @@ const AppClientDetail = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-accent-foreground" />
       </div>
     );
   }
@@ -84,7 +84,7 @@ const AppClientDetail = () => {
           </Button>
           <div>
             <h1 className="font-display text-[17px] font-semibold tracking-[-.01em] text-foreground">{client.name}</h1>
-            <p className="text-sm text-muted-foreground">{client.tax_id}</p>
+            <p className="text-xs text-muted-foreground">{client.tax_id}</p>
           </div>
         </div>
         <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setShowReminder(true)}>

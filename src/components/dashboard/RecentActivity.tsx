@@ -41,7 +41,7 @@ const RecentActivity = ({ invoices }: RecentActivityProps) => {
       </CardHeader>
       <CardContent className="space-y-2">
         {invoices.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-8">Sin actividad reciente</p>
+          <p className="text-xs text-muted-foreground text-center py-8">Sin actividad reciente</p>
         ) : (
           invoices.map((inv) => {
             const st = statusMap[inv.status] || statusMap.DRAFT;
@@ -52,11 +52,11 @@ const RecentActivity = ({ invoices }: RecentActivityProps) => {
                   {isIncome ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{inv.business_clients?.name || "—"}</p>
+                  <p className="text-xs font-medium truncate">{inv.business_clients?.name || "—"}</p>
                   <p className="text-xs text-muted-foreground">{format(parseISO(inv.issue_date), "dd MMM yyyy", { locale: es })}</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className={`text-sm font-semibold ${isIncome ? "text-[hsl(var(--success))]" : "text-destructive"}`}>
+                  <p className={`text-xs font-semibold ${isIncome ? "text-[hsl(var(--success))]" : "text-destructive"}`}>
                     {isIncome ? "+" : "-"}{Number(inv.amount_total).toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
                   </p>
                   <Badge variant={st.variant} className="text-[10px] px-1.5 py-0">{st.label}</Badge>

@@ -95,7 +95,7 @@ const TaskBoardsTab = () => {
     <div className="space-y-5">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base"><LayoutGrid className="h-4 w-4 text-primary" /> Tableros de tareas</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-base"><LayoutGrid className="h-4 w-4 text-accent-foreground" /> Tableros de tareas</CardTitle>
           <CardDescription>
             Gestiona tus Kanban: nombre, prefijo de referencia incremental (DEV-001, DEV-002…), columnas,
             avisos de WhatsApp por columna y qué empleados tienen acceso a cada tablero.
@@ -103,7 +103,7 @@ const TaskBoardsTab = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           {boards.length === 0 && (
-            <p className="py-6 text-center text-sm text-muted-foreground">Aún no hay tableros. Crea el primero abajo.</p>
+            <p className="py-6 text-center text-xs text-muted-foreground">Aún no hay tableros. Crea el primero abajo.</p>
           )}
           {boards.map((b) => <BoardRow key={b.id} board={b} />)}
         </CardContent>
@@ -111,7 +111,7 @@ const TaskBoardsTab = () => {
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base"><Plus className="h-4 w-4 text-primary" /> Nuevo tablero</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-base"><Plus className="h-4 w-4 text-accent-foreground" /> Nuevo tablero</CardTitle>
           <CardDescription>Crea Kanban separados por proyecto o área (p. ej. Desarrollo, Marketing).</CardDescription>
         </CardHeader>
         <CardContent>

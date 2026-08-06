@@ -340,9 +340,9 @@ const RecurringInvoicesTab = ({ accountId, isManager }: RecurringInvoicesTabProp
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-sm text-muted-foreground py-8 text-center">Cargando...</p>
+            <p className="text-xs text-muted-foreground py-8 text-center">Cargando...</p>
           ) : recurring.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-8 text-center">No hay facturas recurrentes configuradas</p>
+            <p className="text-xs text-muted-foreground py-8 text-center">No hay facturas recurrentes configuradas</p>
           ) : (
             <>
               {/* Mobile cards */}
@@ -350,7 +350,7 @@ const RecurringInvoicesTab = ({ accountId, isManager }: RecurringInvoicesTabProp
                 {pagination.paginatedItems.map((r: any) => (
                   <Card key={r.id} className="p-4 space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="font-medium text-sm truncate">{r.business_clients?.name || "—"}</span>
+                      <span className="font-medium text-xs truncate">{r.business_clients?.name || "—"}</span>
                       <Badge variant={r.is_active ? "default" : "secondary"}>{r.is_active ? "Activa" : "Pausada"}</Badge>
                     </div>
                     <p className="text-xs text-muted-foreground truncate">{r.concept || "—"}</p>
@@ -624,7 +624,7 @@ const RecurringInvoicesTab = ({ accountId, isManager }: RecurringInvoicesTabProp
             {!hasLines && (
               <div className="flex items-center gap-2">
                 <Switch checked={vatIncluded} onCheckedChange={setVatIncluded} id="vat-incl" />
-                <Label htmlFor="vat-incl" className="text-sm text-muted-foreground">IVA incluido en el importe</Label>
+                <Label htmlFor="vat-incl" className="text-xs text-muted-foreground">IVA incluido en el importe</Label>
               </div>
             )}
 

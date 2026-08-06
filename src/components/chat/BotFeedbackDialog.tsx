@@ -79,7 +79,7 @@ const BotFeedbackDialog = ({ open, onOpenChange, message, conversationId }: Prop
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <GraduationCap className="h-5 w-5 text-primary" /> Enseñar al bot
+            <GraduationCap className="h-5 w-5 text-accent-foreground" /> Enseñar al bot
           </DialogTitle>
           <DialogDescription>
             Indica qué debería haber hecho el bot con este mensaje. La corrección se aplica a mensajes futuros parecidos.
@@ -87,7 +87,7 @@ const BotFeedbackDialog = ({ open, onOpenChange, message, conversationId }: Prop
         </DialogHeader>
 
         <div className="space-y-4">
-          <blockquote className="rounded-lg border-l-2 border-primary bg-muted/50 px-3 py-2 text-sm italic">
+          <blockquote className="rounded-lg border-l-2 border-primary bg-muted/50 px-3 py-2 text-xs italic">
             "{(message?.body || "").slice(0, 200)}"
           </blockquote>
 

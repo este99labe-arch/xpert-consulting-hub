@@ -171,7 +171,7 @@ const EmployeeDashboard = () => {
   };
 
   const kpis: MiniKpi[] = [
-    { label: "Esta semana", value: fmtH(weekMins), icon: Clock, color: "text-primary", bg: "bg-primary/10" },
+    { label: "Esta semana", value: fmtH(weekMins), icon: Clock, color: "text-accent-foreground", bg: "bg-primary/10" },
     {
       label: "Balance del mes", value: fmtH(balanceMins),
       icon: CalendarCheck,
@@ -181,7 +181,7 @@ const EmployeeDashboard = () => {
     },
     {
       label: "Vacaciones disponibles", value: `${availableVacation} días`,
-      icon: Palmtree, color: "text-primary", bg: "bg-primary/10",
+      icon: Palmtree, color: "text-accent-foreground", bg: "bg-primary/10",
       hint: `${usedVacationDays} / ${totalVacation} usados`,
     },
     {
@@ -208,7 +208,7 @@ const EmployeeDashboard = () => {
         <h1 className="font-display text-[17px] font-semibold tracking-[-.01em] text-foreground">
           {greeting}{displayName ? `, ${displayName}` : ""} 👋
         </h1>
-        <p className="text-sm text-muted-foreground first-letter:uppercase">
+        <p className="text-xs text-muted-foreground first-letter:uppercase">
           {todayLabel} · Tu jornada y lo importante de la semana
         </p>
       </motion.div>

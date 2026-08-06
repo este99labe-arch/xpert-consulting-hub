@@ -40,7 +40,7 @@ const UpcomingDuesWidget = () => {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
-            <CalendarClock className="h-4 w-4 text-primary" />
+            <CalendarClock className="h-4 w-4 text-accent-foreground" />
             Próximos vencimientos
           </CardTitle>
           <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => navigate("/app/invoices")}>
@@ -50,7 +50,7 @@ const UpcomingDuesWidget = () => {
       </CardHeader>
       <CardContent className="pt-0">
         {dues.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-6 text-center">Sin vencimientos próximos</p>
+          <p className="text-xs text-muted-foreground py-6 text-center">Sin vencimientos próximos</p>
         ) : (
           <div className="space-y-2">
             {dues.map((d: any) => {
@@ -63,11 +63,11 @@ const UpcomingDuesWidget = () => {
                   className="w-full flex items-center justify-between gap-3 p-2 rounded-md hover:bg-muted/50 transition-colors text-left"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate">{d.invoice_number || "Sin número"}</p>
+                    <p className="text-xs font-medium truncate">{d.invoice_number || "Sin número"}</p>
                     <p className="text-xs text-muted-foreground truncate">{(d as any).business_clients?.name || "—"}</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-sm font-semibold">{EUR(d.amount_total)}</p>
+                    <p className="text-xs font-semibold">{EUR(d.amount_total)}</p>
                     <Badge variant={overdue ? "destructive" : "outline"} className="text-[10px] h-4 px-1.5">
                       {overdue ? `${Math.abs(days)}d vencida` : days === 0 ? "Hoy" : `En ${days}d`}
                     </Badge>

@@ -23,7 +23,7 @@ const EmptyState = ({ icon: Icon, title, description, actionLabel, onAction, bar
         <Icon className="h-6 w-6" />
       </div>
       <p className="font-medium text-foreground">{title}</p>
-      {description && <p className="mt-1 max-w-sm text-sm">{description}</p>}
+      {description && <p className="mt-1 max-w-sm text-xs">{description}</p>}
       {actionLabel && onAction && (
         <Button size="sm" className="mt-4" onClick={onAction}>
           {actionLabel}

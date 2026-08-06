@@ -94,7 +94,7 @@ const VacationCalendarTab = () => {
                     return (
                       <div key={l.id} className={cn(
                         "truncate text-[10px]",
-                        isPending ? "text-muted-foreground italic" : "text-primary font-medium"
+                        isPending ? "text-muted-foreground italic" : "text-accent-foreground font-medium"
                       )}>
                         {email ? email.split("@")[0] : ""} {typeLabel}
                         {isPending && " ⏳"}

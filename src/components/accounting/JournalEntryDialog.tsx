@@ -51,14 +51,14 @@ const JournalEntryDialog = ({
         {/* Header */}
         <DialogHeader className="flex-shrink-0 space-y-0 border-b border-border px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-primary">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-accent-foreground">
               <BookText className="h-5 w-5" />
             </div>
             <div>
               <DialogTitle className="text-lg">
                 {editingEntry ? `Editar asiento ${editingEntry.entry_number}` : "Nuevo asiento contable"}
               </DialogTitle>
-              <p className="text-sm text-muted-foreground">Las líneas deben cuadrar (Debe = Haber)</p>
+              <p className="text-xs text-muted-foreground">Las líneas deben cuadrar (Debe = Haber)</p>
             </div>
           </div>
         </DialogHeader>
@@ -105,8 +105,8 @@ const JournalEntryDialog = ({
                     ))}
                   </SelectContent>
                 </Select>
-                <Input type="number" placeholder="0,00" value={line.debit} onChange={e => updateLine(idx, "debit", e.target.value)} className="text-sm" />
-                <Input type="number" placeholder="0,00" value={line.credit} onChange={e => updateLine(idx, "credit", e.target.value)} className="text-sm" />
+                <Input type="number" placeholder="0,00" value={line.debit} onChange={e => updateLine(idx, "debit", e.target.value)} className="text-xs" />
+                <Input type="number" placeholder="0,00" value={line.credit} onChange={e => updateLine(idx, "credit", e.target.value)} className="text-xs" />
                 <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => removeLine(idx)} disabled={entryForm.lines.length <= 2}>
                   <Trash2 className="h-4 w-4 text-muted-foreground" />
                 </Button>
@@ -117,7 +117,7 @@ const JournalEntryDialog = ({
 
         {/* Sticky footer with balance + actions */}
         <DialogFooter className="flex-shrink-0 flex-row items-center justify-between gap-3 border-t border-border bg-background px-6 py-3">
-          <div className="flex items-center gap-3 text-sm">
+          <div className="flex items-center gap-3 text-xs">
             <span className="font-mono text-muted-foreground">Debe {EUR(totalDebit)}</span>
             <span className="font-mono text-muted-foreground">Haber {EUR(totalCredit)}</span>
             <Badge variant={balanced ? "default" : "destructive"} className="font-medium">

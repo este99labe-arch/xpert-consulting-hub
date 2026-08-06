@@ -97,13 +97,13 @@ const CreateTaskFromChatDialog = ({ open, onOpenChange, conversation, messages, 
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <ListTodo className="h-5 w-5 text-primary" /> Nueva tarea desde el chat
+            <ListTodo className="h-5 w-5 text-accent-foreground" /> Nueva tarea desde el chat
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           {conversation && (
-            <div className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2 text-sm">
+            <div className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2 text-xs">
               <Building2 className="h-4 w-4 text-muted-foreground" />
               <span className="text-muted-foreground">Cliente:</span>
               <span className="font-medium">{conversation.display_name}</span>

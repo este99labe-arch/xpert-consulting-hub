@@ -24,9 +24,9 @@ interface CreateReminderDialogProps {
 }
 
 const RESOURCE_TYPES = [
-  { value: "INVOICE", label: "Factura", icon: <FileText className="h-3.5 w-3.5 text-primary" /> },
+  { value: "INVOICE", label: "Factura", icon: <FileText className="h-3.5 w-3.5 text-accent-foreground" /> },
   { value: "EXPENSE", label: "Gasto", icon: <FileText className="h-3.5 w-3.5 text-destructive" /> },
-  { value: "JOURNAL_ENTRY", label: "Asiento contable", icon: <BookOpen className="h-3.5 w-3.5 text-primary" /> },
+  { value: "JOURNAL_ENTRY", label: "Asiento contable", icon: <BookOpen className="h-3.5 w-3.5 text-accent-foreground" /> },
 ];
 
 const CreateReminderDialog = ({
@@ -135,7 +135,7 @@ const CreateReminderDialog = ({
       <DialogContent className="sm:max-w-md max-w-[calc(100vw-2rem)] max-h-[90vh] flex flex-col">
         <DialogHeader className="shrink-0">
           <DialogTitle className="flex items-center gap-2">
-            <CalendarClock className="h-5 w-5 text-primary" />
+            <CalendarClock className="h-5 w-5 text-accent-foreground" />
             Nuevo Recordatorio
           </DialogTitle>
           <DialogDescription>
@@ -152,7 +152,7 @@ const CreateReminderDialog = ({
                 placeholder="Ej: Revisar factura pendiente"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="h-8 text-sm"
+                className="h-8 text-xs"
               />
             </div>
 
@@ -164,7 +164,7 @@ const CreateReminderDialog = ({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={2}
-                className="text-sm min-h-[52px]"
+                className="text-xs min-h-[52px]"
               />
             </div>
 
@@ -176,7 +176,7 @@ const CreateReminderDialog = ({
                 value={remindAt}
                 onChange={(e) => setRemindAt(e.target.value)}
                 min={format(new Date(), "yyyy-MM-dd'T'HH:mm")}
-                className="h-8 text-sm"
+                className="h-8 text-xs"
               />
             </div>
 
@@ -205,7 +205,7 @@ const CreateReminderDialog = ({
                       setResourceLabel("");
                     }}
                   >
-                    <SelectTrigger className="w-full h-8 text-sm">
+                    <SelectTrigger className="w-full h-8 text-xs">
                       <SelectValue placeholder="Seleccionar tipo de recurso" />
                     </SelectTrigger>
                     <SelectContent>
@@ -230,7 +230,7 @@ const CreateReminderDialog = ({
                         setResourceLabel(found?.label || "");
                       }}
                     >
-                      <SelectTrigger className="w-full h-8 text-sm">
+                      <SelectTrigger className="w-full h-8 text-xs">
                         <SelectValue placeholder={loadingResources ? "Cargando..." : "Seleccionar recurso"} />
                       </SelectTrigger>
                       <SelectContent>

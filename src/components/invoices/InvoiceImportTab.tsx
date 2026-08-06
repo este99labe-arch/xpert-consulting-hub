@@ -339,7 +339,7 @@ const InvoiceImportTab = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold">Cola de importación</h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Sube facturas o gastos y la IA extraerá los datos automáticamente
           </p>
         </div>
@@ -430,7 +430,7 @@ const InvoiceImportTab = () => {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-                          <span className="text-sm truncate max-w-[200px]">{imp.file_name}</span>
+                          <span className="text-xs truncate max-w-[200px]">{imp.file_name}</span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -450,7 +450,7 @@ const InvoiceImportTab = () => {
                       </TableCell>
                       <TableCell>
                         {ext.confidence != null ? (
-                          <span className={`text-sm font-medium ${confidenceTone(ext.confidence)}`}>
+                          <span className={`text-xs font-medium ${confidenceTone(ext.confidence)}`}>
                             {ext.confidence}%
                           </span>
                         ) : "—"}

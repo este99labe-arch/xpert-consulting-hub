@@ -288,7 +288,7 @@ const AppInvoices = () => {
   const pendingQuotes = Number(kpiData?.pending_quotes || 0);
 
   const kpis = [
-    { label: "Facturado", value: `€${totalIncome.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`, icon: TrendingUp, color: "text-primary", bg: "bg-primary/10" },
+    { label: "Facturado", value: `€${totalIncome.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`, icon: TrendingUp, color: "text-accent-foreground", bg: "bg-primary/10" },
     { label: "Gastos", value: `€${totalExpenses.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`, icon: TrendingDown, color: "text-destructive", bg: "bg-destructive-surface" },
     { label: "Cobrado", value: `€${totalPaid.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`, icon: DollarSign, color: "text-[hsl(var(--success))]", bg: "bg-success-foreground" },
     { label: "Pendiente", value: `€${totalPending.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`, icon: FileText, color: "text-[hsl(var(--warning))]", bg: "bg-warning-surface" },
@@ -575,11 +575,11 @@ const AppInvoices = () => {
                   <div key={req.id} className="flex items-center justify-between rounded-lg border bg-background p-3">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-sm font-semibold">{inv?.invoice_number || "—"}</span>
+                        <span className="font-mono text-xs font-semibold">{inv?.invoice_number || "—"}</span>
                         <Badge variant="outline" className="text-xs">
                           {inv?.type === "INVOICE" ? "Factura" : "Gasto"}
                         </Badge>
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-xs text-muted-foreground">
                           €{Number(inv?.amount_total || 0).toLocaleString("es-ES", { minimumFractionDigits: 2 })}
                         </span>
                       </div>
@@ -731,10 +731,10 @@ const AppInvoices = () => {
                 {paginatedInvoices.map((inv: any) => (
                   <Card key={inv.id} className="cursor-pointer space-y-2 px-[18px] py-4 active:bg-popover" onClick={() => setEditInvoice(inv)}>
                     <div className="flex items-center justify-between">
-                      <span className="font-mono font-semibold text-sm">{inv.invoice_number || inv.id.slice(0, 8).toUpperCase()}</span>
+                      <span className="font-mono font-semibold text-xs">{inv.invoice_number || inv.id.slice(0, 8).toUpperCase()}</span>
                       <StatusBadge status={inv.status} />
                     </div>
-                    <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center justify-between text-xs">
                       <span className="truncate">{inv.business_clients?.name || "—"}</span>
                       <span className="font-mono font-semibold">€{Number(inv.amount_total).toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
                     </div>
@@ -1061,7 +1061,7 @@ const AppInvoices = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
-            <label className="text-sm font-medium">Motivo (opcional)</label>
+            <label className="text-xs font-medium">Motivo (opcional)</label>
             <Textarea
               value={deleteReason}
               onChange={(e) => setDeleteReason(e.target.value)}

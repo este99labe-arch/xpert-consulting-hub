@@ -16,7 +16,7 @@ const API_VERSION = "v1.0";
 
 const methodColors: Record<string, string> = {
   GET: "bg-success-foreground text-[hsl(var(--success))] border-[hsl(var(--success))]/30",
-  POST: "bg-primary/10 text-primary border-primary/30",
+  POST: "bg-primary/10 text-accent-foreground border-primary/30",
   PUT: "bg-warning-surface text-[hsl(var(--warning))] border-[hsl(var(--warning))]/30",
   DELETE: "bg-destructive-surface text-destructive border-destructive/30",
 };
@@ -346,9 +346,9 @@ function EndpointCard({ ep }: { ep: Endpoint }) {
     <div className="border rounded-lg p-4 space-y-2">
       <div className="flex items-center gap-2 flex-wrap">
         <MethodBadge method={ep.method} />
-        <code className="text-sm font-mono font-medium text-foreground">{ep.path}</code>
+        <code className="text-xs font-mono font-medium text-foreground">{ep.path}</code>
       </div>
-      <p className="text-sm text-muted-foreground">{ep.description}</p>
+      <p className="text-xs text-muted-foreground">{ep.description}</p>
       {ep.params && (
         <div>
           <p className="text-xs font-medium text-muted-foreground mb-1">Parámetros:</p>
@@ -667,11 +667,11 @@ const MasterApiDocs = () => {
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <BookOpen className="h-7 w-7 text-primary" />
+            <BookOpen className="h-7 w-7 text-accent-foreground" />
             <h1 className="font-display text-[17px] font-semibold tracking-[-.01em] text-foreground">API Reference</h1>
             <Badge variant="secondary" className="font-mono">{API_VERSION}</Badge>
           </div>
-          <p className="text-muted-foreground text-sm max-w-2xl">
+          <p className="text-muted-foreground text-xs max-w-2xl">
             Documentación completa de la API pública de XpertConsulting ERP. Todos los endpoints están protegidos con autenticación por API key.
           </p>
           <div className="mt-2">
@@ -699,7 +699,7 @@ const MasterApiDocs = () => {
                 </div>
               </AccordionTrigger>
               <AccordionContent className="px-4 pb-4">
-                <p className="text-sm text-muted-foreground mb-4">{section.description}</p>
+                <p className="text-xs text-muted-foreground mb-4">{section.description}</p>
                 <div className="space-y-3">
                   {section.endpoints.map((ep, j) => (
                     <EndpointCard key={j} ep={ep} />
@@ -717,7 +717,7 @@ const MasterApiDocs = () => {
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b">
                     <th className="text-left py-2 px-3 font-medium">Status</th>

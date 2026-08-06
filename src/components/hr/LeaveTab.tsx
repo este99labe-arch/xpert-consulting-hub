@@ -105,12 +105,12 @@ const LeaveTab = () => {
 
   const pagination = usePagination(requests);
 
-  if (isLoading) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+  if (isLoading) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-accent-foreground" /></div>;
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <p className="text-sm text-muted-foreground">{requests.length} solicitudes</p>
+        <p className="text-xs text-muted-foreground">{requests.length} solicitudes</p>
         <Button onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-2" />Nueva Solicitud</Button>
       </div>
 
@@ -126,7 +126,7 @@ const LeaveTab = () => {
             return (
               <Card key={r.id} className="p-4 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-sm">{typeLabel}</span>
+                  <span className="font-medium text-xs">{typeLabel}</span>
                   <Badge variant={st.variant}>{st.label}</Badge>
                 </div>
                 {isManager && <p className="text-xs text-muted-foreground">{leaveEmailMap.get(r.user_id)?.split("@")[0] || r.user_id.slice(0, 8)}</p>}

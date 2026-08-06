@@ -145,12 +145,12 @@ const CreateBusinessClientDialog = ({ open, onOpenChange, accountId, onSuccess }
         {/* Header */}
         <DialogHeader className="flex-shrink-0 space-y-0 border-b border-border px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-primary">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-accent-foreground">
               <Building2 className="h-5 w-5" />
             </div>
             <div>
               <DialogTitle className="text-lg">Nuevo cliente</DialogTitle>
-              <p className="text-sm text-muted-foreground">Completa los datos del cliente y su contacto principal</p>
+              <p className="text-xs text-muted-foreground">Completa los datos del cliente y su contacto principal</p>
             </div>
           </div>
         </DialogHeader>

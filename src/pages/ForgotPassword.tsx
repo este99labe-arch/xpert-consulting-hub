@@ -54,8 +54,8 @@ const ForgotPassword = () => {
         <CardContent className="pt-4">
           {sent ? (
             <div className="flex flex-col items-center gap-4 py-4">
-              <CheckCircle2 className="h-12 w-12 text-primary" />
-              <p className="text-sm text-muted-foreground text-center">
+              <CheckCircle2 className="h-12 w-12 text-accent-foreground" />
+              <p className="text-xs text-muted-foreground text-center">
                 Si existe una cuenta con <strong>{email}</strong>, recibirás un correo con instrucciones para restablecer tu contraseña.
               </p>
               <Link to="/login">
@@ -91,7 +91,7 @@ const ForgotPassword = () => {
                 Enviar enlace
               </Button>
               <div className="text-center">
-                <Link to="/login" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/login" className="text-xs text-muted-foreground hover:text-accent-foreground transition-colors">
                   <ArrowLeft className="h-3 w-3 inline mr-1" />
                   Volver al login
                 </Link>

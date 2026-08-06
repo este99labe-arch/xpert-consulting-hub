@@ -187,7 +187,7 @@ const MasterSettings = () => {
 
           {usersLoading ? (
             <div className="flex justify-center py-10">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <Loader2 className="h-6 w-6 animate-spin text-accent-foreground" />
             </div>
           ) : (
             <>
@@ -196,12 +196,12 @@ const MasterSettings = () => {
               {filteredUsers.map((u: any) => (
                 <Card key={u.user_id} className="p-4 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="font-medium text-sm truncate">{u.email}</span>
+                    <span className="font-medium text-xs truncate">{u.email}</span>
                     <Badge variant={u.is_active ? "default" : "outline"} className="shrink-0">
                       {u.is_active ? "Activo" : "Inactivo"}
                     </Badge>
                   </div>
-                  <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">{u.account_name}</span>
                     <Badge variant={u.role === "MASTER_ADMIN" ? "default" : "secondary"}>
                       <ShieldCheck className="h-3 w-3 mr-1" />{u.role}
@@ -280,15 +280,15 @@ const MasterSettings = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-muted-foreground text-xs">Email administrador</Label>
-                  <p className="text-sm font-medium">{user?.email}</p>
+                  <p className="text-xs font-medium">{user?.email}</p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground text-xs">Total cuentas cliente</Label>
-                  <p className="text-sm font-medium">{clientAccounts.length}</p>
+                  <p className="text-xs font-medium">{clientAccounts.length}</p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground text-xs">Total usuarios</Label>
-                  <p className="text-sm font-medium">{users.length}</p>
+                  <p className="text-xs font-medium">{users.length}</p>
                 </div>
               </div>
             </CardContent>
@@ -300,7 +300,7 @@ const MasterSettings = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Lock className="h-5 w-5 text-primary" />
+                <Lock className="h-5 w-5 text-accent-foreground" />
                 Cifrado AES-256 de datos personales (RGPD)
               </CardTitle>
               <CardDescription>
@@ -308,7 +308,7 @@ const MasterSettings = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="rounded-md border bg-muted/30 p-4 space-y-2 text-sm">
+              <div className="rounded-md border bg-muted/30 p-4 space-y-2 text-xs">
                 <p className="font-medium">¿Qué hace este botón?</p>
                 <ul className="list-disc list-inside space-y-1 text-muted-foreground text-xs">
                   <li>Re-cifra todos los datos PII existentes con tu clave maestra real.</li>
@@ -328,7 +328,7 @@ const MasterSettings = () => {
 
               {encryptionResult?.success && (
                 <div className="rounded-md border border-primary/30 bg-muted p-4 space-y-2">
-                  <div className="flex items-center gap-2 text-primary font-medium">
+                  <div className="flex items-center gap-2 text-accent-foreground font-medium">
                     <CheckCircle2 className="h-4 w-4" />
                     Cifrado inicializado correctamente
                   </div>
@@ -379,7 +379,7 @@ const MasterSettings = () => {
           </DialogHeader>
           <form onSubmit={handleCreateUser} className="space-y-4">
             {createError && (
-              <div className="flex items-center gap-2 rounded-md bg-destructive-surface p-3 text-sm text-destructive">
+              <div className="flex items-center gap-2 rounded-md bg-destructive-surface p-3 text-xs text-destructive">
                 <AlertCircle className="h-4 w-4 shrink-0" /> {createError}
               </div>
             )}

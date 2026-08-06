@@ -81,8 +81,8 @@ const ResetPassword = () => {
         <CardContent className="pt-4">
           {success ? (
             <div className="flex flex-col items-center gap-4 py-4">
-              <CheckCircle2 className="h-12 w-12 text-primary" />
-              <p className="text-sm text-muted-foreground text-center">
+              <CheckCircle2 className="h-12 w-12 text-accent-foreground" />
+              <p className="text-xs text-muted-foreground text-center">
                 Tu contraseña ha sido actualizada correctamente. Redirigiendo al login...
               </p>
             </div>
@@ -95,7 +95,7 @@ const ResetPassword = () => {
                 </div>
               )}
               {!isRecovery && (
-                <div className="flex items-center gap-2 rounded-lg bg-muted p-3 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2 rounded-lg bg-muted p-3 text-xs text-muted-foreground">
                   <AlertCircle className="h-4 w-4 shrink-0" />
                   No se detectó un enlace de recuperación válido. Asegúrate de usar el enlace del correo.
                 </div>

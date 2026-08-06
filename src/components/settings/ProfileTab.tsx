@@ -128,7 +128,7 @@ const ProfileTab = ({ userId, accountId, isManager }: { userId: string; accountI
     }
   };
 
-  if (isLoading) return <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+  if (isLoading) return <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-accent-foreground" /></div>;
 
   if (!profile) {
     return (
@@ -208,7 +208,7 @@ const ProfileTab = ({ userId, accountId, isManager }: { userId: string; accountI
                         type={field.includes("date") ? "date" : "text"}
                         value={editValue}
                         onChange={(e) => setEditValue(e.target.value)}
-                        className="h-8 text-sm"
+                        className="h-8 text-xs"
                         autoFocus
                       />
                       <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => handleSaveField(field)} disabled={saving}>
@@ -220,9 +220,9 @@ const ProfileTab = ({ userId, accountId, isManager }: { userId: string; accountI
                     </div>
                   ) : (
                     <p
-                      className={`text-sm font-medium transition-colors ${
+                      className={`text-xs font-medium transition-colors ${
                         canEdit && !hasPending && !(isSensitive && isSensitiveLocked)
-                          ? "cursor-pointer hover:text-primary"
+                          ? "cursor-pointer hover:text-accent-foreground"
                           : "cursor-default"
                       } ${hasPending ? "opacity-60" : ""}`}
                       onClick={() => {

@@ -126,7 +126,7 @@ const TodayAttendanceWidget = () => {
     return (
       <Card>
         <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          <Loader2 className="h-5 w-5 animate-spin text-accent-foreground" />
         </CardContent>
       </Card>
     );
@@ -183,7 +183,7 @@ const TodayAttendanceWidget = () => {
           </div>
 
           {/* Sessions summary */}
-          <div className="flex flex-wrap items-center gap-3 mt-2 text-sm">
+          <div className="flex flex-wrap items-center gap-3 mt-2 text-xs">
             {todayRecords.map((r) => (
               <div key={r.id} className="flex items-center gap-1 text-muted-foreground text-xs">
                 <LogIn className="h-3 w-3" />
@@ -201,7 +201,7 @@ const TodayAttendanceWidget = () => {
               <Badge variant="default" className="text-[10px] animate-pulse">En curso</Badge>
             )}
             {allCompleted && todayRecords.length > 0 && (
-              <Badge variant="outline" className="text-[10px] text-primary border-primary">Completado</Badge>
+              <Badge variant="outline" className="text-[10px] text-accent-foreground border-primary">Completado</Badge>
             )}
           </div>
 
@@ -226,7 +226,7 @@ const TodayAttendanceWidget = () => {
               </Button>
             )}
             {allCompleted && todayRecords.length > 0 && (
-              <div className="text-center text-sm text-muted-foreground mt-2">
+              <div className="text-center text-xs text-muted-foreground mt-2">
                 {todayRecords.length} sesión{todayRecords.length > 1 ? "es" : ""} · {Math.round(progress)}% completado
               </div>
             )}

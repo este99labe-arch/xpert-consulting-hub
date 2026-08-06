@@ -179,7 +179,7 @@ const ImportProductsDialog = ({ open, onOpenChange, accountId, userId, onImporte
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <FileSpreadsheet className="h-5 w-5 text-primary" />
+              <FileSpreadsheet className="h-5 w-5 text-accent-foreground" />
               Importar productos
             </DialogTitle>
             <DialogDescription>
@@ -190,8 +190,8 @@ const ImportProductsDialog = ({ open, onOpenChange, accountId, userId, onImporte
             <div className="rounded-lg border-2 border-dashed border-border bg-muted/30 p-8 text-center">
               <Upload className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
               <Label htmlFor="import-file" className="cursor-pointer">
-                <span className="text-sm font-medium text-primary hover:underline">Selecciona un archivo</span>
-                <span className="text-sm text-muted-foreground"> o arrástralo aquí</span>
+                <span className="text-xs font-medium text-accent-foreground hover:underline">Selecciona un archivo</span>
+                <span className="text-xs text-muted-foreground"> o arrástralo aquí</span>
                 <Input
                   id="import-file"
                   type="file"

@@ -275,7 +275,7 @@ const InvoicePaymentsPanel = ({ invoice, onStatusChanged }: Props) => {
       {payments.length > 0 && (
         <div className="space-y-1.5">
           {payments.map((p: any) => (
-            <div key={p.id} className="flex items-center justify-between rounded border bg-background px-3 py-2 text-sm">
+            <div key={p.id} className="flex items-center justify-between rounded border bg-background px-3 py-2 text-xs">
               <div className="flex items-center gap-3">
                 <span className="font-mono font-semibold text-foreground">
                   €{Number(p.amount).toLocaleString("es-ES", { minimumFractionDigits: 2 })}

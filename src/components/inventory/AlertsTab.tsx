@@ -22,7 +22,7 @@ const AlertsTab = ({ lowStockProducts, isManager, onQuickOrder }: AlertsTabProps
         {lowStockProducts.sort((a, b) => (a.current_stock - a.min_stock) - (b.current_stock - b.min_stock)).map(p => (
           <Card key={p.id} className="p-4 space-y-2 border-destructive/20 bg-destructive/5">
             <div className="flex items-center justify-between">
-              <span className="font-medium text-sm">{p.name}</span>
+              <span className="font-medium text-xs">{p.name}</span>
               <span className="font-mono text-xs text-muted-foreground">{p.sku}</span>
             </div>
             <div className="grid grid-cols-3 gap-2 text-center text-xs">

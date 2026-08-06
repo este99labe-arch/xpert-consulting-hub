@@ -423,7 +423,7 @@ const AppChat = () => {
       <aside className="flex w-full max-w-xs flex-col border-r border-border">
         <div className="border-b border-border p-3">
           <div className="mb-2 flex items-center gap-2">
-            <MessageCircle className="h-5 w-5 text-primary" />
+            <MessageCircle className="h-5 w-5 text-accent-foreground" />
             <h1 className="text-base font-semibold">Chat</h1>
             <div className="ml-auto flex items-center gap-1.5">
               {waConfig?.display_phone && (
@@ -434,7 +434,7 @@ const AppChat = () => {
                 onClick={() => setSoundEnabled((s) => !s)}
                 title={soundEnabled ? "Silenciar avisos de mensajes" : "Activar avisos con sonido"}
               >
-                {soundEnabled ? <Bell className="h-4 w-4 text-primary" /> : <BellOff className="h-4 w-4 text-muted-foreground" />}
+                {soundEnabled ? <Bell className="h-4 w-4 text-accent-foreground" /> : <BellOff className="h-4 w-4 text-muted-foreground" />}
               </Button>
             </div>
           </div>
@@ -469,9 +469,9 @@ const AppChat = () => {
         </div>
         <div className="flex-1 overflow-y-auto scrollbar-hide">
           {isLoading ? (
-            <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+            <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-accent-foreground" /></div>
           ) : filtered.length === 0 ? (
-            <div className="p-6 text-center text-sm text-muted-foreground">
+            <div className="p-6 text-center text-xs text-muted-foreground">
               {conversations.length === 0 ? "Aún no hay conversaciones." : "Sin resultados."}
             </div>
           ) : (
@@ -484,11 +484,11 @@ const AppChat = () => {
                   className={`flex w-full items-start gap-3 border-b border-border/60 p-3 text-left transition-colors hover:bg-muted/50 ${selectedId === c.id ? "bg-muted" : ""}`}
                 >
                   <Avatar className="h-10 w-10 shrink-0">
-                    <AvatarFallback className="bg-primary/10 text-xs font-medium text-primary">{initials(displayName(c))}</AvatarFallback>
+                    <AvatarFallback className="bg-primary/10 text-xs font-medium text-accent-foreground">{initials(displayName(c))}</AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="truncate text-sm font-medium">{displayName(c)}</span>
+                      <span className="truncate text-xs font-medium">{displayName(c)}</span>
                       <span className="shrink-0 text-[11px] text-muted-foreground">{timeLabel(c.last_message_at)}</span>
                     </div>
                     <p className="truncate text-xs text-muted-foreground">
@@ -498,14 +498,14 @@ const AppChat = () => {
                       <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${st.className}`}>{st.label}</span>
                       {c.business_clients?.name && <Building2 className="h-3 w-3 text-muted-foreground" />}
                       {taskConvSet.has(c.id) && (
-                        <span title="Tarea creada desde este chat"><ListTodo className="h-3 w-3 text-primary" /></span>
+                        <span title="Tarea creada desde este chat"><ListTodo className="h-3 w-3 text-accent-foreground" /></span>
                       )}
                       {/* Empleados asignados (discreto; el manager siempre ve todo) */}
                       {(membersByConv.get(c.id) || []).length > 0 && (
                         <span className="flex -space-x-1.5" title={`Asignado a: ${(membersByConv.get(c.id) || []).map(nameOf).join(", ")}`}>
                           {(membersByConv.get(c.id) || []).slice(0, 3).map((uid) => (
                             <Avatar key={uid} className="h-4 w-4 ring-1 ring-background">
-                              <AvatarFallback className="bg-primary/10 text-[7px] font-medium text-primary">{initials(nameOf(uid))}</AvatarFallback>
+                              <AvatarFallback className="bg-primary/10 text-[7px] font-medium text-accent-foreground">{initials(nameOf(uid))}</AvatarFallback>
                             </Avatar>
                           ))}
                         </span>
@@ -527,7 +527,7 @@ const AppChat = () => {
         {!selected ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center text-muted-foreground">
             <MessageCircle className="h-12 w-12 opacity-30" />
-            <p className="text-sm">Selecciona una conversación</p>
+            <p className="text-xs">Selecciona una conversación</p>
             {!waConfig?.is_enabled && (
               <div className="mt-2 flex items-center gap-2 rounded-control border border-warning-border bg-warning-surface px-3 py-2 text-[11.5px] text-warning-text">
                 <ShieldAlert className="h-4 w-4" />
@@ -541,10 +541,10 @@ const AppChat = () => {
             {/* Cabecera del hilo */}
             <header className="flex items-center gap-3 border-b border-border bg-background px-4 py-3">
               <Avatar className="h-9 w-9">
-                <AvatarFallback className="bg-primary/10 text-xs font-medium text-primary">{initials(displayName(selected))}</AvatarFallback>
+                <AvatarFallback className="bg-primary/10 text-xs font-medium text-accent-foreground">{initials(displayName(selected))}</AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold">{displayName(selected)}</p>
+                <p className="truncate text-xs font-semibold">{displayName(selected)}</p>
                 <p className="truncate text-xs text-muted-foreground">
                   {selected.contact_phone}
                   {selected.client_contacts?.name && ` · ${selected.client_contacts.name}`}
@@ -571,7 +571,7 @@ const AppChat = () => {
                             const m = team.find((t) => t.user_id === uid);
                             return (
                               <Avatar key={uid} className="h-5 w-5 ring-2 ring-background">
-                                <AvatarFallback className="bg-primary/10 text-[8px] font-medium text-primary">{initials(m?.name || "?")}</AvatarFallback>
+                                <AvatarFallback className="bg-primary/10 text-[8px] font-medium text-accent-foreground">{initials(m?.name || "?")}</AvatarFallback>
                               </Avatar>
                             );
                           })}
@@ -692,7 +692,7 @@ const AppChat = () => {
                     {!out && !selectMode && (m.body || "").trim() && (
                       <button
                         type="button"
-                        className="shrink-0 rounded-md p-1 text-muted-foreground/60 opacity-0 transition-opacity hover:bg-muted hover:text-primary group-hover:opacity-100"
+                        className="shrink-0 rounded-md p-1 text-muted-foreground/60 opacity-0 transition-opacity hover:bg-muted hover:text-accent-foreground group-hover:opacity-100"
                         title="Enseñar al bot: corregir lo que hizo con este mensaje"
                         onClick={() => setFeedbackMsg(m)}
                       >
@@ -703,13 +703,13 @@ const AppChat = () => {
                 );
               })}
               {messages.length === 0 && (
-                <p className="py-10 text-center text-sm text-muted-foreground">Sin mensajes todavía.</p>
+                <p className="py-10 text-center text-xs text-muted-foreground">Sin mensajes todavía.</p>
               )}
             </div>
 
             {/* Ventana de 24h cerrada: solo plantillas aprobadas */}
             {!windowOpen && (
-              <div className="flex flex-wrap items-center gap-2 border-t border-border bg-warning-surface px-4 py-2.5 text-sm">
+              <div className="flex flex-wrap items-center gap-2 border-t border-border bg-warning-surface px-4 py-2.5 text-xs">
                 <Clock3 className="h-4 w-4 shrink-0 text-[hsl(var(--warning))]" />
                 <span className="flex-1 text-muted-foreground">
                   Han pasado más de 24 h desde el último mensaje del contacto. WhatsApp solo permite reabrir con una plantilla aprobada.
@@ -728,7 +728,7 @@ const AppChat = () => {
             {/* Barra de selección para crear tarea */}
             {selectMode && (
               <div className="flex items-center gap-2 border-t border-border bg-accent px-4 py-2.5 text-xs">
-                <ListTodo className="h-4 w-4 shrink-0 text-primary" />
+                <ListTodo className="h-4 w-4 shrink-0 text-accent-foreground" />
                 <span className="flex-1 text-muted-foreground">
                   {picked.size > 0 ? `${picked.size} mensaje${picked.size > 1 ? "s" : ""} seleccionado${picked.size > 1 ? "s" : ""}` : "Marca los mensajes del cliente para generar una tarea"}
                 </span>
@@ -788,9 +788,9 @@ const AppChat = () => {
       <Dialog open={linkOpen} onOpenChange={setLinkOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><Link2 className="h-5 w-5 text-primary" /> Vincular cliente</DialogTitle>
+            <DialogTitle className="flex items-center gap-2"><Link2 className="h-5 w-5 text-accent-foreground" /> Vincular cliente</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Este contacto no coincide con ningún cliente registrado. Elige a qué cliente pertenece: la conversación
             y sus próximas tareas quedarán asociadas a su ficha.
           </p>

@@ -76,7 +76,7 @@ const EmployeeModulesTab: React.FC<Props> = ({ accountId }) => {
   });
 
   if (loadingEmployees) {
-    return <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+    return <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-accent-foreground" /></div>;
   }
 
   return (
@@ -91,7 +91,7 @@ const EmployeeModulesTab: React.FC<Props> = ({ accountId }) => {
         </CardHeader>
         <CardContent className="p-2">
           {employees.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-6">Sin empleados activos</p>
+            <p className="text-xs text-muted-foreground text-center py-6">Sin empleados activos</p>
           ) : (
             <div className="space-y-1">
               {employees.map((e: any) => {
@@ -101,11 +101,11 @@ const EmployeeModulesTab: React.FC<Props> = ({ accountId }) => {
                     key={e.user_id}
                     onClick={() => setSelectedUserId(e.user_id)}
                     className={`w-full flex items-center gap-2 p-2 rounded-md transition-colors text-left ${
-                      isSel ? "bg-primary/10 text-primary" : "hover:bg-muted"
+                      isSel ? "bg-primary/10 text-accent-foreground" : "hover:bg-muted"
                     }`}
                   >
                     <Avatar className="h-7 w-7"><AvatarFallback className="text-xs">{e.email?.charAt(0).toUpperCase()}</AvatarFallback></Avatar>
-                    <span className="text-sm truncate flex-1">{e.email}</span>
+                    <span className="text-xs truncate flex-1">{e.email}</span>
                   </button>
                 );
               })}
@@ -126,12 +126,12 @@ const EmployeeModulesTab: React.FC<Props> = ({ accountId }) => {
         </CardHeader>
         <CardContent>
           {!selectedUserId ? (
-            <div className="text-center text-muted-foreground py-12 text-sm">
+            <div className="text-center text-muted-foreground py-12 text-xs">
               <UserCog className="h-10 w-10 mx-auto mb-2 opacity-30" />
               Selecciona un empleado de la lista
             </div>
           ) : accountModules.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-6">
+            <p className="text-xs text-muted-foreground text-center py-6">
               Esta cuenta no tiene módulos activos. Pide al administrador que los habilite.
             </p>
           ) : (
@@ -145,7 +145,7 @@ const EmployeeModulesTab: React.FC<Props> = ({ accountId }) => {
                   <div key={mod.id} className="flex items-center justify-between rounded-md border p-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium">{mod.name}</p>
+                        <p className="text-xs font-medium">{mod.name}</p>
                         {isCore && <Badge variant="outline" className="text-[10px]">Siempre visible</Badge>}
                       </div>
                       {mod.description && <p className="text-xs text-muted-foreground mt-0.5">{mod.description}</p>}

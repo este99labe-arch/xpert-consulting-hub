@@ -72,7 +72,7 @@ const TeamAttendanceView = ({
             <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3">
               <Building2 className="h-5 w-5" />
             </div>
-            <p className="text-sm">Selecciona un cliente para ver la asistencia de su equipo</p>
+            <p className="text-xs">Selecciona un cliente para ver la asistencia de su equipo</p>
           </CardContent>
         </Card>
       ) : (
@@ -81,7 +81,7 @@ const TeamAttendanceView = ({
           {pendingDeleteRequests.length > 0 && (
             <Card tone="warning">
               <CardContent className="p-4">
-                <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                <h3 className="text-xs font-semibold mb-3 flex items-center gap-2">
                   <Badge variant="warning">{pendingDeleteRequests.length}</Badge>
                   Solicitudes de eliminación pendientes
                 </h3>
@@ -91,14 +91,14 @@ const TeamAttendanceView = ({
                     return (
                       <div key={req.id} className="flex items-center justify-between bg-card rounded-lg border p-3">
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium">{info?.email || "Empleado"}</p>
+                          <p className="text-xs font-medium">{info?.email || "Empleado"}</p>
                           <p className="text-xs text-muted-foreground">
                             {info ? `${info.work_date} · ${info.check_in ? format(new Date(info.check_in), "HH:mm") : "—"} → ${info.check_out ? format(new Date(info.check_out), "HH:mm") : "en curso"}` : "Registro no encontrado"}
                           </p>
                           <p className="text-xs text-muted-foreground mt-0.5">Motivo: {req.reason}</p>
                         </div>
                         <div className="flex items-center gap-1.5 ml-3">
-                          <Button size="sm" variant="outline" className="h-7 text-xs gap-1 text-primary border-primary/30 hover:bg-primary/10"
+                          <Button size="sm" variant="outline" className="h-7 text-xs gap-1 text-accent-foreground border-primary/30 hover:bg-primary/10"
                             onClick={() => onApproveDelete(req.id, req.attendance_id)}>
                             <Check className="h-3 w-3" /> Aprobar
                           </Button>
@@ -117,7 +117,7 @@ const TeamAttendanceView = ({
 
           {/* Header with export */}
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold capitalize">
+            <h3 className="text-xs font-semibold capitalize">
               {format(selectedMonth, "MMMM yyyy", { locale: es })}
             </h3>
             <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={onExport} disabled={teamRecordsCount === 0}>
@@ -126,14 +126,14 @@ const TeamAttendanceView = ({
           </div>
 
           {teamLoading ? (
-            <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+            <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-accent-foreground" /></div>
           ) : teamSummary.length === 0 ? (
             <Card className="border">
               <CardContent className="flex flex-col items-center justify-center py-16 text-muted-foreground">
                 <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3">
                   <Users className="h-5 w-5" />
                 </div>
-                <p className="text-sm">No hay registros de asistencia para este mes</p>
+                <p className="text-xs">No hay registros de asistencia para este mes</p>
               </CardContent>
             </Card>
           ) : (
@@ -146,20 +146,20 @@ const TeamAttendanceView = ({
                     <div className="h-7 w-7 rounded-full bg-[hsl(var(--border-strong))] flex items-center justify-center text-[11px] font-semibold text-accent-foreground">
                       {emp.email.charAt(0).toUpperCase()}
                     </div>
-                    <span className="text-sm font-medium truncate">{emp.email}</span>
+                    <span className="text-xs font-medium truncate">{emp.email}</span>
                   </div>
                   <div className="grid grid-cols-3 gap-2 text-center">
                     <div>
                       <p className="text-[10px] text-muted-foreground uppercase">Días</p>
-                      <p className="text-sm font-medium tabular-nums">{emp.days}</p>
+                      <p className="text-xs font-medium tabular-nums">{emp.days}</p>
                     </div>
                     <div>
                       <p className="text-[10px] text-muted-foreground uppercase">Total</p>
-                      <p className="text-sm font-medium tabular-nums">{formatMinutes(emp.worked)}</p>
+                      <p className="text-xs font-medium tabular-nums">{formatMinutes(emp.worked)}</p>
                     </div>
                     <div>
                       <p className="text-[10px] text-muted-foreground uppercase">Media</p>
-                      <p className="text-sm text-muted-foreground tabular-nums">
+                      <p className="text-xs text-muted-foreground tabular-nums">
                         {emp.days > 0 ? formatMinutes(Math.round(emp.worked / emp.days)) : "—"}
                       </p>
                     </div>
@@ -187,7 +187,7 @@ const TeamAttendanceView = ({
                           <div className="h-7 w-7 rounded-full bg-[hsl(var(--border-strong))] flex items-center justify-center text-[11px] font-semibold text-accent-foreground">
                             {emp.email.charAt(0).toUpperCase()}
                           </div>
-                          <span className="text-sm font-medium">{emp.email}</span>
+                          <span className="text-xs font-medium">{emp.email}</span>
                         </div>
                       </TableCell>
                       <TableCell className="py-3 text-xs tabular-nums">{emp.days}</TableCell>

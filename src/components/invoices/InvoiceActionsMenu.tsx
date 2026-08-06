@@ -68,7 +68,7 @@ const InvoiceActionsMenu = ({
                     onClick={() => s !== status && onChangeStatus!(s)}
                     disabled={s === status}
                   >
-                    <Check className={`h-4 w-4 mr-2 ${s === status ? "opacity-100 text-primary" : "opacity-0"}`} />
+                    <Check className={`h-4 w-4 mr-2 ${s === status ? "opacity-100 text-accent-foreground" : "opacity-0"}`} />
                     {STATUS_LABELS[s] ?? s}
                   </DropdownMenuItem>
                 ))}
@@ -85,7 +85,7 @@ const InvoiceActionsMenu = ({
             )}
             {onConvertToInvoice && status !== "INVOICED" && (
               <DropdownMenuItem onClick={onConvertToInvoice}>
-                <FileText className="h-4 w-4 mr-2 text-primary" />
+                <FileText className="h-4 w-4 mr-2 text-accent-foreground" />
                 Convertir en factura
               </DropdownMenuItem>
             )}

@@ -489,8 +489,8 @@ const BankReconciliationTab = () => {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">% Conciliado</CardTitle>
-            <Percent className="h-5 w-5 text-primary" />
+            <CardTitle className="text-xs font-medium text-muted-foreground">% Conciliado</CardTitle>
+            <Percent className="h-5 w-5 text-accent-foreground" />
           </CardHeader>
           <CardContent>
             <p className="tnum text-[22px] font-semibold tracking-[-.02em] text-foreground">{kpis?.percentReconciled ?? 0}%</p>
@@ -499,8 +499,8 @@ const BankReconciliationTab = () => {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Importe conciliado</CardTitle>
-            <CheckCircle2 className="h-5 w-5 text-primary" />
+            <CardTitle className="text-xs font-medium text-muted-foreground">Importe conciliado</CardTitle>
+            <CheckCircle2 className="h-5 w-5 text-accent-foreground" />
           </CardHeader>
           <CardContent>
             <p className="tnum text-[22px] font-semibold tracking-[-.02em] text-foreground">{fmtAmount(kpis?.reconciledAmount ?? 0)}</p>
@@ -508,7 +508,7 @@ const BankReconciliationTab = () => {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Importe pendiente</CardTitle>
+            <CardTitle className="text-xs font-medium text-muted-foreground">Importe pendiente</CardTitle>
             <Clock className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -517,7 +517,7 @@ const BankReconciliationTab = () => {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Pendientes</CardTitle>
+            <CardTitle className="text-xs font-medium text-muted-foreground">Pendientes</CardTitle>
             <AlertTriangle className="h-5 w-5 text-[hsl(var(--warning))]" />
           </CardHeader>
           <CardContent>
@@ -631,14 +631,14 @@ const BankReconciliationTab = () => {
                         {format(parseISO(tx.transaction_date), "dd/MM/yyyy")}
                       </TableCell>
                       <TableCell>
-                        <div className="max-w-[250px] truncate text-sm" title={tx.description}>
+                        <div className="max-w-[250px] truncate text-xs" title={tx.description}>
                           {tx.description || "—"}
                         </div>
                         {tx.reference && (
                           <div className="text-xs text-muted-foreground">Ref: {tx.reference}</div>
                         )}
                       </TableCell>
-                      <TableCell className={`text-right font-mono text-sm ${isIncome ? "text-primary" : "text-destructive"}`}>
+                      <TableCell className={`text-right font-mono text-xs ${isIncome ? "text-accent-foreground" : "text-destructive"}`}>
                         {isIncome ? "+" : ""}{fmtAmount(Number(tx.amount))}
                       </TableCell>
                       <TableCell>
@@ -654,7 +654,7 @@ const BankReconciliationTab = () => {
                       </TableCell>
                       <TableCell>
                         {inv ? (
-                          <div className="text-sm">
+                          <div className="text-xs">
                             <span className="font-mono font-medium">{inv.invoice_number}</span>
                             <span className="text-xs text-muted-foreground ml-1">
                               ({inv.type === "INVOICE" ? "Factura" : "Gasto"})
@@ -717,7 +717,7 @@ const BankReconciliationTab = () => {
             <div className="space-y-4">
               {/* Skip rows control */}
               <div className="flex items-center gap-3 p-3 rounded-md bg-muted/50 border">
-                <label className="text-sm font-medium whitespace-nowrap">Filas a saltar (cabecera del banco):</label>
+                <label className="text-xs font-medium whitespace-nowrap">Filas a saltar (cabecera del banco):</label>
                 <Input
                   type="number"
                   min={0}
@@ -748,7 +748,7 @@ const BankReconciliationTab = () => {
                   { key: "reference", label: "Referencia" },
                 ].map(({ key, label }) => (
                   <div key={key}>
-                    <label className="text-sm font-medium text-foreground">{label}</label>
+                    <label className="text-xs font-medium text-foreground">{label}</label>
                     <Select
                       value={columnMapping[key] || "__none__"}
                       onValueChange={(v) =>
@@ -833,7 +833,7 @@ const BankReconciliationTab = () => {
                   >
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-sm font-semibold">{inv.invoice_number}</span>
+                        <span className="font-mono text-xs font-semibold">{inv.invoice_number}</span>
                         <Badge variant="outline" className="text-xs">
                           {inv.type === "INVOICE" ? "Factura" : "Gasto"}
                         </Badge>
@@ -846,7 +846,7 @@ const BankReconciliationTab = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-mono text-sm font-semibold">{fmtAmount(Number(inv.amount_total))}</div>
+                      <div className="font-mono text-xs font-semibold">{fmtAmount(Number(inv.amount_total))}</div>
                       {amountDiff < 0.02 ? (
                         <span className="text-xs text-[hsl(var(--success))]">✓ Importe coincide</span>
                       ) : (
@@ -857,7 +857,7 @@ const BankReconciliationTab = () => {
                 );
               })}
               {matchableInvoices.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-4">No se encontraron facturas</p>
+                <p className="text-xs text-muted-foreground text-center py-4">No se encontraron facturas</p>
               )}
             </div>
           </div>

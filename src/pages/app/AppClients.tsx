@@ -215,7 +215,7 @@ const AppClients = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-accent-foreground" />
       </div>
     );
   }
@@ -335,7 +335,7 @@ const AppClients = () => {
             <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
               <Search className="h-10 w-10 mb-3" />
               <p className="text-lg font-medium">Sin resultados</p>
-              <p className="text-sm mt-1">No se encontraron clientes con los filtros aplicados</p>
+              <p className="text-xs mt-1">No se encontraron clientes con los filtros aplicados</p>
               <Button variant="outline" className="mt-4" onClick={clearFilters}>
                 Limpiar filtros
               </Button>
@@ -374,7 +374,7 @@ const AppClients = () => {
                                   </AvatarFallback>
                                 </Avatar>
                                 <div className="min-w-0">
-                                  <p className="font-medium truncate group-hover:text-primary transition-colors">
+                                  <p className="font-medium truncate group-hover:text-accent-foreground transition-colors">
                                     {client.name}
                                   </p>
                                   <p className="text-xs text-muted-foreground sm:hidden truncate">

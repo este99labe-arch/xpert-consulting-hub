@@ -163,7 +163,7 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5 text-primary" />
+            <MessageSquare className="h-5 w-5 text-accent-foreground" />
             <CardTitle className="text-base">WhatsApp Business</CardTitle>
             {config?.is_enabled && <Badge className="ml-2">Activo</Badge>}
           </div>
@@ -177,7 +177,7 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
 
           {/* Conexión guiada (Embedded Signup / coexistencia). Rellena los campos automáticamente. */}
           <div className="rounded-lg border border-dashed border-primary/40 bg-primary/5 p-3">
-            <p className="mb-2 text-sm font-medium">Conexión recomendada</p>
+            <p className="mb-2 text-xs font-medium">Conexión recomendada</p>
             <WhatsAppEmbeddedSignup
               accountId={accountId}
               onConnected={() => qc.invalidateQueries({ queryKey: ["whatsapp-config", accountId] })}
@@ -224,7 +224,7 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
           <div className="flex items-start gap-2 rounded-lg bg-accent/50 p-3 text-xs text-muted-foreground">
             <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
             En Meta → WhatsApp → Configuración: pega la URL del webhook, usa tu token de verificación y suscríbete a los campos <strong>messages</strong> y <strong>smb_message_echoes</strong> (este último trae al Chat lo que respondas desde el móvil). Si aparece <strong>history</strong>, márcalo para importar las conversaciones anteriores.
-            <a href="https://developers.facebook.com" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-primary underline">Meta <ExternalLink className="h-3 w-3" /></a>
+            <a href="https://developers.facebook.com" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-accent-foreground underline">Meta <ExternalLink className="h-3 w-3" /></a>
           </div>
         </CardContent>
       </Card>
@@ -233,7 +233,7 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Bot className="h-5 w-5 text-primary" />
+            <Bot className="h-5 w-5 text-accent-foreground" />
             <CardTitle className="text-base">Bot y respuestas automáticas</CardTitle>
           </div>
           <CardDescription>Mensajes fijos del bot y plantillas. Variables disponibles: <code>{"{{contacto}}"}</code>, <code>{"{{tarea}}"}</code>, <code>{"{{descripcion}}"}</code>.</CardDescription>
@@ -297,7 +297,7 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Info className="h-5 w-5 text-primary" />
+            <Info className="h-5 w-5 text-accent-foreground" />
             <CardTitle className="text-base">Contexto del negocio</CardTitle>
           </div>
           <CardDescription>
@@ -447,7 +447,7 @@ const BotLearningCard = ({ accountId }: { accountId: string }) => {
     <Card>
       <CardHeader>
         <div className="flex items-center gap-2">
-          <Bot className="h-5 w-5 text-primary" />
+          <Bot className="h-5 w-5 text-accent-foreground" />
           <CardTitle className="text-base">Aprendizaje del bot</CardTitle>
           <Badge variant="secondary" className="ml-1">{feedback.filter((f) => f.is_active).length} activas</Badge>
         </div>
@@ -459,14 +459,14 @@ const BotLearningCard = ({ accountId }: { accountId: string }) => {
       </CardHeader>
       <CardContent className="space-y-2">
         {feedback.length === 0 && (
-          <p className="py-4 text-center text-sm text-muted-foreground">
+          <p className="py-4 text-center text-xs text-muted-foreground">
             Aún no hay correcciones. Ve a un chat, pasa el ratón por un mensaje del cliente y pulsa el icono 🎓.
           </p>
         )}
         {feedback.map((f) => (
           <div key={f.id} className={`flex items-start gap-3 rounded-lg border border-border p-3 ${f.is_active ? "" : "opacity-55"}`}>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm italic">"{f.message_text}"</p>
+              <p className="truncate text-xs italic">"{f.message_text}"</p>
               <div className="mt-1 flex flex-wrap items-center gap-1.5">
                 <Badge variant={f.expected_action === "CREATE_TASK" ? "default" : "secondary"} className="text-[10px]">
                   {ACTION_LABEL[f.expected_action] || f.expected_action}

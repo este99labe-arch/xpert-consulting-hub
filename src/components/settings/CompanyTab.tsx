@@ -136,7 +136,7 @@ const CompanyTab = ({ accountId, isManager }: { accountId: string; isManager: bo
                   placeholder={f.label}
                 />
               ) : (
-                <p className="text-sm font-medium">{f.value || "—"}</p>
+                <p className="text-xs font-medium">{f.value || "—"}</p>
               )}
             </div>
           ))}
@@ -150,7 +150,7 @@ const CompanyTab = ({ accountId, isManager }: { accountId: string; isManager: bo
           </div>
           <div className="space-y-1">
             <Label className="text-muted-foreground text-xs">Fecha de creación</Label>
-            <p className="text-sm font-medium">
+            <p className="text-xs font-medium">
               {account?.created_at ? new Date(account.created_at).toLocaleDateString("es-ES") : "—"}
             </p>
           </div>

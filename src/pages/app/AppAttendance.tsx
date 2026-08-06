@@ -333,7 +333,7 @@ const AppAttendance = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="font-display text-[17px] font-semibold tracking-[-.01em] text-foreground">Control horario</h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Gestiona tus fichajes y consulta tu historial
           </p>
         </div>
@@ -346,7 +346,7 @@ const AppAttendance = () => {
             <div className="flex rounded-lg border border-border bg-muted/50 p-0.5">
               <button
                 onClick={() => setActiveTab("my")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                   activeTab === "my"
                     ? "bg-card text-foreground"
                     : "text-muted-foreground hover:text-foreground"
@@ -357,7 +357,7 @@ const AppAttendance = () => {
               </button>
               <button
                 onClick={() => setActiveTab("team")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                   activeTab === "team"
                     ? "bg-card text-foreground"
                     : "text-muted-foreground hover:text-foreground"
@@ -376,7 +376,7 @@ const AppAttendance = () => {
         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1))}>
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <span className="text-sm font-medium capitalize min-w-[140px] text-center">
+        <span className="text-xs font-medium capitalize min-w-[140px] text-center">
           {format(selectedMonth, "MMMM yyyy", { locale: es })}
         </span>
         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1))}>

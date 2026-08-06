@@ -167,7 +167,7 @@ const ClientServicesTab = ({ clientId, accountId, isAdmin }: Props) => {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <div className="flex items-center gap-2">
-                <Layers className="h-5 w-5 text-primary" />
+                <Layers className="h-5 w-5 text-accent-foreground" />
                 <CardTitle className="text-base">Servicios contratados</CardTitle>
               </div>
               <CardDescription className="mt-1">
@@ -189,7 +189,7 @@ const ClientServicesTab = ({ clientId, accountId, isAdmin }: Props) => {
         </CardHeader>
 
         <CardContent className="space-y-4">
-          {isLoading && <p className="py-6 text-center text-sm text-muted-foreground">Cargando…</p>}
+          {isLoading && <p className="py-6 text-center text-xs text-muted-foreground">Cargando…</p>}
 
           {!isLoading && visible.length === 0 && (
             <EmptyState
@@ -224,7 +224,7 @@ const ClientServicesTab = ({ clientId, accountId, isAdmin }: Props) => {
                     >
                       <Package className="h-4 w-4 shrink-0 text-muted-foreground" />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium">{c.services?.name ?? "Servicio"}</p>
+                        <p className="truncate text-xs font-medium">{c.services?.name ?? "Servicio"}</p>
                         <p className="text-xs text-muted-foreground">
                           Alta {fmt(c.start_date)}
                           {c.end_date && ` · Baja ${fmt(c.end_date)}`}
@@ -232,7 +232,7 @@ const ClientServicesTab = ({ clientId, accountId, isAdmin }: Props) => {
                         </p>
                         {c.notes && <p className="mt-0.5 truncate text-xs italic text-muted-foreground">{c.notes}</p>}
                       </div>
-                      <span className="shrink-0 text-sm tabular-nums">{EUR(precio)}</span>
+                      <span className="shrink-0 text-xs tabular-nums">{EUR(precio)}</span>
                       <Badge variant={st.variant} className="shrink-0">{st.label}</Badge>
 
                       {isAdmin && (
@@ -291,7 +291,7 @@ const ClientServicesTab = ({ clientId, accountId, isAdmin }: Props) => {
           </DialogHeader>
 
           {catalog.length === 0 ? (
-            <p className="py-4 text-sm text-muted-foreground">
+            <p className="py-4 text-xs text-muted-foreground">
               No hay servicios disponibles. Créalos en <strong>Configuración → Líneas de negocio</strong>.
             </p>
           ) : (

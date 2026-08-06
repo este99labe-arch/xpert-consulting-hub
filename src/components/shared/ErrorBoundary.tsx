@@ -41,7 +41,7 @@ export class ErrorBoundary extends React.Component<
           <h2 className="text-xl font-semibold text-foreground">
             Algo salió mal
           </h2>
-          <p className="text-sm text-muted-foreground max-w-md">
+          <p className="text-xs text-muted-foreground max-w-md">
             Ha ocurrido un error inesperado. Puedes intentar de nuevo o contactar soporte si el problema persiste.
           </p>
           {this.state.error && (

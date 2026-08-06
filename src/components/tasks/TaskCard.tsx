@@ -166,7 +166,7 @@ const TaskCard = ({ task, members, clients, onClick, onDragStart }: Props) => {
         </div>
         {assignee ? (
           <Avatar className="h-6 w-6">
-            <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+            <AvatarFallback className="text-[10px] bg-primary/10 text-accent-foreground">
               {initials(assignee.name)}
             </AvatarFallback>
           </Avatar>

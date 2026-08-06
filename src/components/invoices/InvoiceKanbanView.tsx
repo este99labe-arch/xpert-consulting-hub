@@ -111,7 +111,7 @@ const InvoiceKanbanView = ({ invoices, onPreview }: Props) => {
         >
           <div className="p-3 border-b">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold text-foreground">{col.label}</span>
+              <span className="text-xs font-semibold text-foreground">{col.label}</span>
               <Badge variant="secondary" className="text-xs">{col.items.length}</Badge>
             </div>
           </div>
@@ -136,7 +136,7 @@ const InvoiceKanbanView = ({ invoices, onPreview }: Props) => {
                 >
                   <div className="flex items-center gap-1.5 mb-1.5">
                     {inv.type === "INVOICE" ? (
-                      <FileText className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                      <FileText className="h-3.5 w-3.5 text-accent-foreground flex-shrink-0" />
                     ) : (
                       <Receipt className="h-3.5 w-3.5 text-[hsl(var(--warning))] flex-shrink-0" />
                     )}

@@ -83,7 +83,7 @@ const JournalEntriesTab = ({
     <div className="space-y-4">
       {isManager && pendingDeleteRequests.length > 0 && (
         <Card tone="warning" className="p-4">
-          <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+          <h3 className="text-xs font-semibold flex items-center gap-2 mb-3">
             <AlertCircle className="h-4 w-4 text-[hsl(var(--warning))]" />
             Solicitudes de eliminación pendientes
             <Badge variant="secondary">{pendingDeleteRequests.length}</Badge>
@@ -91,7 +91,7 @@ const JournalEntriesTab = ({
           <div className="space-y-2">
             {pendingDeleteRequests.map((req: any) => (
               <div key={req.id} className="flex items-center justify-between bg-background rounded-lg border p-3">
-                <div className="text-sm">
+                <div className="text-xs">
                   <span className="font-mono font-semibold">{req.journal_entries?.entry_number || "—"}</span>
                   <span className="mx-2 text-muted-foreground">·</span>
                   <span className="text-muted-foreground">{req.journal_entries?.description || ""}</span>
@@ -135,12 +135,12 @@ const JournalEntriesTab = ({
         ) : entries.map(entry => (
           <Card key={entry.id} className="p-4 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="font-mono font-semibold text-sm">{entry.entry_number || "—"}</span>
+              <span className="font-mono font-semibold text-xs">{entry.entry_number || "—"}</span>
               <Badge variant={entry.status === "POSTED" ? "default" : "secondary"}>
                 {entry.status === "POSTED" ? "Contabilizado" : "Borrador"}
               </Badge>
             </div>
-            <p className="text-sm truncate">{entry.description || "Sin descripción"}</p>
+            <p className="text-xs truncate">{entry.description || "Sin descripción"}</p>
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>{format(new Date(entry.date), "dd/MM/yyyy")}</span>
               <DropdownMenu>

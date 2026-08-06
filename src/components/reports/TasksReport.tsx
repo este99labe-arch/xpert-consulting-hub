@@ -45,7 +45,7 @@ const SummaryTable = ({ title, desc, icon: Icon, rows, csvName, entityHeader }: 
   <Card>
     <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
       <div>
-        <CardTitle className="flex items-center gap-2 text-base"><Icon className="h-4 w-4 text-primary" /> {title}</CardTitle>
+        <CardTitle className="flex items-center gap-2 text-base"><Icon className="h-4 w-4 text-accent-foreground" /> {title}</CardTitle>
         <CardDescription className="mt-1">{desc}</CardDescription>
       </div>
       <Button
@@ -59,7 +59,7 @@ const SummaryTable = ({ title, desc, icon: Icon, rows, csvName, entityHeader }: 
     </CardHeader>
     <CardContent className="p-0">
       {rows.length === 0 ? (
-        <p className="py-10 text-center text-sm text-muted-foreground">Sin tareas en el periodo seleccionado.</p>
+        <p className="py-10 text-center text-xs text-muted-foreground">Sin tareas en el periodo seleccionado.</p>
       ) : (
         <div className="overflow-x-auto">
           <Table>

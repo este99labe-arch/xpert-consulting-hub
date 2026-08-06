@@ -206,7 +206,7 @@ const TaxesTab = ({ invoices, accountId }: TaxesTabProps) => {
         <CardContent className="py-6 flex justify-between items-center">
           <div>
             <span className="text-lg font-bold">Resultado liquidación IVA</span>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               {taxData.result >= 0 ? "A ingresar en Hacienda" : "A compensar / devolver"}
             </p>
           </div>

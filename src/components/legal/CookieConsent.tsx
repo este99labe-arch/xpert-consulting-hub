@@ -59,19 +59,19 @@ export const CookieConsent = () => {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-3">
               <div className="rounded-lg bg-muted p-2 shrink-0">
-                <Cookie className="h-5 w-5 text-primary" />
+                <Cookie className="h-5 w-5 text-accent-foreground" />
               </div>
               <div className="space-y-1">
-                <h2 className="text-sm font-semibold text-foreground">
+                <h2 className="text-xs font-semibold text-foreground">
                   Tu privacidad nos importa
                 </h2>
-                <p className="text-xs text-muted-foreground sm:text-sm">
+                <p className="text-xs text-muted-foreground sm:text-xs">
                   Usamos cookies técnicas necesarias para que la aplicación funcione, y
                   cookies opcionales para mejorar tu experiencia. Puedes aceptar todas,
                   rechazar las opcionales o personalizarlas.{" "}
                   <Link
                     to="/legal/cookies"
-                    className="font-medium text-primary underline-offset-2 hover:underline"
+                    className="font-medium text-accent-foreground underline-offset-2 hover:underline"
                   >
                     Más información
                   </Link>
@@ -124,7 +124,7 @@ export const CookieConsent = () => {
           <div className="space-y-4 py-2">
             <div className="flex items-start justify-between gap-4 rounded-lg border border-border bg-muted/30 p-4">
               <div className="space-y-1">
-                <Label className="text-sm font-semibold">Necesarias</Label>
+                <Label className="text-xs font-semibold">Necesarias</Label>
                 <p className="text-xs text-muted-foreground">
                   Imprescindibles para la sesión, autenticación y seguridad. No
                   pueden desactivarse.
@@ -135,7 +135,7 @@ export const CookieConsent = () => {
 
             <div className="flex items-start justify-between gap-4 rounded-lg border border-border p-4">
               <div className="space-y-1">
-                <Label htmlFor="analytics" className="text-sm font-semibold">
+                <Label htmlFor="analytics" className="text-xs font-semibold">
                   Analíticas
                 </Label>
                 <p className="text-xs text-muted-foreground">
@@ -151,7 +151,7 @@ export const CookieConsent = () => {
 
             <div className="flex items-start justify-between gap-4 rounded-lg border border-border p-4">
               <div className="space-y-1">
-                <Label htmlFor="marketing" className="text-sm font-semibold">
+                <Label htmlFor="marketing" className="text-xs font-semibold">
                   Marketing
                 </Label>
                 <p className="text-xs text-muted-foreground">

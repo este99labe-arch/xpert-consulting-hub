@@ -345,12 +345,12 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
         {/* Header */}
         <DialogHeader className="flex-shrink-0 space-y-0 border-b border-border px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-primary">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-accent-foreground">
               <meta.icon className="h-5 w-5" />
             </div>
             <div>
               <DialogTitle className="text-lg">{meta.title}</DialogTitle>
-              <p className="text-sm text-muted-foreground">{meta.subtitle}</p>
+              <p className="text-xs text-muted-foreground">{meta.subtitle}</p>
             </div>
           </div>
         </DialogHeader>
@@ -513,23 +513,23 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
                     value={line.description}
                     onChange={(e) => updateLine(i, "description", e.target.value)}
                     placeholder="Descripción del servicio..."
-                    className="text-sm"
+                    className="text-xs"
                   />
                   <Input
                     type="number" min="0" step="0.01"
                     value={line.quantity}
                     onChange={(e) => updateLine(i, "quantity", e.target.value)}
                     placeholder="Cant."
-                    className="text-sm"
+                    className="text-xs"
                   />
                   <Input
                     type="number" min="0" step="0.01"
                     value={line.unitPrice}
                     onChange={(e) => updateLine(i, "unitPrice", e.target.value)}
                     placeholder="Precio €"
-                    className="text-sm"
+                    className="text-xs"
                   />
-                  <div className="hidden text-right font-mono text-sm text-muted-foreground sm:block">
+                  <div className="hidden text-right font-mono text-xs text-muted-foreground sm:block">
                     €{lineAmounts[i]?.toLocaleString("es-ES", { minimumFractionDigits: 2 }) || "0,00"}
                   </div>
                   <Button
@@ -588,22 +588,22 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
               <div className="flex items-end pb-1">
                 <div className="flex items-center gap-2">
                   <Switch checked={vatIncluded} onCheckedChange={setVatIncluded} />
-                  <Label className="text-sm">IVA incluido</Label>
+                  <Label className="text-xs">IVA incluido</Label>
                 </div>
               </div>
             </div>
 
             <div className="space-y-1 rounded-lg border border-border bg-muted/40 p-3">
-              <div className="flex justify-between text-sm text-muted-foreground">
+              <div className="flex justify-between text-xs text-muted-foreground">
                 <span>Base imponible</span>
                 <span className="font-mono">€{amountNet.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
               </div>
-              <div className="flex justify-between text-sm text-muted-foreground">
+              <div className="flex justify-between text-xs text-muted-foreground">
                 <span>IVA ({vatPercentage}%)</span>
                 <span className="font-mono">€{amountVat.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
               </div>
               {irpfNum > 0 && (
-                <div className="flex justify-between text-sm text-muted-foreground">
+                <div className="flex justify-between text-xs text-muted-foreground">
                   <span>IRPF (−{irpfPercentage}%)</span>
                   <span className="font-mono">−€{irpfAmount.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
                 </div>

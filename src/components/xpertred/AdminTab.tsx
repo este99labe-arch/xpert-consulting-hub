@@ -89,9 +89,9 @@ const AdminTab = () => {
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { icon: Users, label: "Perfiles activos", value: `${kpis?.activeProfiles}/${kpis?.totalProfiles}`, color: "text-primary" },
+          { icon: Users, label: "Perfiles activos", value: `${kpis?.activeProfiles}/${kpis?.totalProfiles}`, color: "text-accent-foreground" },
           { icon: Heart, label: "Matches", value: kpis?.totalMatches, color: "text-destructive" },
-          { icon: MessageCircle, label: "Mensajes", value: kpis?.totalMessages, color: "text-primary" },
+          { icon: MessageCircle, label: "Mensajes", value: kpis?.totalMessages, color: "text-accent-foreground" },
           { icon: Star, label: "Reputación media", value: kpis?.avgReputation, color: "text-[hsl(var(--warning))]" },
         ].map((kpi) => (
           <Card key={kpi.label}>
@@ -129,14 +129,14 @@ const AdminTab = () => {
         </CardHeader>
         <CardContent>
           {flaggedReviews.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No hay valoraciones pendientes de moderación.</p>
+            <p className="text-xs text-muted-foreground">No hay valoraciones pendientes de moderación.</p>
           ) : (
             <div className="space-y-3">
               {flaggedReviews.map((r: any) => (
                 <div key={r.id} className="flex items-start gap-3 p-3 border rounded-lg">
                   <Flag className="h-4 w-4 text-destructive mt-0.5" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm">{r.comment || "Sin comentario"}</p>
+                    <p className="text-xs">{r.comment || "Sin comentario"}</p>
                     <div className="flex gap-2 mt-1">
                       <Badge variant="outline" className="text-[10px]">
                         P:{r.punctuality} C:{r.quality} Com:{r.communication} Precio:{r.fair_price}

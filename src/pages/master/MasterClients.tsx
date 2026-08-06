@@ -79,7 +79,7 @@ const MasterClients = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-accent-foreground" />
       </div>
     );
   }
@@ -106,7 +106,7 @@ const MasterClients = () => {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
             <p className="text-lg">No hay cuentas registradas</p>
-            <p className="text-sm">Crea tu primera cuenta para comenzar</p>
+            <p className="text-xs">Crea tu primera cuenta para comenzar</p>
           </CardContent>
         </Card>
       ) : (
@@ -121,7 +121,7 @@ const MasterClients = () => {
                   {client.is_active ? "Activo" : "Inactivo"}
                 </Badge>
               </div>
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>{new Date(client.created_at).toLocaleDateString("es-ES")}</span>
                 <Switch
                   checked={client.is_active}

@@ -207,7 +207,7 @@ const MyAttendanceView = ({
                 </p>
               </div>
               <div className="h-9 w-9 rounded-control bg-muted flex items-center justify-center">
-                <Timer className="h-4 w-4 text-primary" />
+                <Timer className="h-4 w-4 text-accent-foreground" />
               </div>
             </div>
           </CardContent>
@@ -233,12 +233,12 @@ const MyAttendanceView = ({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Balance</p>
-                <p className={`tnum text-[22px] font-semibold tracking-[-.02em] mt-0.5 ${balanceMins >= 0 ? "text-primary" : "text-destructive"}`}>
+                <p className={`tnum text-[22px] font-semibold tracking-[-.02em] mt-0.5 ${balanceMins >= 0 ? "text-accent-foreground" : "text-destructive"}`}>
                   {balanceMins >= 0 ? "+" : ""}{formatMinutes(balanceMins)}
                 </p>
               </div>
               <div className={`h-9 w-9 rounded-control flex items-center justify-center ${balanceMins >= 0 ? "bg-primary/10" : "bg-destructive-surface"}`}>
-                {balanceMins > 0 ? <TrendingUp className="h-4 w-4 text-primary" /> :
+                {balanceMins > 0 ? <TrendingUp className="h-4 w-4 text-accent-foreground" /> :
                   balanceMins < 0 ? <TrendingDown className="h-4 w-4 text-destructive" /> :
                     <Minus className="h-4 w-4 text-muted-foreground" />}
               </div>
@@ -263,7 +263,7 @@ const MyAttendanceView = ({
       <Card className=" border">
         <CardContent className="p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold">Horas por semana</h3>
+            <h3 className="text-xs font-semibold">Horas por semana</h3>
             <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
               <span className="flex items-center gap-1.5">
                 <span className="h-2.5 w-2.5 rounded-sm bg-primary" /> Trabajadas
@@ -289,7 +289,7 @@ const MyAttendanceView = ({
       {/* Weekly detail table */}
       <Card className=" border overflow-hidden">
         <div className="flex items-center justify-between px-5 py-3 border-b bg-muted/30">
-          <h3 className="text-sm font-semibold">Detalle semanal</h3>
+          <h3 className="text-xs font-semibold">Detalle semanal</h3>
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setCurrentWeek(prev => subWeeks(prev, 1))}>
               <ChevronLeft className="h-3.5 w-3.5" />
@@ -304,7 +304,7 @@ const MyAttendanceView = ({
         </div>
 
         {myMonthLoading ? (
-          <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+          <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-accent-foreground" /></div>
         ) : (
           <Table>
             <TableHeader>
@@ -340,10 +340,10 @@ const MyAttendanceView = ({
                     >
                       <TableCell className="py-2.5">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium capitalize">{format(day, "EEE", { locale: es })}</span>
+                          <span className="text-xs font-medium capitalize">{format(day, "EEE", { locale: es })}</span>
                           <span className="text-xs text-muted-foreground">{format(day, "d")}</span>
                           {isTodayDay && (
-                            <span className="text-[10px] font-semibold text-primary bg-muted px-1.5 py-0.5 rounded">Hoy</span>
+                            <span className="text-[10px] font-semibold text-accent-foreground bg-muted px-1.5 py-0.5 rounded">Hoy</span>
                           )}
                         </div>
                       </TableCell>
@@ -358,7 +358,7 @@ const MyAttendanceView = ({
                                     {r.check_in ? format(new Date(r.check_in), "HH:mm") : "—"}
                                     {" → "}
                                     {r.check_out ? format(new Date(r.check_out), "HH:mm") : (
-                                      <span className="text-primary font-medium">en curso</span>
+                                      <span className="text-accent-foreground font-medium">en curso</span>
                                     )}
                                   </span>
                                   {hasPendingDelete ? (
@@ -381,7 +381,7 @@ const MyAttendanceView = ({
                             })}
                           </div>
                         ) : (
-                          <span className="text-muted-foreground/50 text-sm">—</span>
+                          <span className="text-muted-foreground/50 text-xs">—</span>
                         )}
                       </TableCell>
                       <TableCell className="py-2.5 text-xs font-medium tabular-nums">
@@ -455,7 +455,7 @@ const MyAttendanceView = ({
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
-            <label className="text-sm font-medium">Motivo</label>
+            <label className="text-xs font-medium">Motivo</label>
             <Textarea
               placeholder="Indica el motivo de la eliminación..."
               value={deleteReason}

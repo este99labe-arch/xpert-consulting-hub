@@ -25,7 +25,7 @@ const PaginationControls = ({
 
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <span>
           Mostrando {startIndex + 1}–{endIndex} de {totalItems}
         </span>
@@ -72,7 +72,7 @@ const PaginationControls = ({
           <ChevronLeft className="h-4 w-4" />
         </Button>
 
-        <span className="px-3 text-sm font-medium text-foreground">
+        <span className="px-3 text-xs font-medium text-foreground">
           {currentPage} / {totalPages}
         </span>
 

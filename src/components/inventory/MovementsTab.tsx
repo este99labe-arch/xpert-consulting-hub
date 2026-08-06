@@ -104,10 +104,10 @@ const MovementsTab = ({ accountId, products, isManager, onNewMovement }: Movemen
             return (
               <Card key={m.id} className="p-4 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-sm">{m.products?.name}</span>
+                  <span className="font-medium text-xs">{m.products?.name}</span>
                   <div className="flex items-center gap-1">
                     <Icon className={`h-4 w-4 ${m.type === "IN" ? "text-[hsl(var(--success))]" : m.type === "OUT" ? "text-destructive" : "text-muted-foreground"}`} />
-                    <span className="text-sm">{movementTypeLabels[m.type]}</span>
+                    <span className="text-xs">{movementTypeLabels[m.type]}</span>
                   </div>
                 </div>
                 <div className="flex items-center justify-between text-xs text-muted-foreground">

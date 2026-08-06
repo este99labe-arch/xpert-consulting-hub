@@ -121,7 +121,7 @@ const AppSettings = () => {
           <div className="space-y-7">
             <div>
               <h1 className="font-display text-[17px] font-semibold tracking-[-.01em] text-foreground">Configuración</h1>
-              <p className="text-sm text-muted-foreground">Gestiona tu empresa, tu cuenta personal y las integraciones.</p>
+              <p className="text-xs text-muted-foreground">Gestiona tu empresa, tu cuenta personal y las integraciones.</p>
             </div>
             {groupsToRender().map((group) => {
               const items = SECTIONS.filter((s) => s.group === group && (!s.managerOnly || isManager));
@@ -137,7 +137,7 @@ const AppSettings = () => {
                         onClick={() => setSection(s.key)}
                         className="group flex items-start gap-3 rounded-xl border border-border bg-card p-4 text-left shadow-2xs transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:bg-popover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                       >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-primary">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-accent-foreground">
                           <s.icon className="h-5 w-5" />
                         </div>
                         <div className="min-w-0 flex-1">
@@ -147,9 +147,9 @@ const AppSettings = () => {
                               <Badge variant="destructive" className="h-5 min-w-5 px-1 text-xs">{pendingCount}</Badge>
                             )}
                           </div>
-                          <p className="mt-0.5 text-sm text-muted-foreground">{s.desc}</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">{s.desc}</p>
                         </div>
-                        <ChevronRight className="mt-2 h-4 w-4 shrink-0 text-muted-foreground/50 transition-all group-hover:translate-x-0.5 group-hover:text-primary" />
+                        <ChevronRight className="mt-2 h-4 w-4 shrink-0 text-muted-foreground/50 transition-all group-hover:translate-x-0.5 group-hover:text-accent-foreground" />
                       </button>
                     ))}
                   </div>
@@ -167,12 +167,12 @@ const AppSettings = () => {
                 </Button>
                 {current && (
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-primary">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-accent-foreground">
                       <current.icon className="h-5 w-5" />
                     </div>
                     <div>
                       <h1 className="font-display text-[17px] font-semibold tracking-[-.01em] leading-tight">{current.title}</h1>
-                      <p className="text-sm text-muted-foreground">{current.desc}</p>
+                      <p className="text-xs text-muted-foreground">{current.desc}</p>
                     </div>
                   </div>
                 )}

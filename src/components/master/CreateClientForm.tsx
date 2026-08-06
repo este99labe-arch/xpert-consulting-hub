@@ -127,7 +127,7 @@ const CreateClientForm: React.FC<Props> = ({ onSuccess }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="flex items-center gap-2 rounded-md bg-destructive-surface p-3 text-sm text-destructive">
+        <div className="flex items-center gap-2 rounded-md bg-destructive-surface p-3 text-xs text-destructive">
           <AlertCircle className="h-4 w-4 shrink-0" />
           {error}
         </div>
@@ -279,7 +279,7 @@ const CreateClientForm: React.FC<Props> = ({ onSuccess }) => {
                   checked={selectedModules.includes(mod.id)}
                   onCheckedChange={() => toggleModule(mod.id)}
                 />
-                <span className="text-sm">{mod.name}</span>
+                <span className="text-xs">{mod.name}</span>
               </label>
             ))}
           </div>

@@ -25,14 +25,14 @@ const TopClients = ({ clients }: TopClientsProps) => {
       </CardHeader>
       <CardContent>
         {clients.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-6">Sin datos</p>
+          <p className="text-xs text-muted-foreground text-center py-6">Sin datos</p>
         ) : (
           <div className="space-y-3">
             {clients.map((c, i) => (
               <div key={i}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium truncate max-w-[60%]">{c.name}</span>
-                  <span className="text-xs font-semibold text-primary">{EUR(c.total)}</span>
+                  <span className="text-xs font-medium truncate max-w-[60%]">{c.name}</span>
+                  <span className="text-xs font-semibold text-accent-foreground">{EUR(c.total)}</span>
                 </div>
                 <div className="h-2 rounded-full bg-muted overflow-hidden">
                   <div

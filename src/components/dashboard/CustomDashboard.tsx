@@ -168,7 +168,7 @@ const WidgetCard = ({
   return (
     <Card className="border-0">
       <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
-        <CardTitle className="truncate text-sm font-semibold">{title}</CardTitle>
+        <CardTitle className="truncate text-xs font-semibold">{title}</CardTitle>
         {editing && (
           <div className="flex shrink-0 items-center gap-0.5">
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onMove(-1)} disabled={isFirst} aria-label="Mover a la izquierda">
@@ -240,7 +240,7 @@ const WidgetEditorDialog = ({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <LayoutDashboard className="h-5 w-5 text-primary" /> Configurar widget
+            <LayoutDashboard className="h-5 w-5 text-accent-foreground" /> Configurar widget
           </DialogTitle>
         </DialogHeader>
 
@@ -417,10 +417,10 @@ const CustomDashboard = () => {
           <button
             type="button"
             onClick={addWidget}
-            className="flex min-h-[220px] flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
+            className="flex min-h-[220px] flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border text-muted-foreground transition-colors hover:border-primary/40 hover:text-accent-foreground"
           >
             <Plus className="h-6 w-6" />
-            <span className="text-sm font-medium">Añadir widget</span>
+            <span className="text-xs font-medium">Añadir widget</span>
           </button>
         )}
       </div>

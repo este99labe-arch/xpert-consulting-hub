@@ -11,7 +11,7 @@ const AppPlaceholder = () => {
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-16 text-muted-foreground">
           <p className="text-lg">Módulo en desarrollo</p>
-          <p className="text-sm">Esta sección estará disponible en Phase 2</p>
+          <p className="text-xs">Esta sección estará disponible en Phase 2</p>
         </CardContent>
       </Card>
     </div>

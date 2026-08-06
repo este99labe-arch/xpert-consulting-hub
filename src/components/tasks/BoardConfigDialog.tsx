@@ -76,12 +76,12 @@ const BoardConfigDialog = ({ open, onOpenChange, board, onDeleted }: Props) => {
               Los administradores siempre tienen acceso. Marca qué empleados pueden ver y trabajar este tablero.
             </p>
             <div className="max-h-56 space-y-1 overflow-y-auto rounded-md border p-2">
-              {members.length === 0 && <p className="p-2 text-sm text-muted-foreground">No hay miembros en el equipo.</p>}
+              {members.length === 0 && <p className="p-2 text-xs text-muted-foreground">No hay miembros en el equipo.</p>}
               {members.map((m) => (
                 <label key={m.user_id} className="flex cursor-pointer items-center gap-2.5 rounded-md p-1.5 hover:bg-accent/50">
                   <Checkbox checked={selected.has(m.user_id)} onCheckedChange={() => toggle(m.user_id)} />
                   <Avatar className="h-6 w-6"><AvatarFallback className="text-[10px]">{initials(m.name)}</AvatarFallback></Avatar>
-                  <span className="text-sm">{m.name || "Usuario"}</span>
+                  <span className="text-xs">{m.name || "Usuario"}</span>
                 </label>
               ))}
             </div>

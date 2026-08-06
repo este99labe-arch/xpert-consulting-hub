@@ -43,7 +43,7 @@ const InvoiceStatusChart = ({ data }: InvoiceStatusChartProps) => {
           </div>
           <div className="flex-1 space-y-2">
             {data.map((d) => (
-              <div key={d.name} className="flex items-center justify-between text-sm">
+              <div key={d.name} className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
                   <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
                   <span className="text-muted-foreground">{d.name}</span>
@@ -54,7 +54,7 @@ const InvoiceStatusChart = ({ data }: InvoiceStatusChartProps) => {
                 </div>
               </div>
             ))}
-            {total === 0 && <p className="text-sm text-muted-foreground text-center py-4">Sin facturas</p>}
+            {total === 0 && <p className="text-xs text-muted-foreground text-center py-4">Sin facturas</p>}
           </div>
         </div>
       </CardContent>

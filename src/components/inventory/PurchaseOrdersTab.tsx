@@ -36,7 +36,7 @@ const PurchaseOrdersTab = ({ orders, isManager, onNewOrder, onUpdateStatus }: Pu
           pagination.paginatedItems.map(o => (
             <Card key={o.id} className="p-4 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="font-medium text-sm">{o.products?.name}</span>
+                <span className="font-medium text-xs">{o.products?.name}</span>
                 <Badge className={statusColors[o.status]}>{statusLabels[o.status]}</Badge>
               </div>
               <div className="text-xs text-muted-foreground">{o.products?.sku} · Qty: <span className="font-mono">{o.quantity}</span></div>

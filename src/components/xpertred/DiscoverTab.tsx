@@ -200,7 +200,7 @@ const DiscoverTab = () => {
                       placeholder="Nombre..."
                       value={filters.name}
                       onChange={(e) => handleFilterChange("name", e.target.value)}
-                      className="pl-8 h-9 text-sm"
+                      className="pl-8 h-9 text-xs"
                     />
                   </div>
                 </div>
@@ -210,7 +210,7 @@ const DiscoverTab = () => {
                     placeholder="Ej: Ferretería..."
                     value={filters.sector}
                     onChange={(e) => handleFilterChange("sector", e.target.value)}
-                    className="h-9 text-sm"
+                    className="h-9 text-xs"
                   />
                 </div>
                 <div className="space-y-1">
@@ -219,7 +219,7 @@ const DiscoverTab = () => {
                     placeholder="Ej: 4752..."
                     value={filters.cnae}
                     onChange={(e) => handleFilterChange("cnae", e.target.value)}
-                    className="h-9 text-sm"
+                    className="h-9 text-xs"
                   />
                 </div>
                 <div className="space-y-1">
@@ -228,7 +228,7 @@ const DiscoverTab = () => {
                     placeholder="Ej: Madrid..."
                     value={filters.province}
                     onChange={(e) => handleFilterChange("province", e.target.value)}
-                    className="h-9 text-sm"
+                    className="h-9 text-xs"
                   />
                 </div>
                 {hasActiveFilters && (

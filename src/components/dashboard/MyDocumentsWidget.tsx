@@ -32,7 +32,7 @@ const MyDocumentsWidget = () => {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
-            <FileText className="h-4 w-4 text-primary" />
+            <FileText className="h-4 w-4 text-accent-foreground" />
             Mis documentos
           </CardTitle>
           <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => navigate("/app/hr")}>
@@ -42,16 +42,16 @@ const MyDocumentsWidget = () => {
       </CardHeader>
       <CardContent className="pt-0">
         {docs.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-6">Sin documentos</p>
+          <p className="text-xs text-muted-foreground text-center py-6">Sin documentos</p>
         ) : (
           <div className="space-y-2">
             {docs.map((d: any) => (
               <div key={d.id} className="flex items-center gap-2 p-2 rounded-md border">
                 <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center shrink-0">
-                  <FileText className="h-4 w-4 text-primary" />
+                  <FileText className="h-4 w-4 text-accent-foreground" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium truncate">{d.name}</p>
+                  <p className="text-xs font-medium truncate">{d.name}</p>
                   <p className="text-xs text-muted-foreground">
                     {format(parseISO(d.created_at), "dd MMM yyyy", { locale: es })}
                   </p>
