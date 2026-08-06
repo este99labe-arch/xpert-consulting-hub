@@ -170,7 +170,7 @@ const AppTasks = () => {
                 b.id === activeBoardId ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent/60"
               }`}
             >
-              <span className="h-2.5 w-2.5 rounded-full" style={{ background: b.color }} />
+              <span className="h-1.5 w-1.5 rounded-full" style={{ background: b.color }} aria-hidden />
               {b.name}
             </button>
           ))}
@@ -381,7 +381,7 @@ const AppTasks = () => {
       {!activeBoardId ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-16 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-primary">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-faint">
               <LayoutGrid className="h-6 w-6" />
             </div>
             <div>
@@ -404,19 +404,21 @@ const AppTasks = () => {
             {columns.map((col) => (
               <div
                 key={col.id}
-                className={`flex flex-col rounded-lg transition-colors p-2 shrink-0 w-[280px] ${
-                  dragOverColumn === col.id ? "bg-accent/40 ring-2 ring-primary/30" : "bg-muted/30"
+                className={`flex w-[280px] shrink-0 flex-col rounded-[12px] p-2 transition-colors duration-150 ${
+                  dragOverColumn === col.id
+                    ? "bg-row-selected ring-1 ring-row-selected-border"
+                    : "bg-muted"
                 }`}
                 onDragOver={(e) => handleDragOver(e, col.id)}
                 onDragLeave={() => setDragOverColumn(null)}
                 onDrop={(e) => handleDrop(e, col.id)}
               >
-                <div className="flex items-center gap-2 mb-2 px-1">
-                  <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: col.color }} />
-                  <h3 className="text-sm font-semibold truncate">{col.name}</h3>
-                  <Badge variant="secondary" className="text-[10px] px-1.5 h-4 ml-auto shrink-0">
+                <div className="mb-2 flex items-center gap-2 px-1.5 py-1">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: col.color }} aria-hidden />
+                  <h3 className="truncate text-[11.5px] font-semibold text-foreground">{col.name}</h3>
+                  <span className="tnum ml-auto shrink-0 text-[11px] text-subtle">
                     {columnData[col.id]?.length || 0}
-                  </Badge>
+                  </span>
                 </div>
                 <ScrollArea className="flex-1">
                   <div className="space-y-2 min-h-[200px]">
@@ -446,7 +448,7 @@ const AppTasks = () => {
           <CardContent className="p-0 overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-muted/40">
+                <tr className="border-b border-border bg-muted">
                   <th className="p-2 w-8"></th>
                   <th className="text-left p-2 font-medium text-muted-foreground">Título</th>
                   <th className="text-left p-2 font-medium text-muted-foreground">Prioridad</th>

@@ -689,7 +689,7 @@ const AppReports = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <h1 className="tnum text-[22px] font-semibold tracking-[-.02em] text-foreground flex items-center gap-2">
+        <h1 className="font-display text-[17px] font-semibold tracking-[-.01em] text-foreground flex items-center gap-2">
           <BarChart3 className="h-6 w-6" /> Informes
         </h1>
         {role === "MASTER_ADMIN" && selectedAccount && (

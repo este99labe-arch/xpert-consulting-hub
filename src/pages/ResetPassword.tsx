@@ -72,7 +72,7 @@ const ResetPassword = () => {
             <KeyRound className="h-7 w-7" />
           </div>
           <div className="space-y-1">
-            <CardTitle className="tnum text-[22px] font-semibold tracking-[-.02em]">Nueva contraseña</CardTitle>
+            <CardTitle className="font-display text-[17px] font-semibold tracking-[-.01em]">Nueva contraseña</CardTitle>
             <CardDescription className="text-muted-foreground">
               {success ? "¡Contraseña actualizada!" : "Introduce tu nueva contraseña"}
             </CardDescription>

@@ -119,94 +119,77 @@ const MyAttendanceView = ({
     : undefined;
 
   return (
-    <div className="space-y-5">
-      {/* Clock-in Hero Card */}
-      <Card className="border-0 bg-gradient-to-br from-primary/[0.03] to-primary/[0.08]">
-        <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            {/* Left: Today info */}
-            <div className="flex-1">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">
-                {format(new Date(), "EEEE, d 'de' MMMM", { locale: es })}
-              </p>
-              <div className="flex items-baseline gap-2 mt-2">
-                <span className="text-4xl font-bold tracking-tight tabular-nums">
-                  {Math.floor(todayWorkedMins / 60)}:{(todayWorkedMins % 60).toString().padStart(2, "0")}
-                </span>
-                <span className="text-sm text-muted-foreground">
-                  / {Math.floor(dailyExpectedMins / 60)}:{(dailyExpectedMins % 60).toString().padStart(2, "0")} h
-                </span>
-              </div>
-
-              {/* Today progress bar */}
-              <div className="mt-3 w-full max-w-xs">
-                <div className="h-1.5 rounded-full bg-border overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-primary transition-all duration-700 ease-out"
-                    style={{ width: `${todayProgress}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Today sessions summary */}
-              {todayRecords.length > 0 && (
-                <div className="flex flex-wrap items-center gap-3 mt-3 text-xs text-muted-foreground">
-                  {todayRecords.map((r, i) => (
-                    <span key={r.id} className="flex items-center gap-1">
-                      <LogIn className="h-3 w-3" />
-                      {r.check_in ? format(new Date(r.check_in), "HH:mm") : "—"}
-                      {r.check_out && (
-                        <>
-                          <span className="mx-0.5">→</span>
-                          <LogOut className="h-3 w-3" />
-                          {format(new Date(r.check_out), "HH:mm")}
-                        </>
-                      )}
-                      {!r.check_out && (
-                        <Badge variant="default" className="text-[9px] ml-1 animate-pulse py-0 px-1">Activa</Badge>
-                      )}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Right: Action button */}
-            <div className="flex flex-col items-center gap-2">
-              {canCheckIn && (
-                <Button
-                  size="lg"
-                  className="h-14 w-14 rounded-full"
-                  onClick={() => checkInMutation.mutate()}
-                  disabled={checkInMutation.isPending}
-                >
-                  {checkInMutation.isPending
-                    ? <Loader2 className="h-5 w-5 animate-spin" />
-                    : <Play className="h-5 w-5 ml-0.5" />
-                  }
-                </Button>
-              )}
-              {hasActiveSession && (
-                <Button
-                  size="lg"
-                  variant="destructive"
-                  className="h-14 w-14 rounded-full"
-                  onClick={() => checkOutMutation.mutate()}
-                  disabled={checkOutMutation.isPending}
-                >
-                  {checkOutMutation.isPending
-                    ? <Loader2 className="h-5 w-5 animate-spin" />
-                    : <Square className="h-4 w-4" />
-                  }
-                </Button>
-              )}
-              <span className="text-[11px] font-medium text-muted-foreground">
-                {canCheckIn
-                  ? (todayRecords.length > 0 ? "Reanudar jornada" : "Iniciar jornada")
-                  : "Finalizar"
-                }
+    <div className="space-y-4">
+      {/* Tarjeta de fichaje: anillo de progreso de la jornada */}
+      <Card tone="feature">
+        <CardContent className="flex flex-col items-center gap-6 px-[18px] py-6 md:flex-row md:items-center md:justify-between">
+          {/* Anillo de progreso. Girado -90° para que arranque arriba. */}
+          <div className="relative h-[180px] w-[180px] shrink-0">
+            <svg viewBox="0 0 180 180" className="h-full w-full -rotate-90">
+              <circle cx="90" cy="90" r="78" fill="none" stroke="hsl(var(--chart-track))" strokeWidth="12" />
+              <circle
+                cx="90" cy="90" r="78" fill="none"
+                stroke="hsl(var(--primary))" strokeWidth="12" strokeLinecap="round"
+                strokeDasharray={2 * Math.PI * 78}
+                strokeDashoffset={2 * Math.PI * 78 * (1 - todayProgress / 100)}
+                className="transition-[stroke-dashoffset] duration-700 ease-out"
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="tnum text-[34px] font-semibold leading-none tracking-[-.03em] text-figure">
+                {Math.floor(todayWorkedMins / 60)}:{(todayWorkedMins % 60).toString().padStart(2, "0")}
+              </span>
+              <span className="tnum mt-1.5 text-[11px] text-muted-foreground">
+                de {Math.floor(dailyExpectedMins / 60)}:{(dailyExpectedMins % 60).toString().padStart(2, "0")} h
               </span>
             </div>
+          </div>
+
+          <div className="flex min-w-0 flex-1 flex-col items-center gap-3 md:items-start">
+            <p className="tnum text-[10px] uppercase tracking-[.08em] text-faint">
+              {format(new Date(), "EEEE, d 'de' MMMM", { locale: es })}
+            </p>
+
+            {todayRecords.length > 0 && (
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] text-muted-foreground">
+                {todayRecords.map((r) => (
+                  <span key={r.id} className="flex items-center gap-1">
+                    <LogIn className="h-3 w-3 stroke-[1.8] text-faint" />
+                    <span className="tnum">{r.check_in ? format(new Date(r.check_in), "HH:mm") : "—"}</span>
+                    {r.check_out && (
+                      <>
+                        <span className="mx-0.5 text-faint">→</span>
+                        <LogOut className="h-3 w-3 stroke-[1.8] text-faint" />
+                        <span className="tnum">{format(new Date(r.check_out), "HH:mm")}</span>
+                      </>
+                    )}
+                    {!r.check_out && <Badge variant="success" className="ml-1">Activa</Badge>}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {canCheckIn && (
+              <Button
+                className="h-[38px] w-full max-w-[220px] gap-2"
+                onClick={() => checkInMutation.mutate()}
+                disabled={checkInMutation.isPending}
+              >
+                {checkInMutation.isPending ? <Loader2 className="animate-spin" /> : <Play />}
+                {todayRecords.length > 0 ? "Reanudar jornada" : "Iniciar jornada"}
+              </Button>
+            )}
+            {hasActiveSession && (
+              <Button
+                variant="destructive"
+                className="h-[38px] w-full max-w-[220px] gap-2"
+                onClick={() => checkOutMutation.mutate()}
+                disabled={checkOutMutation.isPending}
+              >
+                {checkOutMutation.isPending ? <Loader2 className="animate-spin" /> : <Square />}
+                Pausar jornada
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

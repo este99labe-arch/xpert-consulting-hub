@@ -171,7 +171,7 @@ const AppSettings = () => {
                       <current.icon className="h-5 w-5" />
                     </div>
                     <div>
-                      <h1 className="tnum text-[20px] font-semibold tracking-[-.02em] leading-tight tracking-tight">{current.title}</h1>
+                      <h1 className="font-display text-[17px] font-semibold tracking-[-.01em] leading-tight">{current.title}</h1>
                       <p className="text-sm text-muted-foreground">{current.desc}</p>
                     </div>
                   </div>
