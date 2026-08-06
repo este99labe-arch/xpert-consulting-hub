@@ -1,0 +1,115 @@
+/* ============================================================
+   Midnight — tokens del sistema de diseño
+   XpertConsulting ERP · agosto 2026
+
+   Sustituye el bloque .dark de src/index.css por este.
+   Formato HSL sin coma, tal y como lo consume tailwind.config.ts
+   (`hsl(var(--token))`). No cambies :root: el modo claro se
+   mantiene y Midnight se activa con class="dark" en <html>.
+   ============================================================ */
+
+.dark {
+  /* --- Superficies (4 niveles + rail) ------------------------ */
+  --sidebar-background: 225 33% 5%;   /* #080A10  rail de iconos      */
+  --sidebar:            225 33% 5%;
+  --sidebar-accent:     221 28% 11%;  /* #151A25  item activo         */
+  --sidebar-border:     223 22% 13%;  /* #191D27                      */
+  --sidebar-foreground: 221 14% 60%;  /* #8A93A6                      */
+  --sidebar-accent-foreground: 218 31% 95%;
+  --sidebar-primary:    219 62% 56%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-ring:       219 62% 56%;
+
+  --background: 222 29% 7%;           /* #0C0F16  lienzo              */
+  --card:       221 30% 8%;           /* #0F131C  tarjeta             */
+  --popover:    221 28% 11%;          /* #151A25  elevado             */
+  --muted:      221 27% 10%;          /* #12161F  cabecera de tabla,
+                                          input, chip                 */
+  --secondary:  221 28% 11%;          /* #151A25  botón secundario    */
+
+  /* --- Texto -------------------------------------------------- */
+  --foreground:            218 31% 95%;  /* #EEF1F6                   */
+  --card-foreground:       218 31% 95%;
+  --popover-foreground:    218 31% 95%;
+  --secondary-foreground:  218 31% 95%;
+  --muted-foreground:      221 14% 60%;  /* #8A93A6  secundario       */
+  /* Cifras destacadas: #F4F6FA → 220 38% 97% (ver --figure)        */
+  --figure:                220 38% 97%;
+  /* Texto apagado / metadatos: #6C7488                             */
+  --subtle:                223 11% 48%;
+  /* Placeholder e iconos inactivos: #4A5162                        */
+  --faint:                 223 14% 34%;
+
+  /* --- Bordes ------------------------------------------------- */
+  --border: 221 24% 15%;              /* #1E2431  borde de tarjeta    */
+  --input:  223 24% 17%;              /* #212736  borde de campo      */
+  --border-subtle: 223 22% 13%;       /* #191D27  separador de fila   */
+  --border-strong: 222 21% 19%;       /* #262C3A  botón secundario    */
+
+  /* --- Acento (acción) ---------------------------------------- */
+  --primary:            219 62% 56%;  /* #4A7BD4                      */
+  --primary-foreground: 0 0% 100%;
+  --primary-hover:      217 72% 63%;  /* #5B90E4                      */
+  --ring:               219 62% 56%;
+  /* Acento legible sobre superficie oscura (enlaces, iconos)       */
+  --accent-foreground:  219 79% 72%;  /* #7FA6F0                      */
+  --accent:             220 38% 13%;  /* #141C2C  fondo de chip azul  */
+  /* Fila seleccionada                                              */
+  --row-selected:        220 39% 14%; /* #151E30                      */
+  --row-selected-border: 220 35% 23%; /* #26344F                      */
+
+  /* --- Semántica ---------------------------------------------- */
+  --success:            153 52% 66%;  /* #7DD6AE  texto "cobrado"     */
+  --success-foreground: 157 33% 11%;  /* #12241D  fondo del badge     */
+  --success-border:     152 35% 17%;  /* #1C3A2C                      */
+
+  --destructive:            10 73% 56%;  /* #E0563C  botón/punto      */
+  --destructive-foreground: 0 0% 100%;
+  --destructive-text:       12 77% 75%;  /* #F0A08C  texto sobre osc. */
+  --destructive-surface:    8 35% 12%;   /* #2A1714  fondo del badge  */
+  --destructive-border:     10 41% 18%;  /* #40211B                   */
+
+  --warning:            37 73% 56%;   /* #E0A03C  punto/barra         */
+  --warning-foreground: 0 0% 100%;
+  --warning-text:       39 71% 69%;   /* #E8C27A  texto sobre oscuro  */
+  --warning-surface:    36 38% 10%;   /* #241C10                      */
+  --warning-border:     37 41% 16%;   /* #3A2D18                      */
+
+  /* --- Gráficas ------------------------------------------------
+     Escala secuencial azul para mapas de calor y cohortes.
+     No usar chart-1..5 categórico salvo que las series no tengan
+     significado semántico.                                          */
+  --chart-1: 219 62% 56%;             /* #4A7BD4  serie principal     */
+  --chart-2: 217 51% 48%;             /* #3C6BB8                      */
+  --chart-3: 217 51% 35%;             /* #2C4E86                      */
+  --chart-4: 218 47% 23%;             /* #1F3355                      */
+  --chart-5: 220 29% 12%;             /* #161C28  celda vacía         */
+  --chart-grid:  223 22% 13%;         /* #191D27  líneas de rejilla   */
+  --chart-track: 221 23% 18%;         /* #242B3A  barra "esperado"    */
+  --chart-peak:  217 72% 63%;         /* #5B90E4  barra en curso      */
+
+  /* --- Radios (Midnight usa una escala propia) ---------------- */
+  --radius: 0.875rem;                 /* 14px  tarjeta                */
+  /* control 8px  = calc(var(--radius) - 6px)                        */
+  /* chip    6px  = calc(var(--radius) - 8px)                        */
+
+  /* --- Sombras: Midnight NO usa sombra salvo en diálogos ------- */
+  --shadow-2xs: none;
+  --shadow-xs:  none;
+  --shadow-sm:  none;
+  --shadow:     none;
+  --shadow-md:  none;
+  --shadow-lg:  none;
+  --shadow-xl:  0 24px 60px rgb(0 0 0 / 0.5);
+  --shadow-2xl: 0 24px 60px rgb(0 0 0 / 0.5);
+}
+
+/* Cifras tabulares: obligatorio en todo importe, hora o cantidad.
+   Añadir a @layer utilities de index.css. */
+@layer utilities {
+  .tnum {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+}

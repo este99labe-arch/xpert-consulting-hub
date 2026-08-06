@@ -25,7 +25,11 @@ function loadFacebookSdk(): Promise<void> {
     window.fbAsyncInit = () => {
       window.FB.init({
         appId: META_APP_ID,
-        cookie: true,
+        // Sin cookie de sesión: con ella, FB.login puede devolver el
+        // authResponse guardado de un intento anterior — y con él un `code` ya
+        // consumido, que Meta rechaza como si estuviera caducado. Desde el
+        // servidor es indistinguible. Así cada clic emite un code nuevo.
+        cookie: false,
         xfbml: false,
         version: META_GRAPH_VERSION,
       });
@@ -98,13 +102,21 @@ const WhatsAppEmbeddedSignup = ({ accountId, onConnected }: Props) => {
         },
       });
       if (error || (data as any)?.error) {
-        let msg = (data as any)?.error || error?.message || "Error al conectar";
+        let payload: any = data;
         // supabase-js expone el cuerpo de la respuesta de error en error.context
         // (un Response). Ahí viene el detalle real del backend ({ error: "..." }).
         try {
           const body = await (error as any)?.context?.json?.();
-          if (body?.error) msg = body.error;
+          if (body) payload = body;
         } catch { /* la respuesta no traía JSON */ }
+
+        let msg = payload?.error || error?.message || "Error al conectar";
+        // El código de error de Meta es lo único que permite distinguir un
+        // secreto mal puesto de un permiso que falta; sin él solo se puede
+        // adivinar, así que se muestra y se deja copiar.
+        const m = payload?.meta_error;
+        if (m?.code) msg += ` (Meta code ${m.code}${m.error_subcode ? `/${m.error_subcode}` : ""}${m.fbtrace_id ? `, trace ${m.fbtrace_id}` : ""})`;
+        console.error("Embedded Signup falló:", payload);
         throw new Error(msg);
       }
       toast({ title: "WhatsApp conectado", description: "Número vinculado y guardado correctamente." });
@@ -149,6 +161,9 @@ const WhatsAppEmbeddedSignup = ({ accountId, onConnected }: Props) => {
           config_id: META_ES_CONFIG_ID,
           response_type: "code",
           override_default_response_type: true,
+          // Rehace la autorización aunque ya estuviera concedida, en vez de
+          // resolver al vuelo con lo que hubiera guardado.
+          auth_type: "rerequest",
           extras: {
             setup: {},
             featureType: META_ES_FEATURE_TYPE,

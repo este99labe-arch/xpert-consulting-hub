@@ -79,6 +79,29 @@ async function waSendImage(phoneNumberId, token, to, mediaId, caption) {
   }
 }
 
+/**
+ * ¿Puede este usuario administrar la cuenta?
+ *
+ * Vale por pertenencia directa (MANAGER/MASTER_ADMIN) o por una sesión de
+ * soporte activa. Las Edge Functions usan la service key y se saltan las RLS,
+ * así que la suplantación que resuelve get_user_account_id() no llega aquí:
+ * hay que comprobarla a mano. Es seguro fiarse de la sesión de soporte porque
+ * start_support_session solo la abre a un MASTER_ADMIN y caduca a las 8 horas.
+ */
+async function canManageAccount(admin, userId, accountId) {
+  const { data: ua } = await admin
+    .from("user_accounts").select("roles(code)")
+    .eq("user_id", userId).eq("account_id", accountId).maybeSingle();
+  const roleCode = ua?.roles?.code;
+  if (roleCode === "MANAGER" || roleCode === "MASTER_ADMIN") return true;
+
+  const { data: ss } = await admin
+    .from("support_sessions").select("user_id")
+    .eq("user_id", userId).eq("account_id", accountId)
+    .gt("expires_at", new Date().toISOString()).maybeSingle();
+  return !!ss;
+}
+
 const renderTemplate = (tmpl, vars) =>
   tmpl.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, k) => vars[k] ?? "");
 
@@ -133,10 +156,7 @@ Deno.serve(async (req) => {
     const { data: { user } } = await userClient.auth.getUser();
     if (!user) return json({ error: "No autenticado" }, 401);
 
-    const { data: ua } = await admin
-      .from("user_accounts").select("roles(code)").eq("user_id", user.id).eq("account_id", conv.account_id).maybeSingle();
-    const roleCode = ua?.roles?.code;
-    let allowed = roleCode === "MANAGER" || roleCode === "MASTER_ADMIN" || conv.assigned_to === user.id;
+    let allowed = conv.assigned_to === user.id || await canManageAccount(admin, user.id, conv.account_id);
     if (!allowed) {
       // Miembros asignados a la conversación (multi-asignación)
       const { data: mem } = await admin
