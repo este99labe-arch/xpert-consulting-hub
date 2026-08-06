@@ -48,21 +48,21 @@ const RevenueChart = ({ data, period, onPeriodChange }: RevenueChartProps) => {
                     <stop offset="100%" stopColor="hsl(var(--destructive))" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="label" tick={{ fontSize: 11 }} className="text-muted-foreground" />
-                <YAxis tick={{ fontSize: 11 }} className="text-muted-foreground" width={50} />
+                <CartesianGrid stroke="hsl(var(--chart-grid))" vertical={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 10, fill: "hsl(var(--faint))", fontFamily: "var(--font-mono)" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: "hsl(var(--faint))", fontFamily: "var(--font-mono)" }} axisLine={false} tickLine={false} width={50} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Area type="monotone" dataKey="income" stroke="hsl(var(--success))" fill="url(#incGrad)" strokeWidth={2} />
                 <Area type="monotone" dataKey="expense" stroke="hsl(var(--destructive))" fill="url(#expGrad)" strokeWidth={2} />
               </AreaChart>
             ) : (
               <BarChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="label" tick={{ fontSize: 11 }} className="text-muted-foreground" />
-                <YAxis tick={{ fontSize: 11 }} className="text-muted-foreground" width={50} />
+                <CartesianGrid stroke="hsl(var(--chart-grid))" vertical={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 10, fill: "hsl(var(--faint))", fontFamily: "var(--font-mono)" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: "hsl(var(--faint))", fontFamily: "var(--font-mono)" }} axisLine={false} tickLine={false} width={50} />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="income" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} barSize={period === "30d" ? 8 : 20} />
-                <Bar dataKey="expense" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} barSize={period === "30d" ? 8 : 20} />
+                <Bar dataKey="income" fill="hsl(var(--success))" radius={[3, 3, 0, 0]} barSize={period === "30d" ? 8 : 20} />
+                <Bar dataKey="expense" fill="hsl(var(--destructive))" radius={[3, 3, 0, 0]} barSize={period === "30d" ? 8 : 20} />
               </BarChart>
             )}
           </ChartContainer>

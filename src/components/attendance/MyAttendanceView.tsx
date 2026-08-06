@@ -275,7 +275,7 @@ const MyAttendanceView = ({
           </div>
           <ChartContainer config={chartConfig} className="h-[200px] w-full">
             <BarChart data={weeklyChartData} barGap={2} barSize={20}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
+              <CartesianGrid stroke="hsl(var(--chart-grid))" vertical={false} />
               <XAxis dataKey="name" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
               <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}h`} width={32} />
               <ChartTooltip content={<ChartTooltipContent />} cursor={{ fill: "hsl(var(--muted) / 0.3)" }} />

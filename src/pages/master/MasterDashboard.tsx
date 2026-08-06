@@ -174,7 +174,7 @@ const MasterDashboard = () => {
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={growth}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+                <CartesianGrid stroke="hsl(var(--chart-grid))" vertical={false} />
                 <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
                 <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
                 <Tooltip contentStyle={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
@@ -194,7 +194,7 @@ const MasterDashboard = () => {
             ) : (
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={moduleDist} layout="vertical" margin={{ left: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+                  <CartesianGrid stroke="hsl(var(--chart-grid))" vertical={false} />
                   <XAxis type="number" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
                   <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" width={100} />
                   <Tooltip contentStyle={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />

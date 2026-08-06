@@ -131,11 +131,11 @@ const WidgetCard = ({
         <ChartContainer config={chartConfig} className="!aspect-auto h-full w-full">
           {widget.type === "bar" ? (
             <BarChart {...common}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <CartesianGrid stroke="hsl(var(--chart-grid))" vertical={false} />
               <XAxis dataKey="label" tick={{ fontSize: 10 }} className="text-muted-foreground" interval="preserveStartEnd" />
               <YAxis tick={{ fontSize: 10 }} className="text-muted-foreground" width={46} />
               <ChartTooltip content={<ChartTooltipContent />} />
-              <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} barSize={widget.months > 6 ? 12 : 22} />
+              <Bar dataKey="value" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} barSize={widget.months > 6 ? 12 : 22} />
             </BarChart>
           ) : widget.type === "area" ? (
             <AreaChart {...common}>
@@ -145,7 +145,7 @@ const WidgetCard = ({
                   <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <CartesianGrid stroke="hsl(var(--chart-grid))" vertical={false} />
               <XAxis dataKey="label" tick={{ fontSize: 10 }} className="text-muted-foreground" interval="preserveStartEnd" />
               <YAxis tick={{ fontSize: 10 }} className="text-muted-foreground" width={46} />
               <ChartTooltip content={<ChartTooltipContent />} />
@@ -153,7 +153,7 @@ const WidgetCard = ({
             </AreaChart>
           ) : (
             <LineChart {...common}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <CartesianGrid stroke="hsl(var(--chart-grid))" vertical={false} />
               <XAxis dataKey="label" tick={{ fontSize: 10 }} className="text-muted-foreground" interval="preserveStartEnd" />
               <YAxis tick={{ fontSize: 10 }} className="text-muted-foreground" width={46} />
               <ChartTooltip content={<ChartTooltipContent />} />

@@ -242,7 +242,7 @@ const MasterCostForecast = () => {
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
             <ComposedChart data={series} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+              <CartesianGrid stroke="hsl(var(--chart-grid))" vertical={false} />
               <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
               <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" tickFormatter={(v) => EUR0(v)} width={70} />
               <Tooltip
@@ -250,7 +250,7 @@ const MasterCostForecast = () => {
                 formatter={(v: any, name: any) => [v === null ? "—" : EUR(Number(v)), name]}
               />
               <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Bar name="Ingresos" dataKey="ingreso" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} maxBarSize={40} />
+              <Bar name="Ingresos" dataKey="ingreso" fill="hsl(var(--success))" radius={[3, 3, 0, 0]} maxBarSize={40} />
               <Line name="Coste previsto" dataKey="coste" stroke="hsl(var(--destructive))" strokeWidth={2} strokeDasharray="5 4" dot={false} />
               <Line name="Beneficio" dataKey="beneficio" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 3 }} connectNulls={false} />
             </ComposedChart>
