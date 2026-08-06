@@ -348,7 +348,7 @@ const AppAttendance = () => {
                 onClick={() => setActiveTab("my")}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                   activeTab === "my"
-                    ? "bg-card text-foreground shadow-sm"
+                    ? "bg-card text-foreground"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -359,7 +359,7 @@ const AppAttendance = () => {
                 onClick={() => setActiveTab("team")}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                   activeTab === "team"
-                    ? "bg-card text-foreground shadow-sm"
+                    ? "bg-card text-foreground"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >

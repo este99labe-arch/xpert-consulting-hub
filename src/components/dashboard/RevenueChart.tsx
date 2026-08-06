@@ -24,13 +24,13 @@ const RevenueChart = ({ data, period, onPeriodChange }: RevenueChartProps) => {
   const useArea = period === "7d";
 
   return (
-    <Card className="border-0 shadow-sm overflow-hidden">
+    <Card className="border-0 overflow-hidden">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-base font-semibold">Ingresos vs Gastos</CardTitle>
         <ToggleGroup type="single" value={period} onValueChange={(v) => v && onPeriodChange(v)} size="sm" className="bg-muted rounded-lg p-0.5">
-          <ToggleGroupItem value="7d" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:shadow-sm">7d</ToggleGroupItem>
-          <ToggleGroupItem value="30d" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:shadow-sm">30d</ToggleGroupItem>
-          <ToggleGroupItem value="12m" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:shadow-sm">12m</ToggleGroupItem>
+          <ToggleGroupItem value="7d" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:">7d</ToggleGroupItem>
+          <ToggleGroupItem value="30d" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:">30d</ToggleGroupItem>
+          <ToggleGroupItem value="12m" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:">12m</ToggleGroupItem>
         </ToggleGroup>
       </CardHeader>
       <CardContent className="pt-0 pb-4">

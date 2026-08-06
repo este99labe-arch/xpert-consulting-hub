@@ -418,7 +418,7 @@ const AppChat = () => {
   const displayName = (c: any) => c?.business_clients?.name || c?.contact_name || c?.contact_phone || "Contacto";
 
   return (
-    <div className="flex h-[calc(100vh-8.5rem)] overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+    <div className="flex h-[calc(100vh-8.5rem)] overflow-hidden rounded-xl border border-border bg-card">
       {/* ─── Lista de conversaciones ─── */}
       <aside className="flex w-full max-w-xs flex-col border-r border-border">
         <div className="border-b border-border p-3">

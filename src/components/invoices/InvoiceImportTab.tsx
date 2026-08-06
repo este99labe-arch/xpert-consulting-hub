@@ -439,13 +439,13 @@ const InvoiceImportTab = () => {
                           {sc.label}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm">
+                      <TableCell className="text-xs">
                         {ext.type === "EXPENSE" ? "Gasto" : ext.type === "INVOICE" ? "Factura" : "—"}
                       </TableCell>
-                      <TableCell className="text-sm truncate max-w-[200px]">
+                      <TableCell className="text-xs truncate max-w-[200px]">
                         {ext.concept || imp.error_message || "—"}
                       </TableCell>
-                      <TableCell className="text-right text-sm font-mono">
+                      <TableCell className="text-right text-xs font-mono">
                         {ext.amount_total ? `€${Number(ext.amount_total).toLocaleString("es-ES", { minimumFractionDigits: 2 })}` : "—"}
                       </TableCell>
                       <TableCell>
@@ -455,7 +455,7 @@ const InvoiceImportTab = () => {
                           </span>
                         ) : "—"}
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
+                      <TableCell className="text-xs text-muted-foreground">
                         {format(new Date(imp.created_at), "dd/MM/yy HH:mm", { locale: es })}
                       </TableCell>
                       <TableCell className="text-right">
@@ -627,10 +627,10 @@ const InvoiceImportTab = () => {
                       <TableBody>
                         {editedData.lines.map((line: any, i: number) => (
                           <TableRow key={i}>
-                            <TableCell className="text-sm">{line.description || "—"}</TableCell>
-                            <TableCell className="text-right text-sm">{line.quantity}</TableCell>
-                            <TableCell className="text-right text-sm">{Number(line.unit_price).toFixed(2)}</TableCell>
-                            <TableCell className="text-right text-sm">{Number(line.amount).toFixed(2)}</TableCell>
+                            <TableCell className="text-xs">{line.description || "—"}</TableCell>
+                            <TableCell className="text-right text-xs">{line.quantity}</TableCell>
+                            <TableCell className="text-right text-xs">{Number(line.unit_price).toFixed(2)}</TableCell>
+                            <TableCell className="text-right text-xs">{Number(line.amount).toFixed(2)}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>

@@ -121,7 +121,7 @@ const MyAttendanceView = ({
   return (
     <div className="space-y-5">
       {/* Clock-in Hero Card */}
-      <Card className="border-0 bg-gradient-to-br from-primary/[0.03] to-primary/[0.08] shadow-sm">
+      <Card className="border-0 bg-gradient-to-br from-primary/[0.03] to-primary/[0.08]">
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             {/* Left: Today info */}
@@ -176,7 +176,7 @@ const MyAttendanceView = ({
               {canCheckIn && (
                 <Button
                   size="lg"
-                  className="h-14 w-14 rounded-full shadow-md"
+                  className="h-14 w-14 rounded-full"
                   onClick={() => checkInMutation.mutate()}
                   disabled={checkInMutation.isPending}
                 >
@@ -190,7 +190,7 @@ const MyAttendanceView = ({
                 <Button
                   size="lg"
                   variant="destructive"
-                  className="h-14 w-14 rounded-full shadow-md"
+                  className="h-14 w-14 rounded-full"
                   onClick={() => checkOutMutation.mutate()}
                   disabled={checkOutMutation.isPending}
                 >
@@ -213,7 +213,7 @@ const MyAttendanceView = ({
 
       {/* Monthly stats row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <Card className="shadow-sm border">
+        <Card className=" border">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -223,13 +223,13 @@ const MyAttendanceView = ({
                   {workedMins.toString().padStart(2, "0")}<span className="text-base font-medium text-muted-foreground">m</span>
                 </p>
               </div>
-              <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+              <div className="h-9 w-9 rounded-control bg-muted flex items-center justify-center">
                 <Timer className="h-4 w-4 text-primary" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="shadow-sm border">
+        <Card className=" border">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -239,13 +239,13 @@ const MyAttendanceView = ({
                   {expectedMins.toString().padStart(2, "0")}<span className="text-base font-medium text-muted-foreground">m</span>
                 </p>
               </div>
-              <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
+              <div className="h-9 w-9 rounded-control bg-muted flex items-center justify-center">
                 <Timer className="h-4 w-4 text-muted-foreground" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="shadow-sm border">
+        <Card className=" border">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -254,7 +254,7 @@ const MyAttendanceView = ({
                   {balanceMins >= 0 ? "+" : ""}{formatMinutes(balanceMins)}
                 </p>
               </div>
-              <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${balanceMins >= 0 ? "bg-primary/10" : "bg-destructive/10"}`}>
+              <div className={`h-9 w-9 rounded-control flex items-center justify-center ${balanceMins >= 0 ? "bg-primary/10" : "bg-destructive/10"}`}>
                 {balanceMins > 0 ? <TrendingUp className="h-4 w-4 text-primary" /> :
                   balanceMins < 0 ? <TrendingDown className="h-4 w-4 text-destructive" /> :
                     <Minus className="h-4 w-4 text-muted-foreground" />}
@@ -277,7 +277,7 @@ const MyAttendanceView = ({
       </div>
 
       {/* Weekly chart */}
-      <Card className="shadow-sm border">
+      <Card className=" border">
         <CardContent className="p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold">Horas por semana</h3>
@@ -304,7 +304,7 @@ const MyAttendanceView = ({
       </Card>
 
       {/* Weekly detail table */}
-      <Card className="shadow-sm border overflow-hidden">
+      <Card className=" border overflow-hidden">
         <div className="flex items-center justify-between px-5 py-3 border-b bg-muted/30">
           <h3 className="text-sm font-semibold">Detalle semanal</h3>
           <div className="flex items-center gap-1">
@@ -360,7 +360,7 @@ const MyAttendanceView = ({
                           <span className="text-sm font-medium capitalize">{format(day, "EEE", { locale: es })}</span>
                           <span className="text-xs text-muted-foreground">{format(day, "d")}</span>
                           {isTodayDay && (
-                            <span className="text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded">Hoy</span>
+                            <span className="text-[10px] font-semibold text-primary bg-muted px-1.5 py-0.5 rounded">Hoy</span>
                           )}
                         </div>
                       </TableCell>
@@ -401,10 +401,10 @@ const MyAttendanceView = ({
                           <span className="text-muted-foreground/50 text-sm">—</span>
                         )}
                       </TableCell>
-                      <TableCell className="py-2.5 text-sm font-medium tabular-nums">
+                      <TableCell className="py-2.5 text-xs font-medium tabular-nums">
                         {totalWorkedMins > 0 ? formatMinutes(totalWorkedMins) : <span className="text-muted-foreground/50">—</span>}
                       </TableCell>
-                      <TableCell className="py-2.5 text-sm text-muted-foreground tabular-nums">
+                      <TableCell className="py-2.5 text-xs text-muted-foreground tabular-nums">
                         {isWorkDay ? formatMinutes(dailyExpectedMins) : (
                           <span className="text-xs text-muted-foreground/60">Libre</span>
                         )}

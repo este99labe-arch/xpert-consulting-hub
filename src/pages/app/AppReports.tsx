@@ -206,8 +206,8 @@ const PLReport = ({ accountId }: { accountId: string }) => {
                 <TableBody>
                   {plData.income.map((a: any) => (
                     <TableRow key={a.id}>
-                      <TableCell className="text-sm">{a.code} — {a.name}</TableCell>
-                      <TableCell className="text-right text-sm font-medium">{EUR(a.total)}</TableCell>
+                      <TableCell className="text-xs">{a.code} — {a.name}</TableCell>
+                      <TableCell className="text-right text-xs font-medium">{EUR(a.total)}</TableCell>
                     </TableRow>
                   ))}
                   <TableRow className="font-bold">
@@ -232,8 +232,8 @@ const PLReport = ({ accountId }: { accountId: string }) => {
                 <TableBody>
                   {plData.expenses.map((a: any) => (
                     <TableRow key={a.id}>
-                      <TableCell className="text-sm">{a.code} — {a.name}</TableCell>
-                      <TableCell className="text-right text-sm font-medium">{EUR(a.total)}</TableCell>
+                      <TableCell className="text-xs">{a.code} — {a.name}</TableCell>
+                      <TableCell className="text-right text-xs font-medium">{EUR(a.total)}</TableCell>
                     </TableRow>
                   ))}
                   <TableRow className="font-bold">
@@ -474,7 +474,7 @@ const InventoryReport = ({ accountId }: { accountId: string }) => {
                   return (
                     <TableRow key={p.id}>
                       <TableCell className="text-xs font-mono">{p.sku}</TableCell>
-                      <TableCell className="font-medium text-sm">{p.name}</TableCell>
+                      <TableCell className="font-medium text-xs">{p.name}</TableCell>
                       <TableCell className="text-center">
                         <span className={isLow ? "text-destructive font-bold" : ""}>
                           {p.current_stock}

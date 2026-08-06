@@ -47,7 +47,7 @@ const MyDocumentsWidget = () => {
           <div className="space-y-2">
             {docs.map((d: any) => (
               <div key={d.id} className="flex items-center gap-2 p-2 rounded-md border">
-                <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center shrink-0">
                   <FileText className="h-4 w-4 text-primary" />
                 </div>
                 <div className="min-w-0 flex-1">

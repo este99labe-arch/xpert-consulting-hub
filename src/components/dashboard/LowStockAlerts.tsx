@@ -19,7 +19,7 @@ const LowStockAlerts = ({ products }: LowStockAlertsProps) => {
   const top5 = products.slice(0, 5);
 
   return (
-    <Card className="border-0 shadow-sm">
+    <Card className="border-0">
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold flex items-center gap-2">
           <AlertTriangle className="h-4 w-4 text-[hsl(var(--warning))]" />

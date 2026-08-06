@@ -78,7 +78,7 @@ const TaskCard = ({ task, members, clients, onClick, onDragStart }: Props) => {
       onDragStart={onDragStart}
       onClick={onClick}
       className={cn(
-        "p-3 space-y-2 cursor-grab active:cursor-grabbing transition-all hover:shadow-md hover:border-primary/40",
+        "p-3 space-y-2 cursor-grab active:cursor-grabbing transition-colors hover:bg-popover hover:border-primary/40",
         overdue && "border-destructive/40"
       )}
     >

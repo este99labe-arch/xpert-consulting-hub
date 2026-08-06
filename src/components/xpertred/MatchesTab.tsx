@@ -282,7 +282,7 @@ const MatchesTab = () => {
                       className={`w-full text-left p-3 border-b hover:bg-muted/50 transition-colors ${selectedMatch?.id === m.id ? "bg-muted" : ""}`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
+                        <div className="h-10 w-10 rounded-full bg-[hsl(var(--border-strong))] flex items-center justify-center text-xs font-semibold text-accent-foreground">
                           {m.other_name.charAt(0)}
                         </div>
                         <div className="min-w-0">
@@ -302,7 +302,7 @@ const MatchesTab = () => {
                   <>
                     <div className="p-3 border-b">
                       <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                        <div className="h-8 w-8 rounded-full bg-[hsl(var(--border-strong))] flex items-center justify-center text-[11px] font-semibold text-accent-foreground">
                           {selectedMatch.other_name.charAt(0)}
                         </div>
                         <div className="min-w-0 flex-1">
@@ -374,7 +374,7 @@ const MatchesTab = () => {
                 <Card key={req.id} className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-lg font-bold text-primary">
+                      <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center text-lg font-bold text-primary">
                         {req.from_name.charAt(0)}
                       </div>
                       <div>

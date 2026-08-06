@@ -171,7 +171,7 @@ const AuditActivityTab = ({ accountId }: AuditActivityTabProps) => {
                         {actionLabels[log.action] || log.action}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm">
+                    <TableCell className="text-xs">
                       {entityLabels[log.entity_type] || log.entity_type}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground max-w-xs truncate">

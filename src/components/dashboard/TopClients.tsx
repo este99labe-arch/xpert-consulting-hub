@@ -16,7 +16,7 @@ const TopClients = ({ clients }: TopClientsProps) => {
   const max = clients.length > 0 ? clients[0].total : 1;
 
   return (
-    <Card className="border-0 shadow-sm">
+    <Card className="border-0">
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold flex items-center gap-2">
           <Users className="h-4 w-4 text-muted-foreground" />

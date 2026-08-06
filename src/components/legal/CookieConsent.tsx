@@ -58,7 +58,7 @@ export const CookieConsent = () => {
         <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6 sm:py-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-3">
-              <div className="rounded-lg bg-primary/10 p-2 shrink-0">
+              <div className="rounded-lg bg-muted p-2 shrink-0">
                 <Cookie className="h-5 w-5 text-primary" />
               </div>
               <div className="space-y-1">

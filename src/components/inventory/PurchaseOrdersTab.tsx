@@ -80,12 +80,12 @@ const PurchaseOrdersTab = ({ orders, isManager, onNewOrder, onUpdateStatus }: Pu
             )}
             {pagination.paginatedItems.map(o => (
               <TableRow key={o.id}>
-                <TableCell className="text-sm">{format(new Date(o.created_at), "dd/MM/yyyy", { locale: es })}</TableCell>
+                <TableCell className="text-xs">{format(new Date(o.created_at), "dd/MM/yyyy", { locale: es })}</TableCell>
                 <TableCell>{o.products?.name} <span className="text-xs text-muted-foreground">({o.products?.sku})</span></TableCell>
                 <TableCell className="text-right font-mono">{o.quantity}</TableCell>
                 <TableCell><Badge className={statusColors[o.status]}>{statusLabels[o.status]}</Badge></TableCell>
-                <TableCell className="text-sm">{o.estimated_date ? format(new Date(o.estimated_date), "dd/MM/yyyy") : "—"}</TableCell>
-                <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{o.notes}</TableCell>
+                <TableCell className="text-xs">{o.estimated_date ? format(new Date(o.estimated_date), "dd/MM/yyyy") : "—"}</TableCell>
+                <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">{o.notes}</TableCell>
                 {isManager && (
                   <TableCell>
                     {o.status !== "RECEIVED" && (

@@ -10,7 +10,6 @@ import { es } from "date-fns/locale";
 import StatCard from "@/components/shared/StatCard";
 import { fmtEUR as EUR } from "@/lib/format";
 import CashFeatureCard from "@/components/dashboard/CashFeatureCard";
-import BillingHeatmap from "@/components/dashboard/BillingHeatmap";
 import CustomDashboard from "@/components/dashboard/CustomDashboard";
 import RevenueChart from "@/components/dashboard/RevenueChart";
 import InvoiceStatusChart from "@/components/dashboard/InvoiceStatusChart";
@@ -272,10 +271,10 @@ const ManagerDashboard = () => {
         <div className="flex items-center gap-3 flex-wrap">
           <QuickActions />
           <ToggleGroup type="single" value={period} onValueChange={(v) => v && setPeriod(v as Period)} size="sm" className="bg-muted rounded-lg p-0.5">
-            <ToggleGroupItem value="7d" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:shadow-sm">7d</ToggleGroupItem>
-            <ToggleGroupItem value="30d" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:shadow-sm">30d</ToggleGroupItem>
-            <ToggleGroupItem value="90d" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:shadow-sm">90d</ToggleGroupItem>
-            <ToggleGroupItem value="year" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:shadow-sm">Año</ToggleGroupItem>
+            <ToggleGroupItem value="7d" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:">7d</ToggleGroupItem>
+            <ToggleGroupItem value="30d" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:">30d</ToggleGroupItem>
+            <ToggleGroupItem value="90d" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:">90d</ToggleGroupItem>
+            <ToggleGroupItem value="year" className="text-xs px-3 h-7 rounded-md data-[state=on]:bg-background data-[state=on]:">Año</ToggleGroupItem>
           </ToggleGroup>
         </div>
       </div>
@@ -311,9 +310,9 @@ const ManagerDashboard = () => {
         </div>
       </div>
 
-      {/* ── Fila 2: ritmo de facturación · próximos vencimientos ── */}
+      {/* ── Fila 2: evolución · próximos vencimientos ── */}
       <div className="grid gap-4 lg:grid-cols-[1.55fr_1fr]">
-        <BillingHeatmap invoices={invoices as any} />
+        <RevenueChart data={chartData} period={chartPeriod} onPeriodChange={setChartPeriod} />
         <UpcomingDuesWidget />
       </div>
 
@@ -325,9 +324,10 @@ const ManagerDashboard = () => {
       {/* ── Finanzas ── */}
       <div className="space-y-3">
         <SectionLabel>Finanzas</SectionLabel>
-        <div className="grid gap-4 lg:grid-cols-3">
-          <div className="lg:col-span-2"><RevenueChart data={chartData} period={chartPeriod} onPeriodChange={setChartPeriod} /></div>
-          <div className="lg:col-span-1"><InvoiceStatusChart data={statusData} /></div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <InvoiceStatusChart data={statusData} />
+          <TopClients clients={topClients} />
+          <LowStockAlerts products={lowStockProducts} />
         </div>
       </div>
 
@@ -335,7 +335,6 @@ const ManagerDashboard = () => {
       <div className="space-y-3">
         <SectionLabel>Clientes y equipo</SectionLabel>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <TopClients clients={topClients} />
           <TodayAttendanceWidget />
           <RemindersWidget />
         </div>
@@ -344,10 +343,7 @@ const ManagerDashboard = () => {
       {/* ── Operativa ── */}
       <div className="space-y-3">
         <SectionLabel>Operativa</SectionLabel>
-        <div className="grid gap-4 lg:grid-cols-3">
-          <div className="lg:col-span-2"><RecentActivity invoices={recent} /></div>
-          <div className="lg:col-span-1"><LowStockAlerts products={lowStockProducts} /></div>
-        </div>
+        <RecentActivity invoices={recent} />
       </div>
     </div>
   );

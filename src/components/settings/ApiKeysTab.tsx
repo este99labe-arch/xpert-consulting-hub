@@ -180,10 +180,10 @@ const ApiKeysTab = ({ accountId, isManager }: ApiKeysTabProps) => {
                         {k.is_active ? "Activa" : "Revocada"}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                       {format(new Date(k.created_at), "dd MMM yyyy", { locale: es })}
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                       {k.last_used_at ? format(new Date(k.last_used_at), "dd MMM yyyy HH:mm", { locale: es }) : "Nunca"}
                     </TableCell>
                     {isManager && (

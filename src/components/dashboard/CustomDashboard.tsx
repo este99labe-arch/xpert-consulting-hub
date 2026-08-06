@@ -166,7 +166,7 @@ const WidgetCard = ({
   };
 
   return (
-    <Card className="border-0 shadow-sm">
+    <Card className="border-0">
       <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
         <CardTitle className="truncate text-sm font-semibold">{title}</CardTitle>
         {editing && (

@@ -39,7 +39,7 @@ const ForgotPassword = () => {
 
       <Card className="relative w-full max-w-md shadow-xl border-border/50 backdrop-blur-sm">
         <CardHeader className="text-center space-y-3 pb-2">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground font-bold text-2xl shadow-lg shadow-primary/25">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground font-bold text-2xl shadow-primary/25">
             <Mail className="h-7 w-7" />
           </div>
           <div className="space-y-1">
@@ -68,7 +68,7 @@ const ForgotPassword = () => {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+                <div className="flex items-center gap-2 rounded-control border border-destructive-border bg-destructive-surface p-3 text-[11.5px] text-destructive-text">
                   <AlertCircle className="h-4 w-4 shrink-0" />
                   {error}
                 </div>
@@ -86,7 +86,7 @@ const ForgotPassword = () => {
                   className="h-11"
                 />
               </div>
-              <Button type="submit" className="w-full h-11 font-medium shadow-md shadow-primary/20" disabled={loading}>
+              <Button type="submit" className="w-full h-11 font-medium shadow-primary/20" disabled={loading}>
                 {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                 Enviar enlace
               </Button>

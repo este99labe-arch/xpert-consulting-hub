@@ -180,7 +180,7 @@ const JournalEntriesTab = ({
             )}
             {entries.map(entry => (
               <TableRow key={entry.id}>
-                <TableCell className="font-mono text-sm">{entry.entry_number || "—"}</TableCell>
+                <TableCell className="font-mono text-xs">{entry.entry_number || "—"}</TableCell>
                 <TableCell>{format(new Date(entry.date), "dd/MM/yyyy")}</TableCell>
                 <TableCell className="max-w-[300px] truncate">{entry.description || "—"}</TableCell>
                 <TableCell>

@@ -23,7 +23,7 @@ const InvoiceStatusChart = ({ data }: InvoiceStatusChartProps) => {
   const total = data.reduce((s, d) => s + d.count, 0);
 
   return (
-    <Card className="border-0 shadow-sm">
+    <Card className="border-0">
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold">Estado de Facturas</CardTitle>
       </CardHeader>

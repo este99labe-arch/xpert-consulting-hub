@@ -929,7 +929,7 @@ const AppInvoices = () => {
                     <TableBody>
                       {paginatedQuotes.map((q: any) => (
                         <TableRow key={q.id} className="cursor-pointer" onClick={() => setEditInvoice(q)}>
-                          <TableCell className="font-mono font-semibold text-sm">
+                          <TableCell className="font-mono font-semibold text-xs">
                             {q.invoice_number || q.id.slice(0, 8).toUpperCase()}
                           </TableCell>
                           <TableCell className="whitespace-nowrap hidden sm:table-cell">

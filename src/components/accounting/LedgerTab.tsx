@@ -94,7 +94,7 @@ const LedgerTab = ({ chartAccounts, allLines }: LedgerTabProps) => {
               ) : pagination.paginatedItems.map(l => (
                 <TableRow key={l.id}>
                   <TableCell>{l.journal_entries?.date ? format(new Date(l.journal_entries.date), "dd/MM/yyyy") : ""}</TableCell>
-                  <TableCell className="font-mono text-sm">{l.journal_entries?.entry_number}</TableCell>
+                  <TableCell className="font-mono text-xs">{l.journal_entries?.entry_number}</TableCell>
                   <TableCell className="max-w-[250px] truncate">{l.journal_entries?.description}</TableCell>
                   <TableCell className="text-right font-mono">{Number(l.debit) > 0 ? EUR(Number(l.debit)) : ""}</TableCell>
                   <TableCell className="text-right font-mono">{Number(l.credit) > 0 ? EUR(Number(l.credit)) : ""}</TableCell>

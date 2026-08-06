@@ -147,8 +147,8 @@ const InvoiceTemplateTab = ({ accountId, isManager }: Props) => {
               return (
                 <div
                   key={t.id}
-                  className={`relative cursor-pointer rounded-xl border-2 p-3 transition-all hover:shadow-md ${
-                    isSelected ? "border-primary bg-primary/5 shadow-sm" : "border-border hover:border-primary/50"
+                  className={`relative cursor-pointer rounded-xl border-2 p-3 transition-colors hover:bg-popover ${
+                    isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
                   }`}
                   onClick={() => { if (isManager) { setTemplate(t.id); setDirty(true); } }}
                 >
@@ -273,7 +273,7 @@ const InvoiceTemplateTab = ({ accountId, isManager }: Props) => {
             <CardDescription>{INVOICE_TEMPLATES.find((t) => t.id === template)?.name}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="w-full overflow-hidden rounded-lg border border-border bg-white shadow-sm" style={{ aspectRatio: "210/297" }}>
+            <div className="w-full overflow-hidden rounded-lg border border-border bg-white" style={{ aspectRatio: "210/297" }}>
               <iframe
                 srcDoc={previewHtml}
                 title="Vista previa personalizada"

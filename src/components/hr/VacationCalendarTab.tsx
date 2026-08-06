@@ -83,7 +83,7 @@ const VacationCalendarTab = () => {
                     isToday && "border-primary",
                     isWeekend && "bg-muted/30",
                     hasApproved && "bg-primary/15 border-primary/40",
-                    hasPending && !hasApproved && "shadow-md shadow-muted-foreground/20 border-dashed border-muted-foreground/40"
+                    hasPending && !hasApproved && " shadow-muted-foreground/20 border-dashed border-muted-foreground/40"
                   )}
                 >
                   <div className="font-medium">{day.getDate()}</div>

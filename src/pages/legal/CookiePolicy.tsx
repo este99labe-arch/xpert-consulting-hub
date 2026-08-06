@@ -100,30 +100,30 @@ const CookiePolicy = () => {
                   <TableBody>
                     <TableRow>
                       <TableCell className="font-medium">Necesarias</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
+                      <TableCell className="text-xs text-muted-foreground">
                         Sesión de usuario, autenticación, seguridad CSRF, preferencias
                         de interfaz (sidebar, tema).
                       </TableCell>
-                      <TableCell className="text-sm">Sesión / 1 año</TableCell>
-                      <TableCell className="text-sm">Interés legítimo</TableCell>
+                      <TableCell className="text-xs">Sesión / 1 año</TableCell>
+                      <TableCell className="text-xs">Interés legítimo</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-medium">Analíticas</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
+                      <TableCell className="text-xs text-muted-foreground">
                         Medir uso de funcionalidades, detectar errores y mejorar el
                         rendimiento (datos agregados y anónimos).
                       </TableCell>
-                      <TableCell className="text-sm">Hasta 1 año</TableCell>
-                      <TableCell className="text-sm">Consentimiento</TableCell>
+                      <TableCell className="text-xs">Hasta 1 año</TableCell>
+                      <TableCell className="text-xs">Consentimiento</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-medium">Marketing</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
+                      <TableCell className="text-xs text-muted-foreground">
                         Personalización de contenidos y comunicaciones promocionales
                         (no se usan actualmente para terceros).
                       </TableCell>
-                      <TableCell className="text-sm">Hasta 1 año</TableCell>
-                      <TableCell className="text-sm">Consentimiento</TableCell>
+                      <TableCell className="text-xs">Hasta 1 año</TableCell>
+                      <TableCell className="text-xs">Consentimiento</TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>

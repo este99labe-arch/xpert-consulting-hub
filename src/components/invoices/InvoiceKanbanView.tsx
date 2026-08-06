@@ -127,7 +127,7 @@ const InvoiceKanbanView = ({ invoices, onPreview }: Props) => {
                   onDragEnd={handleDragEnd}
                   onClick={() => onPreview(inv)}
                   className={cn(
-                    "p-3 cursor-pointer hover:shadow-md transition-shadow border-l-4",
+                    "p-3 cursor-pointer hover:bg-popover transition-colors border-l-4",
                     inv.type === "INVOICE"
                       ? "border-l-primary bg-card"
                       : "border-l-[hsl(var(--warning))] bg-[hsl(var(--warning))]/10",

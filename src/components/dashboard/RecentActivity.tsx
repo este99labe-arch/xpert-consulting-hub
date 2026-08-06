@@ -29,7 +29,7 @@ const RecentActivity = ({ invoices }: RecentActivityProps) => {
   const navigate = useNavigate();
 
   return (
-    <Card className="border-0 shadow-sm">
+    <Card className="border-0">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-base font-semibold flex items-center gap-2">
           <FileText className="h-4 w-4 text-muted-foreground" />

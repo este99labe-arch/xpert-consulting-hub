@@ -381,7 +381,7 @@ const AppTasks = () => {
       {!activeBoardId ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-16 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-primary">
               <LayoutGrid className="h-6 w-6" />
             </div>
             <div>

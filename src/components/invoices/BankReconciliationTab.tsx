@@ -627,7 +627,7 @@ const BankReconciliationTab = () => {
                   const isIncome = Number(tx.amount) > 0;
                   return (
                     <TableRow key={tx.id}>
-                      <TableCell className="text-sm whitespace-nowrap">
+                      <TableCell className="text-xs whitespace-nowrap">
                         {format(parseISO(tx.transaction_date), "dd/MM/yyyy")}
                       </TableCell>
                       <TableCell>

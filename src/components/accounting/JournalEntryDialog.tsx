@@ -51,7 +51,7 @@ const JournalEntryDialog = ({
         {/* Header */}
         <DialogHeader className="flex-shrink-0 space-y-0 border-b border-border px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-primary">
               <BookText className="h-5 w-5" />
             </div>
             <div>

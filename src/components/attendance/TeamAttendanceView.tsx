@@ -67,7 +67,7 @@ const TeamAttendanceView = ({
       )}
 
       {isMasterAdmin && !selectedClientAccountId ? (
-        <Card className="border shadow-sm">
+        <Card className="border">
           <CardContent className="flex flex-col items-center justify-center py-16 text-muted-foreground">
             <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3">
               <Building2 className="h-5 w-5" />
@@ -79,7 +79,7 @@ const TeamAttendanceView = ({
         <>
           {/* Pending delete requests */}
           {pendingDeleteRequests.length > 0 && (
-            <Card className="border border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/10 shadow-sm">
+            <Card className="border border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/10">
               <CardContent className="p-4">
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
                   <Badge variant="outline" className="text-[hsl(var(--warning))] border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/10">{pendingDeleteRequests.length}</Badge>
@@ -128,7 +128,7 @@ const TeamAttendanceView = ({
           {teamLoading ? (
             <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
           ) : teamSummary.length === 0 ? (
-            <Card className="border shadow-sm">
+            <Card className="border">
               <CardContent className="flex flex-col items-center justify-center py-16 text-muted-foreground">
                 <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3">
                   <Users className="h-5 w-5" />
@@ -143,7 +143,7 @@ const TeamAttendanceView = ({
               {teamSummary.map(emp => (
                 <Card key={emp.userId} className="p-4">
                   <div className="flex items-center gap-2.5 mb-2">
-                    <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-[11px] font-semibold text-primary">
+                    <div className="h-7 w-7 rounded-full bg-[hsl(var(--border-strong))] flex items-center justify-center text-[11px] font-semibold text-accent-foreground">
                       {emp.email.charAt(0).toUpperCase()}
                     </div>
                     <span className="text-sm font-medium truncate">{emp.email}</span>
@@ -169,7 +169,7 @@ const TeamAttendanceView = ({
             </div>
 
             {/* Desktop table */}
-            <Card className="border shadow-sm overflow-hidden hidden md:block">
+            <Card className="border overflow-hidden hidden md:block">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/20 hover:bg-muted/20">
@@ -184,15 +184,15 @@ const TeamAttendanceView = ({
                     <TableRow key={emp.userId}>
                       <TableCell className="py-3">
                         <div className="flex items-center gap-2.5">
-                          <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-[11px] font-semibold text-primary">
+                          <div className="h-7 w-7 rounded-full bg-[hsl(var(--border-strong))] flex items-center justify-center text-[11px] font-semibold text-accent-foreground">
                             {emp.email.charAt(0).toUpperCase()}
                           </div>
                           <span className="text-sm font-medium">{emp.email}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="py-3 text-sm tabular-nums">{emp.days}</TableCell>
-                      <TableCell className="py-3 text-sm font-medium tabular-nums">{formatMinutes(emp.worked)}</TableCell>
-                      <TableCell className="py-3 text-sm text-muted-foreground tabular-nums">
+                      <TableCell className="py-3 text-xs tabular-nums">{emp.days}</TableCell>
+                      <TableCell className="py-3 text-xs font-medium tabular-nums">{formatMinutes(emp.worked)}</TableCell>
+                      <TableCell className="py-3 text-xs text-muted-foreground tabular-nums">
                         {emp.days > 0 ? formatMinutes(Math.round(emp.worked / emp.days)) : "—"}
                       </TableCell>
                     </TableRow>

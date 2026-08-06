@@ -396,7 +396,7 @@ export default function ColumnMappingDialog({
                   <TableBody>
                     {previewSample.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={fields.length} className="text-center text-sm text-muted-foreground py-6">
+                        <TableCell colSpan={fields.length} className="text-center text-xs text-muted-foreground py-6">
                           Sin filas de muestra disponibles.
                         </TableCell>
                       </TableRow>

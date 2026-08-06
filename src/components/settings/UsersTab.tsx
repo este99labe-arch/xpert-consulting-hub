@@ -144,7 +144,7 @@ const UsersTab = ({ userId, accountId }: { userId: string; accountId: string }) 
               <TableBody>
                 {pendingRequests.map((req: any) => (
                   <TableRow key={req.id}>
-                    <TableCell className="font-medium text-sm">{emailMap.get(req.user_id) || req.user_id.slice(0, 8)}</TableCell>
+                    <TableCell className="font-medium text-xs">{emailMap.get(req.user_id) || req.user_id.slice(0, 8)}</TableCell>
                     <TableCell>{PROFILE_FIELD_LABELS[req.field_name] || req.field_name}</TableCell>
                     <TableCell className="text-muted-foreground">{req.old_value || "—"}</TableCell>
                     <TableCell className="font-medium">{req.new_value}</TableCell>

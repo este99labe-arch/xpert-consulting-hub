@@ -148,7 +148,7 @@ const MovementsTab = ({ accountId, products, isManager, onNewMovement }: Movemen
               const Icon = movementTypeIcons[m.type] || RotateCcw;
               return (
                 <TableRow key={m.id}>
-                  <TableCell className="text-sm">{format(new Date(m.created_at), "dd/MM/yyyy HH:mm", { locale: es })}</TableCell>
+                  <TableCell className="text-xs">{format(new Date(m.created_at), "dd/MM/yyyy HH:mm", { locale: es })}</TableCell>
                   <TableCell>{m.products?.name} <span className="text-xs text-muted-foreground">({m.products?.sku})</span></TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
@@ -158,7 +158,7 @@ const MovementsTab = ({ accountId, products, isManager, onNewMovement }: Movemen
                   </TableCell>
                   <TableCell className="text-right font-mono">{m.type === "OUT" ? `-${m.quantity}` : m.quantity}</TableCell>
                   <TableCell className="capitalize">{m.reason}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{m.notes}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">{m.notes}</TableCell>
                 </TableRow>
               );
             })}

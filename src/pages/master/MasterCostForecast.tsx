@@ -198,11 +198,11 @@ const MasterCostForecast = () => {
       {/* KPIs */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         {kpis.map((k) => (
-          <Card key={k.label} className="border-0 shadow-sm">
+          <Card key={k.label} className="border-0">
             <CardContent className="p-4">
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-xs font-medium text-muted-foreground">{k.label}</span>
-                <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${k.bg}`}>
+                <div className={`flex h-8 w-8 items-center justify-center rounded-control ${k.bg}`}>
                   <k.icon className={`h-3.5 w-3.5 ${k.tone}`} />
                 </div>
               </div>

@@ -243,7 +243,7 @@ const AppClients = () => {
           title="Clientes"
           description="Gestiona tu cartera de clientes y su facturación"
           actions={
-            <Button onClick={() => setShowCreate(true)} className="shadow-sm">
+            <Button onClick={() => setShowCreate(true)} className="">
               <Plus className="h-4 w-4 mr-2" />
               <span className="hidden sm:inline">Nuevo cliente</span>
               <span className="sm:hidden">Nuevo</span>
@@ -259,7 +259,7 @@ const AppClients = () => {
           className="grid gap-4 grid-cols-3"
         >
           {statCards.map((s) => (
-            <Card key={s.key} className="border-0 shadow-sm hover:shadow-md transition-shadow">
+            <Card key={s.key} className="border-0 hover:bg-popover transition-colors">
               <CardContent className="p-4 flex items-center gap-3">
                 <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${s.bg}`}>
                   <s.icon className={`h-5 w-5 ${s.color}`} />
@@ -347,7 +347,7 @@ const AppClients = () => {
             onAction={() => setShowCreate(true)}
           />
         ) : filtered.length === 0 ? (
-          <Card className="border-0 shadow-sm">
+          <Card className="border-0">
             <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
               <Search className="h-10 w-10 mb-3" />
               <p className="text-lg font-medium">Sin resultados</p>
@@ -363,7 +363,7 @@ const AppClients = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25, delay: 0.05 }}
           >
-            <Card className="border-0 shadow-sm">
+            <Card className="border-0">
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <Table>
@@ -404,7 +404,7 @@ const AppClients = () => {
                                 </div>
                               </div>
                             </TableCell>
-                            <TableCell className="hidden sm:table-cell font-mono text-sm text-muted-foreground">
+                            <TableCell className="hidden sm:table-cell font-mono text-xs text-muted-foreground">
                               {client.tax_id}
                             </TableCell>
                             <TableCell className="text-muted-foreground hidden md:table-cell">

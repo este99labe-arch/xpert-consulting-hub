@@ -45,7 +45,7 @@ const MasterLayoutInner = () => {
         >
           <SidebarHeader className="p-5 border-b border-sidebar-border group-data-[collapsible=icon]:p-2">
             <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-md p-1 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white p-1 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8">
                 <img src={xpertLogo} alt="XpertConsulting" className="h-full w-full object-contain" />
               </div>
               <div className="overflow-hidden group-data-[collapsible=icon]:hidden">

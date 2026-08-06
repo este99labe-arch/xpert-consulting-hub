@@ -327,7 +327,7 @@ const MasterSettings = () => {
               </Button>
 
               {encryptionResult?.success && (
-                <div className="rounded-md border border-primary/30 bg-primary/10 p-4 space-y-2">
+                <div className="rounded-md border border-primary/30 bg-muted p-4 space-y-2">
                   <div className="flex items-center gap-2 text-primary font-medium">
                     <CheckCircle2 className="h-4 w-4" />
                     Cifrado inicializado correctamente
