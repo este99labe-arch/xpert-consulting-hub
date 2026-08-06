@@ -34,7 +34,7 @@ import BotFeedbackDialog from "@/components/chat/BotFeedbackDialog";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const STATUS_META: Record<string, { label: string; className: string }> = {
-  BOT:     { label: "Bot", className: "bg-primary/10 text-primary" },
+  BOT:     { label: "Bot", className: "bg-muted text-accent-foreground" },
   PENDING: { label: "No atendido", className: "bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))]" },
   HUMAN:   { label: "Atendido", className: "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]" },
   CLOSED:  { label: "Cerrado", className: "bg-muted text-muted-foreground" },
@@ -529,7 +529,7 @@ const AppChat = () => {
             <MessageCircle className="h-12 w-12 opacity-30" />
             <p className="text-sm">Selecciona una conversación</p>
             {!waConfig?.is_enabled && (
-              <div className="mt-2 flex items-center gap-2 rounded-lg bg-warning-surface px-3 py-2 text-xs text-[hsl(var(--warning))]">
+              <div className="mt-2 flex items-center gap-2 rounded-control border border-warning-border bg-warning-surface px-3 py-2 text-[11.5px] text-warning-text">
                 <ShieldAlert className="h-4 w-4" />
                 WhatsApp no está configurado.
                 {isManager && <button className="underline" onClick={() => navigate("/app/settings")}>Configurar</button>}
@@ -661,7 +661,7 @@ const AppChat = () => {
                       />
                     )}
                     <div
-                      className={`max-w-[75%] rounded-2xl px-3.5 py-2 text-sm shadow-2xs ${out ? "rounded-br-md bg-primary text-primary-foreground" : "rounded-bl-md bg-card"} ${selectable ? "cursor-pointer" : ""} ${picked.has(m.id) ? "ring-2 ring-primary" : ""}`}
+                      className={`max-w-[75%] rounded-[12px] px-3.5 py-2 text-xs leading-[1.5] ${out ? "rounded-tr-[4px] border border-row-selected-border bg-row-selected text-foreground" : "rounded-tl-[4px] border border-border-strong bg-popover text-foreground"} ${selectable ? "cursor-pointer" : ""} ${picked.has(m.id) ? "ring-[3px] ring-primary/[.16]" : ""}`}
                       onClick={selectable ? () => togglePick(m.id) : undefined}
                     >
                       {out && m.author_type === "BOT" && (
@@ -727,7 +727,7 @@ const AppChat = () => {
 
             {/* Barra de selección para crear tarea */}
             {selectMode && (
-              <div className="flex items-center gap-2 border-t border-border bg-primary/5 px-4 py-2.5 text-sm">
+              <div className="flex items-center gap-2 border-t border-border bg-accent px-4 py-2.5 text-xs">
                 <ListTodo className="h-4 w-4 shrink-0 text-primary" />
                 <span className="flex-1 text-muted-foreground">
                   {picked.size > 0 ? `${picked.size} mensaje${picked.size > 1 ? "s" : ""} seleccionado${picked.size > 1 ? "s" : ""}` : "Marca los mensajes del cliente para generar una tarea"}
