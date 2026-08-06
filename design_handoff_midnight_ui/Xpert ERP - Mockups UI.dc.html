@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"><style>body{margin:0;background:#eceae5;font-family:Inter,system-ui,sans-serif}a{color:#3860AA}a:hover{color:#26437a}.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(0,0,0,.08);scroll-margin-top:16px}.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#1a1a1a;color:#fff;border-radius:4px;text-decoration:none}.dv-tname{font:600 13px/1.2 Inter,sans-serif;color:#1a1a1a}.dv-opts{display:flex;flex-wrap:wrap;gap:36px;align-items:flex-start}.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none}.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 Inter,sans-serif;color:rgba(0,0,0,.55)}.dv-card{max-width:100%;background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden}.dv-opt:target .dv-oid{background:#2a78d6;color:#fff}.dv-next{margin:22px 0 0;font:12px/1.5 Inter,sans-serif;color:rgba(0,0,0,.5)}</style></helmet>
+
+<section class="dv-turn" id="t1">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Tres direcciones sobre el ERP actual · azul corporativo #3860AA, Inter + JetBrains Mono</span></div>
+
+<div style="max-width:1180px;font:400 13px/1.65 Inter,sans-serif;color:rgba(0,0,0,.62);margin:0 0 30px">
+<p style="margin:0 0 10px"><strong style="color:#1a1a1a">Lo que veo hoy:</strong> ocho tarjetas KPI idénticas con borde superior de color (verde/rojo/azul/ámbar), gráficos Recharts por defecto sobre tarjetas blancas, botones de acción en cuatro colores distintos y un sidebar oscuro con iconos genéricos. Cada elemento pide la misma atención, así que ninguno la recibe. Es el look por defecto de shadcn/ui, y por eso se reconoce al instante.</p>
+<p style="margin:0"><strong style="color:#1a1a1a">Lo que cambio en las tres:</strong> el color deja de ser decoración y pasa a ser semántica (un solo acento + rojo reservado para lo que está vencido); los números usan tipografía tabular y una escala real de jerarquía; las tarjetas se sustituyen por reglas y agrupación; y los gráficos genéricos dan paso a visualizaciones que responden a una pregunta concreta — cascada de tesorería, envejecimiento de cobros, cohortes de cliente.</p>
+</div>
+
+<div class="dv-opts">
+
+<!-- ============ 1a  LEDGER ============ -->
+<div class="dv-opt" id="1a">
+<div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a><strong style="color:#1a1a1a">Ledger</strong> · denso, claro, herramienta financiera. Sidebar claro integrado, franja de métricas sin tarjetas, cascada de tesorería.</div>
+<div class="dv-card" style="width:1360px">
+<div style="display:flex;height:880px;background:#FBFAF8;font-family:Inter,sans-serif">
+
+  <!-- rail -->
+  <div style="width:212px;flex:none;background:#F4F2ED;border-right:1px solid #E3DFD6;display:flex;flex-direction:column;padding:14px 0">
+    <div style="display:flex;align-items:center;gap:9px;padding:0 14px 14px">
+      <div style="width:26px;height:26px;border-radius:7px;background:#3860AA;color:#fff;font:700 11px Inter,sans-serif;display:flex;align-items:center;justify-content:center">EA</div>
+      <div style="min-width:0"><div style="font:600 12.5px Inter,sans-serif;color:#17181A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Estamos a un Click</div><div style="font:500 9.5px 'JetBrains Mono',monospace;color:#9A958A;letter-spacing:.04em">PANEL CLIENTE</div></div>
+    </div>
+    <div style="padding:0 10px 8px"><div style="display:flex;align-items:center;gap:7px;height:29px;padding:0 9px;background:#fff;border:1px solid #E3DFD6;border-radius:7px;font:400 11.5px Inter,sans-serif;color:#9A958A">Buscar<span style="margin-left:auto;font:500 9.5px 'JetBrains Mono',monospace;color:#B5AFA3">⌘K</span></div></div>
+    <div style="display:flex;flex-direction:column;gap:1px;padding:8px 10px 0">
+      <div style="font:600 9.5px 'JetBrains Mono',monospace;color:#B5AFA3;letter-spacing:.08em;padding:6px 9px 5px">OPERACIÓN</div>
+      <div style="display:flex;align-items:center;gap:9px;height:30px;padding:0 9px;border-radius:7px;background:#fff;box-shadow:0 1px 2px rgba(23,24,26,.06);font:600 12.5px Inter,sans-serif;color:#17181A"><span style="width:5px;height:5px;border-radius:50%;background:#3860AA"></span>Dashboard</div>
+      <div style="display:flex;align-items:center;gap:9px;height:30px;padding:0 9px;border-radius:7px;font:500 12.5px Inter,sans-serif;color:#5F5B53"><span style="width:5px;height:5px;border-radius:50%;background:#D6D1C6"></span>Facturas<span style="margin-left:auto;font:500 10px 'JetBrains Mono',monospace;color:#C0492F;background:#FBEDE9;padding:1px 5px;border-radius:4px">6</span></div>
+      <div style="display:flex;align-items:center;gap:9px;height:30px;padding:0 9px;border-radius:7px;font:500 12.5px Inter,sans-serif;color:#5F5B53"><span style="width:5px;height:5px;border-radius:50%;background:#D6D1C6"></span>Clientes</div>
+      <div style="display:flex;align-items:center;gap:9px;height:30px;padding:0 9px;border-radius:7px;font:500 12.5px Inter,sans-serif;color:#5F5B53"><span style="width:5px;height:5px;border-radius:50%;background:#D6D1C6"></span>Contabilidad</div>
+      <div style="display:flex;align-items:center;gap:9px;height:30px;padding:0 9px;border-radius:7px;font:500 12.5px Inter,sans-serif;color:#5F5B53"><span style="width:5px;height:5px;border-radius:50%;background:#D6D1C6"></span>Inventario</div>
+      <div style="font:600 9.5px 'JetBrains Mono',monospace;color:#B5AFA3;letter-spacing:.08em;padding:14px 9px 5px">EQUIPO</div>
+      <div style="display:flex;align-items:center;gap:9px;height:30px;padding:0 9px;border-radius:7px;font:500 12.5px Inter,sans-serif;color:#5F5B53"><span style="width:5px;height:5px;border-radius:50%;background:#D6D1C6"></span>Recursos Humanos</div>
+      <div style="display:flex;align-items:center;gap:9px;height:30px;padding:0 9px;border-radius:7px;font:500 12.5px Inter,sans-serif;color:#5F5B53"><span style="width:5px;height:5px;border-radius:50%;background:#D6D1C6"></span>Control horario</div>
+      <div style="display:flex;align-items:center;gap:9px;height:30px;padding:0 9px;border-radius:7px;font:500 12.5px Inter,sans-serif;color:#5F5B53"><span style="width:5px;height:5px;border-radius:50%;background:#D6D1C6"></span>Tareas</div>
+      <div style="font:600 9.5px 'JetBrains Mono',monospace;color:#B5AFA3;letter-spacing:.08em;padding:14px 9px 5px">SISTEMA</div>
+      <div style="display:flex;align-items:center;gap:9px;height:30px;padding:0 9px;border-radius:7px;font:500 12.5px Inter,sans-serif;color:#5F5B53"><span style="width:5px;height:5px;border-radius:50%;background:#D6D1C6"></span>Informes</div>
+      <div style="display:flex;align-items:center;gap:9px;height:30px;padding:0 9px;border-radius:7px;font:500 12.5px Inter,sans-serif;color:#5F5B53"><span style="width:5px;height:5px;border-radius:50%;background:#D6D1C6"></span>Configuración</div>
+    </div>
+    <div style="margin-top:auto;padding:12px 16px 0;border-top:1px solid #E3DFD6;display:flex;align-items:center;gap:9px">
+      <div style="width:24px;height:24px;border-radius:50%;background:#E3DFD6;color:#5F5B53;font:600 10px Inter,sans-serif;display:flex;align-items:center;justify-content:center">E</div>
+      <div style="font:500 11.5px Inter,sans-serif;color:#5F5B53;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">esteban@xpert…</div>
+    </div>
+  </div>
+
+  <!-- main -->
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:14px;height:52px;padding:0 24px;border-bottom:1px solid #E3DFD6;background:#FBFAF8">
+      <div style="font:500 12px Inter,sans-serif;color:#9A958A">Operación <span style="color:#D6D1C6">/</span> <span style="color:#17181A;font-weight:600">Dashboard</span></div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+        <div style="display:flex;border:1px solid #E3DFD6;border-radius:7px;overflow:hidden;background:#fff">
+          <div style="padding:5px 11px;font:500 11.5px 'JetBrains Mono',monospace;color:#9A958A">7d</div>
+          <div style="padding:5px 11px;font:600 11.5px 'JetBrains Mono',monospace;color:#17181A;background:#F4F2ED;border-left:1px solid #E3DFD6;border-right:1px solid #E3DFD6">30d</div>
+          <div style="padding:5px 11px;font:500 11.5px 'JetBrains Mono',monospace;color:#9A958A">90d</div>
+          <div style="padding:5px 11px;font:500 11.5px 'JetBrains Mono',monospace;color:#9A958A;border-left:1px solid #E3DFD6">Año</div>
+        </div>
+        <div style="height:29px;padding:0 13px;display:flex;align-items:center;border-radius:7px;background:#17181A;color:#fff;font:600 12px Inter,sans-serif">Nueva factura</div>
+        <div style="height:29px;padding:0 11px;display:flex;align-items:center;border-radius:7px;border:1px solid #E3DFD6;background:#fff;color:#5F5B53;font:600 12px Inter,sans-serif">Más ⌄</div>
+      </div>
+    </div>
+
+    <div style="flex:1;overflow:hidden;padding:22px 24px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px">
+        <div>
+          <div style="font:600 19px/1.2 'Inter Tight',Inter,sans-serif;color:#17181A;letter-spacing:-.01em">Resumen ejecutivo</div>
+          <div style="font:400 12px Inter,sans-serif;color:#9A958A;margin-top:3px">Miércoles, 5 de agosto · últimos 30 días vs. periodo anterior</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:7px;padding:5px 11px;border-radius:20px;background:#FBEDE9;border:1px solid #F2D9D1"><span style="width:6px;height:6px;border-radius:50%;background:#C0492F"></span><span style="font:600 11.5px Inter,sans-serif;color:#8E3220">6 facturas vencidas · 14.280 €</span></div>
+      </div>
+
+      <!-- metric strip -->
+      <div style="display:grid;grid-template-columns:1.25fr 1fr 1fr 1fr 1fr;background:#fff;border:1px solid #E3DFD6;border-radius:10px;overflow:hidden;margin-bottom:18px">
+        <div style="padding:15px 18px;border-right:1px solid #E3DFD6;background:#F9F7F3">
+          <div style="font:600 9.5px 'JetBrains Mono',monospace;color:#9A958A;letter-spacing:.07em">DISPONIBLE EN BANCO</div>
+          <div style="font:600 30px/1.1 'JetBrains Mono',monospace;color:#17181A;letter-spacing:-.02em;margin-top:8px;font-variant-numeric:tabular-nums">48.920<span style="font-size:17px;color:#9A958A"> €</span></div>
+          <div style="font:400 11px Inter,sans-serif;color:#9A958A;margin-top:5px">2 cuentas · actualizado hace 12 min</div>
+        </div>
+        <div style="padding:15px 18px;border-right:1px solid #E3DFD6">
+          <div style="font:600 9.5px 'JetBrains Mono',monospace;color:#9A958A;letter-spacing:.07em">INGRESOS</div>
+          <div style="font:600 21px/1.1 'JetBrains Mono',monospace;color:#17181A;margin-top:8px;font-variant-numeric:tabular-nums">62.410 €</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:7px"><span style="font:600 10.5px 'JetBrains Mono',monospace;color:#1F6B4B">+12,4%</span><svg width="56" height="16" viewBox="0 0 56 16"><polyline points="0,13 8,11 16,12 24,7 32,8 40,4 48,5 56,2" fill="none" stroke="#1F6B4B" stroke-width="1.4"></polyline></svg></div>
+        </div>
+        <div style="padding:15px 18px;border-right:1px solid #E3DFD6">
+          <div style="font:600 9.5px 'JetBrains Mono',monospace;color:#9A958A;letter-spacing:.07em">GASTOS</div>
+          <div style="font:600 21px/1.1 'JetBrains Mono',monospace;color:#17181A;margin-top:8px;font-variant-numeric:tabular-nums">41.185 €</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:7px"><span style="font:600 10.5px 'JetBrains Mono',monospace;color:#9A958A">+3,1%</span><svg width="56" height="16" viewBox="0 0 56 16"><polyline points="0,9 8,10 16,8 24,9 32,7 40,9 48,6 56,7" fill="none" stroke="#B5AFA3" stroke-width="1.4"></polyline></svg></div>
+        </div>
+        <div style="padding:15px 18px;border-right:1px solid #E3DFD6">
+          <div style="font:600 9.5px 'JetBrains Mono',monospace;color:#9A958A;letter-spacing:.07em">MARGEN</div>
+          <div style="font:600 21px/1.1 'JetBrains Mono',monospace;color:#17181A;margin-top:8px;font-variant-numeric:tabular-nums">34,0 %</div>
+          <div style="height:4px;border-radius:2px;background:#EFECE4;margin-top:11px;overflow:hidden"><div style="width:68%;height:100%;background:#3860AA"></div></div>
+        </div>
+        <div style="padding:15px 18px">
+          <div style="font:600 9.5px 'JetBrains Mono',monospace;color:#9A958A;letter-spacing:.07em">PERIODO MEDIO COBRO</div>
+          <div style="font:600 21px/1.1 'JetBrains Mono',monospace;color:#17181A;margin-top:8px;font-variant-numeric:tabular-nums">38 <span style="font-size:13px;color:#9A958A">días</span></div>
+          <div style="font:500 10.5px 'JetBrains Mono',monospace;color:#C0492F;margin-top:7px">+6 vs. objetivo (32)</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1.62fr 1fr;gap:16px;margin-bottom:16px">
+        <!-- waterfall -->
+        <div style="background:#fff;border:1px solid #E3DFD6;border-radius:10px;padding:16px 18px 12px">
+          <div style="display:flex;align-items:baseline;justify-content:space-between">
+            <div><div style="font:600 13px Inter,sans-serif;color:#17181A">Cascada de tesorería</div><div style="font:400 11px Inter,sans-serif;color:#9A958A;margin-top:2px">De caja inicial a caja proyectada · 30 días</div></div>
+            <div style="font:500 10.5px 'JetBrains Mono',monospace;color:#9A958A">EUR</div>
+          </div>
+          <svg width="100%" height="232" viewBox="0 0 780 232" style="margin-top:10px;display:block">
+            <g stroke="#EFECE4" stroke-width="1">
+              <line x1="46" y1="16" x2="780" y2="16"></line><line x1="46" y1="62" x2="780" y2="62"></line><line x1="46" y1="108" x2="780" y2="108"></line><line x1="46" y1="154" x2="780" y2="154"></line><line x1="46" y1="192" x2="780" y2="192"></line>
+            </g>
+            <g font-family="JetBrains Mono, monospace" font-size="9" fill="#B5AFA3">
+              <text x="0" y="19">80k</text><text x="0" y="65">60k</text><text x="0" y="111">40k</text><text x="0" y="157">20k</text><text x="0" y="195">0</text>
+            </g>
+            <g>
+              <rect x="60" y="120" width="72" height="72" fill="#C6CEDD"></rect>
+              <rect x="164" y="46" width="72" height="74" fill="#3860AA"></rect>
+              <rect x="268" y="46" width="72" height="30" fill="#3860AA"></rect>
+              <rect x="372" y="76" width="72" height="44" fill="#C0492F"></rect>
+              <rect x="476" y="120" width="72" height="26" fill="#C0492F"></rect>
+              <rect x="580" y="146" width="72" height="18" fill="#C0492F"></rect>
+              <rect x="684" y="82" width="72" height="110" fill="#17181A"></rect>
+              <g stroke="#D6D1C6" stroke-width="1" stroke-dasharray="3 3">
+                <line x1="132" y1="120" x2="164" y2="120"></line><line x1="236" y1="46" x2="268" y2="46"></line><line x1="340" y1="76" x2="372" y2="76"></line><line x1="444" y1="120" x2="476" y2="120"></line><line x1="548" y1="146" x2="580" y2="146"></line><line x1="652" y1="164" x2="684" y2="164"></line>
+              </g>
+            </g>
+            <g font-family="Inter, sans-serif" font-size="10" fill="#5F5B53" text-anchor="middle">
+              <text x="96" y="210">Caja inicial</text><text x="200" y="210">Cobros</text><text x="304" y="210">Otros ing.</text><text x="408" y="210">Nóminas</text><text x="512" y="210">Proveedores</text><text x="616" y="210">Impuestos</text><text x="720" y="210" font-weight="600" fill="#17181A">Proyectada</text>
+            </g>
+            <g font-family="JetBrains Mono, monospace" font-size="9.5" fill="#17181A" text-anchor="middle">
+              <text x="96" y="113">31,2k</text><text x="200" y="39">+32,1k</text><text x="304" y="39">+13,0k</text><text x="408" y="69">−19,1k</text><text x="512" y="113">−11,3k</text><text x="616" y="139">−7,8k</text><text x="720" y="75" font-weight="700">48,9k</text>
+            </g>
+          </svg>
+        </div>
+        <!-- aging -->
+        <div style="background:#fff;border:1px solid #E3DFD6;border-radius:10px;padding:16px 18px">
+          <div style="font:600 13px Inter,sans-serif;color:#17181A">Envejecimiento de cobros</div>
+          <div style="font:400 11px Inter,sans-serif;color:#9A958A;margin:2px 0 14px">42.610 € pendientes en 23 facturas</div>
+          <div style="display:flex;height:8px;border-radius:4px;overflow:hidden;margin-bottom:16px">
+            <div style="flex:52;background:#3860AA"></div><div style="flex:20;background:#7B93C0"></div><div style="flex:14;background:#E0A03C"></div><div style="flex:14;background:#C0492F"></div>
+          </div>
+          <div style="display:flex;flex-direction:column">
+            <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #F1EEE7"><span style="width:8px;height:8px;border-radius:2px;background:#3860AA"></span><span style="font:500 12px Inter,sans-serif;color:#17181A">Al corriente</span><span style="margin-left:auto;font:500 12px 'JetBrains Mono',monospace;color:#17181A">22.150 €</span><span style="font:400 10.5px 'JetBrains Mono',monospace;color:#9A958A;width:34px;text-align:right">11 f.</span></div>
+            <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #F1EEE7"><span style="width:8px;height:8px;border-radius:2px;background:#7B93C0"></span><span style="font:500 12px Inter,sans-serif;color:#17181A">1–30 días</span><span style="margin-left:auto;font:500 12px 'JetBrains Mono',monospace;color:#17181A">8.520 €</span><span style="font:400 10.5px 'JetBrains Mono',monospace;color:#9A958A;width:34px;text-align:right">6 f.</span></div>
+            <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #F1EEE7"><span style="width:8px;height:8px;border-radius:2px;background:#E0A03C"></span><span style="font:500 12px Inter,sans-serif;color:#17181A">31–60 días</span><span style="margin-left:auto;font:500 12px 'JetBrains Mono',monospace;color:#17181A">5.960 €</span><span style="font:400 10.5px 'JetBrains Mono',monospace;color:#9A958A;width:34px;text-align:right">3 f.</span></div>
+            <div style="display:flex;align-items:center;gap:10px;padding:9px 0"><span style="width:8px;height:8px;border-radius:2px;background:#C0492F"></span><span style="font:600 12px Inter,sans-serif;color:#8E3220">+60 días</span><span style="margin-left:auto;font:600 12px 'JetBrains Mono',monospace;color:#8E3220">5.980 €</span><span style="font:400 10.5px 'JetBrains Mono',monospace;color:#9A958A;width:34px;text-align:right">3 f.</span></div>
+          </div>
+          <div style="margin-top:14px;padding:10px 12px;border-radius:8px;background:#F9F7F3;border:1px solid #EFECE4;font:400 11.5px/1.5 Inter,sans-serif;color:#5F5B53">3 facturas superan los 60 días. <span style="color:#3860AA;font-weight:600">Enviar recordatorio →</span></div>
+        </div>
+      </div>
+
+      <!-- table -->
+      <div style="background:#fff;border:1px solid #E3DFD6;border-radius:10px;overflow:hidden">
+        <div style="display:flex;align-items:center;padding:12px 18px;border-bottom:1px solid #E3DFD6"><div style="font:600 13px Inter,sans-serif;color:#17181A">Actividad reciente</div><div style="margin-left:auto;font:500 11.5px Inter,sans-serif;color:#3860AA">Ver todas</div></div>
+        <div style="display:grid;grid-template-columns:88px 1fr 110px 110px 96px;padding:8px 18px;background:#F9F7F3;border-bottom:1px solid #EFECE4;font:600 9.5px 'JetBrains Mono',monospace;color:#9A958A;letter-spacing:.06em"><div>Nº</div><div>CLIENTE</div><div style="text-align:right">IMPORTE</div><div style="text-align:right">VENCE</div><div style="text-align:right">ESTADO</div></div>
+        <div style="display:grid;grid-template-columns:88px 1fr 110px 110px 96px;align-items:center;padding:10px 18px;border-bottom:1px solid #F4F1EA;font:400 12px Inter,sans-serif;color:#17181A"><div style="font-family:'JetBrains Mono',monospace;color:#5F5B53">F-2026-118</div><div>Gestoría Serrano SL</div><div style="text-align:right;font-family:'JetBrains Mono',monospace">4.235,00 €</div><div style="text-align:right;font-family:'JetBrains Mono',monospace;color:#8E3220">12 jul</div><div style="text-align:right"><span style="font:600 10px Inter,sans-serif;color:#8E3220;background:#FBEDE9;padding:3px 7px;border-radius:4px">Vencida</span></div></div>
+        <div style="display:grid;grid-template-columns:88px 1fr 110px 110px 96px;align-items:center;padding:10px 18px;border-bottom:1px solid #F4F1EA;font:400 12px Inter,sans-serif;color:#17181A"><div style="font-family:'JetBrains Mono',monospace;color:#5F5B53">F-2026-117</div><div>Talleres Ovín</div><div style="text-align:right;font-family:'JetBrains Mono',monospace">1.180,50 €</div><div style="text-align:right;font-family:'JetBrains Mono',monospace;color:#5F5B53">21 ago</div><div style="text-align:right"><span style="font:600 10px Inter,sans-serif;color:#5F5B53;background:#F1EEE7;padding:3px 7px;border-radius:4px">Enviada</span></div></div>
+        <div style="display:grid;grid-template-columns:88px 1fr 110px 110px 96px;align-items:center;padding:10px 18px;font:400 12px Inter,sans-serif;color:#17181A"><div style="font-family:'JetBrains Mono',monospace;color:#5F5B53">F-2026-116</div><div>Clínica Dental Norte</div><div style="text-align:right;font-family:'JetBrains Mono',monospace">2.904,00 €</div><div style="text-align:right;font-family:'JetBrains Mono',monospace;color:#5F5B53">—</div><div style="text-align:right"><span style="font:600 10px Inter,sans-serif;color:#1F6B4B;background:#E9F3EE;padding:3px 7px;border-radius:4px">Pagada</span></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- 1a clientes empty -->
+<div class="dv-olabel" style="margin-top:12px"><a class="dv-oid" href="#1a">1a</a>Clientes · estado vacío</div>
+<div class="dv-card" style="width:1360px">
+<div style="height:520px;background:#FBFAF8;font-family:Inter,sans-serif;display:flex;flex-direction:column">
+  <div style="display:flex;align-items:center;height:52px;padding:0 24px;border-bottom:1px solid #E3DFD6"><div style="font:500 12px Inter,sans-serif;color:#9A958A">Operación <span style="color:#D6D1C6">/</span> <span style="color:#17181A;font-weight:600">Clientes</span></div></div>
+  <div style="padding:22px 24px;flex:1;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:16px"><div style="font:600 19px 'Inter Tight',Inter,sans-serif;color:#17181A">Clientes</div><div style="font:400 12px Inter,sans-serif;color:#9A958A">Cartera y facturación</div><div style="margin-left:auto;height:29px;padding:0 13px;display:flex;align-items:center;border-radius:7px;background:#17181A;color:#fff;font:600 12px Inter,sans-serif">Nuevo cliente</div></div>
+    <div style="flex:1;border:1px dashed #DCD7CC;border-radius:12px;background:linear-gradient(#FDFCFA,#FDFCFA) padding-box;display:flex;align-items:center;justify-content:center">
+      <div style="display:flex;gap:44px;align-items:center;max-width:820px">
+        <div style="display:flex;flex-direction:column;gap:6px;opacity:.55">
+          <div style="width:230px;height:34px;border:1px solid #E3DFD6;border-radius:7px;background:#fff;display:flex;align-items:center;padding:0 11px;gap:9px"><span style="width:20px;height:20px;border-radius:50%;background:#EFECE4"></span><span style="width:96px;height:7px;border-radius:4px;background:#EFECE4"></span><span style="margin-left:auto;width:34px;height:7px;border-radius:4px;background:#EFECE4"></span></div>
+          <div style="width:230px;height:34px;border:1px solid #E3DFD6;border-radius:7px;background:#fff;display:flex;align-items:center;padding:0 11px;gap:9px"><span style="width:20px;height:20px;border-radius:50%;background:#EFECE4"></span><span style="width:72px;height:7px;border-radius:4px;background:#EFECE4"></span><span style="margin-left:auto;width:34px;height:7px;border-radius:4px;background:#EFECE4"></span></div>
+          <div style="width:230px;height:34px;border:1px solid #E3DFD6;border-radius:7px;background:#fff;display:flex;align-items:center;padding:0 11px;gap:9px"><span style="width:20px;height:20px;border-radius:50%;background:#EFECE4"></span><span style="width:110px;height:7px;border-radius:4px;background:#EFECE4"></span><span style="margin-left:auto;width:34px;height:7px;border-radius:4px;background:#EFECE4"></span></div>
+        </div>
+        <div style="max-width:420px">
+          <div style="font:600 17px 'Inter Tight',Inter,sans-serif;color:#17181A">Aún no hay clientes en la cartera</div>
+          <div style="font:400 13px/1.6 Inter,sans-serif;color:#7A756B;margin-top:7px">Un cliente es la base de todo: desde aquí se emiten facturas, se calculan los KPIs de ingresos y se activan los recordatorios de cobro.</div>
+          <div style="display:flex;gap:9px;margin-top:16px">
+            <div style="height:32px;padding:0 14px;display:flex;align-items:center;border-radius:7px;background:#3860AA;color:#fff;font:600 12.5px Inter,sans-serif">Crear el primero</div>
+            <div style="height:32px;padding:0 14px;display:flex;align-items:center;border-radius:7px;border:1px solid #E3DFD6;background:#fff;color:#5F5B53;font:600 12.5px Inter,sans-serif">Importar desde CSV</div>
+            <div style="height:32px;padding:0 14px;display:flex;align-items:center;border-radius:7px;color:#5F5B53;font:600 12.5px Inter,sans-serif">Ver ejemplo</div>
+          </div>
+          <div style="font:400 11.5px Inter,sans-serif;color:#9A958A;margin-top:13px">También puedes sincronizarlos desde tu gestoría vía API.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ============ 1b  MIDNIGHT ============ -->
+<div class="dv-opt" id="1b">
+<div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a><strong style="color:#1a1a1a">Midnight</strong> · oscuro premium. Rail de iconos + panel contextual, un KPI protagonista, cohortes de cliente.</div>
+<div class="dv-card" style="width:1360px;border-color:rgba(0,0,0,.25)">
+<div style="display:flex;height:880px;background:#0C0F16;font-family:Inter,sans-serif">
+  <div style="width:56px;flex:none;background:#080A10;border-right:1px solid #191D27;display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:5px">
+    <div style="width:30px;height:30px;border-radius:9px;background:#3860AA;color:#fff;font:700 11px Inter,sans-serif;display:flex;align-items:center;justify-content:center;margin-bottom:10px">EA</div>
+    <div title="Dashboard" style="width:34px;height:34px;border-radius:9px;background:#151A25;border:1px solid #262C3A;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7FA6F0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg></div>
+    <div title="Clientes" style="width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4A5162" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path></svg></div>
+    <div title="Facturas" style="width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;position:relative"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4A5162" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v6h6"></path><path d="M8 13h8"></path><path d="M8 17h5"></path></svg><span style="position:absolute;top:5px;right:6px;width:6px;height:6px;border-radius:50%;background:#E0563C;border:1.5px solid #080A10"></span></div>
+    <div title="Contabilidad" style="width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4A5162" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"></rect><path d="M8 6h8"></path><path d="M8 11h.01"></path><path d="M12 11h.01"></path><path d="M16 11h.01"></path><path d="M8 15h.01"></path><path d="M12 15h.01"></path><path d="M16 15v4"></path></svg></div>
+    <div title="Inventario" style="width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4A5162" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"></path><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg></div>
+    <div title="Control horario" style="width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4A5162" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg></div>
+    <div style="width:24px;height:1px;background:#191D27;margin:6px 0"></div>
+    <div title="Configuración" style="width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4A5162" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10"></path><path d="M18 6h2"></path><circle cx="16" cy="6" r="2"></circle><path d="M4 12h2"></path><path d="M10 12h10"></path><circle cx="8" cy="12" r="2"></circle><path d="M4 18h8"></path><path d="M16 18h4"></path><circle cx="14" cy="18" r="2"></circle></svg></div>
+    <div style="margin-top:auto;width:26px;height:26px;border-radius:50%;background:#1D2331;color:#8A93A6;font:600 10px Inter,sans-serif;display:flex;align-items:center;justify-content:center">E</div>
+  </div>
+
+  <div style="width:194px;flex:none;background:#0A0D14;border-right:1px solid #191D27;padding:14px 12px">
+    <div style="font:600 12.5px Inter,sans-serif;color:#EEF1F6">Estamos a un Click</div>
+    <div style="font:500 9.5px 'JetBrains Mono',monospace;color:#4A5162;letter-spacing:.05em;margin-top:2px">OPERACIÓN</div>
+    <div style="display:flex;flex-direction:column;gap:1px;margin-top:16px">
+      <div style="height:31px;display:flex;align-items:center;padding:0 10px;border-radius:8px;background:#151A25;font:600 12.5px Inter,sans-serif;color:#EEF1F6">Dashboard</div>
+      <div style="height:31px;display:flex;align-items:center;padding:0 10px;border-radius:8px;font:500 12.5px Inter,sans-serif;color:#8A93A6">Facturas <span style="margin-left:auto;font:600 10px 'JetBrains Mono',monospace;color:#F0A08C;background:#2A1714;padding:1px 6px;border-radius:5px">6</span></div>
+      <div style="height:31px;display:flex;align-items:center;padding:0 10px;border-radius:8px;font:500 12.5px Inter,sans-serif;color:#8A93A6">Clientes</div>
+      <div style="height:31px;display:flex;align-items:center;padding:0 10px;border-radius:8px;font:500 12.5px Inter,sans-serif;color:#8A93A6">Contabilidad</div>
+      <div style="height:31px;display:flex;align-items:center;padding:0 10px;border-radius:8px;font:500 12.5px Inter,sans-serif;color:#8A93A6">Inventario</div>
+      <div style="font:600 9.5px 'JetBrains Mono',monospace;color:#3C4354;letter-spacing:.07em;padding:16px 10px 6px">VISTAS GUARDADAS</div>
+      <div style="height:29px;display:flex;align-items:center;gap:8px;padding:0 10px;border-radius:8px;font:500 12px Inter,sans-serif;color:#8A93A6"><span style="width:5px;height:5px;border-radius:50%;background:#3860AA"></span>Cierre mensual</div>
+      <div style="height:29px;display:flex;align-items:center;gap:8px;padding:0 10px;border-radius:8px;font:500 12px Inter,sans-serif;color:#8A93A6"><span style="width:5px;height:5px;border-radius:50%;background:#E0A03C"></span>Cobros críticos</div>
+      <div style="height:29px;display:flex;align-items:center;gap:8px;padding:0 10px;border-radius:8px;font:500 12px Inter,sans-serif;color:#8A93A6"><span style="width:5px;height:5px;border-radius:50%;background:#3E9E77"></span>Rentabilidad</div>
+    </div>
+  </div>
+
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:12px;height:54px;padding:0 24px;border-bottom:1px solid #191D27">
+      <div style="font:600 13px Inter,sans-serif;color:#EEF1F6">Dashboard</div>
+      <div style="flex:1;max-width:320px;margin-left:12px;height:30px;border-radius:8px;background:#12161F;border:1px solid #212736;display:flex;align-items:center;padding:0 11px;font:400 11.5px Inter,sans-serif;color:#535B6E">Buscar facturas, clientes, apuntes…<span style="margin-left:auto;font:500 9.5px 'JetBrains Mono',monospace">⌘K</span></div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+        <div style="display:flex;background:#12161F;border:1px solid #212736;border-radius:8px;padding:2px">
+          <div style="padding:4px 10px;font:500 11px 'JetBrains Mono',monospace;color:#6C7488">7d</div><div style="padding:4px 10px;font:600 11px 'JetBrains Mono',monospace;color:#EEF1F6;background:#232A3A;border-radius:6px">30d</div><div style="padding:4px 10px;font:500 11px 'JetBrains Mono',monospace;color:#6C7488">90d</div><div style="padding:4px 10px;font:500 11px 'JetBrains Mono',monospace;color:#6C7488">Año</div>
+        </div>
+        <div style="height:30px;padding:0 14px;display:flex;align-items:center;border-radius:8px;background:#4A7BD4;color:#fff;font:600 12px Inter,sans-serif">Nueva factura</div>
+      </div>
+    </div>
+
+    <div style="flex:1;padding:22px 24px;display:flex;flex-direction:column;gap:16px;overflow:hidden">
+      <!-- hero -->
+      <div style="display:grid;grid-template-columns:1.55fr 1fr;gap:16px">
+        <div style="border-radius:14px;border:1px solid #1E2431;background:linear-gradient(160deg,#141A26 0%,#0F131C 60%);padding:18px 20px 0;overflow:hidden;position:relative">
+          <div style="display:flex;align-items:baseline;gap:10px">
+            <div style="font:500 11px Inter,sans-serif;color:#8A93A6">Caja disponible</div>
+            <div style="font:600 10px 'JetBrains Mono',monospace;color:#7DD6AE;background:#12241D;padding:2px 6px;border-radius:5px">+18,3% 30d</div>
+          </div>
+          <div style="font:600 44px/1.05 'JetBrains Mono',monospace;color:#F4F6FA;letter-spacing:-.03em;margin-top:8px;font-variant-numeric:tabular-nums">48.920,40 <span style="font-size:22px;color:#6C7488">€</span></div>
+          <div style="font:400 11.5px Inter,sans-serif;color:#6C7488;margin-top:6px">Runway estimado 4,2 meses al ritmo actual de gasto</div>
+          <svg width="100%" height="132" viewBox="0 0 760 132" preserveAspectRatio="none" style="display:block;margin-top:6px">
+            <defs><linearGradient id="g1b" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4A7BD4" stop-opacity=".45"></stop><stop offset="100%" stop-color="#4A7BD4" stop-opacity="0"></stop></linearGradient></defs>
+            <path d="M0,96 L60,88 L120,92 L180,74 L240,80 L300,58 L360,66 L420,48 L480,54 L540,36 L600,44 L660,26 L720,32 L760,18 L760,132 L0,132 Z" fill="url(#g1b)"></path>
+            <path d="M0,96 L60,88 L120,92 L180,74 L240,80 L300,58 L360,66 L420,48 L480,54 L540,36 L600,44 L660,26 L720,32 L760,18" fill="none" stroke="#6C9BF0" stroke-width="1.8"></path>
+          </svg>
+        </div>
+        <div style="display:grid;grid-template-rows:1fr 1fr;gap:16px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div style="border-radius:14px;border:1px solid #1E2431;background:#0F131C;padding:14px 16px">
+              <div style="font:500 10.5px Inter,sans-serif;color:#6C7488">Ingresos</div>
+              <div style="font:600 22px 'JetBrains Mono',monospace;color:#F4F6FA;margin-top:7px;font-variant-numeric:tabular-nums">62.410 €</div>
+              <div style="font:600 10.5px 'JetBrains Mono',monospace;color:#7DD6AE;margin-top:6px">+12,4%</div>
+            </div>
+            <div style="border-radius:14px;border:1px solid #1E2431;background:#0F131C;padding:14px 16px">
+              <div style="font:500 10.5px Inter,sans-serif;color:#6C7488">Gastos</div>
+              <div style="font:600 22px 'JetBrains Mono',monospace;color:#F4F6FA;margin-top:7px;font-variant-numeric:tabular-nums">41.185 €</div>
+              <div style="font:600 10.5px 'JetBrains Mono',monospace;color:#8A93A6;margin-top:6px">+3,1%</div>
+            </div>
+          </div>
+          <div style="border-radius:14px;border:1px solid #3A2018;background:linear-gradient(140deg,#1C1210,#12161F 70%);padding:14px 16px;display:flex;flex-direction:column">
+            <div style="display:flex;align-items:center;gap:8px"><span style="width:6px;height:6px;border-radius:50%;background:#E0563C"></span><div style="font:600 11px Inter,sans-serif;color:#F0A08C">Requiere atención</div></div>
+            <div style="display:flex;align-items:baseline;gap:9px;margin-top:9px"><div style="font:600 26px 'JetBrains Mono',monospace;color:#F4F6FA">14.280 €</div><div style="font:400 11px Inter,sans-serif;color:#8A93A6">en 6 facturas vencidas</div></div>
+            <div style="margin-top:auto;display:flex;gap:8px"><div style="height:28px;padding:0 12px;display:flex;align-items:center;border-radius:7px;background:#E0563C;color:#fff;font:600 11.5px Inter,sans-serif">Reclamar</div><div style="height:28px;padding:0 12px;display:flex;align-items:center;border-radius:7px;border:1px solid #2A303E;color:#8A93A6;font:600 11.5px Inter,sans-serif">Ver detalle</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- cohorts + list -->
+      <div style="display:grid;grid-template-columns:1.55fr 1fr;gap:16px;flex:1;min-height:0">
+        <div style="border-radius:14px;border:1px solid #1E2431;background:#0F131C;padding:16px 18px;display:flex;flex-direction:column">
+          <div style="display:flex;align-items:baseline;justify-content:space-between"><div><div style="font:600 12.5px Inter,sans-serif;color:#EEF1F6">Cohortes de cliente · facturación retenida</div><div style="font:400 10.5px Inter,sans-serif;color:#6C7488;margin-top:2px">% del importe del primer mes que se mantiene</div></div><div style="display:flex;align-items:center;gap:5px"><span style="font:400 9.5px 'JetBrains Mono',monospace;color:#4A5162">0%</span><span style="width:14px;height:9px;background:#161C28;border-radius:2px"></span><span style="width:14px;height:9px;background:#1F3355;border-radius:2px"></span><span style="width:14px;height:9px;background:#2C4E86;border-radius:2px"></span><span style="width:14px;height:9px;background:#3C6BB8;border-radius:2px"></span><span style="width:14px;height:9px;background:#5B90E4;border-radius:2px"></span><span style="font:400 9.5px 'JetBrains Mono',monospace;color:#4A5162">100%</span></div></div>
+          <div style="margin-top:16px;display:grid;grid-template-columns:70px repeat(7,1fr);gap:4px;font-family:'JetBrains Mono',monospace">
+            <div></div><div style="font-size:9.5px;color:#4A5162;text-align:center">M0</div><div style="font-size:9.5px;color:#4A5162;text-align:center">M1</div><div style="font-size:9.5px;color:#4A5162;text-align:center">M2</div><div style="font-size:9.5px;color:#4A5162;text-align:center">M3</div><div style="font-size:9.5px;color:#4A5162;text-align:center">M4</div><div style="font-size:9.5px;color:#4A5162;text-align:center">M5</div><div style="font-size:9.5px;color:#4A5162;text-align:center">M6</div>
+
+            <div style="font-size:10px;color:#8A93A6;display:flex;align-items:center">Feb 26</div>
+            <div style="height:30px;border-radius:4px;background:#5B90E4;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#08101F">100</div>
+            <div style="height:30px;border-radius:4px;background:#3C6BB8;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#E6EEFC">92</div>
+            <div style="height:30px;border-radius:4px;background:#3C6BB8;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#E6EEFC">88</div>
+            <div style="height:30px;border-radius:4px;background:#2C4E86;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#C8D8F5">81</div>
+            <div style="height:30px;border-radius:4px;background:#2C4E86;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#C8D8F5">78</div>
+            <div style="height:30px;border-radius:4px;background:#1F3355;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#9FB4D8">74</div>
+            <div style="height:30px;border-radius:4px;background:#1F3355;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#9FB4D8">71</div>
+
+            <div style="font-size:10px;color:#8A93A6;display:flex;align-items:center">Mar 26</div>
+            <div style="height:30px;border-radius:4px;background:#5B90E4;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#08101F">100</div>
+            <div style="height:30px;border-radius:4px;background:#3C6BB8;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#E6EEFC">95</div>
+            <div style="height:30px;border-radius:4px;background:#3C6BB8;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#E6EEFC">90</div>
+            <div style="height:30px;border-radius:4px;background:#2C4E86;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#C8D8F5">84</div>
+            <div style="height:30px;border-radius:4px;background:#2C4E86;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#C8D8F5">80</div>
+            <div style="height:30px;border-radius:4px;background:#1F3355;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#9FB4D8">76</div>
+            <div style="height:30px;border-radius:4px;background:#161C28"></div>
+
+            <div style="font-size:10px;color:#8A93A6;display:flex;align-items:center">Abr 26</div>
+            <div style="height:30px;border-radius:4px;background:#5B90E4;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#08101F">100</div>
+            <div style="height:30px;border-radius:4px;background:#3C6BB8;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#E6EEFC">89</div>
+            <div style="height:30px;border-radius:4px;background:#2C4E86;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#C8D8F5">83</div>
+            <div style="height:30px;border-radius:4px;background:#2C4E86;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#C8D8F5">79</div>
+            <div style="height:30px;border-radius:4px;background:#1F3355;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#9FB4D8">72</div>
+            <div style="height:30px;border-radius:4px;background:#161C28"></div><div style="height:30px;border-radius:4px;background:#161C28"></div>
+
+            <div style="font-size:10px;color:#8A93A6;display:flex;align-items:center">May 26</div>
+            <div style="height:30px;border-radius:4px;background:#5B90E4;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#08101F">100</div>
+            <div style="height:30px;border-radius:4px;background:#3C6BB8;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#E6EEFC">93</div>
+            <div style="height:30px;border-radius:4px;background:#3C6BB8;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#E6EEFC">87</div>
+            <div style="height:30px;border-radius:4px;background:#1F3355;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#9FB4D8">70</div>
+            <div style="height:30px;border-radius:4px;background:#161C28"></div><div style="height:30px;border-radius:4px;background:#161C28"></div><div style="height:30px;border-radius:4px;background:#161C28"></div>
+
+            <div style="font-size:10px;color:#8A93A6;display:flex;align-items:center">Jun 26</div>
+            <div style="height:30px;border-radius:4px;background:#5B90E4;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#08101F">100</div>
+            <div style="height:30px;border-radius:4px;background:#3C6BB8;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#E6EEFC">96</div>
+            <div style="height:30px;border-radius:4px;background:#2C4E86;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#C8D8F5">85</div>
+            <div style="height:30px;border-radius:4px;background:#161C28"></div><div style="height:30px;border-radius:4px;background:#161C28"></div><div style="height:30px;border-radius:4px;background:#161C28"></div><div style="height:30px;border-radius:4px;background:#161C28"></div>
+
+            <div style="font-size:10px;color:#8A93A6;display:flex;align-items:center">Jul 26</div>
+            <div style="height:30px;border-radius:4px;background:#5B90E4;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#08101F">100</div>
+            <div style="height:30px;border-radius:4px;background:#3C6BB8;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#E6EEFC">91</div>
+            <div style="height:30px;border-radius:4px;background:#161C28"></div><div style="height:30px;border-radius:4px;background:#161C28"></div><div style="height:30px;border-radius:4px;background:#161C28"></div><div style="height:30px;border-radius:4px;background:#161C28"></div><div style="height:30px;border-radius:4px;background:#161C28"></div>
+
+            <div style="font-size:10px;color:#8A93A6;display:flex;align-items:center">Ago 26</div>
+            <div style="height:30px;border-radius:4px;background:#5B90E4;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#08101F">100</div>
+            <div style="height:30px;border-radius:4px;background:#161C28"></div><div style="height:30px;border-radius:4px;background:#161C28"></div><div style="height:30px;border-radius:4px;background:#161C28"></div><div style="height:30px;border-radius:4px;background:#161C28"></div><div style="height:30px;border-radius:4px;background:#161C28"></div><div style="height:30px;border-radius:4px;background:#161C28"></div>
+          </div>
+          <div style="margin-top:auto;padding-top:14px;font:400 11px/1.5 Inter,sans-serif;color:#6C7488">La cohorte de mayo cae al 70% en M3, once puntos por debajo de la media. <span style="color:#7FA6F0;font-weight:600">Analizar →</span></div>
+        </div>
+
+        <div style="border-radius:14px;border:1px solid #1E2431;background:#0F131C;padding:16px 18px;display:flex;flex-direction:column">
+          <div style="font:600 12.5px Inter,sans-serif;color:#EEF1F6">Próximos vencimientos</div>
+          <div style="display:flex;flex-direction:column;margin-top:12px">
+            <div style="display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid #191D27"><div style="width:36px;text-align:center"><div style="font:600 13px 'JetBrains Mono',monospace;color:#F0A08C">12</div><div style="font:500 9px 'JetBrains Mono',monospace;color:#6C7488">JUL</div></div><div style="min-width:0"><div style="font:500 12px Inter,sans-serif;color:#EEF1F6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Gestoría Serrano SL</div><div style="font:400 10.5px Inter,sans-serif;color:#6C7488">F-2026-118 · 24 días vencida</div></div><div style="margin-left:auto;font:500 12px 'JetBrains Mono',monospace;color:#F4F6FA">4.235 €</div></div>
+            <div style="display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid #191D27"><div style="width:36px;text-align:center"><div style="font:600 13px 'JetBrains Mono',monospace;color:#E0A03C">08</div><div style="font:500 9px 'JetBrains Mono',monospace;color:#6C7488">AGO</div></div><div style="min-width:0"><div style="font:500 12px Inter,sans-serif;color:#EEF1F6">Nóminas agosto</div><div style="font:400 10.5px Inter,sans-serif;color:#6C7488">3 empleados</div></div><div style="margin-left:auto;font:500 12px 'JetBrains Mono',monospace;color:#F4F6FA">6.370 €</div></div>
+            <div style="display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid #191D27"><div style="width:36px;text-align:center"><div style="font:600 13px 'JetBrains Mono',monospace;color:#8A93A6">20</div><div style="font:500 9px 'JetBrains Mono',monospace;color:#6C7488">AGO</div></div><div style="min-width:0"><div style="font:500 12px Inter,sans-serif;color:#EEF1F6">Modelo 303 · IVA T2</div><div style="font:400 10.5px Inter,sans-serif;color:#6C7488">Agencia Tributaria</div></div><div style="margin-left:auto;font:500 12px 'JetBrains Mono',monospace;color:#F4F6FA">3.912 €</div></div>
+            <div style="display:flex;align-items:center;gap:11px;padding:10px 0"><div style="width:36px;text-align:center"><div style="font:600 13px 'JetBrains Mono',monospace;color:#8A93A6">21</div><div style="font:500 9px 'JetBrains Mono',monospace;color:#6C7488">AGO</div></div><div style="min-width:0"><div style="font:500 12px Inter,sans-serif;color:#EEF1F6">Talleres Ovín</div><div style="font:400 10.5px Inter,sans-serif;color:#6C7488">F-2026-117 · enviada</div></div><div style="margin-left:auto;font:500 12px 'JetBrains Mono',monospace;color:#F4F6FA">1.180 €</div></div>
+          </div>
+          <div style="margin-top:auto;padding-top:12px;border-top:1px solid #191D27;display:flex;align-items:center"><div style="font:400 11px Inter,sans-serif;color:#6C7488">Saldo neto a 30 días</div><div style="margin-left:auto;font:600 13px 'JetBrains Mono',monospace;color:#7DD6AE">+21.225 €</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- 1b asistencia -->
+<div class="dv-olabel" style="margin-top:12px"><a class="dv-oid" href="#1b">1b</a>Control horario · misma paleta oscura</div>
+<div class="dv-card" style="width:1360px;border-color:rgba(0,0,0,.25)">
+<div style="height:560px;background:#0C0F16;font-family:Inter,sans-serif;display:flex;flex-direction:column">
+  <div style="display:flex;align-items:center;height:54px;padding:0 24px;border-bottom:1px solid #191D27"><div style="font:600 13px Inter,sans-serif;color:#EEF1F6">Control horario</div><div style="margin-left:auto;display:flex;gap:8px"><div style="height:30px;padding:0 13px;display:flex;align-items:center;border-radius:8px;border:1px solid #212736;color:#8A93A6;font:600 11.5px Inter,sans-serif">Registro PDF</div><div style="height:30px;padding:0 13px;display:flex;align-items:center;border-radius:8px;background:#151A25;color:#EEF1F6;font:600 11.5px Inter,sans-serif">Mis fichajes</div><div style="height:30px;padding:0 13px;display:flex;align-items:center;border-radius:8px;color:#8A93A6;font:600 11.5px Inter,sans-serif">Equipo</div></div></div>
+  <div style="flex:1;padding:22px 24px;display:grid;grid-template-columns:340px 1fr;gap:16px">
+    <div style="border-radius:14px;border:1px solid #1E2431;background:linear-gradient(160deg,#141A26,#0F131C);padding:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px">
+      <div style="font:500 10px 'JetBrains Mono',monospace;color:#6C7488;letter-spacing:.08em">MIÉRCOLES, 5 DE AGOSTO</div>
+      <svg width="180" height="180" viewBox="0 0 180 180"><circle cx="90" cy="90" r="76" fill="none" stroke="#1B2130" stroke-width="12"></circle><circle cx="90" cy="90" r="76" fill="none" stroke="#4A7BD4" stroke-width="12" stroke-linecap="round" stroke-dasharray="286 478" transform="rotate(-90 90 90)"></circle><text x="90" y="86" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="34" font-weight="600" fill="#F4F6FA">5:24</text><text x="90" y="108" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#6C7488">de 9:00 h</text></svg>
+      <div style="height:38px;padding:0 22px;display:flex;align-items:center;border-radius:10px;background:#E0563C;color:#fff;font:600 13px Inter,sans-serif">Pausar jornada</div>
+      <div style="font:400 11px Inter,sans-serif;color:#6C7488">Entrada 08:12 · pausa 30 min</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px;min-height:0">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+        <div style="border-radius:14px;border:1px solid #1E2431;background:#0F131C;padding:14px 16px"><div style="font:500 10.5px Inter,sans-serif;color:#6C7488">Fichadas (mes)</div><div style="font:600 21px 'JetBrains Mono',monospace;color:#F4F6FA;margin-top:6px">96h 40m</div></div>
+        <div style="border-radius:14px;border:1px solid #1E2431;background:#0F131C;padding:14px 16px"><div style="font:500 10.5px Inter,sans-serif;color:#6C7488">Esperadas</div><div style="font:600 21px 'JetBrains Mono',monospace;color:#F4F6FA;margin-top:6px">108h 00m</div></div>
+        <div style="border-radius:14px;border:1px solid #1E2431;background:#0F131C;padding:14px 16px"><div style="font:500 10.5px Inter,sans-serif;color:#6C7488">Balance</div><div style="font:600 21px 'JetBrains Mono',monospace;color:#F0A08C;margin-top:6px">−11h 20m</div><div style="height:4px;border-radius:2px;background:#1B2130;margin-top:9px;overflow:hidden"><div style="width:89%;height:100%;background:#E0563C"></div></div></div>
+      </div>
+      <div style="flex:1;border-radius:14px;border:1px solid #1E2431;background:#0F131C;padding:16px 18px;min-height:0">
+        <div style="display:flex;align-items:baseline"><div style="font:600 12.5px Inter,sans-serif;color:#EEF1F6">Horas por semana</div><div style="margin-left:auto;display:flex;gap:12px;font:400 10.5px Inter,sans-serif;color:#6C7488"><span style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:2px;background:#4A7BD4"></span>Trabajadas</span><span style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:2px;background:#242B3A"></span>Esperadas</span></div></div>
+        <svg width="100%" height="188" viewBox="0 0 820 188" preserveAspectRatio="none" style="margin-top:12px;display:block">
+          <g stroke="#191D27"><line x1="0" y1="40" x2="820" y2="40"></line><line x1="0" y1="85" x2="820" y2="85"></line><line x1="0" y1="130" x2="820" y2="130"></line><line x1="0" y1="164" x2="820" y2="164"></line></g>
+          <g><rect x="40" y="42" width="76" height="122" fill="#242B3A" rx="3"></rect><rect x="40" y="58" width="76" height="106" fill="#4A7BD4" rx="3"></rect>
+          <rect x="176" y="42" width="76" height="122" fill="#242B3A" rx="3"></rect><rect x="176" y="50" width="76" height="114" fill="#4A7BD4" rx="3"></rect>
+          <rect x="312" y="42" width="76" height="122" fill="#242B3A" rx="3"></rect><rect x="312" y="72" width="76" height="92" fill="#4A7BD4" rx="3"></rect>
+          <rect x="448" y="42" width="76" height="122" fill="#242B3A" rx="3"></rect><rect x="448" y="46" width="76" height="118" fill="#4A7BD4" rx="3"></rect>
+          <rect x="584" y="42" width="76" height="122" fill="#242B3A" rx="3"></rect><rect x="584" y="88" width="76" height="76" fill="#4A7BD4" rx="3"></rect>
+          <rect x="720" y="42" width="76" height="122" fill="#242B3A" rx="3"></rect><rect x="720" y="132" width="76" height="32" fill="#6C9BF0" rx="3"></rect></g>
+          <g font-family="JetBrains Mono, monospace" font-size="10" fill="#4A5162" text-anchor="middle"><text x="78" y="182">S31</text><text x="214" y="182">S32</text><text x="350" y="182">S33</text><text x="486" y="182">S34</text><text x="622" y="182">S35</text><text x="758" y="182">S36</text></g>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ============ 1c  CANVAS ============ -->
+<div class="dv-opt" id="1c">
+<div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a><strong style="color:#1a1a1a">Canvas</strong> · claro y aireado, navegación superior por secciones, tipografía grande y cero tarjetas.</div>
+<div class="dv-card" style="width:1360px">
+<div style="height:880px;background:#FFFFFF;font-family:Inter,sans-serif;display:flex;flex-direction:column">
+  <div style="display:flex;align-items:center;gap:26px;height:56px;padding:0 34px;border-bottom:1px solid #ECEEF2">
+    <div style="display:flex;align-items:center;gap:9px"><div style="width:24px;height:24px;border-radius:6px;background:#1B2436;color:#fff;font:700 9.5px Inter,sans-serif;display:flex;align-items:center;justify-content:center;letter-spacing:.02em">EA</div><div style="font:600 13px 'Inter Tight',Inter,sans-serif;color:#101319">Estamos a un Click</div><div style="font:500 10px 'JetBrains Mono',monospace;color:#A2A8B4;border:1px solid #E6E8EE;border-radius:5px;padding:1px 5px">PRO</div></div>
+    <div style="display:flex;gap:2px;margin-left:14px">
+      <div style="padding:7px 12px;border-radius:8px;background:#F3F4F7;font:600 12.5px Inter,sans-serif;color:#101319">Resumen</div>
+      <div style="padding:7px 12px;font:500 12.5px Inter,sans-serif;color:#6B7280">Facturación</div>
+      <div style="padding:7px 12px;font:500 12.5px Inter,sans-serif;color:#6B7280">Clientes</div>
+      <div style="padding:7px 12px;font:500 12.5px Inter,sans-serif;color:#6B7280">Equipo</div>
+      <div style="padding:7px 12px;font:500 12.5px Inter,sans-serif;color:#6B7280">Contabilidad</div>
+      <div style="padding:7px 12px;font:500 12.5px Inter,sans-serif;color:#6B7280">Más ⌄</div>
+    </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+      <div style="width:240px;height:30px;border-radius:8px;background:#F6F7F9;display:flex;align-items:center;padding:0 11px;font:400 11.5px Inter,sans-serif;color:#A2A8B4">Buscar<span style="margin-left:auto;font:500 9.5px 'JetBrains Mono',monospace">⌘K</span></div>
+      <div style="width:28px;height:28px;border-radius:50%;background:#1B2436;color:#fff;font:600 10.5px Inter,sans-serif;display:flex;align-items:center;justify-content:center">E</div>
+    </div>
+  </div>
+
+  <div style="flex:1;padding:34px 34px 0;overflow:hidden">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:30px">
+      <div>
+        <div style="font:400 12px 'JetBrains Mono',monospace;color:#A2A8B4;letter-spacing:.06em">MIÉRCOLES, 5 DE AGOSTO 2026</div>
+        <div style="font:400 34px/1.15 'Instrument Serif',Georgia,serif;color:#101319;margin-top:8px">Buenas noches, Esteban</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="height:32px;padding:0 13px;display:flex;align-items:center;border-radius:8px;border:1px solid #E6E8EE;font:600 12px Inter,sans-serif;color:#4A5160">Últimos 30 días ⌄</div>
+        <div style="height:32px;padding:0 15px;display:flex;align-items:center;border-radius:8px;background:#3860AA;color:#fff;font:600 12px Inter,sans-serif">Nueva factura</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #ECEEF2;border-bottom:1px solid #ECEEF2">
+      <div style="padding:22px 24px 22px 0;border-right:1px solid #ECEEF2">
+        <div style="font:500 11.5px Inter,sans-serif;color:#8A909C">Disponible en banco</div>
+        <div style="font:400 34px/1.1 'Inter Tight',Inter,sans-serif;color:#101319;margin-top:9px;letter-spacing:-.02em;font-variant-numeric:tabular-nums">48.920 €</div>
+        <div style="font:400 11.5px Inter,sans-serif;color:#8A909C;margin-top:6px">2 cuentas conciliadas</div>
+      </div>
+      <div style="padding:22px 24px;border-right:1px solid #ECEEF2">
+        <div style="font:500 11.5px Inter,sans-serif;color:#8A909C">Resultado del periodo</div>
+        <div style="font:400 34px/1.1 'Inter Tight',Inter,sans-serif;color:#101319;margin-top:9px;letter-spacing:-.02em;font-variant-numeric:tabular-nums">21.225 €</div>
+        <div style="font:500 11.5px Inter,sans-serif;color:#1F6B4B;margin-top:6px">↗ 12,4% vs. periodo previo</div>
+      </div>
+      <div style="padding:22px 24px;border-right:1px solid #ECEEF2">
+        <div style="font:500 11.5px Inter,sans-serif;color:#8A909C">Pendiente de cobro</div>
+        <div style="font:400 34px/1.1 'Inter Tight',Inter,sans-serif;color:#101319;margin-top:9px;letter-spacing:-.02em;font-variant-numeric:tabular-nums">42.610 €</div>
+        <div style="font:500 11.5px Inter,sans-serif;color:#B03A22;margin-top:6px">14.280 € vencidos · 6 facturas</div>
+      </div>
+      <div style="padding:22px 0 22px 24px">
+        <div style="font:500 11.5px Inter,sans-serif;color:#8A909C">Margen sobre ingresos</div>
+        <div style="font:400 34px/1.1 'Inter Tight',Inter,sans-serif;color:#101319;margin-top:9px;letter-spacing:-.02em;font-variant-numeric:tabular-nums">34,0 %</div>
+        <div style="display:flex;gap:3px;margin-top:11px">
+          <span style="flex:1;height:5px;border-radius:3px;background:#3860AA"></span><span style="flex:1;height:5px;border-radius:3px;background:#3860AA"></span><span style="flex:1;height:5px;border-radius:3px;background:#3860AA"></span><span style="flex:1;height:5px;border-radius:3px;background:#E6E8EE"></span><span style="flex:1;height:5px;border-radius:3px;background:#E6E8EE"></span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:38px;padding-top:28px">
+      <div>
+        <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:4px">
+          <div style="font:600 14px 'Inter Tight',Inter,sans-serif;color:#101319">Ingresos y gastos</div>
+          <div style="font:400 11.5px Inter,sans-serif;color:#A2A8B4">12 meses · barras apiladas con línea de resultado</div>
+        </div>
+        <svg width="100%" height="266" viewBox="0 0 780 266" style="display:block;margin-top:14px">
+          <g stroke="#F1F2F5"><line x1="34" y1="20" x2="780" y2="20"></line><line x1="34" y1="72" x2="780" y2="72"></line><line x1="34" y1="124" x2="780" y2="124"></line><line x1="34" y1="176" x2="780" y2="176"></line></g>
+          <line x1="34" y1="228" x2="780" y2="228" stroke="#D8DBE2"></line>
+          <g font-family="JetBrains Mono, monospace" font-size="9" fill="#A2A8B4"><text x="0" y="23">80k</text><text x="0" y="75">60k</text><text x="0" y="127">40k</text><text x="0" y="179">20k</text></g>
+          <g>
+            <rect x="48" y="150" width="26" height="78" fill="#DCE3F0" rx="2"></rect><rect x="78" y="176" width="26" height="52" fill="#F0DCD6" rx="2"></rect>
+            <rect x="110" y="140" width="26" height="88" fill="#DCE3F0" rx="2"></rect><rect x="140" y="172" width="26" height="56" fill="#F0DCD6" rx="2"></rect>
+            <rect x="172" y="128" width="26" height="100" fill="#DCE3F0" rx="2"></rect><rect x="202" y="170" width="26" height="58" fill="#F0DCD6" rx="2"></rect>
+            <rect x="234" y="136" width="26" height="92" fill="#DCE3F0" rx="2"></rect><rect x="264" y="164" width="26" height="64" fill="#F0DCD6" rx="2"></rect>
+            <rect x="296" y="118" width="26" height="110" fill="#DCE3F0" rx="2"></rect><rect x="326" y="168" width="26" height="60" fill="#F0DCD6" rx="2"></rect>
+            <rect x="358" y="104" width="26" height="124" fill="#DCE3F0" rx="2"></rect><rect x="388" y="160" width="26" height="68" fill="#F0DCD6" rx="2"></rect>
+            <rect x="420" y="112" width="26" height="116" fill="#DCE3F0" rx="2"></rect><rect x="450" y="166" width="26" height="62" fill="#F0DCD6" rx="2"></rect>
+            <rect x="482" y="92" width="26" height="136" fill="#DCE3F0" rx="2"></rect><rect x="512" y="158" width="26" height="70" fill="#F0DCD6" rx="2"></rect>
+            <rect x="544" y="84" width="26" height="144" fill="#DCE3F0" rx="2"></rect><rect x="574" y="154" width="26" height="74" fill="#F0DCD6" rx="2"></rect>
+            <rect x="606" y="96" width="26" height="132" fill="#DCE3F0" rx="2"></rect><rect x="636" y="162" width="26" height="66" fill="#F0DCD6" rx="2"></rect>
+            <rect x="668" y="74" width="26" height="154" fill="#3860AA" rx="2"></rect><rect x="698" y="148" width="26" height="80" fill="#C0492F" rx="2"></rect>
+          </g>
+          <polyline points="61,196 123,192 185,186 247,190 309,180 371,168 433,174 495,160 557,152 619,160 681,140" fill="none" stroke="#101319" stroke-width="1.6" stroke-dasharray="0"></polyline>
+          <g fill="#101319"><circle cx="681" cy="140" r="3"></circle></g>
+          <g font-family="Inter, sans-serif" font-size="9.5" fill="#A2A8B4" text-anchor="middle"><text x="74" y="246">sep</text><text x="136" y="246">oct</text><text x="198" y="246">nov</text><text x="260" y="246">dic</text><text x="322" y="246">ene</text><text x="384" y="246">feb</text><text x="446" y="246">mar</text><text x="508" y="246">abr</text><text x="570" y="246">may</text><text x="632" y="246">jun</text><text x="694" y="246" fill="#101319" font-weight="600">jul</text></g>
+          <g font-family="Inter, sans-serif" font-size="10" fill="#6B7280"><rect x="34" y="256" width="9" height="9" fill="#3860AA" rx="2"></rect><text x="49" y="264">Ingresos</text><rect x="112" y="256" width="9" height="9" fill="#C0492F" rx="2"></rect><text x="127" y="264">Gastos</text><line x1="188" y1="261" x2="206" y2="261" stroke="#101319" stroke-width="1.6"></line><text x="212" y="264">Resultado</text></g>
+        </svg>
+      </div>
+
+      <div>
+        <div style="font:600 14px 'Inter Tight',Inter,sans-serif;color:#101319;margin-bottom:14px">Necesita tu atención</div>
+        <div style="display:flex;flex-direction:column">
+          <div style="display:flex;gap:12px;padding:13px 0;border-top:1px solid #ECEEF2"><span style="width:6px;height:6px;border-radius:50%;background:#C0492F;margin-top:6px;flex:none"></span><div><div style="font:600 12.5px Inter,sans-serif;color:#101319">6 facturas vencidas · 14.280 €</div><div style="font:400 11.5px/1.5 Inter,sans-serif;color:#8A909C;margin-top:2px">La más antigua lleva 24 días. Puedes reclamar las seis en un solo envío.</div><div style="font:600 11.5px Inter,sans-serif;color:#3860AA;margin-top:6px">Enviar recordatorios →</div></div></div>
+          <div style="display:flex;gap:12px;padding:13px 0;border-top:1px solid #ECEEF2"><span style="width:6px;height:6px;border-radius:50%;background:#E0A03C;margin-top:6px;flex:none"></span><div><div style="font:600 12.5px Inter,sans-serif;color:#101319">Modelo 303 vence el 20 de agosto</div><div style="font:400 11.5px/1.5 Inter,sans-serif;color:#8A909C;margin-top:2px">Estimación 3.912 €. Quedan 4 apuntes sin conciliar del trimestre.</div><div style="font:600 11.5px Inter,sans-serif;color:#3860AA;margin-top:6px">Revisar apuntes →</div></div></div>
+          <div style="display:flex;gap:12px;padding:13px 0;border-top:1px solid #ECEEF2"><span style="width:6px;height:6px;border-radius:50%;background:#C8CCD4;margin-top:6px;flex:none"></span><div><div style="font:600 12.5px Inter,sans-serif;color:#101319">1 solicitud de vacaciones pendiente</div><div style="font:400 11.5px/1.5 Inter,sans-serif;color:#8A909C;margin-top:2px">clic1@estamosaunclic.com · 18–22 de agosto</div><div style="font:600 11.5px Inter,sans-serif;color:#3860AA;margin-top:6px">Aprobar →</div></div></div>
+          <div style="display:flex;gap:12px;padding:13px 0;border-top:1px solid #ECEEF2;border-bottom:1px solid #ECEEF2"><span style="width:6px;height:6px;border-radius:50%;background:#C8CCD4;margin-top:6px;flex:none"></span><div><div style="font:600 12.5px Inter,sans-serif;color:#101319">Equipo presente hoy: 2 de 3</div><div style="font:400 11.5px/1.5 Inter,sans-serif;color:#8A909C;margin-top:2px">clic2 no ha fichado y su horario empezó hace 2 h.</div></div></div>
+        </div>
+        <div style="margin-top:20px;font:600 14px 'Inter Tight',Inter,sans-serif;color:#101319;margin-bottom:10px">Concentración de cartera</div>
+        <div style="display:flex;height:9px;border-radius:5px;overflow:hidden;margin-bottom:12px"><div style="flex:38;background:#1B2436"></div><div style="flex:22;background:#3860AA"></div><div style="flex:16;background:#7B93C0"></div><div style="flex:12;background:#B9C6DD"></div><div style="flex:12;background:#E6E8EE"></div></div>
+        <div style="display:flex;flex-direction:column;gap:7px;font:400 11.5px Inter,sans-serif;color:#4A5160">
+          <div style="display:flex"><span>Gestoría Serrano SL</span><span style="margin-left:auto;font-family:'JetBrains Mono',monospace;color:#101319">38%</span></div>
+          <div style="display:flex"><span>Clínica Dental Norte</span><span style="margin-left:auto;font-family:'JetBrains Mono',monospace;color:#101319">22%</span></div>
+          <div style="display:flex"><span>Talleres Ovín</span><span style="margin-left:auto;font-family:'JetBrains Mono',monospace;color:#101319">16%</span></div>
+          <div style="display:flex;color:#8A909C"><span>Otros 9 clientes</span><span style="margin-left:auto;font-family:'JetBrains Mono',monospace">24%</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- 1c clientes empty -->
+<div class="dv-olabel" style="margin-top:12px"><a class="dv-oid" href="#1c">1c</a>Clientes · estado vacío con primeros pasos</div>
+<div class="dv-card" style="width:1360px">
+<div style="height:520px;background:#fff;font-family:Inter,sans-serif;display:flex;flex-direction:column">
+  <div style="display:flex;align-items:center;gap:26px;height:56px;padding:0 34px;border-bottom:1px solid #ECEEF2">
+    <div style="display:flex;align-items:center;gap:9px"><div style="width:24px;height:24px;border-radius:6px;background:#1B2436;color:#fff;font:700 9.5px Inter,sans-serif;display:flex;align-items:center;justify-content:center;letter-spacing:.02em">EA</div><div style="font:600 13px 'Inter Tight',Inter,sans-serif;color:#101319">Estamos a un Click</div></div>
+    <div style="display:flex;gap:2px;margin-left:14px"><div style="padding:7px 12px;font:500 12.5px Inter,sans-serif;color:#6B7280">Resumen</div><div style="padding:7px 12px;font:500 12.5px Inter,sans-serif;color:#6B7280">Facturación</div><div style="padding:7px 12px;border-radius:8px;background:#F3F4F7;font:600 12.5px Inter,sans-serif;color:#101319">Clientes</div><div style="padding:7px 12px;font:500 12.5px Inter,sans-serif;color:#6B7280">Equipo</div></div>
+  </div>
+  <div style="flex:1;padding:36px 34px;display:flex;gap:56px">
+    <div style="max-width:400px">
+      <div style="font:400 27px/1.2 'Instrument Serif',Georgia,serif;color:#101319">Tu cartera está vacía</div>
+      <div style="font:400 13px/1.65 Inter,sans-serif;color:#6B7280;margin-top:10px">Los clientes alimentan la facturación, los KPIs de ingresos y los avisos de cobro. Empieza por uno y el resto del panel cobra sentido.</div>
+      <div style="display:flex;gap:9px;margin-top:20px"><div style="height:34px;padding:0 16px;display:flex;align-items:center;border-radius:8px;background:#3860AA;color:#fff;font:600 12.5px Inter,sans-serif">Nuevo cliente</div><div style="height:34px;padding:0 16px;display:flex;align-items:center;border-radius:8px;border:1px solid #E6E8EE;color:#4A5160;font:600 12.5px Inter,sans-serif">Importar CSV</div></div>
+      <div style="margin-top:26px;font:500 10px 'JetBrains Mono',monospace;color:#A2A8B4;letter-spacing:.07em">PUESTA EN MARCHA · 1 DE 4</div>
+      <div style="display:flex;gap:4px;margin-top:9px"><span style="flex:1;height:4px;border-radius:2px;background:#3860AA"></span><span style="flex:1;height:4px;border-radius:2px;background:#E6E8EE"></span><span style="flex:1;height:4px;border-radius:2px;background:#E6E8EE"></span><span style="flex:1;height:4px;border-radius:2px;background:#E6E8EE"></span></div>
+      <div style="display:flex;flex-direction:column;margin-top:16px">
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #F1F2F5"><span style="width:16px;height:16px;border-radius:50%;border:1.5px solid #3860AA"></span><span style="font:600 12px Inter,sans-serif;color:#101319">Dar de alta el primer cliente</span></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #F1F2F5"><span style="width:16px;height:16px;border-radius:50%;border:1.5px solid #DDE0E6"></span><span style="font:400 12px Inter,sans-serif;color:#8A909C">Emitir una factura</span></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #F1F2F5"><span style="width:16px;height:16px;border-radius:50%;border:1.5px solid #DDE0E6"></span><span style="font:400 12px Inter,sans-serif;color:#8A909C">Conectar la cuenta bancaria</span></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 0"><span style="width:16px;height:16px;border-radius:50%;border:1.5px solid #DDE0E6"></span><span style="font:400 12px Inter,sans-serif;color:#8A909C">Invitar al equipo</span></div>
+      </div>
+    </div>
+    <div style="flex:1;border-radius:12px;background:#FAFBFC;border:1px solid #F1F2F5;padding:20px;display:flex;flex-direction:column;gap:9px">
+      <div style="font:500 10px 'JetBrains Mono',monospace;color:#A2A8B4;letter-spacing:.07em">ASÍ SE VERÁ</div>
+      <div style="display:grid;grid-template-columns:1fr 100px 110px 90px;padding:8px 12px;font:600 9.5px 'JetBrains Mono',monospace;color:#B7BCC6;letter-spacing:.05em"><div>CLIENTE</div><div>NIF</div><div style="text-align:right">FACTURADO</div><div style="text-align:right">ESTADO</div></div>
+      <div style="display:grid;grid-template-columns:1fr 100px 110px 90px;align-items:center;padding:11px 12px;background:#fff;border:1px solid #EEF0F3;border-radius:9px;opacity:.6"><div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:50%;background:#EDEFF3"></span><span style="width:120px;height:8px;border-radius:4px;background:#EDEFF3"></span></div><span style="width:56px;height:8px;border-radius:4px;background:#EDEFF3"></span><span style="width:64px;height:8px;border-radius:4px;background:#EDEFF3;justify-self:end"></span><span style="width:48px;height:16px;border-radius:8px;background:#EDEFF3;justify-self:end"></span></div>
+      <div style="display:grid;grid-template-columns:1fr 100px 110px 90px;align-items:center;padding:11px 12px;background:#fff;border:1px solid #EEF0F3;border-radius:9px;opacity:.4"><div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:50%;background:#EDEFF3"></span><span style="width:96px;height:8px;border-radius:4px;background:#EDEFF3"></span></div><span style="width:56px;height:8px;border-radius:4px;background:#EDEFF3"></span><span style="width:64px;height:8px;border-radius:4px;background:#EDEFF3;justify-self:end"></span><span style="width:48px;height:16px;border-radius:8px;background:#EDEFF3;justify-self:end"></span></div>
+      <div style="display:grid;grid-template-columns:1fr 100px 110px 90px;align-items:center;padding:11px 12px;background:#fff;border:1px solid #EEF0F3;border-radius:9px;opacity:.22"><div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:50%;background:#EDEFF3"></span><span style="width:132px;height:8px;border-radius:4px;background:#EDEFF3"></span></div><span style="width:56px;height:8px;border-radius:4px;background:#EDEFF3"></span><span style="width:64px;height:8px;border-radius:4px;background:#EDEFF3;justify-self:end"></span><span style="width:48px;height:16px;border-radius:8px;background:#EDEFF3;justify-self:end"></span></div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+</div>
+
+<p class="dv-next">Prueba: "desarrolla <a class="dv-oid" href="#1a">1a</a> con las pantallas de Facturas y RRHH" · "mezcla la densidad de <a class="dv-oid" href="#1a">1a</a> con la paleta de <a class="dv-oid" href="#1b">1b</a>" · "quiero ver <a class="dv-oid" href="#1c">1c</a> con el sidebar en vez de barra superior"</p>
+</section>
+</x-dc>
+</body>
+</html>
