@@ -119,7 +119,7 @@ const UsersTab = ({ userId, accountId }: { userId: string; accountId: string }) 
   const emailMap = new Map(users.map((u: any) => [u.user_id, u.email]));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Pending change requests */}
       {pendingRequests.length > 0 && (
         <Card className="border-destructive/30 bg-destructive/5">

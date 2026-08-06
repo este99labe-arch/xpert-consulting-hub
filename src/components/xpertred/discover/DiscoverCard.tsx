@@ -35,7 +35,7 @@ const DiscoverCard = ({ profile, score, direction, isManager, isSelf, isPending,
       <Card className="overflow-hidden">
         <div className="bg-gradient-to-br from-primary/10 to-primary/5 p-6">
           <div className="flex items-start gap-4">
-            <div className="h-16 w-16 rounded-2xl bg-muted border border-primary/20 flex items-center justify-center tnum text-[22px] font-semibold tracking-[-.02em] text-accent-foreground">
+            <div className="h-16 w-16 rounded-lg bg-muted border border-primary/20 flex items-center justify-center tnum text-[22px] font-semibold tracking-[-.02em] text-accent-foreground">
               {name.charAt(0)}
             </div>
             <div className="flex-1 min-w-0">

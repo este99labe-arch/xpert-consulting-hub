@@ -130,7 +130,7 @@ const MasterDashboard = () => {
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-[17px] font-semibold tracking-[-.01em] text-foreground">Panel Admin</h1>
@@ -141,13 +141,13 @@ const MasterDashboard = () => {
         </Button>
       </div>
 
-      <Tabs defaultValue="resumen" className="space-y-5">
+      <Tabs defaultValue="resumen" className="space-y-4">
         <TabsList>
           <TabsTrigger value="resumen" className="gap-1.5"><LayoutDashboard className="h-4 w-4" />Resumen de red</TabsTrigger>
           <TabsTrigger value="forecast" className="gap-1.5"><PiggyBank className="h-4 w-4" />Previsión de costes</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="resumen" className="space-y-5">
+        <TabsContent value="resumen" className="space-y-4">
       {/* KPIs */}
       <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
         {kpis.map((k) => (
@@ -166,7 +166,7 @@ const MasterDashboard = () => {
       </div>
 
       {/* Charts row */}
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2"><Activity className="h-4 w-4 text-accent-foreground" />Crecimiento de cuentas (6 meses)</CardTitle>
@@ -207,7 +207,7 @@ const MasterDashboard = () => {
       </div>
 
       {/* Top accounts + churn risk */}
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2"><TrendingUp className="h-4 w-4 text-accent-foreground" />Cuentas más activas (mes)</CardTitle>

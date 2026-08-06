@@ -62,13 +62,13 @@ const ResetPassword = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent px-4">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-accent blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-primary/8 blur-3xl" />
       </div>
 
       <Card className="relative w-full max-w-md shadow-xl border-border/50 backdrop-blur-sm">
         <CardHeader className="text-center space-y-3 pb-2">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground font-bold text-2xl shadow-primary/25">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-2xl shadow-primary/25">
             <KeyRound className="h-7 w-7" />
           </div>
           <div className="space-y-1">

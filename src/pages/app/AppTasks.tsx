@@ -352,7 +352,7 @@ const AppTasks = () => {
 
       {/* Bulk actions */}
       {selected.size > 0 && (
-        <Card className="bg-primary/5 border-primary/30">
+        <Card className="bg-accent border-row-selected-border">
           <CardContent className="p-2 flex items-center gap-2 flex-wrap">
             <span className="text-xs font-medium px-2">{selected.size} seleccionadas</span>
             <Select onValueChange={(v) => bulkUpdate({ column_id: v })}>

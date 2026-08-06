@@ -147,7 +147,7 @@ const AccountingSettingsTab = ({ accountId }: Props) => {
   );
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* Método contable */}
       <Card>
         <CardHeader className="pb-3">

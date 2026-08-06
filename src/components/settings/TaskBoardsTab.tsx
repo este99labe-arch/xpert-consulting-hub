@@ -92,7 +92,7 @@ const TaskBoardsTab = () => {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base"><LayoutGrid className="h-4 w-4 text-accent-foreground" /> Tableros de tareas</CardTitle>

@@ -198,7 +198,7 @@ const EmployeeDashboard = () => {
   const todayLabel = format(now, "EEEE, d 'de' MMMM", { locale: es });
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* Hero header */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
@@ -232,7 +232,7 @@ const EmployeeDashboard = () => {
       </div>
 
       {/* Hero attendance + Reminders */}
-      <div className="grid gap-5 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <TodayAttendanceWidget />
         </div>
@@ -242,7 +242,7 @@ const EmployeeDashboard = () => {
       </div>
 
       {/* Week chart + Vacations + Documents */}
-      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <MyWeekAttendanceWidget />
         <MyVacationsWidget />
         <MyDocumentsWidget />

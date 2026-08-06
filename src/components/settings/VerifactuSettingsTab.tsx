@@ -84,7 +84,7 @@ const VerifactuSettingsTab = ({ accountId, isManager }: Props) => {
   const effectiveNif = nif.trim() || (account as any)?.tax_id || "";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -94,7 +94,7 @@ const VerifactuSettingsTab = ({ accountId, isManager }: Props) => {
             Registro de facturas en la AEAT mediante el sistema Veri*Factu (remisión en tiempo real).
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4">
           <div className="flex items-center justify-between rounded-lg border p-4">
             <div className="space-y-0.5">
               <Label className="text-xs font-medium">Activar VERI*FACTU</Label>

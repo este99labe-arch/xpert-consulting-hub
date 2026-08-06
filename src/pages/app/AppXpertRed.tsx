@@ -14,7 +14,7 @@ const AppXpertRed = () => {
   const [tab, setTab] = useState("discover");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <PageHeader
         title={<>Xpert<span className="text-destructive">Red</span></>}
         description="Red empresarial B2B — Conecta con otras empresas del ecosistema"

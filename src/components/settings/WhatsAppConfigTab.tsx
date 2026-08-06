@@ -158,7 +158,7 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* Conexión */}
       <Card>
         <CardHeader>
@@ -176,7 +176,7 @@ const WhatsAppConfigTab = ({ accountId, isManager }: Props) => {
           </div>
 
           {/* Conexión guiada (Embedded Signup / coexistencia). Rellena los campos automáticamente. */}
-          <div className="rounded-lg border border-dashed border-primary/40 bg-primary/5 p-3">
+          <div className="rounded-lg border border-dashed border-primary/40 bg-accent p-3">
             <p className="mb-2 text-xs font-medium">Conexión recomendada</p>
             <WhatsAppEmbeddedSignup
               accountId={accountId}

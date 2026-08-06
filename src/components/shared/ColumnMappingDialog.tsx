@@ -285,7 +285,7 @@ export default function ColumnMappingDialog({
         </DialogHeader>
 
         {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
           {requiredMissing.length > 0 && (
             <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
               <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
@@ -327,7 +327,7 @@ export default function ColumnMappingDialog({
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="font-medium text-xs truncate">{field.label}</span>
                             {field.required ? (
-                              <Badge variant="outline" className="h-5 px-1.5 text-[10px] font-medium border-primary/30 text-accent-foreground">
+                              <Badge variant="outline" className="h-5 px-1.5 text-[10px] font-medium border-row-selected-border text-accent-foreground">
                                 Obligatorio
                               </Badge>
                             ) : (

@@ -131,7 +131,7 @@ const InvoiceTemplateTab = ({ accountId, isManager }: Props) => {
   }, [template, opts]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* ─── Galería de plantillas ─── */}
       <Card>
         <CardHeader>
@@ -148,7 +148,7 @@ const InvoiceTemplateTab = ({ accountId, isManager }: Props) => {
                 <div
                   key={t.id}
                   className={`relative cursor-pointer rounded-xl border-2 p-3 transition-colors hover:bg-popover ${
-                    isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                    isSelected ? "border-primary bg-accent" : "border-border hover:border-primary/50"
                   }`}
                   onClick={() => { if (isManager) { setTemplate(t.id); setDirty(true); } }}
                 >
@@ -182,7 +182,7 @@ const InvoiceTemplateTab = ({ accountId, isManager }: Props) => {
             <CardTitle className="flex items-center gap-2 text-base"><Palette className="h-4 w-4 text-accent-foreground" /> Personalización</CardTitle>
             <CardDescription>Ajusta el nombre, el color y los datos que aparecen en el documento.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-5">
+          <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label>Nombre en la factura</Label>

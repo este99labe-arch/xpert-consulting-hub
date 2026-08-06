@@ -163,7 +163,7 @@ const EmployeeScheduleDialog = ({ open, onOpenChange, accountId, userId, label }
           </div>
         </DialogHeader>
 
-        <div className="flex-1 space-y-5 overflow-y-auto bg-muted/30 px-6 py-5">
+        <div className="flex-1 space-y-4 overflow-y-auto bg-muted/30 px-6 py-5">
           <div className="space-y-1.5">
             <Label>Plantilla de horario</Label>
             <Select value={templateId} onValueChange={setTemplateId}>

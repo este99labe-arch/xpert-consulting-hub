@@ -125,7 +125,7 @@ const CompanyTab = ({ accountId, isManager }: { accountId: string; isManager: bo
         )}
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {fields.map((f) => (
             <div key={f.key} className="space-y-1">
               <Label className="text-muted-foreground text-xs">{f.label}</Label>

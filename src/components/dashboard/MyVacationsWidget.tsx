@@ -89,7 +89,7 @@ const MyVacationsWidget = () => {
           </div>
         </CardHeader>
         <CardContent className="pt-0 space-y-3">
-          <div className="rounded-lg bg-primary/5 p-3">
+          <div className="rounded-lg bg-accent p-3">
             <div className="flex items-baseline justify-between">
               <span className="text-xs text-muted-foreground">Disponibles</span>
               <span className="tnum text-[22px] font-semibold tracking-[-.02em] text-accent-foreground">{available}</span>

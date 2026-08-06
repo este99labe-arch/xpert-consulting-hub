@@ -16,7 +16,7 @@ const API_VERSION = "v1.0";
 
 const methodColors: Record<string, string> = {
   GET: "bg-success-foreground text-[hsl(var(--success))] border-[hsl(var(--success))]/30",
-  POST: "bg-primary/10 text-accent-foreground border-primary/30",
+  POST: "bg-primary/10 text-accent-foreground border-row-selected-border",
   PUT: "bg-warning-surface text-[hsl(var(--warning))] border-[hsl(var(--warning))]/30",
   DELETE: "bg-destructive-surface text-destructive border-destructive/30",
 };
@@ -662,7 +662,7 @@ const MasterApiDocs = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>

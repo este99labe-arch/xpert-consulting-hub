@@ -123,7 +123,7 @@ const AppSettings = () => {
   const active = section || visible[0]?.key || "";
 
   return (
-    <div className="flex min-h-full gap-6">
+    <div className="flex min-h-full gap-4">
       {/* Navegación secundaria (212 px) */}
       <aside className="hidden w-[212px] shrink-0 lg:block">
         {groupsToRender().map((group) => {

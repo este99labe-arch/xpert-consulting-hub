@@ -326,7 +326,7 @@ const MatchesTab = () => {
                           const isMine = msg.sender_account_id === accountId;
                           return (
                             <div key={msg.id} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
-                              <div className={`max-w-[75%] rounded-2xl px-4 py-2 text-xs ${isMine ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted rounded-bl-md"}`}>
+                              <div className={`max-w-[75%] rounded-lg px-4 py-2 text-xs ${isMine ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted rounded-bl-md"}`}>
                                 {msg.content}
                                 <div className={`text-[10px] mt-1 ${isMine ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
                                   {new Date(msg.created_at).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}

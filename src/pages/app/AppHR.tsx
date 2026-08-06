@@ -14,7 +14,7 @@ const AppHR = () => {
   const isManager = role === "MANAGER" || role === "MASTER_ADMIN";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <PageHeader
         title="Recursos Humanos"
         description="Gestiona empleados, ausencias, calendario y documentación"

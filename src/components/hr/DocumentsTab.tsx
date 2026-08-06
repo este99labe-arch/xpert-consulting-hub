@@ -406,7 +406,7 @@ const DocumentsTab = () => {
                 onClick={() => setSelectedFolder(folder.id)}
                 className="group text-left"
               >
-                <Card className=" hover:bg-popover hover:border-primary/30 transition-all cursor-pointer">
+                <Card className=" hover:bg-popover hover:border-row-selected-border transition-all cursor-pointer">
                   <CardContent className="p-5 flex flex-col items-center text-center">
                     <div className="text-4xl mb-3">
                       {FOLDER_ICONS[folder.name] || "📁"}
@@ -427,7 +427,7 @@ const DocumentsTab = () => {
           {/* Add folder card (manager only) */}
           {isManager && (
             <button onClick={() => { setShowNewFolder(true); setNewFolderName(""); }} className="text-left">
-              <Card className=" hover:bg-popover border-dashed hover:border-primary/30 transition-all cursor-pointer h-full">
+              <Card className=" hover:bg-popover border-dashed hover:border-row-selected-border transition-all cursor-pointer h-full">
                 <CardContent className="p-5 flex flex-col items-center justify-center text-center h-full text-muted-foreground">
                   <FolderPlus className="h-8 w-8 mb-2" />
                   <p className="text-xs font-medium">Nueva carpeta</p>
@@ -480,7 +480,7 @@ const DocumentsTab = () => {
             const empFolderCount = folders.filter((f: any) => f.user_id === emp.user_id).length;
             return (
               <button key={emp.user_id} onClick={() => setSelectedEmployee(emp.user_id)} className="text-left">
-                <Card className=" hover:bg-popover hover:border-primary/30 transition-all cursor-pointer">
+                <Card className=" hover:bg-popover hover:border-row-selected-border transition-all cursor-pointer">
                   <CardContent className="p-5 flex items-center gap-4">
                     <Avatar className="h-12 w-12">
                       <AvatarFallback className="bg-primary/10 text-accent-foreground font-semibold">

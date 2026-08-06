@@ -226,7 +226,7 @@ const VerticalsServicesTab = ({ accountId, isManager }: Props) => {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <Card>
         <CardHeader>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

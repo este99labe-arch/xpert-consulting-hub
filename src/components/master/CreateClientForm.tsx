@@ -242,7 +242,7 @@ const CreateClientForm: React.FC<Props> = ({ onSuccess }) => {
       </Card>
 
       {/* Primary Contact */}
-      <Card className="border-primary/30">
+      <Card className="border-row-selected-border">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Contacto Principal *</CardTitle>
         </CardHeader>

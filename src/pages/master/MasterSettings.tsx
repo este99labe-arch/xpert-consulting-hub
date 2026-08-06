@@ -150,7 +150,7 @@ const MasterSettings = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <h1 className="font-display text-[17px] font-semibold tracking-[-.01em] text-foreground">Configuración</h1>
 
       <Tabs defaultValue="users" className="space-y-4">
@@ -327,7 +327,7 @@ const MasterSettings = () => {
               </Button>
 
               {encryptionResult?.success && (
-                <div className="rounded-md border border-primary/30 bg-muted p-4 space-y-2">
+                <div className="rounded-md border border-row-selected-border bg-muted p-4 space-y-2">
                   <div className="flex items-center gap-2 text-accent-foreground font-medium">
                     <CheckCircle2 className="h-4 w-4" />
                     Cifrado inicializado correctamente

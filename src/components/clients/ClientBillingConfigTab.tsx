@@ -35,7 +35,7 @@ const ClientBillingConfigTab = ({ client, onSave, saving }: Props) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <Card>
         <CardHeader>
           <CardTitle>Impuestos por defecto</CardTitle>

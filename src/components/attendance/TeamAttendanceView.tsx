@@ -56,7 +56,7 @@ const TeamAttendanceView = ({
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {isMasterAdmin && (
         <MasterAccountSelector
           title="Asistencia"
@@ -98,7 +98,7 @@ const TeamAttendanceView = ({
                           <p className="text-xs text-muted-foreground mt-0.5">Motivo: {req.reason}</p>
                         </div>
                         <div className="flex items-center gap-1.5 ml-3">
-                          <Button size="sm" variant="outline" className="h-7 text-xs gap-1 text-accent-foreground border-primary/30 hover:bg-primary/10"
+                          <Button size="sm" variant="outline" className="h-7 text-xs gap-1 text-accent-foreground border-row-selected-border hover:bg-primary/10"
                             onClick={() => onApproveDelete(req.id, req.attendance_id)}>
                             <Check className="h-3 w-3" /> Aprobar
                           </Button>

@@ -512,7 +512,7 @@ const AppInvoices = () => {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <PageHeader
         title="Facturación"
         description="Gestiona facturas, presupuestos, gastos y cobros"
@@ -540,7 +540,7 @@ const AppInvoices = () => {
           </Button>
         </div>
 
-        <TabsContent value="invoices" className="space-y-6">
+        <TabsContent value="invoices" className="space-y-4">
 
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
@@ -865,7 +865,7 @@ const AppInvoices = () => {
 
         </TabsContent>
 
-        <TabsContent value="quotes" className="space-y-6">
+        <TabsContent value="quotes" className="space-y-4">
           {/* Quote KPIs */}
           <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
             {[

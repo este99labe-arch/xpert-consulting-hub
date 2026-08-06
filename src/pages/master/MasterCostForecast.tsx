@@ -179,7 +179,7 @@ const MasterCostForecast = () => {
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div>
         <h2 className="text-lg font-semibold">Previsión de costes vs beneficios</h2>
         <p className="text-xs text-muted-foreground">

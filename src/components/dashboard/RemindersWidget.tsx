@@ -122,7 +122,7 @@ const RemindersWidget = () => {
                         isOverdue
                           ? "border-destructive/30 bg-destructive/5"
                           : isNow
-                          ? "border-primary/30 bg-primary/5"
+                          ? "border-row-selected-border bg-accent"
                           : "border-border"
                       }`}
                     >

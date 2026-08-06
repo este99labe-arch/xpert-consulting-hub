@@ -103,7 +103,7 @@ const InvoiceKanbanView = ({ invoices, onPreview }: Props) => {
           className={cn(
             "flex-shrink-0 w-[220px] lg:w-[240px] rounded-lg border border-t-4 bg-muted/30 transition-colors",
             statusColumnColors[col.key],
-            dragOverColumn === col.key && "bg-accent/40 ring-2 ring-primary/30"
+            dragOverColumn === col.key && "bg-accent/40 ring-2 ring-primary/[.16]"
           )}
           onDragOver={(e) => handleDragOver(e, col.key)}
           onDragLeave={handleDragLeave}
