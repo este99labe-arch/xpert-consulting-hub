@@ -36,7 +36,10 @@ export default {
         },
         destructive: {
           DEFAULT: 'hsl(var(--destructive))',
-          foreground: 'hsl(var(--destructive-foreground))'
+          foreground: 'hsl(var(--destructive-foreground))',
+          text: 'hsl(var(--destructive-text))',
+          surface: 'hsl(var(--destructive-surface))',
+          border: 'hsl(var(--destructive-border))'
         },
         muted: {
           DEFAULT: 'hsl(var(--muted))',
@@ -48,11 +51,15 @@ export default {
         },
         success: {
           DEFAULT: 'hsl(var(--success))',
-          foreground: 'hsl(var(--success-foreground))'
+          foreground: 'hsl(var(--success-foreground))',
+          border: 'hsl(var(--success-border))'
         },
         warning: {
           DEFAULT: 'hsl(var(--warning))',
-          foreground: 'hsl(var(--warning-foreground))'
+          foreground: 'hsl(var(--warning-foreground))',
+          text: 'hsl(var(--warning-text))',
+          surface: 'hsl(var(--warning-surface))',
+          border: 'hsl(var(--warning-border))'
         },
         popover: {
           DEFAULT: 'hsl(var(--popover))',
@@ -66,8 +73,26 @@ export default {
           2: 'hsl(var(--chart-2))',
           3: 'hsl(var(--chart-3))',
           4: 'hsl(var(--chart-4))',
-          5: 'hsl(var(--chart-5))'
+          5: 'hsl(var(--chart-5))',
+          grid: 'hsl(var(--chart-grid))',
+          track: 'hsl(var(--chart-track))',
+          peak: 'hsl(var(--chart-peak))'
         },
+        /* Escala de texto de Midnight: figure (cifra protagonista) →
+           foreground → muted-foreground → subtle → faint. faint es solo
+           decoración e iconos inactivos, nunca contenido legible. */
+        figure: 'hsl(var(--figure))',
+        subtle: 'hsl(var(--subtle))',
+        faint: 'hsl(var(--faint))',
+        'border-subtle': 'hsl(var(--border-subtle))',
+        'border-strong': 'hsl(var(--border-strong))',
+        'primary-hover': 'hsl(var(--primary-hover))',
+        info: {
+          text: 'hsl(var(--info-text))',
+          border: 'hsl(var(--info-border))'
+        },
+        'row-selected': 'hsl(var(--row-selected))',
+        'row-selected-border': 'hsl(var(--row-selected-border))',
         card: {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))'
@@ -86,7 +111,11 @@ export default {
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)'
+        sm: 'calc(var(--radius) - 4px)',
+        /* Escala de Midnight: 14px tarjeta · 10-12px contenedor interior ·
+           8px control (botón, campo, item de nav) · 6px chip y badge. */
+        control: 'calc(var(--radius) - 6px)',
+        chip: 'calc(var(--radius) - 8px)'
       },
       keyframes: {
         'accordion-down': {
@@ -112,6 +141,7 @@ export default {
         '2xl': 'var(--shadow-2xl)'
       },
       fontFamily: {
+        display: ['Inter Tight', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         sans: [
           'Inter',
           'ui-sans-serif',

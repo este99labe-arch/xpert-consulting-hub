@@ -5,6 +5,13 @@ import { cn } from "@/lib/utils";
 
 const Tabs = TabsPrimitive.Root;
 
+/**
+ * Pestañas de Midnight: segmento sobre fondo `muted` con borde `input`, no la
+ * barra subrayada anterior. La activa se distingue por superficie elevada.
+ *
+ * Los contadores que van dentro de un trigger toman el color del estado que
+ * cuentan y se escriben en mono (.tnum).
+ */
 const TabsList = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.List>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
@@ -12,7 +19,7 @@ const TabsList = React.forwardRef<
   <TabsPrimitive.List
     ref={ref}
     className={cn(
-      "relative flex h-10 w-full items-center justify-start gap-1 overflow-x-auto border-b border-border text-muted-foreground scrollbar-hide",
+      "inline-flex items-center gap-1 overflow-x-auto rounded-[9px] border border-input bg-muted p-[3px] text-muted-foreground scrollbar-hide",
       className,
     )}
     {...props}
@@ -27,9 +34,10 @@ const TabsTrigger = React.forwardRef<
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      "group relative inline-flex h-10 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-t-md px-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:text-foreground disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-foreground",
-      // Indicador inferior animado para la pestaña activa
-      "after:pointer-events-none after:absolute after:inset-x-2 after:bottom-0 after:h-[2px] after:rounded-full after:bg-primary after:origin-center after:scale-x-0 after:transition-transform after:duration-200 data-[state=active]:after:scale-x-100",
+      "inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-chip px-2.5 py-[5px] text-[11.5px] font-medium text-subtle transition-colors duration-150",
+      "hover:text-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/[.16]",
+      "disabled:pointer-events-none disabled:text-faint",
+      "data-[state=active]:bg-[hsl(var(--border-strong))] data-[state=active]:font-semibold data-[state=active]:text-foreground",
       className,
     )}
     {...props}
@@ -43,10 +51,7 @@ const TabsContent = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <TabsPrimitive.Content
     ref={ref}
-    className={cn(
-      "mt-4 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-      className,
-    )}
+    className={cn("mt-4 focus-visible:outline-none", className)}
     {...props}
   />
 ));

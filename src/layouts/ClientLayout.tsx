@@ -5,83 +5,40 @@ import NotificationBell from "@/components/shared/NotificationBell";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  SidebarProvider,
-  Sidebar,
-  SidebarContent,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarFooter,
-  SidebarTrigger,
-  SidebarInset,
-  useSidebar,
-} from "@/components/ui/sidebar";
-import {
-  LayoutDashboard, Users, FileText, Calculator, UserCog, Clock, Settings, LogOut, Package, ArrowRightLeft, ChevronDown, BarChart3, HelpCircle, CalendarClock, Globe, MessageCircle,
-} from "lucide-react";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { LogOut, Settings, HelpCircle, ChevronDown, Menu, Search } from "lucide-react";
 import ReminderNotifier from "@/components/reminders/ReminderNotifier";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import OnboardingTour from "@/components/shared/OnboardingTour";
-import HealthCheck from "@/components/shared/HealthCheck";
 import MyTasksBadge from "@/components/tasks/MyTasksBadge";
 import { SupportAccountSwitcher, SupportSessionBanner } from "@/components/shared/SupportSession";
 import AccountSwitcher from "@/components/shared/AccountSwitcher";
-import xpertLogo from "@/assets/brand/iso-blue.png";
+import AppNav, { moduleIcons, modulePaths, type NavModule } from "@/components/shared/AppNav";
+import { cn } from "@/lib/utils";
+import xpertLogo from "@/assets/brand/iso-white.png";
 
-const moduleIcons: Record<string, any> = {
-  DASHBOARD: LayoutDashboard,
-  CLIENTS: Users,
-  INVOICES: FileText,
-  ACCOUNTING: Calculator,
-  HR: UserCog,
-  ATTENDANCE: Clock,
-  INVENTORY: Package,
-  REPORTS: BarChart3,
-  TASKS: CalendarClock,
-  XPERTRED: Globe,
-  CHAT: MessageCircle,
-  SETTINGS: Settings,
-};
+/** Módulos que se asoman al rail de 56 px, en este orden. El resto viven solo
+ *  en el panel: el rail es un atajo, no una segunda navegación completa. */
+const RAIL_CODES = ["DASHBOARD", "INVOICES", "CLIENTS", "CHAT", "TASKS"];
 
-const modulePaths: Record<string, string> = {
-  DASHBOARD: "/app/dashboard",
-  CLIENTS: "/app/clients",
-  INVOICES: "/app/invoices",
-  ACCOUNTING: "/app/accounting",
-  HR: "/app/hr",
-  ATTENDANCE: "/app/attendance",
-  INVENTORY: "/app/inventory",
-  REPORTS: "/app/reports",
-  TASKS: "/app/tasks",
-  XPERTRED: "/app/xpertred",
-  CHAT: "/app/chat",
-  SETTINGS: "/app/settings",
-};
-
-const SidebarInner = () => {
+const ClientLayout = () => {
   const { signOut, user, accountId, role, supportSession } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const { setOpen, isMobile } = useSidebar();
+  const isMobile = useIsMobile();
   const [showTutorial, setShowTutorial] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const { data: accountInfo } = useQuery({
     queryKey: ["account-info", accountId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("accounts")
-        .select("name, type")
-        .eq("id", accountId!)
-        .single();
+      const { data, error } = await supabase.from("accounts").select("name, type").eq("id", accountId!).single();
       if (error) throw error;
       return data;
     },
@@ -97,7 +54,7 @@ const SidebarInner = () => {
 
   const { data: modules = [] } = useQuery({
     queryKey: ["account_modules", accountId, role, user?.id, supportSession?.accountId],
-    queryFn: async () => {
+    queryFn: async (): Promise<NavModule[]> => {
       if (!accountId) return [];
       // En sesión de soporte se muestran los módulos contratados por el cliente,
       // no el catálogo completo: la idea es ver la app tal y como la ve él.
@@ -129,194 +86,150 @@ const SidebarInner = () => {
     enabled: !!accountId,
   });
 
+  // Tareas y Configuración se ven siempre, estén o no en el catálogo contratado.
+  const navModules: NavModule[] = [...modules];
+  if (!navModules.some((m) => m.code === "TASKS")) navModules.push({ code: "TASKS", name: "Tareas" });
+  if (!navModules.some((m) => m.code === "SETTINGS")) navModules.push({ code: "SETTINGS", name: "Configuración" });
+
+  const railItems = RAIL_CODES.map((c) => navModules.find((m) => m.code === c)).filter(Boolean) as NavModule[];
+  const userInitial = user?.email?.charAt(0).toUpperCase() ?? "?";
+
+  const nav = (
+    <AppNav
+      modules={navModules}
+      companyName={companyName}
+      isMaster={role === "MASTER_ADMIN"}
+      onNavigate={() => setMobileNavOpen(false)}
+    />
+  );
+
   return (
-    <>
-      <Sidebar
-        collapsible="icon"
-        className="border-r-0"
-        onMouseEnter={() => !isMobile && setOpen(true)}
-        onMouseLeave={() => !isMobile && setOpen(false)}
-      >
-        <SidebarHeader className="p-3 border-b border-sidebar-border">
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                size="lg"
-                className="h-auto py-2 hover:bg-transparent cursor-default"
-                tooltip={companyName}
-              >
-                {isXpertAccount ? (
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white p-0.5">
-                    <img src={xpertLogo} alt="XpertConsulting" className="h-full w-full object-contain" />
-                  </div>
-                ) : (
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground text-xs font-bold">
-                    {companyInitials}
-                  </div>
-                )}
-                <div className="flex flex-col gap-0.5 leading-none overflow-hidden">
-                  <span className="text-sm font-semibold truncate">{companyName}</span>
-                  <span className="text-[10px] text-sidebar-foreground/50">Panel Cliente</span>
-                </div>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarHeader>
-        <SidebarContent className="px-3 py-4 scrollbar-hide">
-          <SidebarMenu>
-            {modules.filter((mod) => mod.code !== "SETTINGS").map((mod) => {
-              const Icon = moduleIcons[mod.code] || LayoutDashboard;
-              const path = modulePaths[mod.code] || "/app/dashboard";
-              return (
-                <SidebarMenuItem key={mod.code}>
-                  <SidebarMenuButton
-                    isActive={location.pathname === path}
-                    onClick={() => navigate(path)}
-                    tooltip={mod.name}
-                    className="h-10 rounded-lg"
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span>{mod.name}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              );
-            })}
-            {/* Tareas - always visible */}
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                isActive={location.pathname === "/app/tasks"}
-                onClick={() => navigate("/app/tasks")}
-                tooltip="Tareas"
-                className="h-10 rounded-lg"
-              >
-                <CalendarClock className="h-4 w-4" />
-                <span className="flex-1">Tareas</span>
-                <MyTasksBadge />
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                isActive={location.pathname === "/app/settings"}
-                onClick={() => navigate("/app/settings")}
-                tooltip="Configuración"
-                className="h-10 rounded-lg"
-              >
-                <Settings className="h-4 w-4" />
-                <span>Configuración</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-          {role === "MASTER_ADMIN" && (
-            <>
-              <Separator className="my-3 bg-sidebar-border" />
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    onClick={() => navigate("/master/dashboard")}
-                    tooltip="Ir al Panel Master"
-                    className="h-10 rounded-lg"
-                  >
-                    <ArrowRightLeft className="h-4 w-4" />
-                    <span>Panel Master</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </>
-          )}
-        </SidebarContent>
-        <SidebarFooter className="p-3 border-t border-sidebar-border">
-          <SidebarMenu className="gap-1.5">
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                size="lg"
-                className="h-auto py-2 hover:bg-transparent cursor-default"
-                tooltip={user?.email || "Usuario"}
-              >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-sidebar-accent-foreground text-xs font-medium">
-                  {user?.email?.charAt(0).toUpperCase()}
-                </div>
-                <div className="flex flex-col gap-0.5 leading-none overflow-hidden">
-                  <span className="text-xs truncate">{user?.email}</span>
-                </div>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                onClick={signOut}
-                tooltip="Cerrar sesión"
-                className="h-9 rounded-lg text-sidebar-foreground/70 hover:text-sidebar-foreground"
-              >
-                <LogOut className="h-4 w-4" />
-                <span>Cerrar sesión</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarFooter>
-      </Sidebar>
+    <div className="flex h-screen w-full overflow-hidden bg-background">
+      {/* ── Rail de 56 px ───────────────────────────────────────────── */}
+      <aside className="hidden w-14 shrink-0 flex-col items-center gap-1 border-r border-border-subtle bg-sidebar-background py-3 md:flex">
+        {isXpertAccount ? (
+          <div className="mb-2.5 flex h-[30px] w-[30px] items-center justify-center rounded-[9px] bg-secondary p-1">
+            <img src={xpertLogo} alt="XpertConsulting" className="h-full w-full object-contain" />
+          </div>
+        ) : (
+          <div className="mb-2.5 flex h-[30px] w-[30px] items-center justify-center rounded-[9px] bg-primary text-[11px] font-bold text-primary-foreground">
+            {companyInitials}
+          </div>
+        )}
+
+        {railItems.map((mod) => {
+          const Icon = moduleIcons[mod.code];
+          const path = modulePaths[mod.code];
+          const active = location.pathname === path;
+          return (
+            <button
+              key={mod.code}
+              type="button"
+              title={mod.name}
+              aria-label={mod.name}
+              onClick={() => navigate(path)}
+              className={cn(
+                "relative flex h-[34px] w-[34px] items-center justify-center rounded-[9px] transition-colors duration-150",
+                "focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/[.16]",
+                active
+                  ? "border border-border-strong bg-sidebar-accent text-accent-foreground"
+                  : "text-faint hover:bg-sidebar-accent/60 hover:text-muted-foreground",
+              )}
+            >
+              <Icon className="h-4 w-4 stroke-[1.7]" />
+              {mod.code === "TASKS" && (
+                <span className="pointer-events-none absolute right-1 top-1">
+                  <MyTasksBadge />
+                </span>
+              )}
+            </button>
+          );
+        })}
+
+        <div className="mt-auto flex h-[26px] w-[26px] items-center justify-center rounded-full bg-[hsl(var(--border-strong))] text-[10px] font-semibold text-muted-foreground">
+          {userInitial}
+        </div>
+      </aside>
+
+      {/* ── Panel de navegación de 194 px ───────────────────────────── */}
+      <aside className="hidden w-[194px] shrink-0 border-r border-border-subtle bg-sidebar md:block">{nav}</aside>
+
+      {/* Cajón móvil: mismo panel, sin duplicar la lista */}
+      <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+        <SheetContent side="left" className="w-[240px] border-border-subtle bg-sidebar p-0">
+          {nav}
+        </SheetContent>
+      </Sheet>
+
       <GlobalSearch />
       <ReminderNotifier />
-      <SidebarInset>
+
+      {/* ── Contenido ───────────────────────────────────────────────── */}
+      <div className="flex min-w-0 flex-1 flex-col">
         <SupportSessionBanner />
-        <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b bg-background/80 backdrop-blur-sm px-6">
-          <div className="flex items-center gap-3">
-            <SidebarTrigger />
-            <Separator orientation="vertical" className="h-5" />
-            <Breadcrumbs />
-          </div>
-          <div className="flex items-center gap-1">
+
+        <header className="flex h-[54px] shrink-0 items-center gap-3 border-b border-border-subtle px-6">
+          {isMobile && (
+            <Button variant="ghost" size="icon" onClick={() => setMobileNavOpen(true)} aria-label="Abrir navegación">
+              <Menu />
+            </Button>
+          )}
+          <Breadcrumbs />
+
+          <button
+            type="button"
+            onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
+            className="ml-3 hidden h-[30px] max-w-[320px] flex-1 items-center gap-2 rounded-control border border-input bg-muted px-[11px] text-[11.5px] text-faint transition-colors hover:border-border-strong focus-visible:outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/[.16] lg:flex"
+          >
+            <Search className="h-3.5 w-3.5 stroke-[1.8]" />
+            <span className="truncate">Buscar facturas, clientes, apuntes…</span>
+            <span className="ml-auto font-mono text-[9.5px] font-medium">⌘K</span>
+          </button>
+
+          <div className="ml-auto flex items-center gap-1">
             <AccountSwitcher />
             <SupportAccountSwitcher />
             <NotificationBell />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="gap-2 h-9 px-2">
-                  <Avatar className="h-7 w-7">
-                    <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
-                      {user?.email?.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm font-medium hidden sm:inline">{user?.email?.split("@")[0]}</span>
-                  <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                <Button variant="ghost" className="h-[30px] gap-2 px-2">
+                  <span className="flex h-[22px] w-[22px] items-center justify-center rounded-full bg-[hsl(var(--border-strong))] text-[10px] font-semibold text-accent-foreground">
+                    {userInitial}
+                  </span>
+                  <span className="hidden text-xs font-medium text-foreground sm:inline">
+                    {user?.email?.split("@")[0]}
+                  </span>
+                  <ChevronDown className="text-faint" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem onClick={() => navigate("/app/settings")}>
-                  <Settings className="h-4 w-4 mr-2" />
+                  <Settings className="mr-2 h-4 w-4" />
                   Mi perfil
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setShowTutorial(true)}>
-                  <HelpCircle className="h-4 w-4 mr-2" />
+                  <HelpCircle className="mr-2 h-4 w-4" />
                   Ver tutorial
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={signOut} className="text-destructive focus:text-destructive">
-                  <LogOut className="h-4 w-4 mr-2" />
+                <DropdownMenuItem onClick={signOut} className="text-destructive-text focus:text-destructive-text">
+                  <LogOut className="mr-2 h-4 w-4" />
                   Cerrar sesión
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </header>
-        <main className="flex-1 overflow-auto p-6">
-          <div className="max-w-7xl mx-auto">
-            <ErrorBoundary>
-              <Outlet />
-            </ErrorBoundary>
-          </div>
-        </main>
-        <OnboardingTour forceShow={showTutorial} onClose={() => setShowTutorial(false)} />
-      </SidebarInset>
-    </>
-  );
-};
 
-const ClientLayout = () => {
-  return (
-    <SidebarProvider defaultOpen={false}>
-      <div className="flex min-h-screen w-full overflow-hidden">
-        <SidebarInner />
+        <main className="flex-1 overflow-auto px-6 pb-8 pt-[22px]">
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
+        </main>
+
+        <OnboardingTour forceShow={showTutorial} onClose={() => setShowTutorial(false)} />
       </div>
-    </SidebarProvider>
+    </div>
   );
 };
 

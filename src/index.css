@@ -1,5 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -84,64 +85,104 @@
   }
 
   .dark {
-    --background: 215 25% 8%;
-    --foreground: 210 20% 98%;
-
-    --card: 215 25% 12%;
-    --card-foreground: 210 20% 98%;
-
-    --popover: 215 25% 14%;
-    --popover-foreground: 210 20% 98%;
-
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 215 25% 20%;
-    --secondary-foreground: 210 20% 98%;
-
-    --muted: 215 25% 18%;
-    --muted-foreground: 214 20% 60%;
-
-    --accent: 217 60% 18%;
-    --accent-foreground: 217 91% 70%;
-
-    --destructive: 0 72% 55%;
-    --destructive-foreground: 0 0% 100%;
-
-    --success: 152 69% 45%;
-    --success-foreground: 0 0% 100%;
-
-    --warning: 38 92% 55%;
-    --warning-foreground: 0 0% 100%;
-
-    --border: 215 25% 20%;
-    --input: 215 25% 20%;
-    --ring: 217 91% 60%;
-
-    --sidebar-background: 215 28% 7%;
-    --sidebar-foreground: 214 20% 85%;
-    --sidebar-primary: 217 91% 60%;
+    /* --- Superficies (4 niveles + rail) ------------------------ */
+    --sidebar-background: 225 33% 5%;   /* #080A10  rail de iconos      */
+    --sidebar:            225 33% 5%;
+    --sidebar-accent:     221 28% 11%;  /* #151A25  item activo         */
+    --sidebar-border:     223 22% 13%;  /* #191D27                      */
+    --sidebar-foreground: 221 14% 60%;  /* #8A93A6                      */
+    --sidebar-accent-foreground: 218 31% 95%;
+    --sidebar-primary:    219 62% 56%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 25% 14%;
-    --sidebar-accent-foreground: 214 20% 85%;
-    --sidebar-border: 215 25% 16%;
-    --sidebar-ring: 217 91% 60%;
-    --sidebar: 215 28% 7%;
+    --sidebar-ring:       219 62% 56%;
 
-    --chart-1: 217 91% 60%;
-    --chart-2: 199 89% 55%;
-    --chart-3: 152 69% 50%;
-    --chart-4: 38 92% 55%;
-    --chart-5: 262 83% 65%;
+    --background: 222 29% 7%;           /* #0C0F16  lienzo              */
+    --card:       221 30% 8%;           /* #0F131C  tarjeta             */
+    --popover:    221 28% 11%;          /* #151A25  elevado             */
+    --muted:      221 27% 10%;          /* #12161F  cabecera de tabla,
+                                            input, chip                 */
+    --secondary:  221 28% 11%;          /* #151A25  botón secundario    */
 
-    --shadow-2xs: 0 1px 2px 0 hsl(0 0% 0% / 0.1);
-    --shadow-xs: 0 1px 3px 0 hsl(0 0% 0% / 0.12);
-    --shadow-sm: 0 1px 3px 0 hsl(0 0% 0% / 0.15), 0 1px 2px -1px hsl(0 0% 0% / 0.15);
-    --shadow: 0 2px 6px -1px hsl(0 0% 0% / 0.2), 0 1px 3px -1px hsl(0 0% 0% / 0.15);
-    --shadow-md: 0 4px 8px -2px hsl(0 0% 0% / 0.25), 0 2px 4px -2px hsl(0 0% 0% / 0.15);
-    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.25), 0 4px 6px -4px hsl(0 0% 0% / 0.15);
-    --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.25), 0 8px 10px -6px hsl(0 0% 0% / 0.15);
-    --shadow-2xl: 0 25px 50px -12px hsl(0 0% 0% / 0.4);
+    /* --- Texto -------------------------------------------------- */
+    --foreground:            218 31% 95%;  /* #EEF1F6                   */
+    --card-foreground:       218 31% 95%;
+    --popover-foreground:    218 31% 95%;
+    --secondary-foreground:  218 31% 95%;
+    --muted-foreground:      221 14% 60%;  /* #8A93A6  secundario       */
+    /* Cifras destacadas: #F4F6FA → 220 38% 97% (ver --figure)        */
+    --figure:                220 38% 97%;
+    /* Texto apagado / metadatos: #6C7488                             */
+    --subtle:                223 11% 48%;
+    /* Placeholder e iconos inactivos: #4A5162                        */
+    --faint:                 223 14% 34%;
+
+    /* --- Bordes ------------------------------------------------- */
+    --border: 221 24% 15%;              /* #1E2431  borde de tarjeta    */
+    --input:  223 24% 17%;              /* #212736  borde de campo      */
+    --border-subtle: 223 22% 13%;       /* #191D27  separador de fila   */
+    --border-strong: 222 21% 19%;       /* #262C3A  botón secundario    */
+
+    /* --- Acento (acción) ---------------------------------------- */
+    --primary:            219 62% 56%;  /* #4A7BD4                      */
+    --primary-foreground: 0 0% 100%;
+    --primary-hover:      217 72% 63%;  /* #5B90E4                      */
+    --ring:               219 62% 56%;
+    /* Acento legible sobre superficie oscura (enlaces, iconos)       */
+    --accent-foreground:  219 79% 72%;  /* #7FA6F0                      */
+    --accent:             220 38% 13%;  /* #141C2C  fondo de chip azul  */
+    /* Fila seleccionada                                              */
+    --row-selected:        220 39% 14%; /* #151E30                      */
+    --row-selected-border: 220 35% 23%; /* #26344F                      */
+
+    /* --- Semántica ---------------------------------------------- */
+    --success:            153 52% 66%;  /* #7DD6AE  texto "cobrado"     */
+    --success-foreground: 157 33% 11%;  /* #12241D  fondo del badge     */
+    --success-border:     152 35% 17%;  /* #1C3A2C                      */
+
+    --destructive:            10 73% 56%;  /* #E0563C  botón/punto      */
+    --destructive-foreground: 0 0% 100%;
+    --destructive-text:       12 77% 75%;  /* #F0A08C  texto sobre osc. */
+    --destructive-surface:    8 35% 12%;   /* #2A1714  fondo del badge  */
+    --destructive-border:     10 41% 18%;  /* #40211B                   */
+
+    --warning:            37 73% 56%;   /* #E0A03C  punto/barra         */
+    --warning-foreground: 0 0% 100%;
+    --warning-text:       39 71% 69%;   /* #E8C27A  texto sobre oscuro  */
+    --warning-surface:    36 38% 10%;   /* #241C10                      */
+    --warning-border:     37 41% 16%;   /* #3A2D18                      */
+
+    /* Informativo (badge "Enviada"). Azul más claro que --accent-foreground
+       porque va sobre el fondo de chip, no sobre el lienzo. */
+    --info-text:   219 83% 81%;         /* #A8C3F7                      */
+    --info-border: 219 38% 22%;         /* #22314C                      */
+
+    /* --- Gráficas ------------------------------------------------
+       Escala secuencial azul para mapas de calor y cohortes.
+       No usar chart-1..5 categórico salvo que las series no tengan
+       significado semántico.                                          */
+    --chart-1: 219 62% 56%;             /* #4A7BD4  serie principal     */
+    --chart-2: 217 51% 48%;             /* #3C6BB8                      */
+    --chart-3: 217 51% 35%;             /* #2C4E86                      */
+    --chart-4: 218 47% 23%;             /* #1F3355                      */
+    --chart-5: 220 29% 12%;             /* #161C28  celda vacía         */
+    --chart-grid:  223 22% 13%;         /* #191D27  líneas de rejilla   */
+    --chart-track: 221 23% 18%;         /* #242B3A  barra "esperado"    */
+    --chart-peak:  217 72% 63%;         /* #5B90E4  barra en curso      */
+
+    /* --- Radios (Midnight usa una escala propia) ---------------- */
+    --radius: 0.875rem;                 /* 14px  tarjeta                */
+    /* control 8px  = calc(var(--radius) - 6px)                        */
+    /* chip    6px  = calc(var(--radius) - 8px)                        */
+
+    /* --- Sombras: Midnight NO usa sombra salvo en diálogos ------- */
+    --shadow-2xs: none;
+    --shadow-xs:  none;
+    --shadow-sm:  none;
+    --shadow:     none;
+    --shadow-md:  none;
+    --shadow-lg:  none;
+    --shadow-xl:  0 24px 60px rgb(0 0 0 / 0.5);
+    --shadow-2xl: 0 24px 60px rgb(0 0 0 / 0.5);
   }
 }
 
@@ -156,6 +197,15 @@
 }
 
 @layer utilities {
+  /* Cifras tabulares: obligatorio en importes, horas, fechas cortas,
+     porcentajes, cantidades y códigos. Evita el baile de dígitos al
+     actualizarse un dato y alinea las columnas numéricas. */
+  .tnum {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;

@@ -3,23 +3,37 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
+/**
+ * Badge de estado de Midnight: radio 5-6 px, 10 px / 600, con terna propia de
+ * texto, superficie y borde.
+ *
+ * Los cinco estados del sistema son `success` (pagada, conciliado, activo),
+ * `softDestructive` (vencida), `warning` (pendiente, vacaciones), `info`
+ * (enviada) y `muted` (borrador). Los nombres se conservan porque ya hay
+ * decenas de llamadas en la app; lo que cambia es su aspecto.
+ *
+ * El estado nunca se comunica solo por color: el badge siempre lleva texto.
+ */
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center gap-1.5 rounded-chip border px-2 py-[3px] text-[10px] font-semibold leading-none transition-colors focus:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/[.16]",
   {
     variants: {
       variant: {
-        default: "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
-        secondary: "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        destructive: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
-        outline: "text-foreground",
-        // Variantes "soft" para estados: sustituyen al patrón manual
-        // `bg-green-100 text-green-800 dark:bg-green-900 …`. Al ir con tokens,
-        // se adaptan solas al modo oscuro.
-        success: "border-transparent bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]",
-        warning: "border-transparent bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))]",
-        info: "border-transparent bg-primary/15 text-primary",
-        muted: "border-transparent bg-muted text-muted-foreground",
-        softDestructive: "border-transparent bg-destructive/15 text-destructive",
+        default: "border-transparent bg-primary text-primary-foreground",
+        secondary: "border-border-strong bg-secondary text-foreground",
+        destructive: "border-transparent bg-destructive text-destructive-foreground",
+        outline: "border-input text-muted-foreground",
+
+        /** Pagada · Conciliado · Activo */
+        success: "border-success-border bg-success-foreground text-success",
+        /** Vencida */
+        softDestructive: "border-destructive-border bg-destructive-surface text-destructive-text",
+        /** Pendiente · Vacaciones */
+        warning: "border-warning-border bg-warning-surface text-warning-text",
+        /** Enviada */
+        info: "border-info-border bg-accent text-info-text",
+        /** Borrador */
+        muted: "border-border-strong bg-secondary text-muted-foreground",
       },
     },
     defaultVariants: {
