@@ -91,17 +91,17 @@ const confidenceStyles: Record<Confidence, { dot: string; label: string; badge: 
   high: {
     dot: "bg-[hsl(var(--success))]",
     label: "Alta",
-    badge: "border-[hsl(var(--success))]/30 bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]",
+    badge: "border-[hsl(var(--success))]/30 bg-success-foreground text-[hsl(var(--success))]",
   },
   medium: {
     dot: "bg-[hsl(var(--warning))]",
     label: "Parcial",
-    badge: "border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))]",
+    badge: "border-[hsl(var(--warning))]/30 bg-warning-surface text-[hsl(var(--warning))]",
   },
   none: {
     dot: "bg-destructive",
     label: "Sin coincidencia",
-    badge: "border-destructive/30 bg-destructive/10 text-destructive",
+    badge: "border-destructive/30 bg-destructive-surface text-destructive",
   },
 };
 

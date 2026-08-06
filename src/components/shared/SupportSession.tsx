@@ -142,7 +142,7 @@ export const SupportSessionBanner = () => {
   };
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/10 px-6 py-2">
+    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[hsl(var(--warning))]/30 bg-warning-surface px-6 py-2">
       <div className="flex min-w-0 items-center gap-2 text-sm">
         <LifeBuoy className="h-4 w-4 shrink-0 text-[hsl(var(--warning))]" />
         <span className="truncate">

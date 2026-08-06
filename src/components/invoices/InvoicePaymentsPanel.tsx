@@ -194,7 +194,7 @@ const InvoicePaymentsPanel = ({ invoice, onStatusChanged }: Props) => {
       </div>
 
       {markedPaidNoRecords && (
-        <p className="rounded-md bg-[hsl(var(--success))]/10 px-3 py-2 text-xs text-[hsl(var(--success))]">
+        <p className="rounded-md bg-success-foreground px-3 py-2 text-xs text-[hsl(var(--success))]">
           Esta factura está marcada como pagada. No hay cobros detallados registrados.
         </p>
       )}

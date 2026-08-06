@@ -204,12 +204,12 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, onExport, onSendEma
             <span className="font-semibold text-foreground text-sm md:text-base">{typeLabel} {invoiceNumber}</span>
             <Badge variant="outline">{statusLabels[invoice.status] || invoice.status}</Badge>
             {invoice.verifactu_status === "SENT" && (
-              <Badge className="bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] border-transparent gap-1">
+              <Badge className="bg-success-foreground text-[hsl(var(--success))] border-transparent gap-1">
                 <ShieldCheck className="h-3 w-3" /> AEAT
               </Badge>
             )}
             {invoice.verifactu_status === "PREPARED" && (
-              <Badge className="bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))] border-transparent gap-1">
+              <Badge className="bg-warning-surface text-[hsl(var(--warning))] border-transparent gap-1">
                 <ShieldCheck className="h-3 w-3" /> Preparada
               </Badge>
             )}

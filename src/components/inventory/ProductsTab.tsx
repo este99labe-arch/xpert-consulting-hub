@@ -98,7 +98,7 @@ const ProductsTab = ({ products, isManager, onNewProduct, onEditProduct, onToggl
               const isLow = p.is_active && p.current_stock <= p.min_stock;
               const isWarning = p.is_active && !isLow && p.current_stock < p.min_stock * 1.5;
               return (
-                <TableRow key={p.id} className={isLow ? "bg-destructive/5" : isWarning ? "bg-[hsl(var(--warning))]/10" : ""}>
+                <TableRow key={p.id} className={isLow ? "bg-destructive/5" : isWarning ? "bg-warning-surface" : ""}>
                   <TableCell className="font-medium">{p.name}</TableCell>
                   <TableCell className="font-mono text-xs">{p.sku}</TableCell>
                   <TableCell>{p.category}</TableCell>

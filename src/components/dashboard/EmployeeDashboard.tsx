@@ -176,7 +176,7 @@ const EmployeeDashboard = () => {
       label: "Balance del mes", value: fmtH(balanceMins),
       icon: CalendarCheck,
       color: balanceMins >= 0 ? "text-[hsl(var(--success))]" : "text-destructive",
-      bg: balanceMins >= 0 ? "bg-[hsl(var(--success))]/10" : "bg-destructive/10",
+      bg: balanceMins >= 0 ? "bg-success-foreground" : "bg-destructive-surface",
       hint: balanceMins >= 0 ? "A favor" : "Por recuperar",
     },
     {
@@ -188,7 +188,7 @@ const EmployeeDashboard = () => {
       label: "Solicitudes pendientes", value: String(pendingLeaves),
       icon: Bell,
       color: pendingLeaves > 0 ? "text-[hsl(var(--warning))]" : "text-muted-foreground",
-      bg: pendingLeaves > 0 ? "bg-[hsl(var(--warning))]/10" : "bg-muted",
+      bg: pendingLeaves > 0 ? "bg-warning-surface" : "bg-muted",
     },
   ];
 

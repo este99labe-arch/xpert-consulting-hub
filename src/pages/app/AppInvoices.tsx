@@ -289,9 +289,9 @@ const AppInvoices = () => {
 
   const kpis = [
     { label: "Facturado", value: `€${totalIncome.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`, icon: TrendingUp, color: "text-primary", bg: "bg-primary/10" },
-    { label: "Gastos", value: `€${totalExpenses.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`, icon: TrendingDown, color: "text-destructive", bg: "bg-destructive/10" },
-    { label: "Cobrado", value: `€${totalPaid.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`, icon: DollarSign, color: "text-[hsl(var(--success))]", bg: "bg-[hsl(var(--success))]/10" },
-    { label: "Pendiente", value: `€${totalPending.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`, icon: FileText, color: "text-[hsl(var(--warning))]", bg: "bg-[hsl(var(--warning))]/10" },
+    { label: "Gastos", value: `€${totalExpenses.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`, icon: TrendingDown, color: "text-destructive", bg: "bg-destructive-surface" },
+    { label: "Cobrado", value: `€${totalPaid.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`, icon: DollarSign, color: "text-[hsl(var(--success))]", bg: "bg-success-foreground" },
+    { label: "Pendiente", value: `€${totalPending.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`, icon: FileText, color: "text-[hsl(var(--warning))]", bg: "bg-warning-surface" },
   ];
 
   const handleExportPdf = async (invoiceId: string) => {

@@ -48,7 +48,7 @@ const RecentActivity = ({ invoices }: RecentActivityProps) => {
             const isIncome = inv.type === "INVOICE";
             return (
               <div key={inv.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/40 hover:bg-muted/60 transition-colors">
-                <div className={`flex h-8 w-8 items-center justify-center rounded-full shrink-0 ${isIncome ? "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]" : "bg-destructive/10 text-destructive"}`}>
+                <div className={`flex h-8 w-8 items-center justify-center rounded-full shrink-0 ${isIncome ? "bg-success-foreground text-[hsl(var(--success))]" : "bg-destructive-surface text-destructive"}`}>
                   {isIncome ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
                 </div>
                 <div className="flex-1 min-w-0">

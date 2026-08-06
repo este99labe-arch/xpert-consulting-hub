@@ -254,7 +254,7 @@ const MyAttendanceView = ({
                   {balanceMins >= 0 ? "+" : ""}{formatMinutes(balanceMins)}
                 </p>
               </div>
-              <div className={`h-9 w-9 rounded-control flex items-center justify-center ${balanceMins >= 0 ? "bg-primary/10" : "bg-destructive/10"}`}>
+              <div className={`h-9 w-9 rounded-control flex items-center justify-center ${balanceMins >= 0 ? "bg-primary/10" : "bg-destructive-surface"}`}>
                 {balanceMins > 0 ? <TrendingUp className="h-4 w-4 text-primary" /> :
                   balanceMins < 0 ? <TrendingDown className="h-4 w-4 text-destructive" /> :
                     <Minus className="h-4 w-4 text-muted-foreground" />}

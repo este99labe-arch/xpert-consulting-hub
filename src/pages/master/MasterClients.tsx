@@ -86,7 +86,7 @@ const MasterClients = () => {
 
   if (error) {
     return (
-      <div className="rounded-md bg-destructive/10 p-4 text-destructive">
+      <div className="rounded-md bg-destructive-surface p-4 text-destructive">
         Error al cargar clientes: {(error as Error).message}
       </div>
     );
@@ -130,7 +130,7 @@ const MasterClients = () => {
               </div>
               <div className="flex items-center gap-2 pt-1 border-t">
                 <Button variant="outline" size="sm" className="flex-1" onClick={() => setSelectedAccountId(client.id)}>Gestionar</Button>
-                <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/10 border-destructive/30"
+                <Button variant="outline" size="sm" className="text-destructive-text hover:bg-destructive-surface border-destructive/30"
                   onClick={() => { setDeleteTarget({ id: client.id, name: client.name }); setDeleteMode("account_only"); }}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -173,7 +173,7 @@ const MasterClients = () => {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Button variant="outline" size="sm" onClick={() => setSelectedAccountId(client.id)}>Gestionar</Button>
-                        <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/10 border-destructive/30"
+                        <Button variant="outline" size="sm" className="text-destructive-text hover:bg-destructive-surface border-destructive/30"
                           onClick={() => { setDeleteTarget({ id: client.id, name: client.name }); setDeleteMode("account_only"); }}>
                           <Trash2 className="h-4 w-4" />
                         </Button>

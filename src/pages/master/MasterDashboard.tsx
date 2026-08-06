@@ -122,11 +122,11 @@ const MasterDashboard = () => {
 
   const kpis = [
     { label: "Cuentas totales", value: total, icon: Building2, color: "text-primary", bg: "bg-primary/10" },
-    { label: "Cuentas activas", value: active, icon: CheckCircle, color: "text-[hsl(var(--success))]", bg: "bg-[hsl(var(--success))]/10" },
-    { label: "Nuevas este mes", value: newThisMonth, icon: Sparkles, color: "text-[hsl(var(--warning))]", bg: "bg-[hsl(var(--warning))]/10" },
+    { label: "Cuentas activas", value: active, icon: CheckCircle, color: "text-[hsl(var(--success))]", bg: "bg-success-foreground" },
+    { label: "Nuevas este mes", value: newThisMonth, icon: Sparkles, color: "text-[hsl(var(--warning))]", bg: "bg-warning-surface" },
     { label: "Usuarios activos", value: usersCount, icon: Users, color: "text-primary", bg: "bg-primary/10" },
     { label: "Módulos activados", value: modulesActive, icon: Boxes, color: "text-primary", bg: "bg-primary/10" },
-    { label: "Ingresos red (mes)", value: EUR0(networkRevenue), icon: TrendingUp, color: "text-[hsl(var(--success))]", bg: "bg-[hsl(var(--success))]/10" },
+    { label: "Ingresos red (mes)", value: EUR0(networkRevenue), icon: TrendingUp, color: "text-[hsl(var(--success))]", bg: "bg-success-foreground" },
   ];
 
   return (

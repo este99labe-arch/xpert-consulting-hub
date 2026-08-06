@@ -134,7 +134,7 @@ const VerifactuSettingsTab = ({ accountId, isManager }: Props) => {
           </div>
 
           {env === "prod" && (
-            <div className="flex items-start gap-2 rounded-lg border border-[hsl(var(--warning))]/40 bg-[hsl(var(--warning))]/10 p-3 text-sm">
+            <div className="flex items-start gap-2 rounded-lg border border-[hsl(var(--warning))]/40 bg-warning-surface p-3 text-sm">
               <AlertTriangle className="h-4 w-4 mt-0.5 text-[hsl(var(--warning))] shrink-0" />
               <span>
                 Entorno de <strong>producción</strong>: los registros se enviarán de forma real e irreversible a la AEAT.

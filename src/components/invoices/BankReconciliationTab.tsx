@@ -643,7 +643,7 @@ const BankReconciliationTab = () => {
                       </TableCell>
                       <TableCell>
                         {tx.is_reconciled ? (
-                          <Badge className="bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]">
+                          <Badge className="bg-success-foreground text-[hsl(var(--success))]">
                             <CheckCircle2 className="h-3 w-3 mr-1" /> Conciliada
                           </Badge>
                         ) : (

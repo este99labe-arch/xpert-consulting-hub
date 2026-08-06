@@ -529,7 +529,7 @@ const AppChat = () => {
             <MessageCircle className="h-12 w-12 opacity-30" />
             <p className="text-sm">Selecciona una conversación</p>
             {!waConfig?.is_enabled && (
-              <div className="mt-2 flex items-center gap-2 rounded-lg bg-[hsl(var(--warning))]/10 px-3 py-2 text-xs text-[hsl(var(--warning))]">
+              <div className="mt-2 flex items-center gap-2 rounded-lg bg-warning-surface px-3 py-2 text-xs text-[hsl(var(--warning))]">
                 <ShieldAlert className="h-4 w-4" />
                 WhatsApp no está configurado.
                 {isManager && <button className="underline" onClick={() => navigate("/app/settings")}>Configurar</button>}
@@ -709,7 +709,7 @@ const AppChat = () => {
 
             {/* Ventana de 24h cerrada: solo plantillas aprobadas */}
             {!windowOpen && (
-              <div className="flex flex-wrap items-center gap-2 border-t border-border bg-[hsl(var(--warning))]/10 px-4 py-2.5 text-sm">
+              <div className="flex flex-wrap items-center gap-2 border-t border-border bg-warning-surface px-4 py-2.5 text-sm">
                 <Clock3 className="h-4 w-4 shrink-0 text-[hsl(var(--warning))]" />
                 <span className="flex-1 text-muted-foreground">
                   Han pasado más de 24 h desde el último mensaje del contacto. WhatsApp solo permite reabrir con una plantilla aprobada.

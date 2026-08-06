@@ -172,8 +172,8 @@ const MasterCostForecast = () => {
   }, []);
 
   const kpis = [
-    { label: "Ingreso medio mensual", value: EUR0(kpi.avgIncome), icon: TrendingUp, tone: "text-[hsl(var(--success))]", bg: "bg-[hsl(var(--success))]/10", hint: "Media de meses con facturación" },
-    { label: "Coste mensual previsto", value: EUR0(kpi.monthlyCost), icon: TrendingDown, tone: "text-destructive", bg: "bg-destructive/10", hint: "Suma de costes activos" },
+    { label: "Ingreso medio mensual", value: EUR0(kpi.avgIncome), icon: TrendingUp, tone: "text-[hsl(var(--success))]", bg: "bg-success-foreground", hint: "Media de meses con facturación" },
+    { label: "Coste mensual previsto", value: EUR0(kpi.monthlyCost), icon: TrendingDown, tone: "text-destructive", bg: "bg-destructive-surface", hint: "Suma de costes activos" },
     { label: "Beneficio mensual esperado", value: EUR0(kpi.expectedProfit), icon: PiggyBank, tone: kpi.expectedProfit >= 0 ? "text-[hsl(var(--success))]" : "text-destructive", bg: "bg-primary/10", hint: "Ingreso medio − coste previsto" },
     { label: "Margen esperado", value: `${Math.round(kpi.margin)}%`, icon: Wallet, tone: kpi.margin >= 0 ? "text-primary" : "text-destructive", bg: "bg-primary/10", hint: "Beneficio / ingreso" },
   ];

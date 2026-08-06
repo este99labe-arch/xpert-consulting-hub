@@ -68,7 +68,7 @@ const AppClientDetail = () => {
         <Button variant="ghost" onClick={() => navigate("/app/clients")}>
           <ArrowLeft className="h-4 w-4 mr-2" /> Volver
         </Button>
-        <div className="rounded-md bg-destructive/10 p-4 text-destructive">
+        <div className="rounded-md bg-destructive-surface p-4 text-destructive">
           Cliente no encontrado
         </div>
       </div>

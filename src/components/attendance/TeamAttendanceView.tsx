@@ -79,10 +79,10 @@ const TeamAttendanceView = ({
         <>
           {/* Pending delete requests */}
           {pendingDeleteRequests.length > 0 && (
-            <Card className="border border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/10">
+            <Card tone="warning">
               <CardContent className="p-4">
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                  <Badge variant="outline" className="text-[hsl(var(--warning))] border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/10">{pendingDeleteRequests.length}</Badge>
+                  <Badge variant="warning">{pendingDeleteRequests.length}</Badge>
                   Solicitudes de eliminación pendientes
                 </h3>
                 <div className="space-y-2">
@@ -102,7 +102,7 @@ const TeamAttendanceView = ({
                             onClick={() => onApproveDelete(req.id, req.attendance_id)}>
                             <Check className="h-3 w-3" /> Aprobar
                           </Button>
-                          <Button size="sm" variant="ghost" className="h-7 text-xs gap-1 text-destructive hover:bg-destructive/10"
+                          <Button size="sm" variant="ghost" className="h-7 text-xs gap-1 text-destructive-text hover:bg-destructive-surface"
                             onClick={() => onRejectDelete(req.id)}>
                             <X className="h-3 w-3" /> Rechazar
                           </Button>

@@ -130,7 +130,7 @@ const InvoiceKanbanView = ({ invoices, onPreview }: Props) => {
                     "p-3 cursor-pointer hover:bg-popover transition-colors border-l-4",
                     inv.type === "INVOICE"
                       ? "border-l-primary bg-card"
-                      : "border-l-[hsl(var(--warning))] bg-[hsl(var(--warning))]/10",
+                      : "border-l-[hsl(var(--warning))] bg-warning-surface",
                     draggingId === inv.id && "opacity-50 ring-2 ring-primary"
                   )}
                 >

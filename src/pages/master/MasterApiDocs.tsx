@@ -15,10 +15,10 @@ import { toast } from "@/hooks/use-toast";
 const API_VERSION = "v1.0";
 
 const methodColors: Record<string, string> = {
-  GET: "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] border-[hsl(var(--success))]/30",
+  GET: "bg-success-foreground text-[hsl(var(--success))] border-[hsl(var(--success))]/30",
   POST: "bg-primary/10 text-primary border-primary/30",
-  PUT: "bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/30",
-  DELETE: "bg-destructive/10 text-destructive border-destructive/30",
+  PUT: "bg-warning-surface text-[hsl(var(--warning))] border-[hsl(var(--warning))]/30",
+  DELETE: "bg-destructive-surface text-destructive border-destructive/30",
 };
 
 interface Endpoint {
