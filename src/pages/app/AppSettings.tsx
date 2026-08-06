@@ -120,7 +120,7 @@ const AppSettings = () => {
         {!section ? (
           <div className="space-y-7">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">Configuración</h1>
+              <h1 className="font-display text-[17px] font-semibold tracking-[-.01em] text-foreground">Configuración</h1>
               <p className="text-sm text-muted-foreground">Gestiona tu empresa, tu cuenta personal y las integraciones.</p>
             </div>
             {groupsToRender().map((group) => {
@@ -171,7 +171,7 @@ const AppSettings = () => {
                       <current.icon className="h-5 w-5" />
                     </div>
                     <div>
-                      <h1 className="text-xl font-bold leading-tight tracking-tight">{current.title}</h1>
+                      <h1 className="tnum text-[20px] font-semibold tracking-[-.02em] leading-tight tracking-tight">{current.title}</h1>
                       <p className="text-sm text-muted-foreground">{current.desc}</p>
                     </div>
                   </div>

@@ -138,7 +138,7 @@ const PLTab = ({ chartAccounts, postedLines }: PLTabProps) => {
       <Card>
         <CardContent className="py-6 flex justify-between items-center">
           <span className="text-lg font-bold">Resultado del periodo</span>
-          <span className={`text-2xl font-bold font-mono ${plData.result >= 0 ? "" : "text-destructive"}`}>
+          <span className={`tnum text-[22px] font-semibold tracking-[-.02em] ${plData.result >= 0 ? "" : "text-destructive"}`}>
             {EUR(plData.result)}
           </span>
         </CardContent>

@@ -493,7 +493,7 @@ const BankReconciliationTab = () => {
             <Percent className="h-5 w-5 text-primary" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-foreground">{kpis?.percentReconciled ?? 0}%</p>
+            <p className="tnum text-[22px] font-semibold tracking-[-.02em] text-foreground">{kpis?.percentReconciled ?? 0}%</p>
             <p className="text-xs text-muted-foreground mt-1">{kpis?.reconciled ?? 0} de {kpis?.total ?? 0} transacciones</p>
           </CardContent>
         </Card>
@@ -503,7 +503,7 @@ const BankReconciliationTab = () => {
             <CheckCircle2 className="h-5 w-5 text-primary" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-foreground">{fmtAmount(kpis?.reconciledAmount ?? 0)}</p>
+            <p className="tnum text-[22px] font-semibold tracking-[-.02em] text-foreground">{fmtAmount(kpis?.reconciledAmount ?? 0)}</p>
           </CardContent>
         </Card>
         <Card>
@@ -512,7 +512,7 @@ const BankReconciliationTab = () => {
             <Clock className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-foreground">{fmtAmount(kpis?.pendingAmount ?? 0)}</p>
+            <p className="tnum text-[22px] font-semibold tracking-[-.02em] text-foreground">{fmtAmount(kpis?.pendingAmount ?? 0)}</p>
           </CardContent>
         </Card>
         <Card>
@@ -521,7 +521,7 @@ const BankReconciliationTab = () => {
             <AlertTriangle className="h-5 w-5 text-[hsl(var(--warning))]" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-foreground">{kpis?.pending ?? 0}</p>
+            <p className="tnum text-[22px] font-semibold tracking-[-.02em] text-foreground">{kpis?.pending ?? 0}</p>
             <p className="text-xs text-muted-foreground mt-1">transacciones sin conciliar</p>
           </CardContent>
         </Card>

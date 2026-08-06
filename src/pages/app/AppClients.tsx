@@ -266,7 +266,7 @@ const AppClients = () => {
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs font-medium text-muted-foreground truncate">{s.label}</p>
-                  <p className={`text-2xl font-bold tracking-tight ${s.color}`}>{s.value}</p>
+                  <p className={`tnum text-[22px] font-semibold tracking-[-.02em] ${s.color}`}>{s.value}</p>
                 </div>
               </CardContent>
             </Card>

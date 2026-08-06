@@ -668,7 +668,7 @@ const MasterApiDocs = () => {
         <div>
           <div className="flex items-center gap-3 mb-2">
             <BookOpen className="h-7 w-7 text-primary" />
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">API Reference</h1>
+            <h1 className="font-display text-[17px] font-semibold tracking-[-.01em] text-foreground">API Reference</h1>
             <Badge variant="secondary" className="font-mono">{API_VERSION}</Badge>
           </div>
           <p className="text-muted-foreground text-sm max-w-2xl">

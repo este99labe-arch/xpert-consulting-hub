@@ -389,7 +389,7 @@ const DocumentsTab = () => {
             </AvatarFallback>
           </Avatar>
           <div>
-            <h2 className="text-xl font-bold">{selectedEmployeeInfo.displayName}</h2>
+            <h2 className="tnum text-[20px] font-semibold tracking-[-.02em]">{selectedEmployeeInfo.displayName}</h2>
             {selectedEmployeeInfo.email && (
               <p className="text-sm text-muted-foreground">{selectedEmployeeInfo.email}</p>
             )}

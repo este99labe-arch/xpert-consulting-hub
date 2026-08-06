@@ -97,7 +97,7 @@ const AdminTab = () => {
           <Card key={kpi.label}>
             <CardContent className="p-4 text-center">
               <kpi.icon className={`h-6 w-6 mx-auto mb-2 ${kpi.color}`} />
-              <div className="text-2xl font-bold">{kpi.value}</div>
+              <div className="tnum text-[22px] font-semibold tracking-[-.02em]">{kpi.value}</div>
               <div className="text-xs text-muted-foreground">{kpi.label}</div>
             </CardContent>
           </Card>
@@ -107,13 +107,13 @@ const AdminTab = () => {
       <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold">{kpis?.matchRate}%</div>
+            <div className="tnum text-[22px] font-semibold tracking-[-.02em]">{kpis?.matchRate}%</div>
             <div className="text-xs text-muted-foreground">Tasa de match</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-destructive">{kpis?.flaggedReviews}</div>
+            <div className="tnum text-[22px] font-semibold tracking-[-.02em] text-destructive">{kpis?.flaggedReviews}</div>
             <div className="text-xs text-muted-foreground">Valoraciones denunciadas</div>
           </CardContent>
         </Card>

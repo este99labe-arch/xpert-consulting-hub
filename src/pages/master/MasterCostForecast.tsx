@@ -206,7 +206,7 @@ const MasterCostForecast = () => {
                   <k.icon className={`h-3.5 w-3.5 ${k.tone}`} />
                 </div>
               </div>
-              <p className={`text-xl font-bold tracking-tight ${k.tone}`}>{k.value}</p>
+              <p className={`tnum text-[20px] font-semibold tracking-[-.02em] ${k.tone}`}>{k.value}</p>
               <p className="mt-0.5 text-[11px] text-muted-foreground">{k.hint}</p>
             </CardContent>
           </Card>

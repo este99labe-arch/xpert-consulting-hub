@@ -133,7 +133,7 @@ const MasterDashboard = () => {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Panel Admin</h1>
+          <h1 className="font-display text-[17px] font-semibold tracking-[-.01em] text-foreground">Panel Admin</h1>
           <p className="text-sm text-muted-foreground">Resumen ejecutivo de la red XpertConsulting</p>
         </div>
         <Button onClick={() => navigate("/master/clients")} variant="outline" size="sm">
@@ -159,7 +159,7 @@ const MasterDashboard = () => {
                   <k.icon className={`h-3.5 w-3.5 ${k.color}`} />
                 </div>
               </div>
-              <p className={`text-xl font-bold tracking-tight ${k.color}`}>{k.value}</p>
+              <p className={`tnum text-[20px] font-semibold tracking-[-.02em] ${k.color}`}>{k.value}</p>
             </CardContent>
           </Card>
         ))}

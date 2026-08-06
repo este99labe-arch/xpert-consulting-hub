@@ -218,7 +218,7 @@ const MyAttendanceView = ({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Fichadas</p>
-                <p className="text-2xl font-bold mt-0.5 tabular-nums">
+                <p className="tnum text-[22px] font-semibold tracking-[-.02em] mt-0.5">
                   {workedHours}<span className="text-base font-medium text-muted-foreground">h</span>{" "}
                   {workedMins.toString().padStart(2, "0")}<span className="text-base font-medium text-muted-foreground">m</span>
                 </p>
@@ -234,7 +234,7 @@ const MyAttendanceView = ({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Esperadas</p>
-                <p className="text-2xl font-bold mt-0.5 tabular-nums">
+                <p className="tnum text-[22px] font-semibold tracking-[-.02em] mt-0.5">
                   {expectedHours}<span className="text-base font-medium text-muted-foreground">h</span>{" "}
                   {expectedMins.toString().padStart(2, "0")}<span className="text-base font-medium text-muted-foreground">m</span>
                 </p>
@@ -250,7 +250,7 @@ const MyAttendanceView = ({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Balance</p>
-                <p className={`text-2xl font-bold mt-0.5 tabular-nums ${balanceMins >= 0 ? "text-primary" : "text-destructive"}`}>
+                <p className={`tnum text-[22px] font-semibold tracking-[-.02em] mt-0.5 ${balanceMins >= 0 ? "text-primary" : "text-destructive"}`}>
                   {balanceMins >= 0 ? "+" : ""}{formatMinutes(balanceMins)}
                 </p>
               </div>

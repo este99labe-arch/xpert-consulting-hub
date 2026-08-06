@@ -205,7 +205,7 @@ const EmployeeDashboard = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25 }}
       >
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+        <h1 className="font-display text-[17px] font-semibold tracking-[-.01em] text-foreground">
           {greeting}{displayName ? `, ${displayName}` : ""} 👋
         </h1>
         <p className="text-sm text-muted-foreground first-letter:uppercase">
@@ -224,7 +224,7 @@ const EmployeeDashboard = () => {
                   <k.icon className={`h-3.5 w-3.5 ${k.color}`} />
                 </div>
               </div>
-              <p className={`text-xl font-bold tracking-tight ${k.color}`}>{k.value}</p>
+              <p className={`tnum text-[20px] font-semibold tracking-[-.02em] ${k.color}`}>{k.value}</p>
               {k.hint && <p className="text-[11px] text-muted-foreground mt-1">{k.hint}</p>}
             </CardContent>
           </Card>

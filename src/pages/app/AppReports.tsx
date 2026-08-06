@@ -171,7 +171,7 @@ const PLReport = ({ accountId }: { accountId: string }) => {
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
               <TrendingUp className="h-4 w-4 text-[hsl(var(--success))]" /> Ingresos
             </div>
-            <p className="text-2xl font-bold text-[hsl(var(--success))]">{EUR(plData.totalIncome)}</p>
+            <p className="tnum text-[22px] font-semibold tracking-[-.02em] text-[hsl(var(--success))]">{EUR(plData.totalIncome)}</p>
           </CardContent>
         </Card>
         <Card>
@@ -179,13 +179,13 @@ const PLReport = ({ accountId }: { accountId: string }) => {
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
               <TrendingDown className="h-4 w-4 text-destructive" /> Gastos
             </div>
-            <p className="text-2xl font-bold text-destructive">{EUR(plData.totalExpense)}</p>
+            <p className="tnum text-[22px] font-semibold tracking-[-.02em] text-destructive">{EUR(plData.totalExpense)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <div className="text-sm text-muted-foreground mb-1">Resultado</div>
-            <p className={`text-2xl font-bold ${plData.result >= 0 ? "text-[hsl(var(--success))]" : "text-destructive"}`}>
+            <p className={`tnum text-[22px] font-semibold tracking-[-.02em] ${plData.result >= 0 ? "text-[hsl(var(--success))]" : "text-destructive"}`}>
               {EUR(plData.result)}
             </p>
           </CardContent>
@@ -434,19 +434,19 @@ const InventoryReport = ({ accountId }: { accountId: string }) => {
         <Card>
           <CardContent className="pt-6">
             <div className="text-sm text-muted-foreground mb-1">Valor a coste</div>
-            <p className="text-2xl font-bold">{EUR(totalValue)}</p>
+            <p className="tnum text-[22px] font-semibold tracking-[-.02em]">{EUR(totalValue)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <div className="text-sm text-muted-foreground mb-1">Valor a PVP</div>
-            <p className="text-2xl font-bold">{EUR(totalSaleValue)}</p>
+            <p className="tnum text-[22px] font-semibold tracking-[-.02em]">{EUR(totalSaleValue)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <div className="text-sm text-muted-foreground mb-1">Productos bajo mínimo</div>
-            <p className={`text-2xl font-bold ${lowStockCount > 0 ? "text-destructive" : ""}`}>
+            <p className={`tnum text-[22px] font-semibold tracking-[-.02em] ${lowStockCount > 0 ? "text-destructive" : ""}`}>
               {lowStockCount}
             </p>
           </CardContent>
@@ -612,21 +612,21 @@ const InvoiceSummaryReport = ({ accountId }: { accountId: string }) => {
         <Card>
           <CardContent className="pt-6">
             <div className="text-sm text-muted-foreground mb-1">Facturado</div>
-            <p className="text-xl font-bold text-[hsl(var(--success))]">{EUR(stats.totalIncome)}</p>
+            <p className="tnum text-[20px] font-semibold tracking-[-.02em] text-[hsl(var(--success))]">{EUR(stats.totalIncome)}</p>
             <p className="text-xs text-muted-foreground">{stats.invoiceCount} facturas</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <div className="text-sm text-muted-foreground mb-1">Gastos</div>
-            <p className="text-xl font-bold text-destructive">{EUR(stats.totalExpense)}</p>
+            <p className="tnum text-[20px] font-semibold tracking-[-.02em] text-destructive">{EUR(stats.totalExpense)}</p>
             <p className="text-xs text-muted-foreground">{stats.expenseCount} gastos</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <div className="text-sm text-muted-foreground mb-1">Balance</div>
-            <p className={`text-xl font-bold ${stats.totalIncome - stats.totalExpense >= 0 ? "text-[hsl(var(--success))]" : "text-destructive"}`}>
+            <p className={`tnum text-[20px] font-semibold tracking-[-.02em] ${stats.totalIncome - stats.totalExpense >= 0 ? "text-[hsl(var(--success))]" : "text-destructive"}`}>
               {EUR(stats.totalIncome - stats.totalExpense)}
             </p>
           </CardContent>
@@ -689,7 +689,7 @@ const AppReports = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+        <h1 className="tnum text-[22px] font-semibold tracking-[-.02em] text-foreground flex items-center gap-2">
           <BarChart3 className="h-6 w-6" /> Informes
         </h1>
         {role === "MASTER_ADMIN" && selectedAccount && (

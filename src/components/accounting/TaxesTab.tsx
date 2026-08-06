@@ -211,7 +211,7 @@ const TaxesTab = ({ invoices, accountId }: TaxesTabProps) => {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <span className={`text-2xl font-bold font-mono ${taxData.result >= 0 ? "text-destructive" : ""}`}>
+            <span className={`tnum text-[22px] font-semibold tracking-[-.02em] ${taxData.result >= 0 ? "text-destructive" : ""}`}>
               {EUR(Math.abs(taxData.result))}
             </span>
             {isManager && accountId && (

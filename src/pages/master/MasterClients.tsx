@@ -95,7 +95,7 @@ const MasterClients = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Gestión de Cuentas</h1>
+        <h1 className="font-display text-[17px] font-semibold tracking-[-.01em] text-foreground">Gestión de Cuentas</h1>
         <Button onClick={() => setShowCreate(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Nueva cuenta

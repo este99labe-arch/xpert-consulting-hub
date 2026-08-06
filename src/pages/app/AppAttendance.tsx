@@ -332,7 +332,7 @@ const AppAttendance = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Control horario</h1>
+          <h1 className="font-display text-[17px] font-semibold tracking-[-.01em] text-foreground">Control horario</h1>
           <p className="text-sm text-muted-foreground">
             Gestiona tus fichajes y consulta tu historial
           </p>

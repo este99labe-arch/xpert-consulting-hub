@@ -43,7 +43,7 @@ const ForgotPassword = () => {
             <Mail className="h-7 w-7" />
           </div>
           <div className="space-y-1">
-            <CardTitle className="text-2xl font-bold tracking-tight">Recuperar contraseña</CardTitle>
+            <CardTitle className="tnum text-[22px] font-semibold tracking-[-.02em]">Recuperar contraseña</CardTitle>
             <CardDescription className="text-muted-foreground">
               {sent
                 ? "Revisa tu bandeja de entrada"

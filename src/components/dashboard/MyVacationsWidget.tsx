@@ -92,7 +92,7 @@ const MyVacationsWidget = () => {
           <div className="rounded-lg bg-primary/5 p-3">
             <div className="flex items-baseline justify-between">
               <span className="text-xs text-muted-foreground">Disponibles</span>
-              <span className="text-2xl font-bold text-primary">{available}</span>
+              <span className="tnum text-[22px] font-semibold tracking-[-.02em] text-primary">{available}</span>
             </div>
             <div className="flex justify-between text-xs text-muted-foreground mt-1">
               <span>{usedDays} usados</span>

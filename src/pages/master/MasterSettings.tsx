@@ -151,7 +151,7 @@ const MasterSettings = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight text-foreground">Configuración</h1>
+      <h1 className="font-display text-[17px] font-semibold tracking-[-.01em] text-foreground">Configuración</h1>
 
       <Tabs defaultValue="users" className="space-y-4">
         <TabsList>

@@ -83,7 +83,7 @@ const AppClientDetail = () => {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">{client.name}</h1>
+            <h1 className="font-display text-[17px] font-semibold tracking-[-.01em] text-foreground">{client.name}</h1>
             <p className="text-sm text-muted-foreground">{client.tax_id}</p>
           </div>
         </div>

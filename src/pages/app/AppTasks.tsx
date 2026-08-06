@@ -189,7 +189,7 @@ const AppTasks = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          <h1 className="font-display text-[17px] font-semibold tracking-[-.01em] text-foreground">
             Tareas {showArchived && <span className="text-muted-foreground font-normal text-lg">· Archivadas</span>}
           </h1>
           <p className="text-sm text-muted-foreground">
@@ -545,7 +545,7 @@ const MetricCard = ({
   <Card>
     <CardContent className="p-3">
       <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className={`text-2xl font-bold ${accent === "destructive" ? "text-destructive" : accentColor || ""}`}>{value}</p>
+      <p className={`tnum text-[22px] font-semibold tracking-[-.02em] ${accent === "destructive" ? "text-destructive" : accentColor || ""}`}>{value}</p>
     </CardContent>
   </Card>
 );
