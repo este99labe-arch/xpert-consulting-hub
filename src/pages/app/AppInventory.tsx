@@ -2,7 +2,8 @@ import { useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { useModuleTab } from "@/lib/moduleTabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +25,7 @@ import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 
 const AppInventory = () => {
+  const [tab, setTab] = useModuleTab("products");
   const { user, accountId, role } = useAuth();
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -193,13 +195,7 @@ const AppInventory = () => {
         <StatCard label="Mov. este mes" value={movementCount} icon={TrendingDown} />
       </div>
 
-      <Tabs defaultValue="products">
-        <TabsList className="w-full sm:w-auto">
-          <TabsTrigger value="products">Productos</TabsTrigger>
-          <TabsTrigger value="movements">Movimientos</TabsTrigger>
-          <TabsTrigger value="alerts">Alertas {lowStockProducts.length > 0 && <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-[10px]">{lowStockProducts.length}</Badge>}</TabsTrigger>
-          <TabsTrigger value="orders">Órdenes</TabsTrigger>
-        </TabsList>
+      <Tabs value={tab} onValueChange={setTab}>
 
         <TabsContent value="products">
           <ProductsTab products={products} isManager={isManager} onNewProduct={openNewProduct} onEditProduct={openEditProduct} onToggleActive={(p) => toggleProductActive.mutate(p)} onImportCSV={() => setImportDialog(true)} />

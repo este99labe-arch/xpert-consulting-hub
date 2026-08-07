@@ -2,7 +2,8 @@ import { useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { useModuleTab } from "@/lib/moduleTabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Plus } from "lucide-react";
@@ -25,6 +26,7 @@ import PageHeader from "@/components/shared/PageHeader";
 import EmptyState from "@/components/shared/EmptyState";
 
 const AppAccounting = () => {
+  const [tab, setTab] = useModuleTab("dashboard");
   const { user, accountId, role } = useAuth();
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -415,22 +417,7 @@ const AppAccounting = () => {
         <MasterAccountSelector title="Contabilidad" onSelect={setSelectedAccountId} variant="inline" />
       )}
 
-      <Tabs defaultValue="dashboard">
-        <TabsList className="w-full sm:w-auto">
-          <TabsTrigger value="dashboard">Resumen</TabsTrigger>
-          <TabsTrigger value="chart">Plan</TabsTrigger>
-          <TabsTrigger value="entries" className="relative">
-            Asientos
-            {isManager && pendingDeleteRequests.length > 0 && (
-              <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold h-4 w-4">
-                {pendingDeleteRequests.length}
-              </span>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="ledger">Mayor</TabsTrigger>
-          <TabsTrigger value="pl">P&L</TabsTrigger>
-          <TabsTrigger value="taxes">IVA</TabsTrigger>
-        </TabsList>
+      <Tabs value={tab} onValueChange={setTab}>
 
         <TabsContent value="dashboard">
           {/* Tesorería: dinero disponible para operar. Solo para gestores. */}
