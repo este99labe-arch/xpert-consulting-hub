@@ -89,9 +89,9 @@ const BrandPanel = () => (
  */
 const AuthLayout = ({ children }: { children: ReactNode }) => (
   <div className="min-h-screen bg-background">
-    <div className="grid min-h-screen w-full lg:grid-cols-[1fr_452px]">
+    <div className="grid min-h-screen w-full lg:grid-cols-[1.1fr_1fr]">
       <BrandPanel />
-      <main className="flex flex-col justify-center px-6 py-11 sm:px-10">
+      <main className="flex flex-col justify-center px-6 py-11 sm:px-10 lg:px-14">
         <div className="mx-auto w-full max-w-[372px]">
           <img src={logoWhite} alt="XpertConsulting" className="mb-9 h-[26px] w-auto lg:hidden" />
           {children}

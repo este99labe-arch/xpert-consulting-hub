@@ -407,19 +407,28 @@ const AppInvoices = () => {
         throw new Error(errMsg);
       }
       const blob = await res.blob();
+      if (blob.size === 0) throw new Error("El PDF ha llegado vacío");
+
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
+      a.rel = "noopener";
       const disposition = res.headers.get("Content-Disposition");
       const filenameMatch = disposition?.match(/filename="(.+)"/);
       a.download = filenameMatch?.[1] || `factura-${invoiceId.slice(0, 8)}.pdf`;
       document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      /* La descarga del blob se resuelve de forma asíncrona: revocar la URL
+         y quitar el enlace en la misma vuelta del bucle de eventos puede
+         cancelarla antes de que el navegador la haya leído. */
+      setTimeout(() => {
+        a.remove();
+        URL.revokeObjectURL(url);
+      }, 2000);
       toast({ title: "PDF descargado correctamente" });
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      console.error("Descarga de PDF falló:", err);
+      toast({ title: "No se ha podido descargar el PDF", description: err.message, variant: "destructive" });
     }
   };
 
