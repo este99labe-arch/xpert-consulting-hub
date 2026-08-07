@@ -14,7 +14,7 @@ const FEATURES = [
  * el ancho y la marca se reduce al logotipo sobre él.
  */
 const BrandPanel = () => (
-  <aside className="relative hidden flex-col justify-between overflow-hidden bg-sidebar px-[52px] py-11 lg:flex">
+  <aside className="relative hidden overflow-hidden bg-sidebar px-[52px] py-11 lg:flex lg:justify-center">
     {/* Halo: el único degradado que admite el sistema, y es monocromo azul
         sobre negro, no un degradado de marca. */}
     <div
@@ -32,9 +32,13 @@ const BrandPanel = () => (
       className="pointer-events-none absolute -bottom-[120px] -right-[140px] w-[520px] select-none opacity-[.035]"
     />
 
-    <img src={logoWhite} alt="XpertConsulting" className="relative h-[30px] w-auto self-start" />
+    {/* El contenido se limita a 520px y se centra en la columna: en una
+        pantalla ancha, dejarlo pegado al borde izquierdo lo alejaría
+        demasiado del formulario. */}
+    <div className="relative flex w-full max-w-[520px] flex-col justify-between">
+    <img src={logoWhite} alt="XpertConsulting" className="h-[30px] w-auto self-start" />
 
-    <div className="relative flex max-w-[430px] flex-col gap-[34px]">
+    <div className="flex max-w-[430px] flex-col gap-[34px]">
       <div className="flex flex-col gap-3">
         {/* Reclamo de marca, no el título de la página: el <h1> lo lleva el
             formulario, que es a lo que se viene aquí y está en todos los
@@ -68,9 +72,10 @@ const BrandPanel = () => (
       </ul>
     </div>
 
-    <div className="relative flex items-center gap-2 text-[11.5px] text-subtle">
+    <div className="flex items-center gap-2 text-[11.5px] text-subtle">
       <ShieldCheck className="h-3.5 w-3.5 stroke-[1.8] text-faint" />
       Datos cifrados y conformes con el RGPD
+    </div>
     </div>
   </aside>
 );
@@ -84,7 +89,7 @@ const BrandPanel = () => (
  */
 const AuthLayout = ({ children }: { children: ReactNode }) => (
   <div className="min-h-screen bg-background">
-    <div className="mx-auto grid min-h-screen w-full max-w-[1180px] lg:grid-cols-[1fr_452px]">
+    <div className="grid min-h-screen w-full lg:grid-cols-[1fr_452px]">
       <BrandPanel />
       <main className="flex flex-col justify-center px-6 py-11 sm:px-10">
         <div className="mx-auto w-full max-w-[372px]">
