@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -46,11 +47,28 @@ import BankReconciliationTab from "@/components/invoices/BankReconciliationTab";
 import InvoiceImportTab from "@/components/invoices/InvoiceImportTab";
 import PageHeader from "@/components/shared/PageHeader";
 import { markInvoicePaid, reopenInvoice, setInvoiceStatus, convertQuoteToInvoice, INVOICE_STATUS_LABELS } from "@/lib/invoiceStatus";
+import { fmtEUR } from "@/lib/format";
+import InvoiceDetailView from "@/components/invoices/InvoiceDetailView";
 
 const statusLabels: Record<string, string> = {
   DRAFT: "Borrador", SENT: "Enviada", PAID: "Pagada", PARTIALLY_PAID: "Pago parcial", OVERDUE: "Vencida",
   ACCEPTED: "Aceptado", REJECTED: "Rechazado", INVOICED: "Facturado",
 };
+
+/** Pestañas de estado de la barra de filtros. El contador toma el color del
+ *  estado que cuenta: en vencidas informa de un problema, en pagadas no. */
+const STATUS_TABS = [
+  { value: "ALL", label: "Todas", countClass: "text-subtle" },
+  { value: "OVERDUE", label: "Vencidas", countClass: "text-destructive-text" },
+  { value: "SENT", label: "Pendientes", countClass: "text-warning-text" },
+  { value: "PAID", label: "Pagadas", countClass: "text-success" },
+];
+
+/** Vencida = pendiente de cobro y pasada su fecha de vencimiento. */
+const isOverdue = (inv: any): boolean =>
+  ["SENT", "PARTIALLY_PAID"].includes(inv.status) &&
+  !!inv.due_date &&
+  inv.due_date < format(new Date(), "yyyy-MM-dd");
 
 const typeLabels: Record<string, string> = {
   INVOICE: "Factura", EXPENSE: "Gasto", QUOTE: "Presupuesto",
@@ -136,6 +154,11 @@ const AppInvoices = () => {
 
   const [reopenTarget, setReopenTarget] = useState<any>(null);
 
+  /* Factura abierta a página completa. Sustituye al diálogo como forma de
+     VER una factura; editar sigue abriendo el diálogo. */
+  const [detailInvoice, setDetailInvoice] = useState<any>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
   // Reminder state
   const [reminderInvoice, setReminderInvoice] = useState<any>(null);
 
@@ -164,7 +187,7 @@ const AppInvoices = () => {
       if (!accountId) return { data: [], count: 0 };
       let query = supabase
         .from("invoices")
-        .select("*, business_clients(name, tax_id, email)", { count: "exact" })
+        .select("*, business_clients(name, tax_id, email, address)", { count: "exact" })
         .eq("account_id", accountId)
         .neq("type", "QUOTE")
         .order("issue_date", { ascending: false });
@@ -198,6 +221,70 @@ const AppInvoices = () => {
 
   const paginatedInvoices = invoiceResult?.data || [];
 
+  /* Contadores de las pestañas. Van en su propia consulta ligera porque la
+     lista está paginada en servidor y contar sobre la página daría un número
+     que cambia al pasar de página. */
+  const { data: statusCounts = {} } = useQuery({
+    queryKey: ["invoice-status-counts", accountId, typeFilter],
+    queryFn: async (): Promise<Record<string, number>> => {
+      if (!accountId) return {};
+      let q = supabase.from("invoices").select("status, due_date").eq("account_id", accountId).neq("type", "QUOTE");
+      if (typeFilter !== "ALL") q = q.eq("type", typeFilter);
+      const { data, error } = await q;
+      if (error) throw error;
+      const rows = data || [];
+      return {
+        ALL: rows.length,
+        OVERDUE: rows.filter(isOverdue).length,
+        SENT: rows.filter((r: any) => ["SENT", "PARTIALLY_PAID"].includes(r.status) && !isOverdue(r)).length,
+        PAID: rows.filter((r: any) => r.status === "PAID").length,
+      };
+    },
+    enabled: !!accountId,
+  });
+
+  const toggleSelect = (id: string) =>
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  const allSelected = paginatedInvoices.length > 0 && paginatedInvoices.every((i: any) => selectedIds.has(i.id));
+  const toggleSelectAll = () =>
+    setSelectedIds(allSelected ? new Set() : new Set(paginatedInvoices.map((i: any) => i.id)));
+
+  const pageTotals = paginatedInvoices.reduce(
+    (acc: { net: number; total: number }, i: any) => ({
+      net: acc.net + Number(i.amount_net || 0),
+      total: acc.total + Number(i.amount_total || 0),
+    }),
+    { net: 0, total: 0 },
+  );
+
+  /** Recordatorio a todas las seleccionadas que tengan email de cliente. */
+  const handleBatchReminder = async () => {
+    const targets = paginatedInvoices.filter((i: any) => selectedIds.has(i.id) && i.business_clients?.email);
+    if (targets.length === 0) {
+      toast({ title: "Ninguna seleccionada tiene email de cliente", variant: "destructive" });
+      return;
+    }
+    for (const inv of targets) await handleSendEmail(inv.id);
+    setSelectedIds(new Set());
+  };
+
+  const handleBatchCancel = async () => {
+    const ids = paginatedInvoices.filter((i: any) => selectedIds.has(i.id)).map((i: any) => i.id);
+    try {
+      for (const id of ids) await setInvoiceStatus(id, "CANCELLED");
+      toast({ title: `${ids.length} anulada${ids.length === 1 ? "" : "s"}` });
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["invoice-status-counts"] });
+      setSelectedIds(new Set());
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  };
+
   // Server-side paginated query for quotes
   const { data: quoteResult } = useQuery({
     queryKey: ["quotes", accountId, quotePagination.currentPage, quotePagination.pageSize, debouncedQuoteSearch, quoteStatusFilter],
@@ -205,7 +292,7 @@ const AppInvoices = () => {
       if (!accountId) return { data: [], count: 0 };
       let query = supabase
         .from("invoices")
-        .select("*, business_clients(name, tax_id, email)", { count: "exact" })
+        .select("*, business_clients(name, tax_id, email, address)", { count: "exact" })
         .eq("account_id", accountId)
         .eq("type", "QUOTE")
         .order("issue_date", { ascending: false });
@@ -511,6 +598,19 @@ const AppInvoices = () => {
     </div>
   );
 
+  if (detailInvoice) {
+    return (
+      <InvoiceDetailView
+        invoice={detailInvoice}
+        onBack={() => setDetailInvoice(null)}
+        onEdit={() => setEditInvoice(detailInvoice)}
+        onExport={() => handleExportPdf(detailInvoice.id)}
+        onSendEmail={detailInvoice.business_clients?.email ? () => handleSendEmail(detailInvoice.id) : undefined}
+        onMarkPaid={() => handleMarkPaid(detailInvoice)}
+      />
+    );
+  }
+
   return (
     <div className="space-y-4">
       <PageHeader
@@ -606,112 +706,121 @@ const AppInvoices = () => {
         </Card>
       )}
 
-      {/* Filters + View Toggle */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Buscar por nº factura o concepto..." value={search} onChange={(e) => { setSearch(e.target.value); invoicePagination.resetPage(); }} className="pl-9" />
-          </div>
-          <ToggleGroup type="single" value={invoiceViewMode} onValueChange={(v) => v && setInvoiceViewMode(v as "list" | "kanban" | "folders")} className="hidden sm:flex">
-            <ToggleGroupItem value="list" aria-label="Vista lista" className="px-2.5">
-              <List className="h-4 w-4" />
-            </ToggleGroupItem>
-            <ToggleGroupItem value="kanban" aria-label="Vista kanban" className="px-2.5">
-              <LayoutGrid className="h-4 w-4" />
-            </ToggleGroupItem>
-            <ToggleGroupItem value="folders" aria-label="Vista carpetas" className="px-2.5">
-              <FolderTree className="h-4 w-4" />
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </div>
-        <div className="flex flex-wrap gap-2 items-center">
-          <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); invoicePagination.resetPage(); }}>
-            <SelectTrigger className="w-full sm:w-[140px]"><SelectValue placeholder="Estado" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">Todos</SelectItem>
-              <SelectItem value="DRAFT">Borrador</SelectItem>
-              <SelectItem value="SENT">Enviada</SelectItem>
-              <SelectItem value="PARTIALLY_PAID">Pago parcial</SelectItem>
-              <SelectItem value="PAID">Pagada</SelectItem>
-              <SelectItem value="OVERDUE">Vencida</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v); invoicePagination.resetPage(); }}>
-            <SelectTrigger className="w-full sm:w-[140px]"><SelectValue placeholder="Tipo" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">Todos</SelectItem>
-              <SelectItem value="INVOICE">Factura</SelectItem>
-              <SelectItem value="EXPENSE">Gasto</SelectItem>
-            </SelectContent>
-          </Select>
-          {/* Filtros rápidos de fecha */}
-          <div className="flex overflow-hidden rounded-lg border border-border">
-            {[
-              { label: "Hoy", days: 0 },
-              { label: "7 días", days: 6 },
-              { label: "30 días", days: 29 },
-            ].map((q) => (
+      {/* ── Barra de filtros ────────────────────────────────────── */}
+      <div className="flex flex-wrap items-center gap-2">
+        {/* Pestañas de estado con contador */}
+        <div className="inline-flex items-center gap-1 rounded-[9px] border border-input bg-muted p-[3px]">
+          {STATUS_TABS.map((t) => {
+            const active = statusFilter === t.value;
+            return (
               <button
-                key={q.label}
+                key={t.value}
                 type="button"
-                className="border-r border-border px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors last:border-r-0 hover:bg-muted hover:text-foreground"
-                onClick={() => {
-                  setDateFrom(startOfDay(subDays(new Date(), q.days)));
-                  setDateTo(new Date());
-                  invoicePagination.resetPage();
-                }}
+                onClick={() => { setStatusFilter(t.value); invoicePagination.resetPage(); }}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-chip px-2.5 py-[5px] text-[11.5px] transition-colors duration-150",
+                  "focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/[.16]",
+                  active
+                    ? "bg-[hsl(var(--border-strong))] font-semibold text-foreground"
+                    : "font-medium text-subtle hover:text-foreground",
+                )}
               >
-                {q.label}
+                {t.label}
+                {statusCounts[t.value] != null && (
+                  <span className={cn("tnum text-[11px]", t.countClass)}>{statusCounts[t.value]}</span>
+                )}
               </button>
-            ))}
-          </div>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className={cn("w-full sm:w-[140px] justify-start text-left font-normal", !dateFrom && "text-muted-foreground")}>
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {dateFrom ? format(dateFrom, "dd/MM/yy") : "Desde"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar mode="single" selected={dateFrom} onSelect={(d) => { setDateFrom(d); invoicePagination.resetPage(); }} className={cn("p-3 pointer-events-auto")} />
-            </PopoverContent>
-          </Popover>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className={cn("w-full sm:w-[140px] justify-start text-left font-normal", !dateTo && "text-muted-foreground")}>
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {dateTo ? format(dateTo, "dd/MM/yy") : "Hasta"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar mode="single" selected={dateTo} onSelect={(d) => { setDateTo(d); invoicePagination.resetPage(); }} className={cn("p-3 pointer-events-auto")} />
-            </PopoverContent>
-          </Popover>
-          {(dateFrom || dateTo) && (
-            <Button variant="ghost" size="sm" onClick={() => { setDateFrom(undefined); setDateTo(undefined); invoicePagination.resetPage(); }}>
-              <X className="h-4 w-4 mr-1" /> Limpiar
-            </Button>
-          )}
-          {/* Mobile view toggle */}
-          <ToggleGroup type="single" value={invoiceViewMode} onValueChange={(v) => v && setInvoiceViewMode(v as "list" | "kanban" | "folders")} className="sm:hidden">
-            <ToggleGroupItem value="list" aria-label="Vista lista" className="px-2.5">
-              <List className="h-4 w-4" />
-            </ToggleGroupItem>
-            <ToggleGroupItem value="kanban" aria-label="Vista kanban" className="px-2.5">
-              <LayoutGrid className="h-4 w-4" />
-            </ToggleGroupItem>
-            <ToggleGroupItem value="folders" aria-label="Vista carpetas" className="px-2.5">
-              <FolderTree className="h-4 w-4" />
-            </ToggleGroupItem>
-          </ToggleGroup>
+            );
+          })}
         </div>
+
+        <div className="relative w-[220px]">
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 stroke-[1.8] text-faint" />
+          <Input
+            placeholder="Buscar por nº o cliente"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); invoicePagination.resetPage(); }}
+            className="pl-8"
+          />
+        </div>
+
+        <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v); invoicePagination.resetPage(); }}>
+          <SelectTrigger className="w-[130px]"><SelectValue placeholder="Tipo" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">Todos los tipos</SelectItem>
+            <SelectItem value="INVOICE">Factura</SelectItem>
+            <SelectItem value="EXPENSE">Gasto</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Rango de fechas como chip descartable */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="gap-1.5">
+              <CalendarIcon />
+              {dateFrom || dateTo
+                ? `${dateFrom ? format(dateFrom, "d MMM", { locale: es }) : "…"} – ${dateTo ? format(dateTo, "d MMM yyyy", { locale: es }) : "…"}`
+                : "Fechas"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <div className="flex">
+              <Calendar mode="single" selected={dateFrom} onSelect={(d) => { setDateFrom(d); invoicePagination.resetPage(); }} />
+              <Calendar mode="single" selected={dateTo} onSelect={(d) => { setDateTo(d); invoicePagination.resetPage(); }} />
+            </div>
+          </PopoverContent>
+        </Popover>
+        {(dateFrom || dateTo) && (
+          <button
+            type="button"
+            onClick={() => { setDateFrom(undefined); setDateTo(undefined); invoicePagination.resetPage(); }}
+            className="inline-flex items-center gap-1.5 rounded-chip border border-info-border bg-accent px-2 py-[5px] text-[11px] text-info-text transition-colors hover:border-primary"
+          >
+            Rango activo
+            <X className="h-3 w-3 stroke-[2] text-accent-foreground" />
+          </button>
+        )}
+
+        {/* Acciones por lote: solo aparecen con algo seleccionado */}
+        {selectedIds.size > 0 && (
+          <div className="flex h-[30px] items-center gap-2.5 rounded-control border border-row-selected-border bg-row-selected px-2.5">
+            <span className="tnum text-[11px] font-semibold text-accent-foreground">
+              {selectedIds.size} seleccionada{selectedIds.size === 1 ? "" : "s"}
+            </span>
+            <span className="h-3.5 w-px bg-row-selected-border" aria-hidden />
+            <button
+              type="button"
+              onClick={handleBatchReminder}
+              className="text-[11px] font-medium text-foreground transition-colors hover:text-accent-foreground"
+            >
+              Enviar recordatorio
+            </button>
+            <button
+              type="button"
+              onClick={handleBatchCancel}
+              className="text-[11px] font-medium text-destructive-text transition-colors hover:text-destructive"
+            >
+              Anular
+            </button>
+          </div>
+        )}
+
+        <ToggleGroup
+          type="single"
+          value={invoiceViewMode}
+          onValueChange={(v) => v && setInvoiceViewMode(v as "list" | "kanban" | "folders")}
+          className="ml-auto"
+        >
+          <ToggleGroupItem value="list" aria-label="Vista lista" className="px-2.5"><List className="h-4 w-4" /></ToggleGroupItem>
+          <ToggleGroupItem value="kanban" aria-label="Vista kanban" className="px-2.5"><LayoutGrid className="h-4 w-4" /></ToggleGroupItem>
+          <ToggleGroupItem value="folders" aria-label="Vista carpetas" className="px-2.5"><FolderTree className="h-4 w-4" /></ToggleGroupItem>
+        </ToggleGroup>
       </div>
 
       {invoiceViewMode === "kanban" ? (
-        <InvoiceKanbanView invoices={kanbanInvoices} onPreview={setPreviewInvoice} />
+        <InvoiceKanbanView invoices={kanbanInvoices} onPreview={setDetailInvoice} />
       ) : invoiceViewMode === "folders" ? (
-        <InvoiceFolderView invoices={kanbanInvoices} onPreview={setPreviewInvoice} />
+        <InvoiceFolderView invoices={kanbanInvoices} onPreview={setDetailInvoice} />
       ) : (
         <>
           {/* Mobile cards */}
@@ -729,7 +838,7 @@ const AppInvoices = () => {
             ) : (
               <>
                 {paginatedInvoices.map((inv: any) => (
-                  <Card key={inv.id} className="cursor-pointer space-y-2 px-[18px] py-4 active:bg-popover" onClick={() => setEditInvoice(inv)}>
+                  <Card key={inv.id} className="cursor-pointer space-y-2 px-[18px] py-4 active:bg-popover" onClick={() => setDetailInvoice(inv)}>
                     <div className="flex items-center justify-between">
                       <span className="font-mono font-semibold text-xs">{inv.invoice_number || inv.id.slice(0, 8).toUpperCase()}</span>
                       <StatusBadge status={inv.status} />
@@ -781,78 +890,117 @@ const AppInvoices = () => {
                 />
               ) : (
                 <>
-                   <div className="overflow-x-auto">
-                   <Table>
+                  <div className="overflow-x-auto">
+                  <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Nº</TableHead>
-                        <TableHead>F. Emisión</TableHead>
-                        <TableHead className="hidden lg:table-cell">F. Pago</TableHead>
+                        <TableHead className="w-[34px] pr-0">
+                          <Checkbox
+                            checked={allSelected}
+                            onCheckedChange={toggleSelectAll}
+                            aria-label="Seleccionar todas"
+                          />
+                        </TableHead>
+                        <TableHead className="w-[118px]">Nº</TableHead>
                         <TableHead>Cliente</TableHead>
-                        <TableHead>Concepto</TableHead>
-                        <TableHead>Tipo</TableHead>
-                        <TableHead className="text-right">Total</TableHead>
-                        <TableHead>Estado</TableHead>
-                        <TableHead className="text-right">Acciones</TableHead>
+                        <TableHead className="w-[116px] text-right">Base</TableHead>
+                        <TableHead className="w-[108px] text-right">Total</TableHead>
+                        <TableHead className="w-[100px] text-right">Vence</TableHead>
+                        <TableHead className="w-[106px]">Estado</TableHead>
+                        <TableHead className="w-[52px]" />
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {paginatedInvoices.map((inv: any) => (
-                        <TableRow key={inv.id} className="cursor-pointer" onClick={() => setEditInvoice(inv)}>
-                          <TableCell className="tnum font-medium text-muted-foreground">
-                            {inv.invoice_number || inv.id.slice(0, 8).toUpperCase()}
-                          </TableCell>
-                          <TableCell className="tnum whitespace-nowrap text-muted-foreground">
-                            {format(new Date(inv.issue_date), "dd MMM yyyy", { locale: es })}
-                          </TableCell>
-                          <TableCell className="tnum hidden whitespace-nowrap text-muted-foreground lg:table-cell">
-                            {inv.paid_at ? format(new Date(inv.paid_at), "dd MMM yyyy", { locale: es }) : <span className="text-faint">—</span>}
-                          </TableCell>
-                          <TableCell>{inv.business_clients?.name || "—"}</TableCell>
-                          <TableCell className="max-w-[200px] truncate">{inv.concept || "—"}</TableCell>
-                          <TableCell>{typeLabels[inv.type] || inv.type}</TableCell>
-                          <TableCell className="tnum text-right font-medium text-figure">
-                            €{Number(inv.amount_total).toLocaleString("es-ES", { minimumFractionDigits: 2 })}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1.5">
-                              <StatusBadge status={inv.status} />
-                              {inv.verifactu_status === "SENT" && (
-                                <span title="Registrada en la AEAT (VERI*FACTU)">
-                                  <ShieldCheck className="h-3.5 w-3.5 text-[hsl(var(--success))]" />
-                                </span>
+                      {paginatedInvoices.map((inv: any) => {
+                        const overdue = isOverdue(inv);
+                        const selected = selectedIds.has(inv.id);
+                        return (
+                          <TableRow
+                            key={inv.id}
+                            data-state={selected ? "selected" : undefined}
+                            className="cursor-pointer"
+                            onClick={() => setDetailInvoice(inv)}
+                          >
+                            <TableCell className="pr-0" onClick={(e) => e.stopPropagation()}>
+                              <Checkbox
+                                checked={selected}
+                                onCheckedChange={() => toggleSelect(inv.id)}
+                                aria-label={`Seleccionar ${inv.invoice_number || "factura"}`}
+                              />
+                            </TableCell>
+                            <TableCell className="tnum text-muted-foreground">
+                              {inv.invoice_number || inv.id.slice(0, 8).toUpperCase()}
+                            </TableCell>
+                            <TableCell className="max-w-0 truncate text-foreground">
+                              {inv.business_clients?.name || <span className="text-muted-foreground">Sin cliente asignado</span>}
+                            </TableCell>
+                            <TableCell className="tnum text-right text-muted-foreground">
+                              {Number(inv.amount_net).toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                            </TableCell>
+                            <TableCell className="tnum text-right font-medium text-figure">
+                              {fmtEUR(inv.amount_total)}
+                            </TableCell>
+                            <TableCell
+                              className={cn(
+                                "tnum whitespace-nowrap text-right",
+                                overdue ? "text-destructive-text"
+                                  : inv.status === "PAID" ? "text-faint"
+                                  : "text-warning-text",
                               )}
-                              {inv.verifactu_status === "PREPARED" && (
-                                <span title="Preparada para VERI*FACTU (pendiente de envío)">
-                                  <ShieldCheck className="h-3.5 w-3.5 text-[hsl(var(--warning))]" />
-                                </span>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center justify-end gap-0.5">
-                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Vista previa" onClick={() => setPreviewInvoice(inv)}>
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <InvoiceActionsMenu
-                              status={inv.status}
-                              onChangeStatus={(st) => handleChangeStatus(inv, st)}
-                              onMarkPaid={inv.status !== "PAID" ? () => handleMarkPaid(inv) : undefined}
-                              onReopen={inv.status === "PAID" ? () => setReopenTarget(inv) : undefined}
-                              onPreview={() => setPreviewInvoice(inv)}
-                              onExport={() => handleExportPdf(inv.id)}
-                              onEdit={() => setEditInvoice(inv)}
-                              onDelete={() => handleDeleteClick(inv)}
-                              onSendEmail={inv.business_clients?.email ? () => handleSendEmail(inv.id) : undefined}
-                              onReminder={() => setReminderInvoice(inv)}
-                              onRegisterVerifactu={inv.type === "INVOICE" ? () => handleRegisterVerifactu(inv) : undefined}
-                              verifactuStatus={inv.verifactu_status}
-                            />
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                            >
+                              {inv.status === "PAID" || !inv.due_date
+                                ? <span className="text-faint">—</span>
+                                : format(new Date(inv.due_date), "dd MMM", { locale: es })}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1.5">
+                                <StatusBadge status={overdue ? "OVERDUE" : inv.status} />
+                                {inv.verifactu_status === "SENT" && (
+                                  <span title="Registrada en la AEAT (VERI*FACTU)">
+                                    <ShieldCheck className="h-3.5 w-3.5 text-success" />
+                                  </span>
+                                )}
+                                {inv.verifactu_status === "PREPARED" && (
+                                  <span title="Preparada para VERI*FACTU (pendiente de envío)">
+                                    <ShieldCheck className="h-3.5 w-3.5 text-warning-text" />
+                                  </span>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                              <InvoiceActionsMenu
+                                status={inv.status}
+                                onChangeStatus={(st) => handleChangeStatus(inv, st)}
+                                onMarkPaid={inv.status !== "PAID" ? () => handleMarkPaid(inv) : undefined}
+                                onReopen={inv.status === "PAID" ? () => setReopenTarget(inv) : undefined}
+                                onPreview={() => setPreviewInvoice(inv)}
+                                onExport={() => handleExportPdf(inv.id)}
+                                onEdit={() => setEditInvoice(inv)}
+                                onDelete={() => handleDeleteClick(inv)}
+                                onSendEmail={inv.business_clients?.email ? () => handleSendEmail(inv.id) : undefined}
+                                onReminder={() => setReminderInvoice(inv)}
+                                onRegisterVerifactu={inv.type === "INVOICE" ? () => handleRegisterVerifactu(inv) : undefined}
+                                verifactuStatus={inv.verifactu_status}
+                              />
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
+                    {/* Pie de totales de la página */}
+                    <TableFooter>
+                      <TableRow>
+                        <TableCell colSpan={3} className="text-[11.5px] text-muted-foreground">
+                          Total página · <span className="tnum">{paginatedInvoices.length}</span> de{" "}
+                          <span className="tnum">{invoiceResult?.count ?? 0}</span>
+                        </TableCell>
+                        <TableCell className="tnum text-right text-muted-foreground">
+                          {pageTotals.net.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                        </TableCell>
+                        <TableCell className="tnum text-right text-figure">{fmtEUR(pageTotals.total)}</TableCell>
+                        <TableCell colSpan={3} />
+                      </TableRow>
+                    </TableFooter>
                   </Table>
                   </div>
                   {renderServerPagination(invoicePagination)}
