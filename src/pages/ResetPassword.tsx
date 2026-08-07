@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, KeyRound, CheckCircle2, AlertCircle } from "lucide-react";
+import { Loader2, Lock } from "lucide-react";
+import AuthLayout from "@/layouts/AuthLayout";
+import {
+  AuthPasswordField, AuthAlert, AuthSubmit, AuthLegal, PasswordStrength,
+} from "@/components/auth/AuthControls";
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
@@ -17,18 +17,12 @@ const ResetPassword = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Listen for the PASSWORD_RECOVERY event from Supabase
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
-        setIsRecovery(true);
-      }
+      if (event === "PASSWORD_RECOVERY") setIsRecovery(true);
     });
 
-    // Also check hash for recovery token
-    const hash = window.location.hash;
-    if (hash.includes("type=recovery")) {
-      setIsRecovery(true);
-    }
+    // El enlace del correo llega con el token en el hash
+    if (window.location.hash.includes("type=recovery")) setIsRecovery(true);
 
     return () => subscription.unsubscribe();
   }, []);
@@ -38,11 +32,11 @@ const ResetPassword = () => {
     setError("");
 
     if (password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres");
+      setError("La contraseña debe tener al menos 6 caracteres.");
       return;
     }
     if (password !== confirmPassword) {
-      setError("Las contraseñas no coinciden");
+      setError("Las contraseñas no coinciden.");
       return;
     }
 
@@ -53,88 +47,77 @@ const ResetPassword = () => {
       setSuccess(true);
       setTimeout(() => navigate("/login", { replace: true }), 3000);
     } catch (err: any) {
-      setError(err.message || "Error al actualizar la contraseña");
+      console.error("Cambio de contraseña falló:", err);
+      setError("No se ha podido actualizar la contraseña. Vuelve a pedir el enlace del correo.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent px-4">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-accent blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-primary/8 blur-3xl" />
+    <AuthLayout>
+      <div className="flex flex-col gap-[7px]">
+        <h1 className="font-display text-[22px] font-semibold tracking-[-.012em] text-figure">
+          Nueva contraseña
+        </h1>
+        <p className="text-[12.5px] text-muted-foreground">Introduce tu nueva contraseña.</p>
       </div>
 
-      <Card className="relative w-full max-w-md shadow-xl border-border/50 backdrop-blur-sm">
-        <CardHeader className="text-center space-y-3 pb-2">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-2xl shadow-primary/25">
-            <KeyRound className="h-7 w-7" />
-          </div>
-          <div className="space-y-1">
-            <CardTitle className="font-display text-[17px] font-semibold tracking-[-.01em]">Nueva contraseña</CardTitle>
-            <CardDescription className="text-muted-foreground">
-              {success ? "¡Contraseña actualizada!" : "Introduce tu nueva contraseña"}
-            </CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent className="pt-4">
-          {success ? (
-            <div className="flex flex-col items-center gap-4 py-4">
-              <CheckCircle2 className="h-12 w-12 text-accent-foreground" />
-              <p className="text-xs text-muted-foreground text-center">
-                Tu contraseña ha sido actualizada correctamente. Redirigiendo al login...
-              </p>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {error && (
-                <div className="flex items-center gap-2 rounded-control border border-destructive-border bg-destructive-surface p-3 text-[11.5px] text-destructive-text">
-                  <AlertCircle className="h-4 w-4 shrink-0" />
-                  {error}
-                </div>
-              )}
-              {!isRecovery && (
-                <div className="flex items-center gap-2 rounded-lg bg-muted p-3 text-xs text-muted-foreground">
-                  <AlertCircle className="h-4 w-4 shrink-0" />
-                  No se detectó un enlace de recuperación válido. Asegúrate de usar el enlace del correo.
-                </div>
-              )}
-              <div className="space-y-2">
-                <Label htmlFor="password">Nueva contraseña</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  disabled={loading}
-                  className="h-11"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  placeholder="••••••••"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  disabled={loading}
-                  className="h-11"
-                />
-              </div>
-              <Button type="submit" className="w-full h-11 font-medium shadow-primary/20" disabled={loading || !isRecovery}>
-                {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                Actualizar contraseña
-              </Button>
-            </form>
+      {success ? (
+        <div className="mt-7">
+          <AuthAlert tone="success">
+            Tu contraseña ha sido actualizada correctamente. Redirigiendo al acceso...
+          </AuthAlert>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="mt-7 flex flex-col gap-4">
+          {error && <AuthAlert>{error}</AuthAlert>}
+          {!isRecovery && (
+            <AuthAlert tone="neutral">
+              No se detectó un enlace de recuperación válido. Asegúrate de usar el enlace del correo.
+            </AuthAlert>
           )}
-        </CardContent>
-      </Card>
-    </div>
+
+          <div className="flex flex-col gap-2.5">
+            <AuthPasswordField
+              label="Nueva contraseña"
+              icon={Lock}
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={loading}
+              autoComplete="new-password"
+            />
+            <PasswordStrength value={password} />
+          </div>
+
+          <AuthPasswordField
+            label="Confirmar contraseña"
+            icon={Lock}
+            placeholder="••••••••"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            disabled={loading}
+            autoComplete="new-password"
+          />
+
+          <AuthSubmit disabled={loading || !isRecovery}>
+            {loading ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Actualizando...
+              </>
+            ) : (
+              "Actualizar contraseña"
+            )}
+          </AuthSubmit>
+        </form>
+      )}
+
+      <AuthLegal />
+    </AuthLayout>
   );
 };
 

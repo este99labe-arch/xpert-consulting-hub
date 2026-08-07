@@ -171,6 +171,45 @@ export const AuthSecondary = ({
   </button>
 );
 
+/**
+ * Medidor de robustez de contraseña.
+ *
+ * Cuenta cuatro criterios cumplidos —longitud, mayúscula, dígito y símbolo—
+ * en vez de puntuar la entropía: es lo que el usuario puede corregir mirando
+ * el resultado, y evita prometer seguridad que no medimos.
+ */
+export const PasswordStrength = ({ value }: { value: string }) => {
+  if (!value) return null;
+
+  const checks = [
+    value.length >= 6,
+    /[A-ZÁÉÍÓÚÑ]/.test(value),
+    /\d/.test(value),
+    /[^\w\s]/.test(value),
+  ];
+  const score = checks.filter(Boolean).length;
+  const label = score <= 1 ? "DÉBIL" : score <= 3 ? "MEDIA" : "FUERTE";
+
+  return (
+    <div className="flex items-center gap-2.5">
+      <div className="flex flex-1 gap-1" aria-hidden>
+        {[0, 1, 2, 3].map((i) => (
+          <span
+            key={i}
+            className={cn(
+              "h-[3px] flex-1 rounded-[5px] transition-colors duration-120",
+              i < score ? "bg-primary" : "bg-chart-track",
+            )}
+          />
+        ))}
+      </div>
+      <span className="font-mono text-[10px] text-muted-foreground" aria-live="polite">
+        {label}
+      </span>
+    </div>
+  );
+};
+
 /** Pie legal, común a las cinco pantallas. */
 export const AuthLegal = () => (
   <p className="mt-7 border-t border-border-subtle pt-5 text-center text-[11px] text-faint">
