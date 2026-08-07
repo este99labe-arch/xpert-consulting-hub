@@ -56,9 +56,9 @@ const GlobalSearch = () => {
       const [cRes, iRes, pRes, eRes] = await Promise.all([
         supabase
           .from("business_clients")
-          .select("id, name, tax_id")
+          .select("id, name, tax_id, email")
           .eq("account_id", accountId)
-          .ilike("name", pattern)
+          .or(`name.ilike.${pattern},tax_id.ilike.${pattern},email.ilike.${pattern}`)
           .limit(5),
         supabase
           .from("invoices")
@@ -85,7 +85,7 @@ const GlobalSearch = () => {
           id: c.id,
           label: c.name,
           sublabel: c.tax_id,
-          path: "/app/clients",
+          path: `/app/clients/${c.id}`,
         }))
       );
       setInvoices(
@@ -129,7 +129,7 @@ const GlobalSearch = () => {
   const hasResults = clients.length + invoices.length + products.length + employees.length > 0;
 
   return (
-    <CommandDialog open={open} onOpenChange={setOpen}>
+    <CommandDialog open={open} onOpenChange={setOpen} shouldFilter={false}>
       <CommandInput
         placeholder="Buscar clientes, facturas, productos, empleados..."
         value={query}

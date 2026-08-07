@@ -21,7 +21,21 @@ function uint8ToBase64(bytes: Uint8Array): string {
 async function processExtraction(import_id: string) {
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const lovableKey = Deno.env.get("LOVABLE_API_KEY")!;
+  /* Proveedor de IA.
+     Se prefiere OpenAI porque es la clave que ya usa el resto del proyecto
+     (transcripción y clasificación del webhook de WhatsApp) y no depende de
+     la plataforma en la que se despliega. La pasarela de Lovable se conserva
+     como alternativa por si el proyecto sigue apoyándose en ella, pero al
+     migrar de proyecto de Supabase ese secreto no viaja, y entonces el
+     Bearer se enviaba como "undefined": el gateway devolvía 401 y todo fallo
+     acababa en el mismo "Error al procesar con IA", que no dice nada. */
+  const openaiKey = Deno.env.get("OPENAI_API_KEY");
+  const lovableKey = Deno.env.get("LOVABLE_API_KEY");
+  const provider = openaiKey
+    ? { url: "https://api.openai.com/v1/chat/completions", key: openaiKey, model: Deno.env.get("OPENAI_VISION_MODEL") || "gpt-4o-mini", name: "OpenAI" }
+    : lovableKey
+      ? { url: "https://ai.gateway.lovable.dev/v1/chat/completions", key: lovableKey, model: "google/gemini-2.5-flash", name: "Lovable" }
+      : null;
   const supabase = createClient(supabaseUrl, serviceKey);
 
   try {
@@ -97,14 +111,22 @@ Responde con un JSON válido.`;
 
     console.log(`Processing import ${import_id}, file: ${importRecord.file_name}, type: ${mimeType}`);
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    if (!provider) {
+      await supabase.from("invoice_imports").update({
+        status: "ERROR",
+        error_message: "No hay ningún proveedor de IA configurado. Añade OPENAI_API_KEY en los secretos de las Edge Functions.",
+      }).eq("id", import_id);
+      return;
+    }
+
+    const aiResponse = await fetch(provider.url, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${lovableKey}`,
+        Authorization: `Bearer ${provider.key}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: provider.model,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userContent },
@@ -115,11 +137,18 @@ Responde con un JSON válido.`;
     if (!aiResponse.ok) {
       const errText = await aiResponse.text();
       console.error("AI gateway error:", aiResponse.status, errText);
+      /* El mensaje lleva el proveedor y el motivo real: un 401 por clave mal
+         puesta y un 500 del modelo no se arreglan igual, y "Error al procesar
+         con IA" obligaba a mirar los logs para distinguirlos. */
+      let detail = "";
+      try { detail = JSON.parse(errText)?.error?.message || ""; } catch { detail = errText.slice(0, 120); }
       const errorMsg = aiResponse.status === 429
-        ? "Límite de peticiones excedido. Intente de nuevo en unos minutos."
+        ? "Límite de peticiones excedido. Inténtalo de nuevo en unos minutos."
         : aiResponse.status === 402
         ? "Créditos de IA agotados."
-        : "Error al procesar con IA";
+        : aiResponse.status === 401 || aiResponse.status === 403
+        ? `La clave de ${provider.name} no es válida o ha caducado. Revísala en los secretos de las Edge Functions.`
+        : `${provider.name} devolvió ${aiResponse.status}${detail ? `: ${detail}` : ""}`;
       await supabase.from("invoice_imports").update({
         status: "ERROR",
         error_message: errorMsg,
