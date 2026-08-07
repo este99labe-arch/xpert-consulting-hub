@@ -19,13 +19,7 @@ import OnboardingTour from "@/components/shared/OnboardingTour";
 import MyTasksBadge from "@/components/tasks/MyTasksBadge";
 import { SupportAccountSwitcher, SupportSessionBanner } from "@/components/shared/SupportSession";
 import AccountSwitcher from "@/components/shared/AccountSwitcher";
-import AppNav, { moduleIcons, modulePaths, type NavModule } from "@/components/shared/AppNav";
-import { cn } from "@/lib/utils";
-import xpertLogo from "@/assets/brand/iso-white.png";
-
-/** Módulos que se asoman al rail de 56 px, en este orden. El resto viven solo
- *  en el panel: el rail es un atajo, no una segunda navegación completa. */
-const RAIL_CODES = ["DASHBOARD", "INVOICES", "CLIENTS", "CHAT", "TASKS"];
+import AppNav, { type NavModule } from "@/components/shared/AppNav";
 
 const ClientLayout = () => {
   const { signOut, user, accountId, role, supportSession } = useAuth();
@@ -91,13 +85,14 @@ const ClientLayout = () => {
   if (!navModules.some((m) => m.code === "TASKS")) navModules.push({ code: "TASKS", name: "Tareas" });
   if (!navModules.some((m) => m.code === "SETTINGS")) navModules.push({ code: "SETTINGS", name: "Configuración" });
 
-  const railItems = RAIL_CODES.map((c) => navModules.find((m) => m.code === c)).filter(Boolean) as NavModule[];
   const userInitial = user?.email?.charAt(0).toUpperCase() ?? "?";
 
   const nav = (
     <AppNav
       modules={navModules}
       companyName={companyName}
+      companyInitials={companyInitials}
+      isXpertAccount={isXpertAccount}
       isMaster={role === "MASTER_ADMIN"}
       onNavigate={() => setMobileNavOpen(false)}
     />
@@ -105,54 +100,8 @@ const ClientLayout = () => {
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
-      {/* ── Rail de 56 px ───────────────────────────────────────────── */}
-      <aside className="hidden w-14 shrink-0 flex-col items-center gap-1 border-r border-border-subtle bg-sidebar-background py-3 md:flex">
-        {isXpertAccount ? (
-          <div className="mb-2.5 flex h-[30px] w-[30px] items-center justify-center rounded-[9px] bg-secondary p-1">
-            <img src={xpertLogo} alt="XpertConsulting" className="h-full w-full object-contain" />
-          </div>
-        ) : (
-          <div className="mb-2.5 flex h-[30px] w-[30px] items-center justify-center rounded-[9px] bg-primary text-[11px] font-bold text-primary-foreground">
-            {companyInitials}
-          </div>
-        )}
-
-        {railItems.map((mod) => {
-          const Icon = moduleIcons[mod.code];
-          const path = modulePaths[mod.code];
-          const active = location.pathname === path;
-          return (
-            <button
-              key={mod.code}
-              type="button"
-              title={mod.name}
-              aria-label={mod.name}
-              onClick={() => navigate(path)}
-              className={cn(
-                "relative flex h-[34px] w-[34px] items-center justify-center rounded-[9px] transition-colors duration-150",
-                "focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/[.16]",
-                active
-                  ? "border border-border-strong bg-sidebar-accent text-accent-foreground"
-                  : "text-faint hover:bg-sidebar-accent/60 hover:text-muted-foreground",
-              )}
-            >
-              <Icon className="h-4 w-4 stroke-[1.7]" />
-              {mod.code === "TASKS" && (
-                <span className="pointer-events-none absolute right-1 top-1">
-                  <MyTasksBadge />
-                </span>
-              )}
-            </button>
-          );
-        })}
-
-        <div className="mt-auto flex h-[26px] w-[26px] items-center justify-center rounded-full bg-[hsl(var(--border-strong))] text-[10px] font-semibold text-muted-foreground">
-          {userInitial}
-        </div>
-      </aside>
-
       {/* ── Panel de navegación de 194 px ───────────────────────────── */}
-      <aside className="hidden w-[194px] shrink-0 border-r border-border-subtle bg-sidebar md:block">{nav}</aside>
+      <aside className="hidden w-[212px] shrink-0 border-r border-border-subtle bg-sidebar md:block">{nav}</aside>
 
       {/* Cajón móvil: mismo panel, sin duplicar la lista */}
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>

@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import MyTasksBadge from "@/components/tasks/MyTasksBadge";
+import xpertLogo from "@/assets/brand/iso-white.png";
 
 export const moduleIcons: Record<string, any> = {
   DASHBOARD: LayoutDashboard,
@@ -53,6 +54,26 @@ export interface NavModule {
   name: string;
 }
 
+/** Marca de la cuenta en la cabecera del panel. Vivía en el rail de iconos;
+ *  al retirarlo se recoloca aquí para no perder la referencia de en qué
+ *  cuenta estás, que en multi-cuenta importa. */
+const AccountMark = ({
+  companyName, companyInitials, isXpertAccount,
+}: { companyName: string; companyInitials: string; isXpertAccount: boolean }) => (
+  <div className="flex items-center gap-2.5 px-2.5">
+    {isXpertAccount ? (
+      <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-control bg-secondary p-1">
+        <img src={xpertLogo} alt="" aria-hidden className="h-full w-full object-contain" />
+      </div>
+    ) : (
+      <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-control bg-primary text-[10px] font-bold text-primary-foreground">
+        {companyInitials}
+      </div>
+    )}
+    <span className="truncate text-[12.5px] font-semibold text-foreground">{companyName}</span>
+  </div>
+);
+
 const GroupLabel = ({ children }: { children: React.ReactNode }) => (
   <div className="px-2.5 pb-1.5 pt-4 font-mono text-[9.5px] font-semibold uppercase tracking-[.07em] text-faint first:pt-0">
     {children}
@@ -91,10 +112,12 @@ const NavItem = ({
  * el cajón móvil para que no haya dos listas que mantener.
  */
 const AppNav = ({
-  modules, companyName, isMaster, onNavigate,
+  modules, companyName, companyInitials, isXpertAccount, isMaster, onNavigate,
 }: {
   modules: NavModule[];
   companyName: string;
+  companyInitials: string;
+  isXpertAccount: boolean;
   isMaster: boolean;
   onNavigate?: () => void;
 }) => {
@@ -118,7 +141,7 @@ const AppNav = ({
 
   return (
     <nav className="flex h-full flex-col px-3 py-3.5">
-      <div className="truncate px-2.5 text-[12.5px] font-semibold text-foreground">{companyName}</div>
+      <AccountMark companyName={companyName} companyInitials={companyInitials} isXpertAccount={isXpertAccount} />
 
       <div className="mt-1 flex-1 overflow-y-auto scrollbar-hide">
         {grouped.map((group) => (
