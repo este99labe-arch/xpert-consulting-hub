@@ -48,6 +48,8 @@ interface InvoiceData {
   company: { name: string; taxId?: string; address?: string; city?: string; postalCode?: string; phone?: string; email?: string };
   client: { name: string; taxId?: string; email?: string; address?: string; city?: string; postalCode?: string; phone?: string };
   payments?: { amount: number; date: string; method: string }[];
+  /** PNG del QR de VERI*FACTU en data URL. Solo en facturas. */
+  qrDataUrl?: string;
 }
 
 // ─── MONEY FORMAT ──────────────────────────────────────────
@@ -110,8 +112,21 @@ async function generatePdf(d: InvoiceData): Promise<Uint8Array> {
     }
   }
 
+  /* Las fuentes estándar de PDF usan WinAnsi, que sí cubre acentos, ñ y €.
+     Aun así, si algún carácter suelto no fuera representable, antes se perdía
+     la línea entera en silencio; ahora se degrada el texto y se escribe. */
+  const ASCII_FALLBACK: Record<string, string> = { "€": "EUR", "—": "-", "–": "-", "·": "-", "…": "..." };
+  function sanitize(text: string): string {
+    let out = text;
+    for (const [from, to] of Object.entries(ASCII_FALLBACK)) out = out.split(from).join(to);
+    return out.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  }
   function txt(text: string, x: number, yy: number, font: PDFFont, size: number, color = C.dark) {
-    try { page.drawText(text, { x, y: yy, size, font, color }); } catch { /* skip unsupported chars */ }
+    try {
+      page.drawText(text, { x, y: yy, size, font, color });
+    } catch {
+      try { page.drawText(sanitize(text), { x, y: yy, size, font, color }); } catch { /* irrepresentable */ }
+    }
   }
 
   function line(x1: number, y1: number, x2: number, y2: number, thickness = 1, color = C.border) {
@@ -122,132 +137,109 @@ async function generatePdf(d: InvoiceData): Promise<Uint8Array> {
     page.drawRectangle({ x, y: yy, width: w, height: h, color });
   }
 
-  // ─── QR TRIBUTARIO VERI*FACTU ───────────────────
-  // Ubicación: PRIMERA página, esquina superior izquierda, antes del contenido.
-  // Tamaño: 40×40 mm con margen blanco de 6 mm. Solo aparece una vez.
+  const MM = 2.83465; // 1 mm en puntos
+
+  // ─── CABECERA ───────────────────────────────────
+  // El QR va arriba a la derecha, dentro de la banda de cabecera. Antes se
+  // dibujaba arriba a la IZQUIERDA a 40 mm más 12 mm de margen —52 mm de caja,
+  // un cuarto del ancho útil— y empujaba todo el documento hacia abajo.
+  //
+  // 30 mm es el MÍNIMO que admite la normativa de VERI*FACTU (30×30 a 40×40),
+  // así que no se puede reducir más sin salirse de norma.
+  const QR_SIZE = 30 * MM;
+
   const qrUrl = buildVerifactuQRUrl({
     nif: d.company.taxId || "",
     numserie: d.invoiceNumber,
     fecha: (d as any)._issueDateRaw || d.issueDate,
     importe: d.amountTotal,
   });
+
+  const headTop = y;
+  let hasQr = false;
+
   if (qrUrl && d.typeLabel === "FACTURA") {
     try {
-      const MM = 2.83465; // 1 mm = 2.83465 pt
-      const QR_SIZE = 40 * MM;   // 40 mm
-      const QR_MARGIN = 6 * MM;  // 6 mm de margen interior blanco
-      const BOX = QR_SIZE + QR_MARGIN * 2;
-      const qrX = M;             // esquina superior izquierda
-      const qrY = y - BOX;       // arriba del todo
-      // Caja blanca con borde fino
-      page.drawRectangle({ x: qrX, y: qrY, width: BOX, height: BOX, color: C.white, borderColor: C.border, borderWidth: 0.5 });
-      // Etiqueta superior
-      txt("QR tributario:", qrX, qrY + BOX + 5, helB, 7.5, C.mid);
-      const qrPngDataUrl = await QRCode.toDataURL(qrUrl, { errorCorrectionLevel: "M", margin: 0, width: 512 });
+      const qrX = PAGE_W - M - QR_SIZE;
+      const qrY = headTop - QR_SIZE;
+      const qrPngDataUrl = await QRCode.toDataURL(qrUrl, { errorCorrectionLevel: "M", margin: 0, width: 320 });
       const qrBytes = Uint8Array.from(atob(qrPngDataUrl.split(",")[1]), (c) => c.charCodeAt(0));
       const qrImg = await doc.embedPng(qrBytes);
-      page.drawImage(qrImg, { x: qrX + QR_MARGIN, y: qrY + QR_MARGIN, width: QR_SIZE, height: QR_SIZE });
-      // Pie del QR
-      const cap1 = "Factura verificable en la sede";
-      const cap2 = "electronica de la AEAT";
-      const cw1 = hel.widthOfTextAtSize(cap1, 6.5);
-      const cw2 = hel.widthOfTextAtSize(cap2, 6.5);
-      txt(cap1, qrX + (BOX - cw1) / 2, qrY - 8, hel, 6.5, C.mid);
-      txt(cap2, qrX + (BOX - cw2) / 2, qrY - 16, hel, 6.5, C.mid);
-      // Avanzar y para que el header empiece debajo del QR
-      y = qrY - 24;
+      page.drawImage(qrImg, { x: qrX, y: qrY, width: QR_SIZE, height: QR_SIZE });
+
+      const cap = "Verificable en la AEAT";
+      const cw = hel.widthOfTextAtSize(cap, 6);
+      txt(cap, qrX + (QR_SIZE - cw) / 2, qrY - 9, hel, 6, C.light);
+      hasQr = true;
     } catch (err) {
       console.error("[VERI*FACTU] Error generando QR:", err);
     }
   }
 
-  // ─── HEADER ─────────────────────────────────────
-  txt(d.company.name, M, y, helB, 20, C.dark);
+  // Membrete: solo el nombre. Los datos fiscales del emisor van una vez, en
+  // su recuadro; repetirlos aquí llenaba de ruido la parte alta.
+  txt(d.company.name, M, headTop - 16, helB, 19, C.dark);
 
-  // Doc type label (right, small caps)
-  const typeW = helB.widthOfTextAtSize(d.typeLabel, 9);
-  txt(d.typeLabel, PAGE_W - M - typeW, y + 2, helB, 9, C.light);
-  y -= 16;
+  // Tipo y número de documento, bajo el membrete para no chocar con el QR
+  const typeY = headTop - 44;
+  txt(d.typeLabel, M, typeY, helB, 8, C.light);
+  txt(d.invoiceNumber, M, typeY - 20, helB, 17, C.dark);
 
-  // Doc number (right)
-  rightText(page, d.invoiceNumber, y, helB, 16, C.dark);
+  // Estado, a la derecha bajo el QR
+  const stW = helB.widthOfTextAtSize(d.statusLabel, 8);
+  const badgeX = PAGE_W - M - stW - 14;
+  const badgeY = hasQr ? headTop - QR_SIZE - 30 : typeY - 4;
+  rect(badgeX, badgeY, stW + 14, 15, C.bg);
+  page.drawRectangle({ x: badgeX, y: badgeY, width: stW + 14, height: 15, borderColor: C.border, borderWidth: 0.5, color: C.bg });
+  txt(d.statusLabel, badgeX + 7, badgeY + 4, helB, 8, C.mid);
 
-  // Company details (left)
-  const compDetails: string[] = [];
-  if (d.company.taxId) compDetails.push(`NIF/CIF: ${d.company.taxId}`);
-  if (d.company.address) compDetails.push(d.company.address);
-  const cityLine = [d.company.postalCode, d.company.city].filter(Boolean).join(" ");
-  if (cityLine) compDetails.push(cityLine);
-  const contactLine = [d.company.phone, d.company.email].filter(Boolean).join(" - ");
-  if (contactLine) compDetails.push(contactLine);
+  y = Math.min(typeY - 34, hasQr ? headTop - QR_SIZE - 40 : typeY - 34);
 
-  for (const detail of compDetails) {
-    txt(detail, M, y, hel, 8, C.mid);
-    y -= 11;
-  }
+  // Filete de separación
+  line(M, y, PAGE_W - M, y, 1.5, C.dark);
+  y -= 26;
 
-  // Status badge (right)
-  const statusText = d.statusLabel;
-  const stW = helB.widthOfTextAtSize(statusText, 8);
-  const badgeX = PAGE_W - M - stW - 12;
-  rect(badgeX, y - 2, stW + 12, 14, C.bg);
-  txt(statusText, badgeX + 6, y + 1, helB, 8, C.mid);
-
-  y -= 10;
-
-  // Divider
-  line(M, y, PAGE_W - M, y, 2, C.dark);
-  y -= 24;
-
-  // ─── PARTIES ────────────────────────────────────
+  // ─── PARTES ─────────────────────────────────────
   const halfW = (CW - 24) / 2;
+  const partyH = 96;
 
-  // Emisor box
-  rect(M, y - 90, halfW, 92, C.bg);
-  page.drawRectangle({ x: M, y: y - 90, width: halfW, height: 92, borderColor: C.border, borderWidth: 0.5, color: C.bg });
-  txt("EMISOR", M + 12, y - 10, helB, 7, C.light);
-  txt(d.company.name, M + 12, y - 24, helB, 11, C.dark);
+  const drawParty = (
+    x: number, label: string, name: string,
+    info: { taxId?: string; address?: string; postalCode?: string; city?: string; email?: string; phone?: string },
+    filled: boolean,
+  ) => {
+    page.drawRectangle({
+      x, y: y - partyH, width: halfW, height: partyH,
+      borderColor: C.border, borderWidth: 0.5, color: filled ? C.bg : C.white,
+    });
+    txt(label, x + 12, y - 14, helB, 7, C.light);
+    txt(name, x + 12, y - 30, helB, 11, C.dark);
 
-  let ey = y - 38;
-  const emLines: string[] = [];
-  if (d.company.taxId) emLines.push(`NIF/CIF: ${d.company.taxId}`);
-  if (d.company.address) emLines.push(d.company.address);
-  const emCity = [d.company.postalCode, d.company.city].filter(Boolean).join(" ");
-  if (emCity) emLines.push(emCity);
-  if (d.company.email) emLines.push(d.company.email);
-  if (d.company.phone) emLines.push(`Tel: ${d.company.phone}`);
-  for (const l of emLines.slice(0, 4)) {
-    txt(l, M + 12, ey, hel, 8, C.mid);
-    ey -= 11;
-  }
+    const lines: string[] = [];
+    if (info.taxId) lines.push(`NIF/CIF: ${info.taxId}`);
+    if (info.address) lines.push(info.address);
+    const cityLine = [info.postalCode, info.city].filter(Boolean).join(" ");
+    if (cityLine) lines.push(cityLine);
+    if (info.email) lines.push(info.email);
+    if (info.phone) lines.push(`Tel: ${info.phone}`);
 
-  // Destinatario box
-  const rx = M + halfW + 24;
-  page.drawRectangle({ x: rx, y: y - 90, width: halfW, height: 92, borderColor: C.border, borderWidth: 0.5, color: C.white });
-  txt("DESTINATARIO", rx + 12, y - 10, helB, 7, C.light);
-  txt(d.client.name, rx + 12, y - 24, helB, 11, C.dark);
+    let ly = y - 45;
+    for (const l of lines.slice(0, 4)) {
+      txt(l, x + 12, ly, hel, 8, C.mid);
+      ly -= 11;
+    }
+  };
 
-  let cy = y - 38;
-  const clLines: string[] = [];
-  if (d.client.taxId) clLines.push(`NIF/CIF: ${d.client.taxId}`);
-  if (d.client.address) clLines.push(d.client.address);
-  const clCity = [d.client.postalCode, d.client.city].filter(Boolean).join(" ");
-  if (clCity) clLines.push(clCity);
-  if (d.client.email) clLines.push(d.client.email);
-  if (d.client.phone) clLines.push(`Tel: ${d.client.phone}`);
-  for (const l of clLines.slice(0, 4)) {
-    txt(l, rx + 12, cy, hel, 8, C.mid);
-    cy -= 11;
-  }
+  drawParty(M, "EMISOR", d.company.name, d.company, true);
+  drawParty(M + halfW + 24, "DESTINATARIO", d.client.name, d.client, false);
 
-  y -= 106;
+  y -= partyH + 22;
 
   // ─── META ROW ───────────────────────────────────
   const metaItems: { label: string; value: string }[] = [
-    { label: "N. DOCUMENTO", value: d.invoiceNumber },
-    { label: "FECHA EMISION", value: d.issueDate },
+    { label: "FECHA DE EMISIÓN", value: d.issueDate },
   ];
-  if (d.operationDate) metaItems.push({ label: "FECHA OPERACION", value: d.operationDate });
+  if (d.operationDate) metaItems.push({ label: "FECHA DE OPERACIÓN", value: d.operationDate });
 
   const metaW = CW / metaItems.length;
   rect(M, y - 36, CW, 38, C.bg);
@@ -271,7 +263,7 @@ async function generatePdf(d: InvoiceData): Promise<Uint8Array> {
 
   // Table header
   rect(M, y - 18, CW, 20, C.dark);
-  const headers = ["Descripcion del servicio", "Cant.", "Precio ud.", "Importe"];
+  const headers = ["Descripción", "Cant.", "Precio ud.", "Importe"];
   headers.forEach((h, i) => {
     const hx = i === 0 ? colX[i] + 8 : colX[i] + colWidths[i] - hel.widthOfTextAtSize(h, 7) - 8;
     txt(h, hx, y - 12, helB, 7, C.white);
@@ -301,10 +293,10 @@ async function generatePdf(d: InvoiceData): Promise<Uint8Array> {
     rightText(page, qText, y - 10, cour, 9, C.dark, colX[1] + colWidths[1] - 8);
 
     // Unit price
-    rightText(page, `${fmtMoney(row.unitPrice)} EUR`, y - 10, cour, 9, C.dark, colX[2] + colWidths[2] - 8);
+    rightText(page, `${fmtMoney(row.unitPrice)} €`, y - 10, cour, 9, C.dark, colX[2] + colWidths[2] - 8);
 
     // Amount
-    rightText(page, `${fmtMoney(row.amount)} EUR`, y - 10, helB, 9, C.dark, colX[3] + colWidths[3] - 8);
+    rightText(page, `${fmtMoney(row.amount)} €`, y - 10, helB, 9, C.dark, colX[3] + colWidths[3] - 8);
 
     y -= rowH;
   }
@@ -327,7 +319,7 @@ async function generatePdf(d: InvoiceData): Promise<Uint8Array> {
     ensureSpace(40);
     rect(M, y - 30, CW, 32, rgb(1, 0.984, 0.929));
     page.drawRectangle({ x: M, y: y - 30, width: CW, height: 32, borderColor: rgb(0.992, 0.902, 0.545), borderWidth: 0.5, color: rgb(1, 0.984, 0.929) });
-    txt("Mencion especial:", M + 10, y - 10, helB, 8, rgb(0.573, 0.251, 0.055));
+    txt("Mención especial:", M + 10, y - 10, helB, 8, rgb(0.573, 0.251, 0.055));
     const mentionLines = wrapText(d.specialMentions, hel, 8, CW - 24);
     let my = y - 22;
     for (const ml of mentionLines.slice(0, 2)) {
@@ -340,12 +332,12 @@ async function generatePdf(d: InvoiceData): Promise<Uint8Array> {
   // ─── PAYMENTS ───────────────────────────────────
   if (d.payments && d.payments.length > 0) {
     ensureSpace(20 + d.payments.length * 18);
-    txt("PAGOS REGISTRADOS", M, y, helB, 7, C.light);
+    txt("COBROS REGISTRADOS", M, y, helB, 7, C.light);
     y -= 14;
     for (const p of d.payments) {
       rect(M, y - 12, CW, 16, rgb(0.941, 0.988, 0.953));
       txt(`${p.date} - ${p.method}`, M + 8, y - 8, hel, 9, C.dark);
-      rightText(page, `${fmtMoney(p.amount)} EUR`, y - 8, helB, 9, C.green, PAGE_W - M - 8);
+      rightText(page, `${fmtMoney(p.amount)} €`, y - 8, helB, 9, C.green, PAGE_W - M - 8);
       y -= 18;
     }
     y -= 8;
@@ -368,18 +360,18 @@ async function generatePdf(d: InvoiceData): Promise<Uint8Array> {
 
   // Base imponible
   txt("Base imponible", totX + 12, ty, hel, 9, C.mid);
-  rightText(page, `${fmtMoney(d.amountNet)} EUR`, ty, cour, 9, C.dark, PAGE_W - M - 12);
+  rightText(page, `${fmtMoney(d.amountNet)} €`, ty, cour, 9, C.dark, PAGE_W - M - 12);
   ty -= 18;
 
   // IVA
   txt(`IVA (${d.vatPercentage}%)`, totX + 12, ty, hel, 9, C.mid);
-  rightText(page, `${fmtMoney(d.amountVat)} EUR`, ty, cour, 9, C.dark, PAGE_W - M - 12);
+  rightText(page, `${fmtMoney(d.amountVat)} €`, ty, cour, 9, C.dark, PAGE_W - M - 12);
   ty -= 18;
 
   // IRPF
   if (hasIrpf) {
     txt(`IRPF (-${d.irpfPercentage}%)`, totX + 12, ty, hel, 9, C.mid);
-    rightText(page, `-${fmtMoney(d.irpfAmount || 0)} EUR`, ty, cour, 9, C.red, PAGE_W - M - 12);
+    rightText(page, `-${fmtMoney(d.irpfAmount || 0)} €`, ty, cour, 9, C.red, PAGE_W - M - 12);
     ty -= 18;
   }
 
@@ -389,22 +381,22 @@ async function generatePdf(d: InvoiceData): Promise<Uint8Array> {
 
   // Total
   txt("TOTAL", totX + 12, ty, helB, 13, C.dark);
-  rightText(page, `${fmtMoney(d.amountTotal)} EUR`, ty, helB, 13, C.dark, PAGE_W - M - 12);
+  rightText(page, `${fmtMoney(d.amountTotal)} €`, ty, helB, 13, C.dark, PAGE_W - M - 12);
   ty -= 20;
 
   // Paid & balance
   if (totalPaid > 0) {
     txt("Pagado", totX + 12, ty, helB, 9, C.green);
-    rightText(page, `${fmtMoney(totalPaid)} EUR`, ty, helB, 9, C.green, PAGE_W - M - 12);
+    rightText(page, `${fmtMoney(totalPaid)} €`, ty, helB, 9, C.green, PAGE_W - M - 12);
     ty -= 16;
     txt("Saldo pendiente", totX + 12, ty, helB, 9, C.red);
-    rightText(page, `${fmtMoney(balance)} EUR`, ty, helB, 9, C.red, PAGE_W - M - 12);
+    rightText(page, `${fmtMoney(balance)} €`, ty, helB, 9, C.red, PAGE_W - M - 12);
   }
 
   // ─── FOOTER ─────────────────────────────────────
   const footerY = M + 10;
   line(M, footerY + 12, PAGE_W - M, footerY + 12, 0.5, C.border);
-  const footerText = `${d.company.name}${d.company.taxId ? ` - NIF/CIF: ${d.company.taxId}` : ""} - Documento generado automaticamente`;
+  const footerText = `${d.company.name}${d.company.taxId ? ` - NIF/CIF: ${d.company.taxId}` : ""} - Documento generado automáticamente`;
   const ftW = hel.widthOfTextAtSize(footerText, 7);
   txt(footerText, (PAGE_W - ftW) / 2, footerY, hel, 7, C.light);
 
@@ -421,24 +413,30 @@ const statusColors: Record<string, { bg: string; color: string }> = {
 
 function renderLinesRows(d: InvoiceData): string {
   if (d.lines && d.lines.length > 0) {
-    return d.lines.map(l => `<tr><td style="font-weight:600">${l.description||"-"}</td><td class="r">${l.quantity}</td><td class="r">EUR ${fmtMoney(l.unitPrice)}</td><td class="r b">EUR ${fmtMoney(l.amount)}</td></tr>`).join("");
+    return d.lines.map(l => `<tr><td style="font-weight:600">${l.description||"-"}</td><td class="r">${l.quantity}</td><td class="r">${fmtMoney(l.unitPrice)} €</td><td class="r b">${fmtMoney(l.amount)} €</td></tr>`).join("");
   }
-  return `<tr><td style="font-weight:600">${d.concept||"-"}</td><td class="r">1</td><td class="r">EUR ${fmtMoney(d.amountNet)}</td><td class="r b">EUR ${fmtMoney(d.amountNet)}</td></tr>${d.description?`<tr><td colspan="4" class="desc-cell">${d.description}</td></tr>`:""}`;
+  return `<tr><td style="font-weight:600">${d.concept||"-"}</td><td class="r">1</td><td class="r">${fmtMoney(d.amountNet)} €</td><td class="r b">${fmtMoney(d.amountNet)} €</td></tr>${d.description?`<tr><td colspan="4" class="desc-cell">${d.description}</td></tr>`:""}`;
 }
 
 function renderTotalsHtml(d: InvoiceData, totalPaid: number, balance: number): string {
   const hasIrpf = (d.irpfPercentage || 0) > 0;
-  return `<div class="t-row"><span>Base imponible</span><span class="mono">EUR ${fmtMoney(d.amountNet)}</span></div>
-<div class="t-row"><span>IVA (${d.vatPercentage}%)</span><span class="mono">EUR ${fmtMoney(d.amountVat)}</span></div>
-${hasIrpf?`<div class="t-row"><span>IRPF (-${d.irpfPercentage}%)</span><span class="mono">-EUR ${fmtMoney(d.irpfAmount||0)}</span></div>`:""}
+  return `<div class="t-row"><span>Base imponible</span><span class="mono">${fmtMoney(d.amountNet)} €</span></div>
+<div class="t-row"><span>IVA (${d.vatPercentage}%)</span><span class="mono">${fmtMoney(d.amountVat)} €</span></div>
+${hasIrpf?`<div class="t-row"><span>IRPF (-${d.irpfPercentage}%)</span><span class="mono">-${fmtMoney(d.irpfAmount||0)} €</span></div>`:""}
 <div class="t-divider"></div>
-<div class="t-total"><span>Total</span><span class="mono">EUR ${fmtMoney(d.amountTotal)}</span></div>
-${totalPaid>0?`<div class="t-row" style="color:#16a34a;font-weight:600"><span>Pagado</span><span class="mono">EUR ${fmtMoney(totalPaid)}</span></div><div class="t-balance"><span>Saldo pendiente</span><span class="mono">EUR ${fmtMoney(balance)}</span></div>`:""}`;
+<div class="t-total"><span>Total</span><span class="mono">${fmtMoney(d.amountTotal)} €</span></div>
+${totalPaid>0?`<div class="t-row" style="color:#16a34a;font-weight:600"><span>Pagado</span><span class="mono">${fmtMoney(totalPaid)} €</span></div><div class="t-balance"><span>Saldo pendiente</span><span class="mono">${fmtMoney(balance)} €</span></div>`:""}`;
+}
+
+/** Bloque del QR fiscal, arriba a la derecha. 30 mm es el mínimo de norma. */
+function renderQr(d: InvoiceData): string {
+  if (!d.qrDataUrl) return "";
+  return `<div style="text-align:center;flex:none"><img src="${d.qrDataUrl}" alt="QR VERI*FACTU" style="width:30mm;height:30mm;display:block"><div style="font-size:7px;color:#94a3b8;margin-top:3px">Verificable en la AEAT</div></div>`;
 }
 
 function renderSpecialMentions(d: InvoiceData): string {
   if (!d.specialMentions) return "";
-  return `<div style="margin-bottom:20px;padding:12px 16px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:11px;color:#92400e;line-height:1.6"><strong>Mencion especial:</strong> ${d.specialMentions}</div>`;
+  return `<div style="margin-bottom:20px;padding:12px 16px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:11px;color:#92400e;line-height:1.6"><strong>Mención especial:</strong> ${d.specialMentions}</div>`;
 }
 
 function classicTemplate(d: InvoiceData): string {
@@ -447,14 +445,14 @@ function classicTemplate(d: InvoiceData): string {
   const balance = d.amountTotal - totalPaid;
   return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>${d.typeLabel} ${d.invoiceNumber}</title>
 <style>@page{size:A4;margin:0}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1e293b;font-size:13px;line-height:1.6;width:210mm;min-height:297mm;margin:0 auto}.page{padding:48px 56px;min-height:297mm;display:flex;flex-direction:column}.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:40px;padding-bottom:24px;border-bottom:3px solid #0f172a}.company{font-size:26px;font-weight:800;color:#0f172a;letter-spacing:-0.5px}.company-detail{font-size:11px;color:#64748b;margin-top:2px;line-height:1.5}.doc-type{font-size:10px;text-transform:uppercase;letter-spacing:3px;color:#94a3b8;font-weight:700}.doc-number{font-size:24px;font-weight:800;color:#0f172a;margin-top:2px}.status{display:inline-block;padding:4px 16px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:8px;background:${sc.bg};color:${sc.color}}.parties{display:flex;gap:40px;margin-bottom:32px}.party{flex:1;padding:20px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0}.party-label{font-size:9px;text-transform:uppercase;letter-spacing:2px;color:#94a3b8;font-weight:700;margin-bottom:10px}.party-name{font-weight:700;font-size:15px;color:#0f172a;margin-bottom:4px}.party-info{font-size:12px;color:#64748b;line-height:1.6}.meta-row{display:flex;gap:20px;margin-bottom:28px}.meta-box{padding:14px 20px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;flex:1}.meta-label{font-size:9px;text-transform:uppercase;letter-spacing:2px;color:#94a3b8;font-weight:700;margin-bottom:4px}.meta-value{font-size:14px;font-weight:600;color:#0f172a}table{width:100%;border-collapse:collapse;margin-bottom:28px}th{text-align:left;padding:12px 16px;font-size:9px;text-transform:uppercase;letter-spacing:2px;color:#94a3b8;font-weight:700;border-bottom:2px solid #e2e8f0;background:#f8fafc}th.r{text-align:right}td{padding:14px 16px;border-bottom:1px solid #f1f5f9;font-size:13px}td.r{text-align:right;font-family:'SF Mono','Courier New',monospace;font-size:12px}td.b{font-weight:700}.desc-cell{color:#64748b;font-size:12px;padding:4px 16px 14px;border-bottom:1px solid #f1f5f9}.totals{display:flex;justify-content:flex-end;margin-bottom:24px}.totals-box{width:300px;background:#f8fafc;border-radius:8px;padding:20px;border:1px solid #e2e8f0}.t-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:#64748b}.t-row .mono{font-family:'SF Mono','Courier New',monospace;font-size:12px}.t-divider{height:2px;background:#0f172a;margin:10px 0}.t-total{display:flex;justify-content:space-between;padding:8px 0;font-size:20px;font-weight:800;color:#0f172a}.t-total .mono{font-family:'SF Mono','Courier New',monospace}.t-balance{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:#dc2626;font-weight:600}.payments{margin-bottom:24px}.payments h3{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#94a3b8;font-weight:700;margin-bottom:12px}.pay-row{display:flex;justify-content:space-between;padding:8px 16px;background:#f0fdf4;border-radius:6px;margin-bottom:4px;font-size:12px}.footer{margin-top:auto;padding-top:24px;border-top:1px solid #e2e8f0;text-align:center;font-size:10px;color:#94a3b8}@media print{body{margin:0;width:100%}.page{box-shadow:none}}</style></head><body><div class="page">
-<div class="header"><div><div class="company">${d.company.name}</div>${d.company.taxId?`<div class="company-detail">NIF/CIF: ${d.company.taxId}</div>`:""}${d.company.address?`<div class="company-detail">${d.company.address}${d.company.postalCode?`, ${d.company.postalCode}`:""}${d.company.city?` ${d.company.city}`:""}</div>`:""}${d.company.phone||d.company.email?`<div class="company-detail">${d.company.phone||""}${d.company.phone&&d.company.email?" - ":""}${d.company.email||""}</div>`:""}</div><div style="text-align:right"><div class="doc-type">${d.typeLabel}</div><div class="doc-number">${d.invoiceNumber}</div><div class="status">${d.statusLabel}</div></div></div>
+<div class="header"><div><div class="company">${d.company.name}</div></div><div style="display:flex;gap:20px;align-items:flex-start"><div style="text-align:right"><div class="doc-type">${d.typeLabel}</div><div class="doc-number">${d.invoiceNumber}</div><div class="status">${d.statusLabel}</div></div>${renderQr(d)}</div></div>
 <div class="parties"><div class="party"><div class="party-label">Emisor</div><div class="party-name">${d.company.name}</div><div class="party-info">${d.company.taxId?`NIF/CIF: ${d.company.taxId}<br>`:""}${d.company.address?`${d.company.address}<br>`:""}${d.company.postalCode||d.company.city?`${d.company.postalCode||""} ${d.company.city||""}<br>`:""}${d.company.email?`${d.company.email}<br>`:""}${d.company.phone?`Tel: ${d.company.phone}`:""}</div></div><div class="party"><div class="party-label">Destinatario</div><div class="party-name">${d.client.name}</div><div class="party-info">${d.client.taxId?`NIF/CIF: ${d.client.taxId}<br>`:""}${d.client.address?`${d.client.address}<br>`:""}${d.client.postalCode||d.client.city?`${d.client.postalCode||""} ${d.client.city||""}<br>`:""}${d.client.email?`${d.client.email}<br>`:""}${d.client.phone?`Tel: ${d.client.phone}`:""}</div></div></div>
-<div class="meta-row"><div class="meta-box"><div class="meta-label">N. Documento</div><div class="meta-value">${d.invoiceNumber}</div></div><div class="meta-box"><div class="meta-label">Fecha de emision</div><div class="meta-value">${d.issueDate}</div></div>${d.operationDate?`<div class="meta-box"><div class="meta-label">Fecha de operacion</div><div class="meta-value">${d.operationDate}</div></div>`:""}</div>
-<table><thead><tr><th>Descripcion del servicio</th><th class="r" style="width:80px">Cant.</th><th class="r" style="width:120px">Precio ud.</th><th class="r" style="width:120px">Importe</th></tr></thead><tbody>${renderLinesRows(d)}</tbody></table>
+<div class="meta-row"><div class="meta-box"><div class="meta-label">Fecha de emisión</div><div class="meta-value">${d.issueDate}</div></div>${d.operationDate?`<div class="meta-box"><div class="meta-label">Fecha de operación</div><div class="meta-value">${d.operationDate}</div></div>`:""}</div>
+<table><thead><tr><th>Descripción</th><th class="r" style="width:80px">Cant.</th><th class="r" style="width:120px">Precio ud.</th><th class="r" style="width:120px">Importe</th></tr></thead><tbody>${renderLinesRows(d)}</tbody></table>
 ${renderSpecialMentions(d)}
-${d.payments&&d.payments.length>0?`<div class="payments"><h3>Pagos registrados</h3>${d.payments.map(p=>`<div class="pay-row"><span>${p.date} - ${p.method}</span><span style="font-weight:600">EUR ${fmtMoney(p.amount)}</span></div>`).join("")}</div>`:""}
+${d.payments&&d.payments.length>0?`<div class="payments"><h3>Cobros registrados</h3>${d.payments.map(p=>`<div class="pay-row"><span>${p.date} - ${p.method}</span><span style="font-weight:600">${fmtMoney(p.amount)} €</span></div>`).join("")}</div>`:""}
 <div class="totals"><div class="totals-box">${renderTotalsHtml(d, totalPaid, balance)}</div></div>
-<div class="footer">${d.company.name}${d.company.taxId?` - NIF/CIF: ${d.company.taxId}`:""}<br>Documento generado automaticamente</div>
+<div class="footer">${d.company.name}${d.company.taxId?` - NIF/CIF: ${d.company.taxId}`:""}<br>Documento generado automáticamente</div>
 </div></body></html>`;
 }
 
@@ -467,14 +465,14 @@ function modernTemplate(d: InvoiceData): string {
   return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>${d.typeLabel} ${d.invoiceNumber}</title>
 <style>@page{size:A4;margin:0}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1e293b;font-size:13px;line-height:1.6;width:210mm;min-height:297mm;margin:0 auto}.page{min-height:297mm;display:flex;flex-direction:column}.top-bar{height:8px;background:linear-gradient(90deg,${accent},#7c3aed)}.content{padding:40px 56px;flex:1;display:flex;flex-direction:column}.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:36px}.brand{display:flex;align-items:center;gap:16px}.brand-icon{width:48px;height:48px;background:${accent};border-radius:12px;display:flex;align-items:center;justify-content:center;color:white;font-size:22px;font-weight:900}.brand-name{font-size:24px;font-weight:800;color:#0f172a}.brand-detail{font-size:11px;color:#64748b}.doc-badge{text-align:right}.doc-type{display:inline-block;padding:6px 20px;background:${accent};color:white;border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px}.doc-number{font-size:20px;font-weight:800;color:#0f172a;margin-top:8px}.doc-status{display:inline-block;padding:3px 12px;border-radius:999px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:6px;background:${sc.bg};color:${sc.color}}.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:28px}.info-card{padding:24px;border-radius:12px;border:1px solid #e2e8f0}.info-card.accent{background:linear-gradient(135deg,#eff6ff,#f0f9ff);border-color:#bfdbfe}.info-label{font-size:9px;text-transform:uppercase;letter-spacing:2px;color:${accent};font-weight:700;margin-bottom:10px}.info-name{font-weight:700;font-size:15px;color:#0f172a;margin-bottom:4px}.info-text{font-size:12px;color:#64748b;line-height:1.6}.meta-strip{display:flex;gap:0;margin-bottom:28px;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0}.meta-item{flex:1;padding:14px 20px;border-right:1px solid #e2e8f0;background:#fafbfc}.meta-item:last-child{border-right:none}.meta-item-label{font-size:9px;text-transform:uppercase;letter-spacing:2px;color:#94a3b8;font-weight:700}.meta-item-value{font-size:14px;font-weight:700;color:#0f172a;margin-top:2px}table{width:100%;border-collapse:collapse;margin-bottom:28px;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0}th{text-align:left;padding:14px 18px;font-size:9px;text-transform:uppercase;letter-spacing:2px;color:white;font-weight:700;background:${accent}}th.r{text-align:right}td{padding:16px 18px;font-size:13px;border-bottom:1px solid #f1f5f9}td.r{text-align:right;font-family:'SF Mono','Courier New',monospace;font-size:12px}td.b{font-weight:700}.desc-cell{color:#64748b;font-size:12px;padding:4px 18px 16px;border-bottom:1px solid #f1f5f9}.totals{display:flex;justify-content:flex-end;margin-bottom:24px}.totals-box{width:300px;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0}.t-row{display:flex;justify-content:space-between;padding:10px 20px;font-size:13px;color:#64748b;background:#fafbfc}.t-row .mono{font-family:'SF Mono','Courier New',monospace;font-size:12px}.t-total{display:flex;justify-content:space-between;padding:14px 20px;font-size:18px;font-weight:800;color:white;background:${accent}}.t-total .mono{font-family:'SF Mono','Courier New',monospace}.t-balance{display:flex;justify-content:space-between;padding:10px 20px;font-size:13px;color:#dc2626;font-weight:600;background:#fef2f2}.payments{margin-bottom:24px}.payments h3{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:${accent};font-weight:700;margin-bottom:12px}.pay-row{display:flex;justify-content:space-between;padding:10px 16px;background:#f0f9ff;border-radius:8px;margin-bottom:4px;font-size:12px;border:1px solid #bfdbfe}.footer{margin-top:auto;padding-top:20px;border-top:2px solid ${accent};text-align:center;font-size:10px;color:#94a3b8}@media print{body{margin:0;width:100%}}</style></head><body><div class="page">
 <div class="top-bar"></div><div class="content">
-<div class="header"><div class="brand"><div class="brand-icon">${d.company.name.charAt(0)}</div><div><div class="brand-name">${d.company.name}</div>${d.company.taxId?`<div class="brand-detail">NIF/CIF: ${d.company.taxId}</div>`:""}</div></div><div class="doc-badge"><div class="doc-type">${d.typeLabel}</div><div class="doc-number">${d.invoiceNumber}</div><div class="doc-status">${d.statusLabel}</div></div></div>
+<div class="header"><div class="brand"><div class="brand-icon">${d.company.name.charAt(0)}</div><div><div class="brand-name">${d.company.name}</div>${d.company.taxId?`<div class="brand-detail">NIF/CIF: ${d.company.taxId}</div>`:""}</div></div><div style="display:flex;gap:20px;align-items:flex-start"><div class="doc-badge"><div class="doc-type">${d.typeLabel}</div><div class="doc-number">${d.invoiceNumber}</div><div class="doc-status">${d.statusLabel}</div></div>${renderQr(d)}</div></div>
 <div class="grid-2"><div class="info-card accent"><div class="info-label">Emisor</div><div class="info-name">${d.company.name}</div><div class="info-text">${d.company.taxId?`NIF/CIF: ${d.company.taxId}<br>`:""}${d.company.address?`${d.company.address}<br>`:""}${d.company.postalCode||d.company.city?`${d.company.postalCode||""} ${d.company.city||""}<br>`:""}${d.company.email?d.company.email:""}${d.company.phone?` - ${d.company.phone}`:""}</div></div><div class="info-card"><div class="info-label">Destinatario</div><div class="info-name">${d.client.name}</div><div class="info-text">${d.client.taxId?`NIF/CIF: ${d.client.taxId}<br>`:""}${d.client.address?`${d.client.address}<br>`:""}${d.client.postalCode||d.client.city?`${d.client.postalCode||""} ${d.client.city||""}<br>`:""}${d.client.email?d.client.email:""}${d.client.phone?` - ${d.client.phone}`:""}</div></div></div>
-<div class="meta-strip"><div class="meta-item"><div class="meta-item-label">N. Documento</div><div class="meta-item-value">${d.invoiceNumber}</div></div><div class="meta-item"><div class="meta-item-label">Fecha emision</div><div class="meta-item-value">${d.issueDate}</div></div>${d.operationDate?`<div class="meta-item"><div class="meta-item-label">Fecha operacion</div><div class="meta-item-value">${d.operationDate}</div></div>`:""}</div>
-<table><thead><tr><th>Descripcion del servicio</th><th class="r" style="width:80px">Cant.</th><th class="r" style="width:120px">Precio ud.</th><th class="r" style="width:120px">Importe</th></tr></thead><tbody>${renderLinesRows(d)}</tbody></table>
+<div class="meta-strip"><div class="meta-item"><div class="meta-item-label">Fecha emision</div><div class="meta-item-value">${d.issueDate}</div></div>${d.operationDate?`<div class="meta-item"><div class="meta-item-label">Fecha operacion</div><div class="meta-item-value">${d.operationDate}</div></div>`:""}</div>
+<table><thead><tr><th>Descripción</th><th class="r" style="width:80px">Cant.</th><th class="r" style="width:120px">Precio ud.</th><th class="r" style="width:120px">Importe</th></tr></thead><tbody>${renderLinesRows(d)}</tbody></table>
 ${renderSpecialMentions(d)}
-${d.payments&&d.payments.length>0?`<div class="payments"><h3>Pagos registrados</h3>${d.payments.map(p=>`<div class="pay-row"><span>${p.date} - ${p.method}</span><span style="font-weight:600">EUR ${fmtMoney(p.amount)}</span></div>`).join("")}</div>`:""}
-<div class="totals"><div class="totals-box"><div class="t-row"><span>Base imponible</span><span class="mono">EUR ${fmtMoney(d.amountNet)}</span></div><div class="t-row"><span>IVA (${d.vatPercentage}%)</span><span class="mono">EUR ${fmtMoney(d.amountVat)}</span></div>${hasIrpf?`<div class="t-row"><span>IRPF (-${d.irpfPercentage}%)</span><span class="mono">-EUR ${fmtMoney(d.irpfAmount||0)}</span></div>`:""}<div class="t-total"><span>Total</span><span class="mono">EUR ${fmtMoney(d.amountTotal)}</span></div>${totalPaid>0?`<div class="t-row" style="color:#16a34a;font-weight:600;background:#f0fdf4"><span>Pagado</span><span class="mono">EUR ${fmtMoney(totalPaid)}</span></div><div class="t-balance"><span>Saldo pendiente</span><span class="mono">EUR ${fmtMoney(balance)}</span></div>`:""}</div></div>
-<div class="footer">${d.company.name}${d.company.taxId?` - NIF/CIF: ${d.company.taxId}`:""}<br>Documento generado automaticamente</div>
+${d.payments&&d.payments.length>0?`<div class="payments"><h3>Cobros registrados</h3>${d.payments.map(p=>`<div class="pay-row"><span>${p.date} - ${p.method}</span><span style="font-weight:600">${fmtMoney(p.amount)} €</span></div>`).join("")}</div>`:""}
+<div class="totals"><div class="totals-box"><div class="t-row"><span>Base imponible</span><span class="mono">${fmtMoney(d.amountNet)} €</span></div><div class="t-row"><span>IVA (${d.vatPercentage}%)</span><span class="mono">${fmtMoney(d.amountVat)} €</span></div>${hasIrpf?`<div class="t-row"><span>IRPF (-${d.irpfPercentage}%)</span><span class="mono">-${fmtMoney(d.irpfAmount||0)} €</span></div>`:""}<div class="t-total"><span>Total</span><span class="mono">${fmtMoney(d.amountTotal)} €</span></div>${totalPaid>0?`<div class="t-row" style="color:#16a34a;font-weight:600;background:#f0fdf4"><span>Pagado</span><span class="mono">${fmtMoney(totalPaid)} €</span></div><div class="t-balance"><span>Saldo pendiente</span><span class="mono">${fmtMoney(balance)} €</span></div>`:""}</div></div>
+<div class="footer">${d.company.name}${d.company.taxId?` - NIF/CIF: ${d.company.taxId}`:""}<br>Documento generado automáticamente</div>
 </div></div></body></html>`;
 }
 
@@ -484,15 +482,15 @@ function minimalTemplate(d: InvoiceData): string {
   const hasIrpf = (d.irpfPercentage || 0) > 0;
   return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>${d.typeLabel} ${d.invoiceNumber}</title>
 <style>@page{size:A4;margin:0}*{margin:0;padding:0;box-sizing:border-box}body{font-family:Georgia,'Times New Roman',serif;color:#111;font-size:13px;line-height:1.7;width:210mm;min-height:297mm;margin:0 auto}.page{padding:64px 64px 48px;min-height:297mm;display:flex;flex-direction:column}.header{margin-bottom:56px}.doc-type{font-size:32px;font-weight:400;color:#111;letter-spacing:-1px;text-transform:uppercase}.doc-number{font-size:14px;color:#888;margin-top:4px;font-family:'Helvetica Neue',Helvetica,sans-serif}.rule{height:1px;background:#ddd;margin:32px 0}.rule-thick{height:2px;background:#111;margin:32px 0}.parties{display:flex;gap:80px;margin-bottom:8px}.party{flex:1}.party-label{font-size:11px;text-transform:uppercase;letter-spacing:3px;color:#aaa;font-family:'Helvetica Neue',Helvetica,sans-serif;font-weight:400;margin-bottom:12px}.party-name{font-size:16px;font-weight:700;color:#111;margin-bottom:4px}.party-info{font-size:12px;color:#666;line-height:1.7}table{width:100%;border-collapse:collapse}th{text-align:left;padding:12px 0;font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#aaa;font-weight:400;border-bottom:1px solid #ddd;font-family:'Helvetica Neue',Helvetica,sans-serif}th.r{text-align:right}td{padding:16px 0;font-size:14px;border-bottom:1px solid #eee}td.r{text-align:right;font-family:'SF Mono','Courier New',monospace;font-size:13px}td.b{font-weight:700}.desc-cell{color:#888;font-size:12px;padding:4px 0 16px;border-bottom:1px solid #eee;font-style:italic}.totals{display:flex;justify-content:flex-end;margin-bottom:24px}.totals-inner{width:260px}.t-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:#888}.t-row .mono{font-family:'SF Mono','Courier New',monospace;font-size:12px}.t-divider{height:0}.t-total{display:flex;justify-content:space-between;padding:12px 0;font-size:24px;font-weight:700;color:#111;border-top:2px solid #111;margin-top:8px}.t-total .mono{font-family:'SF Mono','Courier New',monospace}.t-paid{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:#16a34a;font-weight:600}.t-balance{display:flex;justify-content:space-between;padding:6px 0;font-size:14px;color:#dc2626;font-weight:700}.payments{margin-bottom:8px}.payments h3{font-size:11px;text-transform:uppercase;letter-spacing:3px;color:#aaa;font-family:'Helvetica Neue',Helvetica,sans-serif;font-weight:400;margin-bottom:12px}.pay-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f5f5f5;font-size:12px;color:#666}.footer{margin-top:auto;text-align:center;font-size:10px;color:#bbb;font-family:'Helvetica Neue',Helvetica,sans-serif;padding-top:24px;border-top:1px solid #eee}@media print{body{margin:0;width:100%}}</style></head><body><div class="page">
-<div class="header"><div class="doc-type">${d.typeLabel}</div><div class="doc-number">${d.invoiceNumber} - ${d.issueDate}${d.operationDate?` - Op: ${d.operationDate}`:""}</div></div>
+<div class="header" style="display:flex;justify-content:space-between;align-items:flex-start"><div><div class="doc-type">${d.typeLabel}</div><div class="doc-number">${d.invoiceNumber} · ${d.issueDate}${d.operationDate?` · Op: ${d.operationDate}`:""}</div></div>${renderQr(d)}</div>
 <div class="parties"><div class="party"><div class="party-label">De</div><div class="party-name">${d.company.name}</div><div class="party-info">${d.company.taxId?`NIF/CIF: ${d.company.taxId}<br>`:""}${d.company.address?`${d.company.address}<br>`:""}${d.company.postalCode||d.company.city?`${d.company.postalCode||""} ${d.company.city||""}<br>`:""}${d.company.email?d.company.email:""}${d.company.phone?` - ${d.company.phone}`:""}</div></div><div class="party"><div class="party-label">Para</div><div class="party-name">${d.client.name}</div><div class="party-info">${d.client.taxId?`NIF/CIF: ${d.client.taxId}<br>`:""}${d.client.address?`${d.client.address}<br>`:""}${d.client.postalCode||d.client.city?`${d.client.postalCode||""} ${d.client.city||""}<br>`:""}${d.client.email?d.client.email:""}${d.client.phone?` - ${d.client.phone}`:""}</div></div></div>
 <div class="rule-thick"></div>
 <table><thead><tr><th>Descripcion</th><th class="r" style="width:70px">Cant.</th><th class="r" style="width:110px">Precio ud.</th><th class="r" style="width:110px">Importe</th></tr></thead><tbody>${renderLinesRows(d)}</tbody></table>
 <div class="rule"></div>
 ${d.specialMentions?`<div style="margin-bottom:20px;font-size:11px;color:#666;font-style:italic"><strong>Nota:</strong> ${d.specialMentions}</div>`:""}
-${d.payments&&d.payments.length>0?`<div class="payments"><h3>Pagos</h3>${d.payments.map(p=>`<div class="pay-row"><span>${p.date} - ${p.method}</span><span style="font-weight:600">EUR ${fmtMoney(p.amount)}</span></div>`).join("")}</div><div class="rule"></div>`:""}
-<div class="totals"><div class="totals-inner"><div class="t-row"><span>Base imponible</span><span class="mono">EUR ${fmtMoney(d.amountNet)}</span></div><div class="t-row"><span>IVA (${d.vatPercentage}%)</span><span class="mono">EUR ${fmtMoney(d.amountVat)}</span></div>${hasIrpf?`<div class="t-row"><span>IRPF (-${d.irpfPercentage}%)</span><span class="mono">-EUR ${fmtMoney(d.irpfAmount||0)}</span></div>`:""}<div class="t-total"><span>Total</span><span class="mono">EUR ${fmtMoney(d.amountTotal)}</span></div>${totalPaid>0?`<div class="t-paid"><span>Pagado</span><span class="mono">EUR ${fmtMoney(totalPaid)}</span></div><div class="t-balance"><span>Pendiente</span><span class="mono">EUR ${fmtMoney(balance)}</span></div>`:""}</div></div>
-<div class="footer">${d.company.name}${d.company.taxId?` - ${d.company.taxId}`:""} - Documento generado automaticamente</div>
+${d.payments&&d.payments.length>0?`<div class="payments"><h3>Pagos</h3>${d.payments.map(p=>`<div class="pay-row"><span>${p.date} - ${p.method}</span><span style="font-weight:600">${fmtMoney(p.amount)} €</span></div>`).join("")}</div><div class="rule"></div>`:""}
+<div class="totals"><div class="totals-inner"><div class="t-row"><span>Base imponible</span><span class="mono">${fmtMoney(d.amountNet)} €</span></div><div class="t-row"><span>IVA (${d.vatPercentage}%)</span><span class="mono">${fmtMoney(d.amountVat)} €</span></div>${hasIrpf?`<div class="t-row"><span>IRPF (-${d.irpfPercentage}%)</span><span class="mono">-${fmtMoney(d.irpfAmount||0)} €</span></div>`:""}<div class="t-total"><span>Total</span><span class="mono">${fmtMoney(d.amountTotal)} €</span></div>${totalPaid>0?`<div class="t-paid"><span>Pagado</span><span class="mono">${fmtMoney(totalPaid)} €</span></div><div class="t-balance"><span>Pendiente</span><span class="mono">${fmtMoney(balance)} €</span></div>`:""}</div></div>
+<div class="footer">${d.company.name}${d.company.taxId?` - ${d.company.taxId}`:""} - Documento generado automáticamente</div>
 </div></body></html>`;
 }
 
@@ -620,6 +618,21 @@ Deno.serve(async (req) => {
     }
 
     // Default: return HTML for preview
+    if (data.typeLabel === "FACTURA") {
+      const qrUrl = buildVerifactuQRUrl({
+        nif: data.company.taxId || "",
+        numserie: data.invoiceNumber,
+        fecha: (data as any)._issueDateRaw || data.issueDate,
+        importe: data.amountTotal,
+      });
+      if (qrUrl) {
+        try {
+          data.qrDataUrl = await QRCode.toDataURL(qrUrl, { errorCorrectionLevel: "M", margin: 0, width: 320 });
+        } catch (err) {
+          console.error("[VERI*FACTU] Error generando QR para HTML:", err);
+        }
+      }
+    }
     const html = renderHtmlTemplate(template, data);
     return new Response(html, {
       headers: { ...corsHeaders, "Content-Type": "text/html; charset=utf-8" },
