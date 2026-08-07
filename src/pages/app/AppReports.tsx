@@ -4,7 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { useModuleTab } from "@/lib/moduleTabs";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -676,6 +677,7 @@ const InvoiceSummaryReport = ({ accountId }: { accountId: string }) => {
 
 // ─── MAIN REPORTS PAGE ──────────────────────────────────
 const AppReports = () => {
+  const [tab, setTab] = useModuleTab("pl");
   const { accountId, role } = useAuth();
   const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
   const effectiveAccountId = selectedAccount || accountId;
@@ -699,24 +701,7 @@ const AppReports = () => {
         )}
       </div>
 
-      <Tabs defaultValue="pl" className="space-y-4">
-        <TabsList className="w-full sm:w-auto">
-          <TabsTrigger value="pl" className="gap-1">
-            <TrendingUp className="h-4 w-4" /> PyG
-          </TabsTrigger>
-          <TabsTrigger value="invoices" className="gap-1">
-            <FileText className="h-4 w-4" /> Facturación
-          </TabsTrigger>
-          <TabsTrigger value="attendance" className="gap-1">
-            <Clock className="h-4 w-4" /> Asistencia
-          </TabsTrigger>
-          <TabsTrigger value="inventory" className="gap-1">
-            <Package className="h-4 w-4" /> Inventario
-          </TabsTrigger>
-          <TabsTrigger value="tasks" className="gap-1">
-            <ListTodo className="h-4 w-4" /> Tareas
-          </TabsTrigger>
-        </TabsList>
+      <Tabs value={tab} onValueChange={setTab} className="space-y-4">
 
         <TabsContent value="pl">
           <PLReport accountId={effectiveAccountId} />

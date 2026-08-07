@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { useModuleTab } from "@/lib/moduleTabs";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -134,7 +135,7 @@ const AppInvoices = () => {
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
-  const [activeTab, setActiveTab] = useState("invoices");
+  const [activeTab, setActiveTab] = useModuleTab("invoices");
   const [invoiceViewMode, setInvoiceViewMode] = useState<"list" | "kanban" | "folders">("list");
 
   // Sync URL params on mount
@@ -143,7 +144,14 @@ const AppInvoices = () => {
     const urlType = searchParams.get("type");
     if (urlStatus) setStatusFilter(urlStatus);
     if (urlType) setTypeFilter(urlType);
-    if (urlStatus || urlType) setSearchParams({}, { replace: true });
+    if (urlStatus || urlType) {
+      // Se limpian solo status y type: `tab` también viaja en la URL y
+      // borrarlo entero devolvía siempre a la primera pestaña.
+      const next = new URLSearchParams(searchParams);
+      next.delete("status");
+      next.delete("type");
+      setSearchParams(next, { replace: true });
+    }
   }, []);
 
   // Delete state
@@ -598,47 +606,34 @@ const AppInvoices = () => {
     </div>
   );
 
-  if (detailInvoice) {
-    return (
-      <InvoiceDetailView
-        invoice={detailInvoice}
-        onBack={() => setDetailInvoice(null)}
-        onEdit={() => setEditInvoice(detailInvoice)}
-        onExport={() => handleExportPdf(detailInvoice.id)}
-        onSendEmail={detailInvoice.business_clients?.email ? () => handleSendEmail(detailInvoice.id) : undefined}
-        onMarkPaid={() => handleMarkPaid(detailInvoice)}
-      />
-    );
-  }
+  const detail = detailInvoice ? (
+    <InvoiceDetailView
+      invoice={detailInvoice}
+      onBack={() => setDetailInvoice(null)}
+      onEdit={() => setEditInvoice(detailInvoice)}
+      onExport={() => handleExportPdf(detailInvoice.id)}
+      onSendEmail={detailInvoice.business_clients?.email ? () => handleSendEmail(detailInvoice.id) : undefined}
+      onMarkPaid={() => handleMarkPaid(detailInvoice)}
+    />
+  ) : null;
 
   return (
     <div className="space-y-4">
+      {/* El detalle reemplaza al listado, pero los diálogos del final siguen
+          montados: si no, "Editar" desde el detalle no abría nada y el
+          diálogo aparecía de golpe al volver a la lista. */}
+      <div className={detail ? "hidden" : undefined}>
       <PageHeader
         title="Facturación"
         description="Gestiona facturas, presupuestos, gastos y cobros"
+        actions={
+          <Button onClick={() => setDialogOpen(true)}>
+            <Plus /> {activeTab === "quotes" ? "Nuevo presupuesto" : "Nuevo"}
+          </Button>
+        }
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <TabsList className="w-full sm:w-auto">
-            <TabsTrigger value="invoices">Facturas</TabsTrigger>
-            <TabsTrigger value="quotes">
-              <ClipboardList className="h-4 w-4 mr-1" /> Presupuestos
-            </TabsTrigger>
-            <TabsTrigger value="recurring">
-              <RefreshCw className="h-4 w-4 mr-1" /> Recurrentes
-            </TabsTrigger>
-            <TabsTrigger value="reconciliation">
-              <Landmark className="h-4 w-4 mr-1" /> Conciliación
-            </TabsTrigger>
-            <TabsTrigger value="import">
-              <Upload className="h-4 w-4 mr-1" /> Importar
-            </TabsTrigger>
-          </TabsList>
-          <Button onClick={() => setDialogOpen(true)} className="w-full sm:w-auto">
-            <Plus className="h-4 w-4 mr-2" /> {activeTab === "quotes" ? "Nuevo presupuesto" : "Nuevo"}
-          </Button>
-        </div>
 
         <TabsContent value="invoices" className="space-y-4">
 
@@ -1134,6 +1129,9 @@ const AppInvoices = () => {
           <InvoiceImportTab />
         </TabsContent>
       </Tabs>
+      </div>
+
+      {detail}
 
       <CreateInvoiceDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setCreateDefaultType(undefined); }} defaultType={createDefaultType || (activeTab === "quotes" ? "QUOTE" : undefined)} />
       <InvoicePreviewDialog

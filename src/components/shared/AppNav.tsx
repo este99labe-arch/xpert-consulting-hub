@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   LayoutDashboard, Users, FileText, Calculator, UserCog, Clock, Settings,
   Package, ArrowRightLeft, BarChart3, CalendarClock, Globe, MessageCircle,
@@ -6,6 +6,7 @@ import {
 import { cn } from "@/lib/utils";
 import MyTasksBadge from "@/components/tasks/MyTasksBadge";
 import xpertLogo from "@/assets/brand/iso-white.png";
+import { MODULE_TABS } from "@/lib/moduleTabs";
 
 export const moduleIcons: Record<string, any> = {
   DASHBOARD: LayoutDashboard,
@@ -107,6 +108,27 @@ const NavItem = ({
   </button>
 );
 
+const TabItem = ({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    aria-current={active ? "page" : undefined}
+    className={cn(
+      "flex h-[27px] w-full items-center gap-2 rounded-control py-0 pl-[30px] pr-2.5 text-left text-[11.5px] transition-colors duration-150",
+      "focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/[.16]",
+      active
+        ? "font-semibold text-foreground"
+        : "font-medium text-subtle hover:text-foreground",
+    )}
+  >
+    <span
+      className={cn("h-1 w-1 shrink-0 rounded-full", active ? "bg-accent-foreground" : "bg-faint")}
+      aria-hidden
+    />
+    <span className="flex-1 truncate">{label}</span>
+  </button>
+);
+
 /**
  * Panel de navegación (194 px). Se comparte entre el chrome de escritorio y
  * el cajón móvil para que no haya dos listas que mantener.
@@ -124,8 +146,18 @@ const AppNav = ({
   const location = useLocation();
   const navigate = useNavigate();
 
+  const [searchParams] = useSearchParams();
+  const currentTab = searchParams.get("tab");
+
   const go = (path: string) => {
     navigate(path);
+    onNavigate?.();
+  };
+
+  /** La primera pestaña va sin `?tab=` para que la URL limpia sea la de por
+   *  defecto y no haya dos direcciones para la misma vista. */
+  const goTab = (path: string, key: string, isFirst: boolean) => {
+    navigate(isFirst ? path : `${path}?tab=${key}`);
     onNavigate?.();
   };
 
@@ -150,15 +182,33 @@ const AppNav = ({
             <div className="flex flex-col gap-px">
               {group.items.map((mod) => {
                 const path = modulePaths[mod.code] || "/app/dashboard";
+                const isActive = location.pathname === path;
+                const tabs = MODULE_TABS[mod.code];
                 return (
-                  <NavItem
-                    key={mod.code}
-                    active={location.pathname === path}
-                    onClick={() => go(path)}
-                    icon={moduleIcons[mod.code] || LayoutDashboard}
-                    label={mod.name}
-                    trailing={mod.code === "TASKS" ? <MyTasksBadge /> : undefined}
-                  />
+                  <div key={mod.code}>
+                    <NavItem
+                      active={isActive}
+                      onClick={() => go(path)}
+                      icon={moduleIcons[mod.code] || LayoutDashboard}
+                      label={mod.name}
+                      trailing={mod.code === "TASKS" ? <MyTasksBadge /> : undefined}
+                    />
+                    {/* Las pestañas solo se despliegan en el módulo abierto:
+                        con cinco módulos con pestañas, mostrarlas todas a la
+                        vez convertiría el panel en una lista de treinta. */}
+                    {tabs && isActive && (
+                      <div className="flex flex-col gap-px pb-1 pt-px">
+                        {tabs.map((t, i) => (
+                          <TabItem
+                            key={t.key}
+                            active={(currentTab || tabs[0].key) === t.key}
+                            onClick={() => goTab(path, t.key, i === 0)}
+                            label={t.label}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
