@@ -23,7 +23,7 @@ import {
 import {
   Loader2, KeyRound, UserPlus, AlertCircle, Settings, Users, CalendarDays,
   Clock, ShieldCheck, Save, User, Lock, Unlock, Check, X, Mail, Activity, Key, Webhook, MessageSquare, ShieldAlert, FileText, Calculator,
-  Building2, Layers,
+  Building2, Layers, Palette,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { roleLabel } from "@/lib/roles";
@@ -43,6 +43,7 @@ import VerticalsServicesTab from "@/components/settings/VerticalsServicesTab";
 
 import CompanyTab from "@/components/settings/CompanyTab";
 import ProfileTab from "@/components/settings/ProfileTab";
+import AppearanceTab from "@/components/settings/AppearanceTab";
 import ScheduleTab from "@/components/settings/ScheduleTab";
 import SecurityTab from "@/components/settings/SecurityTab";
 import UsersTab from "@/components/settings/UsersTab";
@@ -78,6 +79,7 @@ const SECTIONS: SettingSection[] = [
   { key: "schedule", group: "General", title: "Horario y vacaciones", desc: "Jornada laboral y días de vacaciones del equipo.", icon: Clock },
   { key: "profile",  group: "Tu cuenta", title: "Mi perfil", desc: "Tus datos personales y de contacto.", icon: User },
   { key: "security", group: "Tu cuenta", title: "Seguridad", desc: "Contraseña y acceso a tu cuenta.", icon: Lock },
+  { key: "appearance", group: "Tu cuenta", title: "Apariencia", desc: "Elige entre el modo oscuro y el claro.", icon: Palette },
   { key: "users",       group: "Equipo", title: "Usuarios", desc: "Gestiona usuarios, roles y solicitudes.", icon: Users, managerOnly: true, badge: true },
   { key: "permissions", group: "Equipo", title: "Permisos de módulos", desc: "Qué módulos puede ver cada empleado.", icon: ShieldCheck, managerOnly: true },
   { key: "taskboards",  group: "Equipo", title: "Tableros de tareas", desc: "Kanban, prefijos de referencia y accesos.", icon: CalendarDays, managerOnly: true },
@@ -200,6 +202,10 @@ const AppSettings = () => {
 
         <TabsContent value="schedule">
           <ScheduleTab accountId={accountId} isManager={isManager} />
+        </TabsContent>
+
+        <TabsContent value="appearance">
+          <AppearanceTab />
         </TabsContent>
 
         <TabsContent value="security">

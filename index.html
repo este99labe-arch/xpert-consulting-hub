@@ -1,9 +1,20 @@
 <!doctype html>
-<!-- Midnight es el tema de la aplicación: la clase "dark" va fija en el html,
-     no hay conmutador. El bloque :root (claro) se conserva por si algún día
-     vuelve a hacer falta, pero hoy no lo usa nadie. -->
+<!-- La clase "dark" se pone aquí como valor por defecto y el script de abajo
+     la corrige antes del primer pintado según la preferencia guardada. -->
 <html lang="es" class="dark">
   <head>
+    <!-- Tema: se aplica ANTES de que React monte. Si se dejara al proveedor,
+         quien tiene el modo claro vería un fogonazo oscuro en cada carga. -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("xpert-theme");
+          var dark = t !== "light";
+          document.documentElement.classList.toggle("dark", dark);
+          document.documentElement.style.colorScheme = dark ? "dark" : "light";
+        } catch (e) { /* almacenamiento bloqueado: se queda el oscuro por defecto */ }
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="/favicon.png" type="image/png" />

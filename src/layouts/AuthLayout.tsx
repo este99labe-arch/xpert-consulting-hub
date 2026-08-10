@@ -1,7 +1,6 @@
 import { ReactNode } from "react";
 import { FileText, Calculator, Users, ShieldCheck } from "lucide-react";
-import logoWhite from "@/assets/brand/logo-horizontal-white.png";
-import isoWhite from "@/assets/brand/iso-white.png";
+import BrandLogo, { useBrandLogo } from "@/components/shared/BrandLogo";
 
 const FEATURES = [
   { icon: FileText, title: "Facturación y VERI*FACTU", desc: "Emite, cobra y registra ante la AEAT." },
@@ -13,7 +12,9 @@ const FEATURES = [
  * Panel de marca. Solo a partir de `lg`: por debajo, el formulario ocupa todo
  * el ancho y la marca se reduce al logotipo sobre él.
  */
-const BrandPanel = () => (
+const BrandPanel = () => {
+  const { iso } = useBrandLogo();
+  return (
   <aside className="relative hidden overflow-hidden bg-sidebar px-[52px] py-11 lg:flex lg:justify-center">
     {/* Halo: el único degradado que admite el sistema, y es monocromo azul
         sobre negro, no un degradado de marca. */}
@@ -26,7 +27,7 @@ const BrandPanel = () => (
       }}
     />
     <img
-      src={isoWhite}
+      src={iso}
       alt=""
       aria-hidden
       className="pointer-events-none absolute -bottom-[120px] -right-[140px] w-[520px] select-none opacity-[.035]"
@@ -36,7 +37,7 @@ const BrandPanel = () => (
         pantalla ancha, dejarlo pegado al borde izquierdo lo alejaría
         demasiado del formulario. */}
     <div className="relative flex w-full max-w-[520px] flex-col justify-between">
-    <img src={logoWhite} alt="XpertConsulting" className="h-[30px] w-auto self-start" />
+    <BrandLogo className="h-[30px] self-start" />
 
     <div className="flex max-w-[430px] flex-col gap-[34px]">
       <div className="flex flex-col gap-3">
@@ -78,7 +79,8 @@ const BrandPanel = () => (
     </div>
     </div>
   </aside>
-);
+  );
+};
 
 /**
  * Lienzo común de las pantallas de acceso.
@@ -93,7 +95,7 @@ const AuthLayout = ({ children }: { children: ReactNode }) => (
       <BrandPanel />
       <main className="flex flex-col justify-center px-6 py-11 sm:px-10 lg:px-14">
         <div className="mx-auto w-full max-w-[372px]">
-          <img src={logoWhite} alt="XpertConsulting" className="mb-9 h-[26px] w-auto lg:hidden" />
+          <BrandLogo className="mb-9 h-[26px] lg:hidden" />
           {children}
         </div>
       </main>
