@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import MyTasksBadge from "@/components/tasks/MyTasksBadge";
-import xpertLogo from "@/assets/brand/iso-white.png";
+import BrandLogo from "@/components/shared/BrandLogo";
 import { MODULE_TABS } from "@/lib/moduleTabs";
 
 export const moduleIcons: Record<string, any> = {
@@ -64,7 +64,7 @@ const AccountMark = ({
   <div className="flex items-center gap-2.5 px-2.5">
     {isXpertAccount ? (
       <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-control bg-secondary p-1">
-        <img src={xpertLogo} alt="" aria-hidden className="h-full w-full object-contain" />
+        <BrandLogo variant="iso" decorative className="h-full w-full" />
       </div>
     ) : (
       <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-control bg-primary text-[10px] font-bold text-primary-foreground">

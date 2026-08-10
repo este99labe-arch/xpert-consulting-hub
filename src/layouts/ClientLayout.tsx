@@ -7,7 +7,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { LogOut, Settings, HelpCircle, ChevronDown, Menu, Search } from "lucide-react";
+import { LogOut, Settings, HelpCircle, ChevronDown, Menu, Search, Moon, Sun } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 import ReminderNotifier from "@/components/reminders/ReminderNotifier";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +27,7 @@ const ClientLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { theme, toggleTheme } = useTheme();
   const [showTutorial, setShowTutorial] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
@@ -159,6 +161,10 @@ const ClientLayout = () => {
                 <DropdownMenuItem onClick={() => setShowTutorial(true)}>
                   <HelpCircle className="mr-2 h-4 w-4" />
                   Ver tutorial
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={toggleTheme}>
+                  {theme === "dark" ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
+                  {theme === "dark" ? "Modo claro" : "Modo oscuro"}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={signOut} className="text-destructive-text focus:text-destructive-text">

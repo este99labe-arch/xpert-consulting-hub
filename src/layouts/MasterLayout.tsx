@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { LayoutDashboard, Users, Settings, LogOut, ArrowRightLeft, BookOpen, Menu } from "lucide-react";
-import xpertLogo from "@/assets/brand/iso-white.png";
+import BrandLogo from "@/components/shared/BrandLogo";
 import { Button } from "@/components/ui/button";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import HealthCheck from "@/components/shared/HealthCheck";
@@ -95,7 +95,7 @@ const MasterLayout = () => {
       {/* Rail de 56 px */}
       <aside className="hidden w-14 shrink-0 flex-col items-center gap-1 border-r border-border-subtle bg-sidebar-background py-3 md:flex">
         <div className="mb-2.5 flex h-[30px] w-[30px] items-center justify-center rounded-[9px] bg-secondary p-1">
-          <img src={xpertLogo} alt="XpertConsulting" className="h-full w-full object-contain" />
+          <BrandLogo variant="iso" className="h-full w-full" />
         </div>
 
         {navItems.map((item) => {
