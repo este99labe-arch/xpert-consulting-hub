@@ -59,8 +59,11 @@ export interface NavModule {
  *  al retirarlo se recoloca aquí para no perder la referencia de en qué
  *  cuenta estás, que en multi-cuenta importa. */
 const AccountMark = ({
-  companyName, companyInitials, isXpertAccount,
-}: { companyName: string; companyInitials: string; isXpertAccount: boolean }) => (
+  companyName, companyInitials, isXpertAccount, brandName, brandColor,
+}: {
+  companyName: string; companyInitials: string; isXpertAccount: boolean;
+  brandName?: string; brandColor?: string;
+}) => (
   <div className="flex items-center gap-2.5 px-2.5">
     {isXpertAccount ? (
       <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-control bg-secondary p-1">
@@ -71,7 +74,23 @@ const AccountMark = ({
         {companyInitials}
       </div>
     )}
-    <span className="truncate text-[12.5px] font-semibold text-foreground">{companyName}</span>
+    <div className="min-w-0">
+      <span className="block truncate text-[12.5px] font-semibold text-foreground">
+        {brandName ?? companyName}
+      </span>
+      {/* Dentro de una marca, la cuenta pasa a segunda línea: dice dónde
+          estás sin perder de vista a quién pertenece. */}
+      {brandName && (
+        <span className="flex items-center gap-1.5 truncate text-[10px] text-muted-foreground">
+          <span
+            className="h-1.5 w-1.5 shrink-0 rounded-full"
+            style={{ background: brandColor || "hsl(var(--faint))" }}
+            aria-hidden
+          />
+          {companyName}
+        </span>
+      )}
+    </div>
   </div>
 );
 
@@ -135,6 +154,7 @@ const TabItem = ({ active, onClick, label }: { active: boolean; onClick: () => v
  */
 const AppNav = ({
   modules, companyName, companyInitials, isXpertAccount, isMaster, onNavigate,
+  brandName, brandColor,
 }: {
   modules: NavModule[];
   companyName: string;
@@ -142,6 +162,8 @@ const AppNav = ({
   isXpertAccount: boolean;
   isMaster: boolean;
   onNavigate?: () => void;
+  brandName?: string;
+  brandColor?: string;
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -173,7 +195,13 @@ const AppNav = ({
 
   return (
     <nav className="flex h-full flex-col px-3 py-3.5">
-      <AccountMark companyName={companyName} companyInitials={companyInitials} isXpertAccount={isXpertAccount} />
+      <AccountMark
+        companyName={companyName}
+        companyInitials={companyInitials}
+        isXpertAccount={isXpertAccount}
+        brandName={brandName}
+        brandColor={brandColor}
+      />
 
       <div className="mt-1 flex-1 overflow-y-auto scrollbar-hide">
         {grouped.map((group) => (
