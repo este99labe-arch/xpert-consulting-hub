@@ -41,6 +41,7 @@ import EmployeeModulesTab from "@/components/settings/EmployeeModulesTab";
 import TaskBoardsTab from "@/components/settings/TaskBoardsTab";
 import VerticalsServicesTab from "@/components/settings/VerticalsServicesTab";
 import BrandsTab from "@/components/settings/BrandsTab";
+import BrandAccessTab from "@/components/settings/BrandAccessTab";
 
 import CompanyTab from "@/components/settings/CompanyTab";
 import ProfileTab from "@/components/settings/ProfileTab";
@@ -83,6 +84,7 @@ const SECTIONS: SettingSection[] = [
   { key: "appearance", group: "Tu cuenta", title: "Apariencia", desc: "Elige entre el modo oscuro y el claro.", icon: Palette },
   { key: "users",       group: "Equipo", title: "Usuarios", desc: "Gestiona usuarios, roles y solicitudes.", icon: Users, managerOnly: true, badge: true },
   { key: "permissions", group: "Equipo", title: "Permisos de módulos", desc: "Qué módulos puede ver cada empleado.", icon: ShieldCheck, managerOnly: true },
+  { key: "brandaccess", group: "Equipo", title: "Acceso por marca", desc: "Departamentos y personas asignados a cada marca.", icon: Building2, managerOnly: true },
   { key: "taskboards",  group: "Equipo", title: "Tableros de tareas", desc: "Kanban, prefijos de referencia y accesos.", icon: CalendarDays, managerOnly: true },
   { key: "brands", group: "Comercial", title: "Marcas", desc: "Identidades con las que facturas y los módulos de cada una.", icon: Tag, managerOnly: true },
   { key: "verticals", group: "Comercial", title: "Líneas de negocio", desc: "Verticales y servicios que ofreces a tus clientes.", icon: Layers, managerOnly: true },
@@ -217,6 +219,11 @@ const AppSettings = () => {
         {isManager && (
           <TabsContent value="users">
             <UsersTab userId={user.id} accountId={accountId} />
+          </TabsContent>
+        )}
+        {isManager && (
+          <TabsContent value="brandaccess">
+            <BrandAccessTab accountId={accountId} isManager={isManager} />
           </TabsContent>
         )}
         {isManager && (
