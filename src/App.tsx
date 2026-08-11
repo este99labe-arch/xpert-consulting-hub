@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { BrandProvider } from "@/contexts/BrandContext";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -50,6 +51,7 @@ const App = () => (
       <Toaster />
       <BrowserRouter>
         <AuthProvider>
+          <BrandProvider>
           <CookieConsent />
           <Suspense fallback={<RouteFallback />}>
           <Routes>
@@ -101,6 +103,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
           </Suspense>
+          </BrandProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

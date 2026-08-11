@@ -21,6 +21,8 @@ import MyTasksBadge from "@/components/tasks/MyTasksBadge";
 import { SupportAccountSwitcher, SupportSessionBanner } from "@/components/shared/SupportSession";
 import AccountSwitcher from "@/components/shared/AccountSwitcher";
 import AppNav, { type NavModule } from "@/components/shared/AppNav";
+import BrandSwitcher from "@/components/shared/BrandSwitcher";
+import { useBrand } from "@/contexts/BrandContext";
 
 const ClientLayout = () => {
   const { signOut, user, accountId, role, supportSession } = useAuth();
@@ -28,6 +30,7 @@ const ClientLayout = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { theme, toggleTheme } = useTheme();
+  const { activeBrand, activeBrandId } = useBrand();
   const [showTutorial, setShowTutorial] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
@@ -49,7 +52,7 @@ const ClientLayout = () => {
   const CORE_CODES = ["DASHBOARD", "ATTENDANCE", "SETTINGS"];
 
   const { data: modules = [] } = useQuery({
-    queryKey: ["account_modules", accountId, role, user?.id, supportSession?.accountId],
+    queryKey: ["account_modules", accountId, role, user?.id, supportSession?.accountId, activeBrandId],
     queryFn: async (): Promise<NavModule[]> => {
       if (!accountId) return [];
       // En sesión de soporte se muestran los módulos contratados por el cliente,
@@ -82,10 +85,40 @@ const ClientLayout = () => {
     enabled: !!accountId,
   });
 
-  // Tareas y Configuración se ven siempre, estén o no en el catálogo contratado.
-  const navModules: NavModule[] = [...modules];
-  if (!navModules.some((m) => m.code === "TASKS")) navModules.push({ code: "TASKS", name: "Tareas" });
-  if (!navModules.some((m) => m.code === "SETTINGS")) navModules.push({ code: "SETTINGS", name: "Configuración" });
+  /* Módulos habilitados en la marca activa. Sin marca activa no se consulta:
+     la vista de cuenta enseña todo lo que el usuario tenga. */
+  const { data: brandModuleCodes } = useQuery({
+    queryKey: ["brand-module-codes", activeBrandId],
+    queryFn: async (): Promise<string[]> => {
+      const { data, error } = await supabase
+        .from("brand_modules")
+        .select("is_enabled, service_modules(code)")
+        .eq("brand_id", activeBrandId!)
+        .eq("is_enabled", true);
+      if (error) throw error;
+      return (data || []).map((m: any) => m.service_modules?.code).filter(Boolean);
+    },
+    enabled: !!activeBrandId,
+  });
+
+  /* Al trabajar dentro de una marca solo se ofrece lo que ESA marca tiene
+     habilitado: es lo que hace que la vista de marca se parezca a un ERP
+     propio en vez de al de la cuenta con otro nombre. */
+  const visibleModules = activeBrandId && brandModuleCodes
+    ? modules.filter((m) => brandModuleCodes.includes(m.code))
+    : modules;
+
+  const navModules: NavModule[] = [...visibleModules];
+  /* Tareas se veía siempre. Dentro de una marca eso contradiría el filtro:
+     si la marca no lo tiene habilitado, no debe aparecer. En la vista de
+     cuenta se mantiene el comportamiento de antes. */
+  if (!activeBrandId && !navModules.some((m) => m.code === "TASKS")) {
+    navModules.push({ code: "TASKS", name: "Tareas" });
+  }
+  // Configuración sí es siempre accesible: es de la cuenta, no de la marca.
+  if (!navModules.some((m) => m.code === "SETTINGS")) {
+    navModules.push({ code: "SETTINGS", name: "Configuración" });
+  }
 
   const userInitial = user?.email?.charAt(0).toUpperCase() ?? "?";
 
@@ -95,6 +128,8 @@ const ClientLayout = () => {
       companyName={companyName}
       companyInitials={companyInitials}
       isXpertAccount={isXpertAccount}
+      brandName={activeBrand?.name}
+      brandColor={activeBrand?.color ?? undefined}
       isMaster={role === "MASTER_ADMIN"}
       onNavigate={() => setMobileNavOpen(false)}
     />
@@ -138,6 +173,7 @@ const ClientLayout = () => {
           </button>
 
           <div className="ml-auto flex items-center gap-1">
+            <BrandSwitcher />
             <AccountSwitcher />
             <SupportAccountSwitcher />
             <NotificationBell />
