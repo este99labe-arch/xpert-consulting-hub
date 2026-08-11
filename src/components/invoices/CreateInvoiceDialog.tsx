@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBrand } from "@/contexts/BrandContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -45,9 +46,11 @@ interface Props {
 
 const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
   const { accountId, user } = useAuth();
+  const { activeBrandId, brands } = useBrand();
   const queryClient = useQueryClient();
 
   const [clientId, setClientId] = useState("");
+  const [brandId, setBrandId] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [type, setType] = useState("INVOICE");
   const [issueDate, setIssueDate] = useState(() => new Date().toISOString().slice(0, 10));
@@ -102,7 +105,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
       if (!accountId) return [];
       const { data, error } = await supabase
         .from("business_clients")
-        .select("id, name, default_vat_percentage, default_irpf_percentage")
+        .select("id, name, default_vat_percentage, default_irpf_percentage, brand_id")
         .eq("account_id", accountId)
         .eq("status", "ACTIVE");
       if (error) throw error;
@@ -114,6 +117,10 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
   useEffect(() => {
     if (clientId && !clientId.startsWith("__self__")) {
       const selected = clients.find((c: any) => c.id === clientId);
+      /* Si el cliente pertenece a una marca, la factura hereda esa: facturar a
+         un cliente de Prevention con la marca de Consulting sería un error
+         difícil de ver una vez emitida. */
+      if (!activeBrandId && (selected as any)?.brand_id) setBrandId((selected as any).brand_id);
       if (selected?.default_vat_percentage != null) {
         setVatPercentage(String(selected.default_vat_percentage));
       }
@@ -252,6 +259,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange, defaultType }: Props) => {
 
       const { data: inv, error } = await supabase.from("invoices").insert({
         account_id: accountId,
+        brand_id: activeBrandId || brandId || null,
         client_id: resolvedClientId,
         type,
         concept,

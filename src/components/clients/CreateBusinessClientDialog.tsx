@@ -9,6 +9,8 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import FormSection from "@/components/shared/FormSection";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useBrand } from "@/contexts/BrandContext";
 import {
   Loader2, AlertCircle, Building2, UserRound, MapPin, Receipt, StickyNote, Copy,
 } from "lucide-react";
@@ -25,6 +27,10 @@ const CreateBusinessClientDialog = ({ open, onOpenChange, accountId, onSuccess }
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { brands, activeBrandId } = useBrand();
+  /* Dentro de una marca el cliente es de esa marca y no hay nada que elegir.
+     En la vista de cuenta sí hay que decidirlo. */
+  const [brandId, setBrandId] = useState<string>("");
   const keepOpenRef = useRef(false);
 
   // Client info
@@ -86,6 +92,7 @@ const CreateBusinessClientDialog = ({ open, onOpenChange, accountId, onSuccess }
         .from("business_clients")
         .insert({
           account_id: accountId,
+          brand_id: activeBrandId || brandId || null,
           name: form.name,
           tax_id: form.tax_id,
           email: form.email || null,
@@ -175,6 +182,23 @@ const CreateBusinessClientDialog = ({ open, onOpenChange, accountId, onSuccess }
                   <Label>NIF / CIF <span className="text-destructive">*</span></Label>
                   <Input value={form.tax_id} onChange={(e) => updateForm("tax_id", e.target.value)} required />
                 </div>
+                {!activeBrandId && brands.length > 0 && (
+                  <div className="space-y-1.5">
+                    <Label>Marca</Label>
+                    <Select value={brandId || "none"} onValueChange={(v) => setBrandId(v === "none" ? "" : v)}>
+                      <SelectTrigger><SelectValue placeholder="Sin marca" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Sin marca</SelectItem>
+                        {brands.map((b) => (
+                          <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-[10.5px] text-muted-foreground">
+                      Sus facturas se emitirán con esta marca.
+                    </p>
+                  </div>
+                )}
                 <div className="space-y-1.5">
                   <Label>Email</Label>
                   <Input type="email" value={form.email} onChange={(e) => updateForm("email", e.target.value)} />
