@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,17 @@ import { toast } from "@/hooks/use-toast";
 const CreateEmployeeDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) => {
   const { accountId, role } = useAuth();
   const queryClient = useQueryClient();
+
+  const { data: departments = [] } = useQuery({
+    queryKey: ["departments", accountId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("departments").select("id, name").eq("account_id", accountId!).order("name");
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!accountId,
+  });
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
 
@@ -31,7 +42,10 @@ const CreateEmployeeDialog = ({ open, onOpenChange }: { open: boolean; onOpenCha
   const [address, setAddress] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [city, setCity] = useState("");
-  const [department, setDepartment] = useState("");
+  /* Departamento por FK, no por texto: es lo que hace que el empleado herede
+     las marcas de su departamento. La columna de texto se sigue rellenando
+     porque hay históricos y solicitudes de cambio que la referencian. */
+  const [departmentId, setDepartmentId] = useState("");
   const [position, setPosition] = useState("");
   const [startDate, setStartDate] = useState("");
   const [ssn, setSsn] = useState("");
@@ -45,7 +59,7 @@ const CreateEmployeeDialog = ({ open, onOpenChange }: { open: boolean; onOpenCha
     setEmail(""); setPassword(""); setRoleCode("EMPLOYEE");
     setFirstName(""); setLastName(""); setDni(""); setPhone("");
     setDateOfBirth(""); setAddress(""); setPostalCode(""); setCity("");
-    setDepartment(""); setPosition(""); setStartDate(""); setSsn("");
+    setDepartmentId(""); setPosition(""); setStartDate(""); setSsn("");
     setContractType("INDEFINIDO"); setWeeklyHours("40"); setCorporateEmail("");
     setSendEmail(true);
   };
@@ -73,7 +87,9 @@ const CreateEmployeeDialog = ({ open, onOpenChange }: { open: boolean; onOpenCha
           dni: dni || null, phone: phone || null,
           date_of_birth: dateOfBirth || null, address: address || null,
           postal_code: postalCode || null, city: city || null,
-          department: department || null, position: position || null,
+          department: departments.find((d: any) => d.id === departmentId)?.name || null,
+          department_id: departmentId || null,
+          position: position || null,
           start_date: startDate || null, social_security_number: ssn || null,
           contract_type: contractType || null,
           weekly_hours: weeklyHours ? parseFloat(weeklyHours) : null,
@@ -188,7 +204,15 @@ const CreateEmployeeDialog = ({ open, onOpenChange }: { open: boolean; onOpenCha
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Departamento</Label>
-                  <Input value={department} onChange={(e) => setDepartment(e.target.value)} placeholder="Administración" />
+                  <Select value={departmentId || "none"} onValueChange={(v) => setDepartmentId(v === "none" ? "" : v)}>
+                    <SelectTrigger><SelectValue placeholder="Sin departamento" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Sin departamento</SelectItem>
+                      {departments.map((d: any) => (
+                        <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>Puesto</Label>
