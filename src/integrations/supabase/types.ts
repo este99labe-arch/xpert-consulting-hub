@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       account_modules: {
@@ -520,6 +545,108 @@ export type Database = {
           },
         ]
       }
+      brand_modules: {
+        Row: {
+          account_id: string
+          brand_id: string
+          id: string
+          is_enabled: boolean
+          module_id: string
+        }
+        Insert: {
+          account_id: string
+          brand_id: string
+          id?: string
+          is_enabled?: boolean
+          module_id: string
+        }
+        Update: {
+          account_id?: string
+          brand_id?: string
+          id?: string
+          is_enabled?: boolean
+          module_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_modules_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_modules_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_modules_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "service_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brands: {
+        Row: {
+          account_id: string
+          color: string | null
+          created_at: string
+          id: string
+          invoice_template: string
+          invoice_template_options: Json
+          is_active: boolean
+          is_default: boolean
+          legal_footer: string | null
+          logo_url: string | null
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          color?: string | null
+          created_at?: string
+          id?: string
+          invoice_template?: string
+          invoice_template_options?: Json
+          is_active?: boolean
+          is_default?: boolean
+          legal_footer?: string | null
+          logo_url?: string | null
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          color?: string | null
+          created_at?: string
+          id?: string
+          invoice_template?: string
+          invoice_template_options?: Json
+          is_active?: boolean
+          is_default?: boolean
+          legal_footer?: string | null
+          logo_url?: string | null
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brands_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_clients: {
         Row: {
           account_id: string
@@ -531,6 +658,7 @@ export type Database = {
           billing_city: string | null
           billing_country: string | null
           billing_postal_code: string | null
+          brand_id: string | null
           city: string | null
           country: string | null
           created_at: string
@@ -562,6 +690,7 @@ export type Database = {
           billing_city?: string | null
           billing_country?: string | null
           billing_postal_code?: string | null
+          brand_id?: string | null
           city?: string | null
           country?: string | null
           created_at?: string
@@ -593,6 +722,7 @@ export type Database = {
           billing_city?: string | null
           billing_country?: string | null
           billing_postal_code?: string | null
+          brand_id?: string | null
           city?: string | null
           country?: string | null
           created_at?: string
@@ -620,6 +750,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_clients_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
             referencedColumns: ["id"]
           },
           {
@@ -791,6 +928,7 @@ export type Database = {
           account_id: string
           assigned_to: string | null
           bot_paused: boolean
+          brand_id: string | null
           client_id: string | null
           contact_id: string | null
           contact_name: string | null
@@ -808,6 +946,7 @@ export type Database = {
           account_id: string
           assigned_to?: string | null
           bot_paused?: boolean
+          brand_id?: string | null
           client_id?: string | null
           contact_id?: string | null
           contact_name?: string | null
@@ -825,6 +964,7 @@ export type Database = {
           account_id?: string
           assigned_to?: string | null
           bot_paused?: boolean
+          brand_id?: string | null
           client_id?: string | null
           contact_id?: string | null
           contact_name?: string | null
@@ -844,6 +984,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_conversations_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
             referencedColumns: ["id"]
           },
           {
@@ -1224,6 +1371,52 @@ export type Database = {
           },
         ]
       }
+      department_brands: {
+        Row: {
+          account_id: string
+          brand_id: string
+          created_at: string
+          department_id: string
+          id: string
+        }
+        Insert: {
+          account_id: string
+          brand_id: string
+          created_at?: string
+          department_id: string
+          id?: string
+        }
+        Update: {
+          account_id?: string
+          brand_id?: string
+          created_at?: string
+          department_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "department_brands_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "department_brands_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "department_brands_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       departments: {
         Row: {
           account_id: string
@@ -1256,6 +1449,7 @@ export type Database = {
       document_folders: {
         Row: {
           account_id: string
+          brand_id: string | null
           created_at: string
           created_by: string
           id: string
@@ -1265,6 +1459,7 @@ export type Database = {
         }
         Insert: {
           account_id: string
+          brand_id?: string | null
           created_at?: string
           created_by: string
           id?: string
@@ -1274,6 +1469,7 @@ export type Database = {
         }
         Update: {
           account_id?: string
+          brand_id?: string | null
           created_at?: string
           created_by?: string
           id?: string
@@ -1287,6 +1483,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_folders_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
             referencedColumns: ["id"]
           },
         ]
@@ -1824,6 +2027,7 @@ export type Database = {
           amount_vat: number
           attachment_name: string | null
           attachment_path: string | null
+          brand_id: string | null
           category_id: string | null
           client_id: string
           concept: string
@@ -1859,6 +2063,7 @@ export type Database = {
           amount_vat: number
           attachment_name?: string | null
           attachment_path?: string | null
+          brand_id?: string | null
           category_id?: string | null
           client_id: string
           concept?: string
@@ -1894,6 +2099,7 @@ export type Database = {
           amount_vat?: number
           attachment_name?: string | null
           attachment_path?: string | null
+          brand_id?: string | null
           category_id?: string | null
           client_id?: string
           concept?: string
@@ -1931,6 +2137,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "invoices_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "invoices_category_id_fkey"
             columns: ["category_id"]
             isOneToOne: false
@@ -1956,6 +2169,7 @@ export type Database = {
       journal_entries: {
         Row: {
           account_id: string
+          brand_id: string | null
           created_at: string
           created_by: string
           date: string
@@ -1970,6 +2184,7 @@ export type Database = {
         }
         Insert: {
           account_id: string
+          brand_id?: string | null
           created_at?: string
           created_by: string
           date: string
@@ -1984,6 +2199,7 @@ export type Database = {
         }
         Update: {
           account_id?: string
+          brand_id?: string | null
           created_at?: string
           created_by?: string
           date?: string
@@ -2002,6 +2218,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
             referencedColumns: ["id"]
           },
           {
@@ -2244,6 +2467,7 @@ export type Database = {
       products: {
         Row: {
           account_id: string
+          brand_id: string | null
           category: string
           cost_price: number
           created_at: string
@@ -2260,6 +2484,7 @@ export type Database = {
         }
         Insert: {
           account_id: string
+          brand_id?: string | null
           category?: string
           cost_price?: number
           created_at?: string
@@ -2276,6 +2501,7 @@ export type Database = {
         }
         Update: {
           account_id?: string
+          brand_id?: string | null
           category?: string
           cost_price?: number
           created_at?: string
@@ -2296,6 +2522,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
             referencedColumns: ["id"]
           },
         ]
@@ -2350,6 +2583,7 @@ export type Database = {
       purchase_orders: {
         Row: {
           account_id: string
+          brand_id: string | null
           created_at: string
           created_by: string
           estimated_date: string | null
@@ -2362,6 +2596,7 @@ export type Database = {
         }
         Insert: {
           account_id: string
+          brand_id?: string | null
           created_at?: string
           created_by: string
           estimated_date?: string | null
@@ -2374,6 +2609,7 @@ export type Database = {
         }
         Update: {
           account_id?: string
+          brand_id?: string | null
           created_at?: string
           created_by?: string
           estimated_date?: string | null
@@ -2390,6 +2626,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_orders_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
             referencedColumns: ["id"]
           },
           {
@@ -2524,6 +2767,7 @@ export type Database = {
           amount_total: number
           amount_vat: number
           append_period: boolean
+          brand_id: string | null
           category_id: string | null
           client_id: string
           concept: string
@@ -2547,6 +2791,7 @@ export type Database = {
           amount_total: number
           amount_vat: number
           append_period?: boolean
+          brand_id?: string | null
           category_id?: string | null
           client_id: string
           concept?: string
@@ -2570,6 +2815,7 @@ export type Database = {
           amount_total?: number
           amount_vat?: number
           append_period?: boolean
+          brand_id?: string | null
           category_id?: string | null
           client_id?: string
           concept?: string
@@ -2596,6 +2842,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "recurring_invoices_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "recurring_invoices_category_id_fkey"
             columns: ["category_id"]
             isOneToOne: false
@@ -2616,6 +2869,7 @@ export type Database = {
           account_id: string
           archived_at: string | null
           assigned_to: string | null
+          brand_id: string | null
           chat_conversation_id: string | null
           chat_message_ids: string[]
           client_id: string | null
@@ -2641,6 +2895,7 @@ export type Database = {
           account_id: string
           archived_at?: string | null
           assigned_to?: string | null
+          brand_id?: string | null
           chat_conversation_id?: string | null
           chat_message_ids?: string[]
           client_id?: string | null
@@ -2666,6 +2921,7 @@ export type Database = {
           account_id?: string
           archived_at?: string | null
           assigned_to?: string | null
+          brand_id?: string | null
           chat_conversation_id?: string | null
           chat_message_ids?: string[]
           client_id?: string | null
@@ -2693,6 +2949,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reminders_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
             referencedColumns: ["id"]
           },
           {
@@ -3061,6 +3324,7 @@ export type Database = {
       task_boards: {
         Row: {
           account_id: string
+          brand_id: string | null
           color: string
           created_at: string
           id: string
@@ -3072,6 +3336,7 @@ export type Database = {
         }
         Insert: {
           account_id: string
+          brand_id?: string | null
           color?: string
           created_at?: string
           id?: string
@@ -3083,6 +3348,7 @@ export type Database = {
         }
         Update: {
           account_id?: string
+          brand_id?: string | null
           color?: string
           created_at?: string
           id?: string
@@ -3098,6 +3364,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_boards_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
             referencedColumns: ["id"]
           },
         ]
@@ -3306,6 +3579,71 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_active_brand: {
+        Row: {
+          brand_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          brand_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_active_brand_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_brands: {
+        Row: {
+          account_id: string
+          brand_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          brand_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          brand_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_brands_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_brands_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
             referencedColumns: ["id"]
           },
         ]
@@ -3788,6 +4126,7 @@ export type Database = {
       xred_profiles: {
         Row: {
           account_id: string
+          brand_id: string | null
           cnae_code: string | null
           created_at: string
           description: string | null
@@ -3801,6 +4140,7 @@ export type Database = {
         }
         Insert: {
           account_id: string
+          brand_id?: string | null
           cnae_code?: string | null
           created_at?: string
           description?: string | null
@@ -3814,6 +4154,7 @@ export type Database = {
         }
         Update: {
           account_id?: string
+          brand_id?: string | null
           cnae_code?: string | null
           created_at?: string
           description?: string | null
@@ -3831,6 +4172,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: true
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "xred_profiles_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
             referencedColumns: ["id"]
           },
         ]
@@ -3984,6 +4332,7 @@ export type Database = {
         Args: { _account: string; _date: string; _prefix: string }
         Returns: string
       }
+      can_access_brand: { Args: { _brand: string }; Returns: boolean }
       can_access_task_board: {
         Args: { _board_id: string; _uid: string }
         Returns: boolean
@@ -4151,6 +4500,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      my_brands: {
+        Args: never
+        Returns: {
+          color: string
+          id: string
+          logo_url: string
+          module_count: number
+          name: string
+        }[]
+      }
       reencrypt_all_with_key: {
         Args: { _new_key: string; _old_key: string }
         Returns: Json
@@ -4313,6 +4672,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },
