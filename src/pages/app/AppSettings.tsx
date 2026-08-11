@@ -23,7 +23,7 @@ import {
 import {
   Loader2, KeyRound, UserPlus, AlertCircle, Settings, Users, CalendarDays,
   Clock, ShieldCheck, Save, User, Lock, Unlock, Check, X, Mail, Activity, Key, Webhook, MessageSquare, ShieldAlert, FileText, Calculator,
-  Building2, Layers, Palette,
+  Building2, Layers, Palette, Tag,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { roleLabel } from "@/lib/roles";
@@ -40,6 +40,7 @@ import CreateEmployeeDialog from "@/components/hr/CreateEmployeeDialog";
 import EmployeeModulesTab from "@/components/settings/EmployeeModulesTab";
 import TaskBoardsTab from "@/components/settings/TaskBoardsTab";
 import VerticalsServicesTab from "@/components/settings/VerticalsServicesTab";
+import BrandsTab from "@/components/settings/BrandsTab";
 
 import CompanyTab from "@/components/settings/CompanyTab";
 import ProfileTab from "@/components/settings/ProfileTab";
@@ -83,6 +84,7 @@ const SECTIONS: SettingSection[] = [
   { key: "users",       group: "Equipo", title: "Usuarios", desc: "Gestiona usuarios, roles y solicitudes.", icon: Users, managerOnly: true, badge: true },
   { key: "permissions", group: "Equipo", title: "Permisos de módulos", desc: "Qué módulos puede ver cada empleado.", icon: ShieldCheck, managerOnly: true },
   { key: "taskboards",  group: "Equipo", title: "Tableros de tareas", desc: "Kanban, prefijos de referencia y accesos.", icon: CalendarDays, managerOnly: true },
+  { key: "brands", group: "Comercial", title: "Marcas", desc: "Identidades con las que facturas y los módulos de cada una.", icon: Tag, managerOnly: true },
   { key: "verticals", group: "Comercial", title: "Líneas de negocio", desc: "Verticales y servicios que ofreces a tus clientes.", icon: Layers, managerOnly: true },
   { key: "invoicetemplate", group: "Facturación y contabilidad", title: "Plantilla de facturas", desc: "Diseño y datos que aparecen en tus facturas.", icon: FileText, managerOnly: true },
   { key: "accounting",      group: "Facturación y contabilidad", title: "Contabilidad", desc: "Método contable, categorías y cuentas.", icon: Calculator, managerOnly: true },
@@ -215,6 +217,11 @@ const AppSettings = () => {
         {isManager && (
           <TabsContent value="users">
             <UsersTab userId={user.id} accountId={accountId} />
+          </TabsContent>
+        )}
+        {isManager && (
+          <TabsContent value="brands">
+            <BrandsTab accountId={accountId} isManager={isManager} />
           </TabsContent>
         )}
         {isManager && (
