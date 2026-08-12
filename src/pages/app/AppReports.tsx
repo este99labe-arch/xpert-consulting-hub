@@ -27,6 +27,7 @@ const PLReport = ({ accountId }: { accountId: string }) => {
   const [year, setYear] = useState(now.getFullYear().toString());
   const [quarter, setQuarter] = useState(Math.ceil((now.getMonth() + 1) / 3).toString());
   const [month, setMonth] = useState((now.getMonth() + 1).toString());
+  const [brandFilter, setBrandFilter] = useState("ALL");
 
   const dateRange = useMemo(() => {
     const y = parseInt(year);
@@ -49,12 +50,28 @@ const PLReport = ({ accountId }: { accountId: string }) => {
     enabled: !!accountId,
   });
 
+  /* Todas las marcas de la cuenta, no solo las que tienen módulos: una marca
+     que solo emite facturas también genera resultado y debe aparecer. */
+  const { data: brands = [] } = useQuery({
+    queryKey: ["report-brands", accountId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("brands")
+        .select("id, name, color")
+        .eq("account_id", accountId)
+        .eq("is_active", true)
+        .order("sort_order");
+      return data || [];
+    },
+    enabled: !!accountId,
+  });
+
   const { data: entries = [] } = useQuery({
     queryKey: ["report-entries", accountId, dateRange.from.toISOString(), dateRange.to.toISOString()],
     queryFn: async () => {
       const { data } = await supabase
         .from("journal_entries")
-        .select("id, date, status")
+        .select("id, date, status, brand_id")
         .eq("account_id", accountId)
         .eq("status", "POSTED")
         .gte("date", format(dateRange.from, "yyyy-MM-dd"))
@@ -79,24 +96,61 @@ const PLReport = ({ accountId }: { accountId: string }) => {
     enabled: entryIds.length > 0,
   });
 
-  const plData = useMemo(() => {
+  /** Marca de cada asiento, para repartir sus líneas sin volver a consultar. */
+  const brandByEntry = useMemo(
+    () => new Map(entries.map((e: any) => [e.id, e.brand_id as string | null])),
+    [entries],
+  );
+
+  /* El desglose por marca es contabilidad ANALÍTICA: el libro sigue siendo uno
+     solo y el total de la cuenta no cambia. Solo dice qué parte del resultado
+     ha puesto cada identidad comercial. */
+  const buildPL = useMemo(() => {
     const incomeAccounts = chartAccounts.filter((a: any) => a.type === "INCOME");
     const expenseAccounts = chartAccounts.filter((a: any) => a.type === "EXPENSE");
 
-    const getTotal = (accounts: any[]) =>
-      accounts.map((acc: any) => {
-        const accLines = lines.filter((l: any) => l.chart_account_id === acc.id);
-        const total = accLines.reduce((sum: number, l: any) => sum + (Number(l.credit) - Number(l.debit)), 0);
-        return { ...acc, total: Math.abs(total) };
-      }).filter((a: any) => a.total > 0);
+    return (subset: any[]) => {
+      const getTotal = (accounts: any[]) =>
+        accounts.map((acc: any) => {
+          const accLines = subset.filter((l: any) => l.chart_account_id === acc.id);
+          const total = accLines.reduce((sum: number, l: any) => sum + (Number(l.credit) - Number(l.debit)), 0);
+          return { ...acc, total: Math.abs(total) };
+        }).filter((a: any) => a.total > 0);
 
-    const income = getTotal(incomeAccounts);
-    const expenses = getTotal(expenseAccounts);
-    const totalIncome = income.reduce((s: number, a: any) => s + a.total, 0);
-    const totalExpense = expenses.reduce((s: number, a: any) => s + a.total, 0);
+      const income = getTotal(incomeAccounts);
+      const expenses = getTotal(expenseAccounts);
+      const totalIncome = income.reduce((s: number, a: any) => s + a.total, 0);
+      const totalExpense = expenses.reduce((s: number, a: any) => s + a.total, 0);
 
-    return { income, expenses, totalIncome, totalExpense, result: totalIncome - totalExpense };
-  }, [chartAccounts, lines]);
+      return { income, expenses, totalIncome, totalExpense, result: totalIncome - totalExpense };
+    };
+  }, [chartAccounts]);
+
+  const visibleLines = useMemo(
+    () => (brandFilter === "ALL" ? lines : lines.filter((l: any) => brandByEntry.get(l.entry_id) === brandFilter)),
+    [lines, brandFilter, brandByEntry],
+  );
+
+  const plData = useMemo(() => buildPL(visibleLines), [buildPL, visibleLines]);
+
+  /** Una fila por marca con importe. Las que no han movido nada se omiten:
+   *  una lista de ceros no informa de nada. */
+  const byBrand = useMemo(() => {
+    if (brands.length < 2) return [];
+    const rows = brands.map((b: any) => {
+      const subset = lines.filter((l: any) => brandByEntry.get(l.entry_id) === b.id);
+      const pl = buildPL(subset);
+      return { id: b.id, name: b.name, color: b.color, ...pl };
+    });
+    // Asientos cuya marca se borró: se agrupan para que los totales cuadren.
+    const known = new Set(brands.map((b: any) => b.id));
+    const orphan = lines.filter((l: any) => {
+      const bid = brandByEntry.get(l.entry_id);
+      return !bid || !known.has(bid);
+    });
+    if (orphan.length) rows.push({ id: "none", name: "Sin marca", color: null, ...buildPL(orphan) });
+    return rows.filter((r) => r.totalIncome !== 0 || r.totalExpense !== 0);
+  }, [brands, lines, brandByEntry, buildPL]);
 
   const exportCSV = () => {
     const rows = [
@@ -112,7 +166,10 @@ const PLReport = ({ accountId }: { accountId: string }) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `PyG_${format(dateRange.from, "yyyy-MM-dd")}_${format(dateRange.to, "yyyy-MM-dd")}.csv`;
+    const brandTag = brandFilter === "ALL"
+      ? ""
+      : `_${(brands.find((b: any) => b.id === brandFilter)?.name || "").replace(/[^\w-]+/g, "-")}`;
+    a.download = `PyG${brandTag}_${format(dateRange.from, "yyyy-MM-dd")}_${format(dateRange.to, "yyyy-MM-dd")}.csv`;
     a.click();
   };
 
@@ -158,6 +215,18 @@ const PLReport = ({ accountId }: { accountId: string }) => {
             </SelectContent>
           </Select>
         )}
+        {/* Con una sola marca el selector sobra: todo es de esa marca. */}
+        {brands.length > 1 && (
+          <Select value={brandFilter} onValueChange={setBrandFilter}>
+            <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Todas las marcas</SelectItem>
+              {brands.map((b: any) => (
+                <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
         <Button variant="outline" size="sm" onClick={exportCSV}>
           <Download className="h-4 w-4 mr-1" /> CSV
         </Button>
@@ -192,6 +261,54 @@ const PLReport = ({ accountId }: { accountId: string }) => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Desglose analítico. Solo con la vista completa: filtrando por una
+          marca, repetiría los totales de arriba. */}
+      {brandFilter === "ALL" && byBrand.length > 1 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Resultado por marca</CardTitle>
+            <CardDescription className="text-xs">
+              Reparto analítico del mismo libro contable. La suma coincide con el resultado del periodo.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Marca</TableHead>
+                  <TableHead className="text-right">Ingresos</TableHead>
+                  <TableHead className="text-right">Gastos</TableHead>
+                  <TableHead className="text-right">Resultado</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {byBrand.map((b) => (
+                  <TableRow key={b.id}>
+                    <TableCell className="text-xs">
+                      <span className="flex items-center gap-2">
+                        <span
+                          className="h-2 w-2 shrink-0 rounded-full"
+                          style={{ background: b.color || "hsl(var(--faint))" }}
+                          aria-hidden
+                        />
+                        {b.name}
+                      </span>
+                    </TableCell>
+                    <TableCell className="tnum text-right text-xs">{EUR(b.totalIncome)}</TableCell>
+                    <TableCell className="tnum text-right text-xs">{EUR(b.totalExpense)}</TableCell>
+                    <TableCell
+                      className={`tnum text-right text-xs font-medium ${b.result >= 0 ? "" : "text-destructive"}`}
+                    >
+                      {EUR(b.result)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
