@@ -35,8 +35,13 @@ const BrandAccessTab = ({ accountId, isManager }: Props) => {
   const [creating, setCreating] = useState(false);
   const [deletingDept, setDeletingDept] = useState<{ id: string; name: string } | null>(null);
 
+  /* Clave propia: esta consulta trae solo las marcas activas y cuatro
+     columnas, mientras que la pestaña Marcas las trae todas y enteras.
+     Compartiendo clave, la que llegara primero le servía a la otra filas
+     incompletas. El sufijo mantiene el prefijo ["brands", accountId], así que
+     una invalidación desde la pestaña Marcas sigue refrescando esta. */
   const { data: brands = [], isLoading: loadingBrands } = useQuery({
-    queryKey: ["brands", accountId],
+    queryKey: ["brands", accountId, "active"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("brands").select("id, name, color, is_default")

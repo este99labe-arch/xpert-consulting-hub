@@ -86,7 +86,7 @@ const SECTIONS: SettingSection[] = [
   { key: "permissions", group: "Equipo", title: "Permisos de módulos", desc: "Qué módulos puede ver cada empleado.", icon: ShieldCheck, managerOnly: true },
   { key: "brandaccess", group: "Equipo", title: "Acceso por marca", desc: "Departamentos y personas asignados a cada marca.", icon: Building2, managerOnly: true },
   { key: "taskboards",  group: "Equipo", title: "Tableros de tareas", desc: "Kanban, prefijos de referencia y accesos.", icon: CalendarDays, managerOnly: true },
-  { key: "brands", group: "Comercial", title: "Marcas", desc: "Identidades con las que facturas y los módulos de cada una.", icon: Tag, managerOnly: true },
+  { key: "brands", group: "Comercial", title: "Marcas", desc: "Imagen de las marcas con las que facturas.", icon: Tag, managerOnly: true },
   { key: "verticals", group: "Comercial", title: "Líneas de negocio", desc: "Verticales y servicios que ofreces a tus clientes.", icon: Layers, managerOnly: true },
   { key: "invoicetemplate", group: "Facturación y contabilidad", title: "Plantilla de facturas", desc: "Diseño y datos que aparecen en tus facturas.", icon: FileText, managerOnly: true },
   { key: "accounting",      group: "Facturación y contabilidad", title: "Contabilidad", desc: "Método contable, categorías y cuentas.", icon: Calculator, managerOnly: true },
