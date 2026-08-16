@@ -32,13 +32,16 @@ const MasterClients = () => {
   const [deleting, setDeleting] = useState(false);
   const queryClient = useQueryClient();
 
+  /* La cuenta propia también se lista: sus marcas se gestionan desde aquí
+     igual que las de cualquier cliente, y antes no había forma de llegar a
+     ellas. Va la primera porque es la casa. */
   const { data: clients = [], isLoading, error } = useQuery({
     queryKey: ["master-clients"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("accounts")
         .select("*")
-        .eq("type", "CLIENT")
+        .order("type", { ascending: false })
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data || [];
@@ -115,30 +118,41 @@ const MasterClients = () => {
         <>
         {/* Mobile cards */}
         <div className="space-y-3 md:hidden">
-          {clients.map((client) => (
+          {clients.map((client) => {
+            const isOwn = client.type === "MASTER";
+            return (
             <Card key={client.id} className="p-4 space-y-3">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <span className="font-medium">{client.name}</span>
-                <Badge variant={client.is_active ? "default" : "secondary"}>
-                  {client.is_active ? "Activo" : "Inactivo"}
-                </Badge>
+                {isOwn ? (
+                  <Badge variant="info">Tu cuenta</Badge>
+                ) : (
+                  <Badge variant={client.is_active ? "default" : "secondary"}>
+                    {client.is_active ? "Activo" : "Inactivo"}
+                  </Badge>
+                )}
               </div>
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>{new Date(client.created_at).toLocaleDateString("es-ES")}</span>
-                <Switch
-                  checked={client.is_active}
-                  onCheckedChange={(checked) => toggleActive.mutate({ id: client.id, is_active: checked })}
-                />
+                {!isOwn && (
+                  <Switch
+                    checked={client.is_active}
+                    onCheckedChange={(checked) => toggleActive.mutate({ id: client.id, is_active: checked })}
+                  />
+                )}
               </div>
               <div className="flex items-center gap-2 pt-1 border-t">
                 <Button variant="outline" size="sm" className="flex-1" onClick={() => setSelected({ id: client.id, name: client.name })}>Gestionar</Button>
-                <Button variant="outline" size="sm" className="text-destructive-text hover:bg-destructive-surface border-destructive/30"
-                  onClick={() => { setDeleteTarget({ id: client.id, name: client.name }); setDeleteMode("account_only"); }}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                {!isOwn && (
+                  <Button variant="outline" size="sm" className="text-destructive-text hover:bg-destructive-surface border-destructive/30"
+                    onClick={() => { setDeleteTarget({ id: client.id, name: client.name }); setDeleteMode("account_only"); }}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </Card>
-          ))}
+            );
+          })}
         </div>
 
         {/* Desktop table */}
@@ -155,34 +169,48 @@ const MasterClients = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {clients.map((client) => (
+                {clients.map((client) => {
+                  /* La cuenta propia se gestiona pero no se toca: desactivarla
+                     dejaría a todo el mundo fuera, y borrarla se lleva por
+                     delante el SaaS entero. */
+                  const isOwn = client.type === "MASTER";
+                  return (
                   <TableRow key={client.id}>
                     <TableCell className="font-medium">{client.name}</TableCell>
                     <TableCell>
-                      <Badge variant={client.is_active ? "default" : "secondary"}>
-                        {client.is_active ? "Activo" : "Inactivo"}
-                      </Badge>
+                      {isOwn ? (
+                        <Badge variant="info">Tu cuenta</Badge>
+                      ) : (
+                        <Badge variant={client.is_active ? "default" : "secondary"}>
+                          {client.is_active ? "Activo" : "Inactivo"}
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {new Date(client.created_at).toLocaleDateString("es-ES")}
                     </TableCell>
                     <TableCell>
-                      <Switch
-                        checked={client.is_active}
-                        onCheckedChange={(checked) => toggleActive.mutate({ id: client.id, is_active: checked })}
-                      />
+                      {!isOwn && (
+                        <Switch
+                          checked={client.is_active}
+                          onCheckedChange={(checked) => toggleActive.mutate({ id: client.id, is_active: checked })}
+                        />
+                      )}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Button variant="outline" size="sm" onClick={() => setSelected({ id: client.id, name: client.name })}>Gestionar</Button>
-                        <Button variant="outline" size="sm" className="text-destructive-text hover:bg-destructive-surface border-destructive/30"
-                          onClick={() => { setDeleteTarget({ id: client.id, name: client.name }); setDeleteMode("account_only"); }}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {!isOwn && (
+                          <Button variant="outline" size="sm" className="text-destructive-text hover:bg-destructive-surface border-destructive/30"
+                            onClick={() => { setDeleteTarget({ id: client.id, name: client.name }); setDeleteMode("account_only"); }}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           </CardContent>
