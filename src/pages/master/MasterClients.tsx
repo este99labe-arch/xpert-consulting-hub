@@ -21,10 +21,12 @@ import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import CreateClientForm from "@/components/master/CreateClientForm";
 import ModuleManager from "@/components/master/ModuleManager";
+import BrandManager from "@/components/master/BrandManager";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const MasterClients = () => {
   const [showCreate, setShowCreate] = useState(false);
-  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
+  const [selected, setSelected] = useState<{ id: string; name: string } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [deleteMode, setDeleteMode] = useState<"account_only" | "all">("account_only");
   const [deleting, setDeleting] = useState(false);
@@ -129,7 +131,7 @@ const MasterClients = () => {
                 />
               </div>
               <div className="flex items-center gap-2 pt-1 border-t">
-                <Button variant="outline" size="sm" className="flex-1" onClick={() => setSelectedAccountId(client.id)}>Gestionar</Button>
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => setSelected({ id: client.id, name: client.name })}>Gestionar</Button>
                 <Button variant="outline" size="sm" className="text-destructive-text hover:bg-destructive-surface border-destructive/30"
                   onClick={() => { setDeleteTarget({ id: client.id, name: client.name }); setDeleteMode("account_only"); }}>
                   <Trash2 className="h-4 w-4" />
@@ -172,7 +174,7 @@ const MasterClients = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" onClick={() => setSelectedAccountId(client.id)}>Gestionar</Button>
+                        <Button variant="outline" size="sm" onClick={() => setSelected({ id: client.id, name: client.name })}>Gestionar</Button>
                         <Button variant="outline" size="sm" className="text-destructive-text hover:bg-destructive-surface border-destructive/30"
                           onClick={() => { setDeleteTarget({ id: client.id, name: client.name }); setDeleteMode("account_only"); }}>
                           <Trash2 className="h-4 w-4" />
@@ -202,16 +204,29 @@ const MasterClients = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Modules dialog */}
-      <Dialog open={!!selectedAccountId} onOpenChange={() => setSelectedAccountId(null)}>
-        <DialogContent className="max-w-lg max-h-[85vh] flex flex-col">
+      {/* Gestión de la cuenta: lo que tiene contratado y con qué identidades
+          factura. Las marcas se dan de alta aquí y no en la configuración del
+          cliente porque son una decisión comercial. */}
+      <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
+        <DialogContent className="flex max-h-[85vh] max-w-2xl flex-col">
           <DialogHeader>
-            <DialogTitle>Gestionar Módulos</DialogTitle>
-            <DialogDescription>Activa o desactiva módulos para esta cuenta</DialogDescription>
+            <DialogTitle>Gestionar {selected?.name}</DialogTitle>
+            <DialogDescription>Módulos contratados y marcas con las que factura</DialogDescription>
           </DialogHeader>
-          <div className="overflow-y-auto flex-1 pr-1">
-            {selectedAccountId && <ModuleManager accountId={selectedAccountId} />}
-          </div>
+          {selected && (
+            <Tabs defaultValue="modules" className="flex min-h-0 flex-1 flex-col">
+              <TabsList className="w-full">
+                <TabsTrigger value="modules" className="flex-1">Módulos</TabsTrigger>
+                <TabsTrigger value="brands" className="flex-1">Marcas</TabsTrigger>
+              </TabsList>
+              <TabsContent value="modules" className="min-h-0 flex-1 overflow-y-auto pr-1">
+                <ModuleManager accountId={selected.id} />
+              </TabsContent>
+              <TabsContent value="brands" className="min-h-0 flex-1 overflow-y-auto pr-1">
+                <BrandManager accountId={selected.id} accountName={selected.name} />
+              </TabsContent>
+            </Tabs>
+          )}
         </DialogContent>
       </Dialog>
 
