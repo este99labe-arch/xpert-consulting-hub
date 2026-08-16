@@ -122,13 +122,15 @@ const ClientLayout = () => {
 
   const userInitial = user?.email?.charAt(0).toUpperCase() ?? "?";
 
+  /* El rótulo de marca solo aparece trabajando DENTRO de una marca: en la
+     cuenta principal, marca y cuenta son lo mismo y saldría dos veces. */
   const nav = (
     <AppNav
       modules={navModules}
       companyName={companyName}
       companyInitials={companyInitials}
       isXpertAccount={isXpertAccount}
-      brandName={activeBrand?.name}
+      brandName={activeBrandId ? activeBrand?.name : undefined}
       brandColor={activeBrand?.color ?? undefined}
       isMaster={role === "MASTER_ADMIN"}
       onNavigate={() => setMobileNavOpen(false)}

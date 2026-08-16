@@ -24,6 +24,7 @@ import { useServerPagination } from "@/hooks/use-server-pagination";
 import CreateBusinessClientDialog from "@/components/clients/CreateBusinessClientDialog";
 import DeleteClientDialog from "@/components/clients/DeleteClientDialog";
 import PageHeader from "@/components/shared/PageHeader";
+import { useBrand } from "@/contexts/BrandContext";
 
 // Iniciales a partir del nombre del cliente (máx. 2 caracteres)
 const getInitials = (name: string) => {
@@ -41,6 +42,11 @@ const AVATAR_CLASS = "bg-[hsl(var(--border-strong))] text-accent-foreground";
 
 const AppClients = () => {
   const { accountId } = useAuth();
+  /* La columna de marca solo tiene sentido desde la cuenta principal, que es
+     donde se ven los clientes de todas. Dentro de una marca son todos suyos y
+     la columna repetiría el mismo valor en cada fila. */
+  const { activeBrandId, brands } = useBrand();
+  const showBrand = !activeBrandId && brands.length > 1;
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const location = useLocation();
@@ -351,6 +357,7 @@ const AppClients = () => {
                         <TableHead>Cliente</TableHead>
                         <TableHead className="hidden sm:table-cell">NIF/CIF</TableHead>
                         <TableHead className="hidden md:table-cell">Email</TableHead>
+                        {showBrand && <TableHead className="hidden lg:table-cell">Marca</TableHead>}
                         <TableHead className="hidden md:table-cell">Verticales</TableHead>
                         <TableHead>Estado</TableHead>
                         <TableHead className="hidden lg:table-cell">Creado</TableHead>
@@ -389,6 +396,22 @@ const AppClients = () => {
                             <TableCell className="text-muted-foreground hidden md:table-cell">
                               {client.email || "—"}
                             </TableCell>
+                            {showBrand && (
+                              <TableCell className="hidden lg:table-cell">
+                                {client.brand_name ? (
+                                  <span className="flex items-center gap-1.5 text-xs">
+                                    <span
+                                      className="h-2 w-2 shrink-0 rounded-full"
+                                      style={{ background: client.brand_color || "hsl(var(--faint))" }}
+                                      aria-hidden
+                                    />
+                                    <span className="truncate">{client.brand_name}</span>
+                                  </span>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground">—</span>
+                                )}
+                              </TableCell>
+                            )}
                             <TableCell className="hidden md:table-cell">
                               {(() => {
                                 const names = contractsByClient.get(client.id)?.verticalNames ?? [];

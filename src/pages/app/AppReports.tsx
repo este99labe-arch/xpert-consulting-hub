@@ -5,7 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { useModuleTab } from "@/lib/moduleTabs";
+import { useModuleTab, moduleTabsFor } from "@/lib/moduleTabs";
+import { useBrand } from "@/contexts/BrandContext";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -794,7 +795,11 @@ const InvoiceSummaryReport = ({ accountId }: { accountId: string }) => {
 
 // ─── MAIN REPORTS PAGE ──────────────────────────────────
 const AppReports = () => {
-  const [tab, setTab] = useModuleTab("pl");
+  /* Dentro de una marca no hay PyG —el libro contable es de la cuenta—, así
+     que la pestaña por defecto es la primera que quede. */
+  const { activeBrandId } = useBrand();
+  const tabs = moduleTabsFor("REPORTS", !!activeBrandId) ?? [];
+  const [tab, setTab] = useModuleTab(tabs[0]?.key ?? "invoices");
   const { accountId, role } = useAuth();
   const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
   const effectiveAccountId = selectedAccount || accountId;
@@ -820,9 +825,11 @@ const AppReports = () => {
 
       <Tabs value={tab} onValueChange={setTab} className="space-y-4">
 
-        <TabsContent value="pl">
-          <PLReport accountId={effectiveAccountId} />
-        </TabsContent>
+        {!activeBrandId && (
+          <TabsContent value="pl">
+            <PLReport accountId={effectiveAccountId} />
+          </TabsContent>
+        )}
         <TabsContent value="invoices">
           <InvoiceSummaryReport accountId={effectiveAccountId} />
         </TabsContent>

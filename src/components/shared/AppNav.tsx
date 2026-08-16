@@ -6,7 +6,8 @@ import {
 import { cn } from "@/lib/utils";
 import MyTasksBadge from "@/components/tasks/MyTasksBadge";
 import BrandLogo from "@/components/shared/BrandLogo";
-import { MODULE_TABS } from "@/lib/moduleTabs";
+import { moduleTabsFor } from "@/lib/moduleTabs";
+import { useBrand } from "@/contexts/BrandContext";
 
 export const moduleIcons: Record<string, any> = {
   DASHBOARD: LayoutDashboard,
@@ -167,6 +168,7 @@ const AppNav = ({
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { activeBrandId } = useBrand();
 
   const [searchParams] = useSearchParams();
   const currentTab = searchParams.get("tab");
@@ -211,7 +213,7 @@ const AppNav = ({
               {group.items.map((mod) => {
                 const path = modulePaths[mod.code] || "/app/dashboard";
                 const isActive = location.pathname === path;
-                const tabs = MODULE_TABS[mod.code];
+                const tabs = moduleTabsFor(mod.code, !!activeBrandId);
                 return (
                   <div key={mod.code}>
                     <NavItem
