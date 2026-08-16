@@ -78,10 +78,12 @@ const BrandManager = ({ accountId, accountName }: Props) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("account_modules")
-        .select("module_id, service_modules(id, name)")
+        .select("module_id, service_modules(id, name, code)")
         .eq("account_id", accountId).eq("is_enabled", true);
       if (error) throw error;
-      return (data || []).map((m: any) => ({ id: m.module_id, name: m.service_modules?.name }));
+      return (data || []).map((m: any) => ({
+        id: m.module_id, name: m.service_modules?.name, code: m.service_modules?.code,
+      }));
     },
     enabled: !!accountId,
   });
@@ -100,12 +102,21 @@ const BrandManager = ({ accountId, accountName }: Props) => {
   const moduleCount = (brandId: string) =>
     brandModules.filter((m: any) => m.brand_id === brandId && m.is_enabled).length;
 
+  /* La contabilidad se lleva desde la cuenta principal: el libro es único para
+     todas las marcas. Ofrecerla dentro de una marca enseñaría la contabilidad
+     completa de la cuenta desde lo que pretende ser una identidad aparte. La
+     base de datos lo rechaza, así que aquí ni se ofrece. */
+  const editingDefault = creating ? false : !!editing?.is_default;
+  const offeredModules = editingDefault
+    ? accountModules
+    : accountModules.filter((m) => m.code !== "ACCOUNTING");
+
   const openCreate = () => {
     setIdentity({ ...EMPTY_IDENTITY });
     setIsActive(true);
     // Una marca nueva nace con todo lo que la cuenta tiene: quitar es más
     // rápido que ir marcando módulo a módulo.
-    setModules(new Set(accountModules.map((m) => m.id)));
+    setModules(new Set(accountModules.filter((m) => m.code !== "ACCOUNTING").map((m) => m.id)));
     setCreating(true);
   };
 
@@ -259,14 +270,14 @@ const BrandManager = ({ accountId, accountName }: Props) => {
 
             <div className="space-y-2">
               <Label>Módulos disponibles en la marca</Label>
-              {accountModules.length === 0 ? (
+              {offeredModules.length === 0 ? (
                 <p className="text-[11.5px] text-muted-foreground">
                   La cuenta no tiene módulos contratados.
                 </p>
               ) : (
                 <>
                   <div className="grid gap-1.5 sm:grid-cols-2">
-                    {accountModules.map((m) => (
+                    {offeredModules.map((m) => (
                       <label
                         key={m.id}
                         className="flex cursor-pointer items-center gap-2.5 rounded-control border border-border bg-card px-3 py-2 text-xs text-foreground transition-colors hover:bg-popover"

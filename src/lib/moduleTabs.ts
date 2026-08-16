@@ -49,6 +49,28 @@ export const MODULE_TABS: Record<string, { key: string; label: string }[]> = {
 };
 
 /**
+ * Pestañas que no tienen sentido dentro de una marca.
+ *
+ * La cuenta de resultados sale del libro contable, y el libro es único para
+ * toda la cuenta: los asientos no se filtran por marca. Enseñar PyG dentro de
+ * XpertSecurity mostraría el resultado de la cuenta entera haciéndolo pasar
+ * por el de la marca. El desglose por marca está en la cuenta principal, en
+ * esa misma pestaña.
+ */
+const ACCOUNT_ONLY_TABS: Record<string, string[]> = {
+  REPORTS: ["pl"],
+};
+
+/** Pestañas de un módulo según dónde se esté trabajando. */
+export const moduleTabsFor = (code: string, insideBrand: boolean) => {
+  const tabs = MODULE_TABS[code];
+  if (!tabs || !insideBrand) return tabs;
+  const hidden = ACCOUNT_ONLY_TABS[code];
+  if (!hidden) return tabs;
+  return tabs.filter((t) => !hidden.includes(t.key));
+};
+
+/**
  * Pestaña activa, guardada en la URL (`?tab=`).
  *
  * En la URL y no en un useState para que el menú lateral y la pantalla no

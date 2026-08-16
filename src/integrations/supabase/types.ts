@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       account_modules: {
@@ -1239,6 +1214,7 @@ export type Database = {
       client_services: {
         Row: {
           account_id: string
+          brand_id: string | null
           client_id: string
           created_at: string
           end_date: string | null
@@ -1253,6 +1229,7 @@ export type Database = {
         }
         Insert: {
           account_id: string
+          brand_id?: string | null
           client_id: string
           created_at?: string
           end_date?: string | null
@@ -1267,6 +1244,7 @@ export type Database = {
         }
         Update: {
           account_id?: string
+          brand_id?: string | null
           client_id?: string
           created_at?: string
           end_date?: string | null
@@ -1285,6 +1263,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_services_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
             referencedColumns: ["id"]
           },
           {
@@ -3088,6 +3073,7 @@ export type Database = {
         Row: {
           account_id: string
           billing_period: string
+          brand_id: string | null
           created_at: string
           description: string | null
           id: string
@@ -3102,6 +3088,7 @@ export type Database = {
         Insert: {
           account_id: string
           billing_period?: string
+          brand_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -3116,6 +3103,7 @@ export type Database = {
         Update: {
           account_id?: string
           billing_period?: string
+          brand_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -3133,6 +3121,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "services_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
             referencedColumns: ["id"]
           },
           {
@@ -3792,6 +3787,7 @@ export type Database = {
       verticals: {
         Row: {
           account_id: string
+          brand_id: string | null
           color: string | null
           created_at: string
           description: string | null
@@ -3803,6 +3799,7 @@ export type Database = {
         }
         Insert: {
           account_id: string
+          brand_id?: string | null
           color?: string | null
           created_at?: string
           description?: string | null
@@ -3814,6 +3811,7 @@ export type Database = {
         }
         Update: {
           account_id?: string
+          brand_id?: string | null
           color?: string | null
           created_at?: string
           description?: string | null
@@ -3829,6 +3827,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "verticals_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
             referencedColumns: ["id"]
           },
         ]
@@ -4332,7 +4337,16 @@ export type Database = {
         Args: { _account: string; _date: string; _prefix: string }
         Returns: string
       }
+      active_brand_id: { Args: never; Returns: string }
+      brand_in_scope: { Args: { _brand: string }; Returns: boolean }
+      can_access_board_brand: { Args: { _board: string }; Returns: boolean }
       can_access_brand: { Args: { _brand: string }; Returns: boolean }
+      can_access_client: { Args: { _client: string }; Returns: boolean }
+      can_access_conversation: { Args: { _conv: string }; Returns: boolean }
+      can_access_invoice: { Args: { _invoice: string }; Returns: boolean }
+      can_access_product: { Args: { _product: string }; Returns: boolean }
+      can_access_recurring: { Args: { _rec: string }; Returns: boolean }
+      can_access_task: { Args: { _task: string }; Returns: boolean }
       can_access_task_board: {
         Args: { _board_id: string; _uid: string }
         Returns: boolean
@@ -4431,6 +4445,9 @@ export type Database = {
           billing_city: string
           billing_country: string
           billing_postal_code: string
+          brand_color: string
+          brand_id: string
+          brand_name: string
           city: string
           country: string
           created_at: string
@@ -4505,6 +4522,7 @@ export type Database = {
         Returns: {
           color: string
           id: string
+          is_default: boolean
           logo_url: string
           module_count: number
           name: string
@@ -4672,9 +4690,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },
